@@ -1,0 +1,21 @@
+# MCP servers (cloned by setup script)
+.mcp-servers/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Analysis outputs
+*.log

@@ -1,0 +1,233 @@
+#!/bin/bash
+#
+# Setup script for civic-ai-tools-example
+# This script prepares your environment for using MCP servers with Cursor IDE or Claude Code CLI
+#
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Get the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+MCP_SERVERS_DIR="$PROJECT_DIR/.mcp-servers"
+
+echo -e "${BLUE}"
+echo "========================================"
+echo "  Civic AI Tools - Setup Script"
+echo "========================================"
+echo -e "${NC}"
+
+# Track errors
+ERRORS=()
+
+# Helper functions
+check_command() {
+    if command -v "$1" &> /dev/null; then
+        echo -e "${GREEN}[OK]${NC} $1 is installed"
+        return 0
+    else
+        echo -e "${RED}[MISSING]${NC} $1 is not installed"
+        return 1
+    fi
+}
+
+print_step() {
+    echo -e "\n${BLUE}>>> $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+    ERRORS+=("$1")
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+# Step 1: Check prerequisites
+print_step "Checking prerequisites..."
+
+PREREQ_OK=true
+
+if ! check_command "node"; then
+    print_error "Node.js is required. Install from https://nodejs.org/"
+    PREREQ_OK=false
+fi
+
+if ! check_command "npm"; then
+    print_error "npm is required. Install from https://nodejs.org/"
+    PREREQ_OK=false
+fi
+
+if ! check_command "git"; then
+    print_error "git is required."
+    PREREQ_OK=false
+fi
+
+if ! check_command "python3"; then
+    print_error "Python 3 is required."
+    PREREQ_OK=false
+else
+    # Check Python version (need 3.11+)
+    PY_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    PY_MAJOR=$(echo "$PY_VERSION" | cut -d. -f1)
+    PY_MINOR=$(echo "$PY_VERSION" | cut -d. -f2)
+    if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 11 ]; then
+        echo -e "${GREEN}[OK]${NC} Python version $PY_VERSION (3.11+ required for datacommons-mcp)"
+    else
+        print_warning "Python $PY_VERSION detected. datacommons-mcp requires Python 3.11+"
+    fi
+fi
+
+if ! check_command "uv"; then
+    print_warning "uv is not installed. It's recommended for Python package management."
+    echo "    Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+fi
+
+if [ "$PREREQ_OK" = false ]; then
+    echo -e "\n${RED}Prerequisites missing. Please install them and re-run this script.${NC}"
+    exit 1
+fi
+
+# Step 2: Set up opengov-mcp-server
+print_step "Setting up OpenGov MCP Server..."
+
+mkdir -p "$MCP_SERVERS_DIR"
+
+OPENGOV_DIR="$MCP_SERVERS_DIR/opengov-mcp-server"
+
+if [ -d "$OPENGOV_DIR" ]; then
+    echo -e "${GREEN}[OK]${NC} opengov-mcp-server already cloned"
+
+    # Check if it needs to be built
+    if [ ! -f "$OPENGOV_DIR/dist/index.js" ]; then
+        print_step "Building opengov-mcp-server..."
+        cd "$OPENGOV_DIR"
+        npm install
+        npm run build
+        cd "$PROJECT_DIR"
+        print_success "opengov-mcp-server built successfully"
+    else
+        echo -e "${GREEN}[OK]${NC} opengov-mcp-server is built"
+    fi
+else
+    echo "Cloning opengov-mcp-server..."
+    git clone https://github.com/npstorey/opengov-mcp-server.git "$OPENGOV_DIR"
+
+    print_step "Building opengov-mcp-server..."
+    cd "$OPENGOV_DIR"
+    npm install
+    npm run build
+    cd "$PROJECT_DIR"
+    print_success "opengov-mcp-server cloned and built successfully"
+fi
+
+# Step 3: Install datacommons-mcp
+print_step "Installing datacommons-mcp..."
+
+if command -v "datacommons-mcp" &> /dev/null; then
+    echo -e "${GREEN}[OK]${NC} datacommons-mcp already installed"
+else
+    if command -v "uv" &> /dev/null; then
+        echo "Using uv to install datacommons-mcp..."
+        uv tool install datacommons-mcp || {
+            print_warning "uv tool install failed, trying pip..."
+            pip3 install datacommons-mcp
+        }
+    else
+        echo "Using pip to install datacommons-mcp..."
+        pip3 install datacommons-mcp
+    fi
+
+    # Verify installation
+    if command -v "datacommons-mcp" &> /dev/null; then
+        print_success "datacommons-mcp installed successfully"
+    else
+        print_warning "datacommons-mcp command not found in PATH"
+        echo "    You may need to add ~/.local/bin to your PATH"
+        echo "    Or restart your terminal"
+    fi
+fi
+
+# Step 4: Verify MCP configuration files
+print_step "Checking MCP configuration files..."
+
+# Claude Code CLI config
+if [ -f "$PROJECT_DIR/.mcp.json" ]; then
+    echo -e "${GREEN}[OK]${NC} .mcp.json exists (for Claude Code CLI)"
+else
+    print_warning ".mcp.json not found - Claude Code CLI won't have MCP access"
+fi
+
+# Cursor IDE config
+if [ -f "$PROJECT_DIR/.cursor/mcp.json" ]; then
+    echo -e "${GREEN}[OK]${NC} .cursor/mcp.json exists (for Cursor IDE)"
+else
+    print_warning ".cursor/mcp.json not found - Cursor IDE won't have MCP access"
+fi
+
+# Step 5: Data Commons API Key
+print_step "Checking Data Commons API key..."
+
+if [ -n "$DC_API_KEY" ]; then
+    echo -e "${GREEN}[OK]${NC} DC_API_KEY environment variable is set"
+else
+    print_warning "DC_API_KEY not set. Data Commons MCP may have limited functionality."
+    echo "    Get an API key at: https://apikeys.datacommons.org/"
+    echo "    Then set it: export DC_API_KEY='your-api-key'"
+fi
+
+# Summary
+print_step "Setup Summary"
+
+if [ ${#ERRORS[@]} -eq 0 ]; then
+    echo -e "${GREEN}"
+    echo "========================================"
+    echo "  Setup completed successfully!"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+    echo "Project structure:"
+    echo "  $PROJECT_DIR/"
+    echo "  ├── .mcp-servers/opengov-mcp-server/  (cloned & built)"
+    echo "  ├── .mcp.json                         (Claude Code config)"
+    echo "  └── .cursor/mcp.json                  (Cursor config)"
+    echo ""
+    echo "Next steps:"
+    echo ""
+    echo "  For Cursor IDE:"
+    echo "    1. Open this folder in Cursor"
+    echo "    2. MCP servers will load automatically"
+    echo ""
+    echo "  For Claude Code CLI:"
+    echo "    1. Run: claude"
+    echo "    2. Approve the MCP servers when prompted"
+    echo "    3. Verify with: /mcp"
+    echo ""
+    echo "  Try asking:"
+    echo "    \"What are the top 311 complaint types in NYC?\""
+    echo ""
+else
+    echo -e "${YELLOW}"
+    echo "========================================"
+    echo "  Setup completed with warnings"
+    echo "========================================"
+    echo -e "${NC}"
+    echo ""
+    echo "Issues to resolve:"
+    for err in "${ERRORS[@]}"; do
+        echo "  - $err"
+    done
+    echo ""
+fi

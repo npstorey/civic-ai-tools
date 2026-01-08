@@ -1,0 +1,205 @@
+{
+  "timestamp": "2025-11-13T11:14:49.677036",
+  "data_sources": {
+    "opengov": "NYC Open Data (Socrata API)",
+    "datacommons": "Google Data Commons API"
+  },
+  "results": {
+    "311_complaints": [
+      {
+        "complaint_type": "HEAT/HOT WATER",
+        "count": "11094"
+      },
+      {
+        "complaint_type": "Illegal Parking",
+        "count": "9985"
+      },
+      {
+        "complaint_type": "Noise - Residential",
+        "count": "7578"
+      },
+      {
+        "complaint_type": "Blocked Driveway",
+        "count": "3126"
+      },
+      {
+        "complaint_type": "Noise - Street/Sidewalk",
+        "count": "2430"
+      },
+      {
+        "complaint_type": "UNSANITARY CONDITION",
+        "count": "2099"
+      },
+      {
+        "complaint_type": "PLUMBING",
+        "count": "1189"
+      },
+      {
+        "complaint_type": "Noise",
+        "count": "1100"
+      },
+      {
+        "complaint_type": "Noise - Commercial",
+        "count": "1066"
+      },
+      {
+        "complaint_type": "Abandoned Vehicle",
+        "count": "993"
+      }
+    ],
+    "restaurant_grades": [
+      {
+        "boro": "Bronx",
+        "grade": "A",
+        "count": "7515"
+      },
+      {
+        "boro": "Bronx",
+        "grade": "B",
+        "count": "1805"
+      },
+      {
+        "boro": "Bronx",
+        "grade": "C",
+        "count": "1086"
+      },
+      {
+        "boro": "Bronx",
+        "grade": "N",
+        "count": "511"
+      },
+      {
+        "boro": "Bronx",
+        "grade": "P",
+        "count": "46"
+      },
+      {
+        "boro": "Bronx",
+        "grade": "Z",
+        "count": "557"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "A",
+        "count": "19712"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "B",
+        "count": "3799"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "C",
+        "count": "2711"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "N",
+        "count": "1893"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "P",
+        "count": "179"
+      },
+      {
+        "boro": "Brooklyn",
+        "grade": "Z",
+        "count": "1460"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "A",
+        "count": "29891"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "B",
+        "count": "4938"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "C",
+        "count": "3847"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "N",
+        "count": "2974"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "P",
+        "count": "213"
+      },
+      {
+        "boro": "Manhattan",
+        "grade": "Z",
+        "count": "2240"
+      },
+      {
+        "boro": "Queens",
+        "grade": "A",
+        "count": "17652"
+      },
+      {
+        "boro": "Queens",
+        "grade": "B",
+        "count": "4133"
+      },
+      {
+        "boro": "Queens",
+        "grade": "C",
+        "count": "3381"
+      },
+      {
+        "boro": "Queens",
+        "grade": "N",
+        "count": "1771"
+      },
+      {
+        "boro": "Queens",
+        "grade": "P",
+        "count": "185"
+      },
+      {
+        "boro": "Queens",
+        "grade": "Z",
+        "count": "1803"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "A",
+        "count": "2783"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "B",
+        "count": "520"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "C",
+        "count": "261"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "N",
+        "count": "326"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "P",
+        "count": "10"
+      },
+      {
+        "boro": "Staten Island",
+        "grade": "Z",
+        "count": "127"
+      }
+    ],
+    "nyc_population": {},
+    "city_comparison": {}
+  }
+}
