@@ -3,7 +3,7 @@
     "opengov": {
       "type": "stdio",
       "command": "node",
-      "args": ["../.mcp-servers/opengov-mcp-server/dist/index.js"],
+      "args": [".mcp-servers/opengov-mcp-server/dist/index.js"],
       "env": {
         "DEFAULT_DOMAIN": "data.cityofnewyork.us",
         "CACHE_ENABLED": "true",
@@ -13,7 +13,7 @@
     "data-commons": {
       "type": "stdio",
       "command": "datacommons-mcp",
-      "args": ["serve", "--stdio"],
+      "args": ["serve", "stdio"],
       "env": {
         "DC_API_ROOT": "https://datacommons.org"
       }

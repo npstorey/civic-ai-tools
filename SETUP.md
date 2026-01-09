@@ -9,9 +9,13 @@ git clone https://github.com/npstorey/civic-ai-tools-example.git
 cd civic-ai-tools-example
 ./scripts/setup.sh
 
-# Optional: Configure API keys for higher rate limits
+# Set up MCP config files (required)
+cp .mcp.json.example .mcp.json
+cp .cursor/mcp.json.example .cursor/mcp.json
+
+# Configure API keys (see "API Keys Configuration" below)
 cp .env.example .env
-# Edit .env with your API keys (see "API Keys Configuration" below)
+# Edit .mcp.json to add your API keys
 ```
 
 The setup script will:
@@ -234,10 +238,12 @@ The MCP servers will automatically load these from the project root `.env` file.
 
 | File | Purpose |
 |------|---------|
-| `.mcp.json` | MCP config for Claude Code CLI |
-| `.cursor/mcp.json` | MCP config for Cursor IDE |
-| `.env.example` | API keys template (copy to `.env`) |
-| `.env` | Your API keys (not committed to git) |
+| `.mcp.json.example` | MCP config template for Claude Code CLI |
+| `.mcp.json` | Your MCP config with API keys (not committed) |
+| `.cursor/mcp.json.example` | MCP config template for Cursor IDE |
+| `.cursor/mcp.json` | Your Cursor MCP config (not committed) |
+| `.env.example` | API keys template |
+| `.env` | Your API keys (not committed) |
 | `scripts/setup.sh` | Automated setup script |
 | `docs/opengov-skill.md` | Detailed OpenGov query guidance |
 | `CLAUDE.md` | Instructions for Claude Code |

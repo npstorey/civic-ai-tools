@@ -1,6 +1,10 @@
 # MCP servers (cloned by setup script)
 .mcp-servers/
 
+# MCP config files (may contain API keys - use .example files as templates)
+.mcp.json
+.cursor/mcp.json
+
 # Python
 __pycache__/
 *.py[cod]
