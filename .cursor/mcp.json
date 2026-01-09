@@ -1,16 +1,17 @@
 {
   "mcpServers": {
     "opengov": {
+      "type": "stdio",
       "command": "node",
       "args": ["../.mcp-servers/opengov-mcp-server/dist/index.js"],
       "env": {
         "DEFAULT_DOMAIN": "data.cityofnewyork.us",
-        "SOCRATA_APP_TOKEN": "",
         "CACHE_ENABLED": "true",
         "LOG_LEVEL": "info"
       }
     },
     "data-commons": {
+      "type": "stdio",
       "command": "datacommons-mcp",
       "args": ["serve", "--stdio"],
       "env": {

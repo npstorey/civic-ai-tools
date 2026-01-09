@@ -8,6 +8,10 @@ This guide walks you through setting up the civic-ai-tools-example project to wo
 git clone https://github.com/npstorey/civic-ai-tools-example.git
 cd civic-ai-tools-example
 ./scripts/setup.sh
+
+# Optional: Configure API keys for higher rate limits
+cp .env.example .env
+# Edit .env with your API keys (see "API Keys Configuration" below)
 ```
 
 The setup script will:
@@ -54,6 +58,8 @@ civic-ai-tools-example/
 ├── .mcp.json                   # Claude Code CLI config
 ├── .cursor/
 │   └── mcp.json               # Cursor IDE config
+├── .env.example               # API keys template
+├── .env                       # Your API keys (create from .env.example)
 ├── docs/
 │   └── opengov-skill.md       # OpenGov query guidance
 ├── scripts/
@@ -156,19 +162,36 @@ python scripts/real_data_analysis.py
 
 ---
 
-## Environment Variables
+## API Keys Configuration
 
-Optional environment variables for enhanced functionality:
+API keys are optional but recommended for higher rate limits. Configure them by creating a `.env` file:
 
 ```bash
-# Data Commons API key (recommended)
-export DC_API_KEY='your-api-key'
+# Copy the example file
+cp .env.example .env
 
-# Socrata API token (optional, increases rate limits)
-export SOCRATA_APP_TOKEN='your-token'
+# Edit with your API keys
+nano .env  # or use your preferred editor
 ```
 
-Get a Data Commons API key: https://apikeys.datacommons.org/
+### Getting API Keys
+
+| Service | Purpose | Get Key |
+|---------|---------|---------|
+| NYC Open Data (Socrata) | Higher rate limits for NYC data | [Get Token](https://data.cityofnewyork.us/profile/edit/developer_settings) |
+| Google Data Commons | Higher rate limits for statistical data | [Get Key](https://apikeys.datacommons.org/) |
+
+### .env File Format
+
+```bash
+# NYC Open Data - increases rate limits significantly
+SOCRATA_APP_TOKEN=your_token_here
+
+# Data Commons - recommended for statistical queries
+DC_API_KEY=your_key_here
+```
+
+The MCP servers will automatically load these from the project root `.env` file.
 
 ---
 
@@ -213,6 +236,8 @@ Get a Data Commons API key: https://apikeys.datacommons.org/
 |------|---------|
 | `.mcp.json` | MCP config for Claude Code CLI |
 | `.cursor/mcp.json` | MCP config for Cursor IDE |
+| `.env.example` | API keys template (copy to `.env`) |
+| `.env` | Your API keys (not committed to git) |
 | `scripts/setup.sh` | Automated setup script |
 | `docs/opengov-skill.md` | Detailed OpenGov query guidance |
 | `CLAUDE.md` | Instructions for Claude Code |
