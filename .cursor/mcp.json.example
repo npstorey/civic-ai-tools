@@ -3,7 +3,7 @@
     "opengov": {
       "type": "stdio",
       "command": "node",
-      "args": ["__PROJECT_DIR__/.mcp-servers/opengov-mcp-server/dist/index.js"],
+      "args": ["__PROJECT_DIR__/.mcp-servers/opengov-mcp-server/dist/index.js", "--stdio"],
       "env": {
         "DEFAULT_DOMAIN": "data.cityofnewyork.us",
         "SOCRATA_APP_TOKEN": "__SOCRATA_APP_TOKEN__",
