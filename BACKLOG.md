@@ -4,73 +4,30 @@ Future decisions and potential improvements for this project.
 
 ---
 
-## Decision: civic-ai-tools Repository
+## Current Priority: civic-ai-tools-website
 
-**Status:** Pending decision
+**Status:** Next up (after fixing opengov-mcp edge cases)
 
-**Context:**
-This example project was originally designed to work with a sibling `civic-ai-tools` repository that contained shared infrastructure (Skills, MCP templates, configs). The project has now been refactored to be fully standalone.
+**Goal:** Build a website that demonstrates the value of MCP servers for civic data queries.
 
-**The civic-ai-tools repo contained:**
-- OpenGov MCP Companion Skill (now embedded in `docs/opengov-skill.md`)
-- MCP configuration templates
-- Shared documentation
-- Potentially other skills
+📄 **Full project plan:** [docs/civic-ai-tools-website-project-plan.md](docs/civic-ai-tools-website-project-plan.md)
 
-**Options:**
+**Summary:**
+- Side-by-side comparison: LLM alone vs LLM + MCP
+- User selects model (same model used for both, fair comparison)
+- Technical explainer + link to GitHub repo
+- Rate limiting: 5 requests/day anonymous, 25/day with GitHub auth
+- Stack: Next.js on Vercel, OpenRouter for LLM, opengov-mcp on Render
 
-1. **Archive civic-ai-tools**
-   - This example is now standalone and self-sufficient
-   - No other projects currently depend on it
-   - Reduces maintenance burden
-
-2. **Keep civic-ai-tools as a skill library**
-   - Useful if you plan multiple civic data projects
-   - Central place to develop and maintain skills
-   - Projects can copy skills they need (like this one did)
-
-3. **Merge remaining useful content**
-   - Review civic-ai-tools for any other valuable skills or patterns
-   - Add them to this repo's `docs/` directory
-   - Then archive civic-ai-tools
-
-**To decide:** Review what else exists in civic-ai-tools and whether future projects would benefit from shared infrastructure.
+**Key finding:** opengov-mcp-server already supports HTTP transport via `/mcp` endpoint - no server changes needed for website integration.
 
 ---
 
-## Future Improvements
-
-### Simplify opengov-mcp Installation
-
-**Current state:** Users must clone and build opengov-mcp-server locally via the setup script.
-
-**Goal:** Allow installation via a single command like `npm install -g` or `npx`.
-
-**Options:**
-
-1. **Publish to npm** (recommended)
-   - Natural fit since it's a Node.js/TypeScript project
-   - Users could run `npx opengov-mcp-server` directly
-   - Setup script would simplify significantly
-   - Requires: npm account, proper package.json metadata, publish workflow
-
-2. **Rewrite in Python**
-   - Would allow `uv tool install` / `pip install` like datacommons-mcp
-   - More consistent with Python-based MCP ecosystem
-   - Significant effort to rewrite
-   - Consider if: Python rewrite offers other benefits (easier contributions, better library ecosystem for civic data)
-
-**Recommendation:** Start with npm publishing. Evaluate Python rewrite only if there's a compelling reason beyond installation convenience.
-
-### Add More Skills
-- Consider adding a Data Commons companion skill (`docs/datacommons-skill.md`)
-- Document common query patterns for other Socrata portals (Chicago, SF, etc.)
-
-### Codex CLI Support
-- Add `~/.codex/config.toml` setup instructions for OpenAI Codex CLI
-- Currently only supports Cursor IDE and Claude Code CLI
+## In Progress
 
 ### Fix opengov-mcp get_data Edge Cases
+
+**Status:** In progress (separate repo)
 
 **Issue 1: `type=metadata` fails**
 - Error: "Query (expected as dataset_id) is required for type=metadata"
@@ -82,11 +39,38 @@ This example project was originally designed to work with a sibling `civic-ai-to
 - The Socrata metrics endpoint may not exist or has a different URL
 - Investigate whether this is a Socrata API limitation or implementation bug
 
-**Impact:** Low - these are edge cases. Core functionality (search, fetch, query, catalog) works correctly.
+---
 
-### Testing
+## Blocked on Website Completion
+
+The following items are deferred until civic-ai-tools-website is complete:
+
+### Simplify opengov-mcp Installation (Publish to npm)
+
+**Current state:** Users must clone and build opengov-mcp-server locally via the setup script.
+
+**Goal:** Allow installation via `npx opengov-mcp-server` directly.
+
+**Requires:** npm account, proper package.json metadata, publish workflow
+
+### Add Codex CLI Support
+- Add `~/.codex/config.toml` setup instructions for OpenAI Codex CLI
+- Currently only supports Cursor IDE and Claude Code CLI
+
+### Add Data Commons Skill
+- Create `docs/datacommons-skill.md` companion skill
+- Document common query patterns for other Socrata portals (Chicago, SF, etc.)
+
+### Add Integration Tests
 - Add integration tests that verify MCP servers respond correctly
 - Could run as part of CI after setup
+
+---
+
+## Resolved
+
+### civic-ai-tools Repository
+**Decision:** Archive when ready. Renamed to `civic-ai-tools-old`. This project is now standalone.
 
 ---
 
@@ -94,3 +78,4 @@ This example project was originally designed to work with a sibling `civic-ai-to
 
 - Decision point created: 2026-01-08
 - Project converted to standalone: 2026-01-08
+- Website project added: 2026-01-14

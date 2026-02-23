@@ -183,11 +183,21 @@ fi
 # Find datacommons-mcp path
 DATACOMMONS_PATH=$(command -v datacommons-mcp 2>/dev/null || echo "datacommons-mcp")
 
+# Determine if we should regenerate configs (if .env has real keys)
+SHOULD_REGENERATE=false
+if [ -f "$PROJECT_DIR/.env" ] && [ "$SOCRATA_TOKEN" != "YOUR_SOCRATA_TOKEN_HERE" ] || [ "$DC_KEY" != "YOUR_DC_API_KEY_HERE" ]; then
+    SHOULD_REGENERATE=true
+fi
+
 # Generate Claude Code CLI config (.mcp.json)
-if [ -f "$PROJECT_DIR/.mcp.json" ]; then
+if [ -f "$PROJECT_DIR/.mcp.json" ] && [ "$SHOULD_REGENERATE" = false ]; then
     echo -e "${GREEN}[OK]${NC} .mcp.json already exists (for Claude Code CLI)"
 else
-    echo "Creating .mcp.json for Claude Code CLI..."
+    if [ -f "$PROJECT_DIR/.mcp.json" ]; then
+        echo "Updating .mcp.json with API keys from .env..."
+    else
+        echo "Creating .mcp.json for Claude Code CLI..."
+    fi
     sed -e "s|__SOCRATA_APP_TOKEN__|$SOCRATA_TOKEN|g" \
         -e "s|__DC_API_KEY__|$DC_KEY|g" \
         -e "s|__DATACOMMONS_MCP_PATH__|$DATACOMMONS_PATH|g" \
@@ -197,10 +207,14 @@ fi
 
 # Generate Cursor IDE config (.cursor/mcp.json) - requires absolute paths
 mkdir -p "$PROJECT_DIR/.cursor"
-if [ -f "$PROJECT_DIR/.cursor/mcp.json" ]; then
+if [ -f "$PROJECT_DIR/.cursor/mcp.json" ] && [ "$SHOULD_REGENERATE" = false ]; then
     echo -e "${GREEN}[OK]${NC} .cursor/mcp.json already exists (for Cursor IDE)"
 else
-    echo "Creating .cursor/mcp.json for Cursor IDE (with absolute paths)..."
+    if [ -f "$PROJECT_DIR/.cursor/mcp.json" ]; then
+        echo "Updating .cursor/mcp.json with API keys from .env..."
+    else
+        echo "Creating .cursor/mcp.json for Cursor IDE (with absolute paths)..."
+    fi
     sed -e "s|__PROJECT_DIR__|$PROJECT_DIR|g" \
         -e "s|__SOCRATA_APP_TOKEN__|$SOCRATA_TOKEN|g" \
         -e "s|__DC_API_KEY__|$DC_KEY|g" \
