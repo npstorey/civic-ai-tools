@@ -43,6 +43,15 @@ Key points:
 
 Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
 
+## Related Repos
+
+| Repo | Purpose |
+|------|---------|
+| [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | Demo website at [civicaitools.org](https://civicaitools.org) — Next.js app with side-by-side MCP comparison |
+| [opengov-mcp-server](https://github.com/npstorey/opengov-mcp-server) | The MCP server itself (Socrata/OpenGov data) |
+
+Sprint-based work for the website lives in that repo's `/sprints/` folder. This repo holds MCP server configs, skill docs, and setup tooling.
+
 ## Running Scripts
 
 ```bash
