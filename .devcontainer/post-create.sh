@@ -1,7 +1,9 @@
 #!/bin/bash
 # Post-create setup for GitHub Codespaces
 #
-# Runs on the default Codespaces image (Python, Node.js, npm, git pre-installed).
+# Run this AFTER the codespace opens:  bash .devcontainer/post-create.sh
+#
+# Uses the lightweight base:ubuntu image, so Python and Node are installed here.
 # Each step is independent with timeouts — no single step blocks readiness.
 # For local development, use ./scripts/setup.sh instead.
 
@@ -17,7 +19,38 @@ ok()   { echo "[OK] $1" ; }
 warn() { echo "[WARN] $1" ; }
 
 # -----------------------------------------------------------------
-# 1. Install uv (fast — usually <10s)
+# 1. Install Python (if not present)
+# -----------------------------------------------------------------
+step "Checking Python"
+if command -v python3 &>/dev/null; then
+    ok "Python3 already installed: $(python3 --version)"
+else
+    echo "Installing Python3..."
+    if sudo apt-get update -qq && sudo apt-get install -y -qq python3 python3-pip python3-venv 2>&1; then
+        ok "Python3 installed"
+    else
+        warn "Python3 installation failed"
+    fi
+fi
+
+# -----------------------------------------------------------------
+# 2. Install Node.js (if not present)
+# -----------------------------------------------------------------
+step "Checking Node.js"
+if command -v node &>/dev/null; then
+    ok "Node.js already installed: $(node --version)"
+else
+    echo "Installing Node.js..."
+    if curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 2>&1 && \
+       sudo apt-get install -y -qq nodejs 2>&1; then
+        ok "Node.js installed"
+    else
+        warn "Node.js installation failed"
+    fi
+fi
+
+# -----------------------------------------------------------------
+# 3. Install uv (fast — usually <10s)
 # -----------------------------------------------------------------
 step "Installing uv"
 if command -v uv &>/dev/null; then
@@ -32,7 +65,7 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 
 # -----------------------------------------------------------------
-# 2. Clone and build opengov-mcp-server
+# 4. Clone and build opengov-mcp-server
 # -----------------------------------------------------------------
 step "Setting up OpenGov MCP server"
 OPENGOV_DIR="$MCP_SERVERS_DIR/opengov-mcp-server"
@@ -64,7 +97,7 @@ else
 fi
 
 # -----------------------------------------------------------------
-# 3. Install datacommons-mcp
+# 5. Install datacommons-mcp
 # -----------------------------------------------------------------
 step "Installing datacommons-mcp"
 if command -v datacommons-mcp &>/dev/null; then
@@ -90,7 +123,7 @@ else
 fi
 
 # -----------------------------------------------------------------
-# 4. Generate MCP config files
+# 6. Generate MCP config files
 # -----------------------------------------------------------------
 step "Generating MCP configuration"
 DATACOMMONS_PATH=$(command -v datacommons-mcp 2>/dev/null || echo "datacommons-mcp")

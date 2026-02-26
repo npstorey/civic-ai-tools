@@ -1,10 +1,5 @@
 {
   "name": "Civic AI Tools",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    }
-  },
-  "postCreateCommand": "bash .devcontainer/post-create.sh"
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "postCreateCommand": "echo 'Codespace ready! Run: bash .devcontainer/post-create.sh'"
 }
