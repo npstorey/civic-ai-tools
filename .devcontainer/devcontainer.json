@@ -1,5 +1,0 @@
-{
-  "name": "Civic AI Tools",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "postCreateCommand": "echo 'Codespace ready! Run: bash .devcontainer/post-create.sh'"
-}

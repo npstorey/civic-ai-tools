@@ -91,8 +91,13 @@ else
 fi
 
 if ! check_command "uv"; then
-    print_warning "uv is not installed. It's recommended for Python package management."
-    echo "    Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    echo "Installing uv (recommended Python package manager)..."
+    if curl -LsSf https://astral.sh/uv/install.sh | sh 2>&1; then
+        export PATH="$HOME/.local/bin:$PATH"
+        print_success "uv installed"
+    else
+        print_warning "uv installation failed. You can install later: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    fi
 fi
 
 if [ "$PREREQ_OK" = false ]; then
