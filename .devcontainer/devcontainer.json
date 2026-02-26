@@ -6,7 +6,7 @@
       "version": "20"
     }
   },
-  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH=\"$HOME/.local/bin:$PATH\" && ./scripts/setup.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
       "extensions": [
