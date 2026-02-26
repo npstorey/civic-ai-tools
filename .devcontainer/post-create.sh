@@ -17,6 +17,20 @@ ok()   { echo "[OK] $1" ; }
 warn() { echo "[WARN] $1" ; }
 
 # -----------------------------------------------------------------
+# 0. Install Node.js (needed for opengov-mcp-server)
+# -----------------------------------------------------------------
+step "Installing Node.js"
+if command -v node &>/dev/null && node -v | grep -qE '^v(1[89]|[2-9][0-9])'; then
+    ok "Node.js $(node -v) already installed"
+else
+    if timeout 120 bash -c 'curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs' 2>&1; then
+        ok "Node.js $(node -v) installed"
+    else
+        warn "Node.js installation failed — opengov-mcp-server will not build"
+    fi
+fi
+
+# -----------------------------------------------------------------
 # 1. Install uv
 # -----------------------------------------------------------------
 step "Installing uv"
