@@ -1,8 +1,8 @@
 #!/bin/bash
 # Post-create setup for GitHub Codespaces
 #
-# This script runs each setup step independently with timeouts so that
-# no single step can prevent the Codespace from becoming "ready".
+# Runs on the default Codespaces image (Python, Node.js, npm, git pre-installed).
+# Each step is independent with timeouts — no single step blocks readiness.
 # For local development, use ./scripts/setup.sh instead.
 
 set +e  # Do NOT exit on errors — every step is fault-tolerant
@@ -17,21 +17,7 @@ ok()   { echo "[OK] $1" ; }
 warn() { echo "[WARN] $1" ; }
 
 # -----------------------------------------------------------------
-# 0. Install Node.js (needed for opengov-mcp-server)
-# -----------------------------------------------------------------
-step "Installing Node.js"
-if command -v node &>/dev/null && node -v | grep -qE '^v(1[89]|[2-9][0-9])'; then
-    ok "Node.js $(node -v) already installed"
-else
-    if timeout 120 bash -c 'curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs' 2>&1; then
-        ok "Node.js $(node -v) installed"
-    else
-        warn "Node.js installation failed — opengov-mcp-server will not build"
-    fi
-fi
-
-# -----------------------------------------------------------------
-# 1. Install uv
+# 1. Install uv (fast — usually <10s)
 # -----------------------------------------------------------------
 step "Installing uv"
 if command -v uv &>/dev/null; then
