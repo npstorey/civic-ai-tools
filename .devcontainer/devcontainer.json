@@ -1,3 +1,1 @@
-{
-  "postCreateCommand": "bash .devcontainer/post-create.sh"
-}
+{}
