@@ -1,5 +1,7 @@
 # Civic AI Tools - Example Project
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/npstorey/civic-ai-tools)
+
 A standalone example for querying NYC Open Data and Google Data Commons using MCP (Model Context Protocol) servers. Works with **Cursor IDE** and **Claude Code CLI**.
 
 ## Quick Start
@@ -37,6 +39,29 @@ See [SETUP.md](SETUP.md) for detailed instructions and troubleshooting.
 - Node.js 18+
 - Python 3.11+
 - [uv](https://github.com/astral-sh/uv) (recommended)
+
+## Standalone Scripts
+
+Several scripts can be run directly with [`uv`](https://docs.astral.sh/uv/getting-started/installation/) — no virtualenv or `requirements.txt` needed. Each script has inline [PEP 723](https://peps.python.org/pep-0723/) metadata so `uv` automatically installs the right dependencies in an isolated environment:
+
+```bash
+# Fetch and analyze live NYC Open Data + Data Commons data
+uv run examples/real_data_analysis.py
+
+# Generate matplotlib charts from analysis results
+uv run examples/create_visualizations.py
+
+# Generate an interactive HTML dashboard (no extra deps)
+uv run examples/create_html_visualizations.py
+
+# Launch a live Streamlit dashboard querying NYC 311 API
+uv run examples/nyc_311_dashboard.py
+
+# Launch the embedded-data Streamlit dashboard
+uv run dashboard_311_dec2025.py
+```
+
+Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ## Documentation
 
