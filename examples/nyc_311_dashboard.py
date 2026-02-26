@@ -1,3 +1,14 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "streamlit",
+#     "pandas",
+#     "plotly",
+#     "requests",
+#     "numpy",
+#     "urllib3",
+# ]
+# ///
 """
 NYC 311 Service Requests Dashboard - December 2025 Analysis
 ============================================================

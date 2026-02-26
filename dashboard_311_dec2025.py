@@ -1,3 +1,12 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "streamlit",
+#     "plotly",
+#     "pandas",
+#     "numpy",
+# ]
+# ///
 """
 NYC 311 Service Requests Dashboard - December 2025
 Designed following Edward Tufte's principles of information design:
