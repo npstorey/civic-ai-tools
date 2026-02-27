@@ -152,10 +152,11 @@ The fastest way to get started — no local install needed.
 
 **Troubleshooting Copilot Chat in Codespaces:**
 
-- **"Chat took too long to get ready"**: Open Command Palette (`Ctrl+Shift+P`) → "Developer: Reload Window". Wait 30 seconds for extensions to reconnect.
-- **Still timing out after reload**: Check that you have a [GitHub Copilot](https://github.com/features/copilot) subscription (free tier works). Go to github.com → Settings → Copilot to verify.
+- **"Language model unavailable"**: This is a known Copilot initialization timing issue. Open Command Palette (`Ctrl+Shift+P`) → "Developer: Reload Window". Wait 30 seconds for extensions to reconnect.
+- **"Chat took too long to get ready"**: Same fix — reload the window.
+- **Still not working after reload**: Check that you have a [GitHub Copilot](https://github.com/features/copilot) subscription (free tier works). Go to github.com → Settings → Copilot to verify.
 - **MCP tools not showing**: Make sure you're in **Agent** mode (not "Ask" or "Edit" mode). The MCP servers only appear in Agent mode.
-- **Setup didn't run**: Open the terminal and run `./scripts/setup.sh` manually.
+- **Setup failed partially**: The Codespace setup is fault-tolerant — it continues even if a step fails. Open the terminal and run `./scripts/setup.sh` to retry any failed steps.
 
 ### VS Code with GitHub Copilot
 

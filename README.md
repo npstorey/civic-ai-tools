@@ -15,7 +15,7 @@ Once the Codespace is ready:
 2. Switch to **Agent** mode (dropdown at the top of the chat panel)
 3. Start asking questions — MCP tools are available automatically
 
-> **Copilot Chat timing out?** This is common on first load. Open the Command Palette (`Ctrl+Shift+P`) → "Developer: Reload Window" and wait for it to reconnect. You need a [GitHub Copilot](https://github.com/features/copilot) subscription (free tier works).
+> **Copilot showing "Language model unavailable"?** This is a known timing issue on first load. Open the Command Palette (`Ctrl+Shift+P`) → "Developer: Reload Window" and wait for it to reconnect. You need a [GitHub Copilot](https://github.com/features/copilot) subscription (free tier works).
 
 ### Local setup
 

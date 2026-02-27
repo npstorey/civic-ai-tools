@@ -22,5 +22,8 @@ venv/
 *.swp
 *.swo
 
+# Temp files
+temp/
+
 # Analysis outputs
 *.log

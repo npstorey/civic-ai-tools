@@ -6,7 +6,7 @@
       "version": "3.12"
     }
   },
-  "postCreateCommand": "bash scripts/setup.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -15,7 +15,8 @@
       ],
       "settings": {
         "chat.agent.enabled": true,
-        "github.copilot.chat.agent.enabled": true
+        "github.copilot.chat.agent.enabled": true,
+        "chat.mcp.discovery.enabled": true
       }
     }
   }
