@@ -41,7 +41,7 @@ mkdir -p "$MCP_SERVERS_DIR"
 if [ -d "$OPENGOV_DIR/.git" ]; then
     echo -e "${GREEN}[OK]${NC} Already cloned"
 else
-    if timeout 120 git clone --depth 1 https://github.com/npstorey/opengov-mcp-server.git "$OPENGOV_DIR" 2>&1; then
+    if timeout --kill-after=10 90 git clone --depth 1 https://github.com/npstorey/opengov-mcp-server.git "$OPENGOV_DIR" 2>&1; then
         echo -e "${GREEN}[OK]${NC} Cloned successfully"
     else
         echo -e "${RED}[FAIL]${NC} git clone failed (network issue?)"
@@ -57,7 +57,7 @@ echo -e "\n${BLUE}>>> Step 2/4: Building OpenGov MCP server...${NC}"
 if [ -d "$OPENGOV_DIR" ]; then
     cd "$OPENGOV_DIR"
 
-    if timeout 180 npm install --no-fund --no-audit 2>&1; then
+    if timeout --kill-after=10 120 npm install --no-fund --no-audit 2>&1; then
         echo -e "${GREEN}[OK]${NC} npm install succeeded"
     else
         echo -e "${RED}[FAIL]${NC} npm install failed"
@@ -65,7 +65,7 @@ if [ -d "$OPENGOV_DIR" ]; then
     fi
 
     if [ -f "$OPENGOV_DIR/node_modules/.package-lock.json" ]; then
-        if timeout 60 npm run build 2>&1; then
+        if timeout --kill-after=10 60 npm run build 2>&1; then
             echo -e "${GREEN}[OK]${NC} Build succeeded"
         else
             echo -e "${RED}[FAIL]${NC} npm run build failed"
@@ -87,11 +87,11 @@ if command -v datacommons-mcp &>/dev/null; then
     echo -e "${GREEN}[OK]${NC} Already installed"
 else
     if command -v uv &>/dev/null; then
-        if timeout 120 uv tool install datacommons-mcp 2>&1; then
+        if timeout --kill-after=10 90 uv tool install datacommons-mcp 2>&1; then
             echo -e "${GREEN}[OK]${NC} Installed via uv"
         else
             echo -e "${YELLOW}[WARN]${NC} uv install failed, trying pip..."
-            if timeout 120 pip3 install datacommons-mcp 2>&1; then
+            if timeout --kill-after=10 90 pip3 install datacommons-mcp 2>&1; then
                 echo -e "${GREEN}[OK]${NC} Installed via pip"
             else
                 echo -e "${RED}[FAIL]${NC} datacommons-mcp installation failed"
@@ -99,7 +99,7 @@ else
             fi
         fi
     else
-        if timeout 120 pip3 install datacommons-mcp 2>&1; then
+        if timeout --kill-after=10 90 pip3 install datacommons-mcp 2>&1; then
             echo -e "${GREEN}[OK]${NC} Installed via pip"
         else
             echo -e "${RED}[FAIL]${NC} datacommons-mcp installation failed"
