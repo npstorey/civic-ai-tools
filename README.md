@@ -6,9 +6,19 @@ A standalone example for querying NYC Open Data and Google Data Commons using MC
 
 ## Quick Start
 
-**GitHub Codespaces** (fastest): Click the badge above, then run `./scripts/setup.sh` in the terminal.
+### GitHub Codespaces (fastest)
 
-**Local clone:**
+Click the badge above to launch a Codespace. The dev container automatically runs `./scripts/setup.sh`, which builds the MCP servers and generates config files.
+
+Once the Codespace is ready:
+1. Open the Copilot Chat panel (the chat icon in the sidebar, or `Ctrl+Shift+I`)
+2. Switch to **Agent** mode (dropdown at the top of the chat panel)
+3. Start asking questions — MCP tools are available automatically
+
+> **Copilot Chat timing out?** This is common on first load. Open the Command Palette (`Ctrl+Shift+P`) → "Developer: Reload Window" and wait for it to reconnect. You need a [GitHub Copilot](https://github.com/features/copilot) subscription (free tier works).
+
+### Local setup
+
 ```bash
 git clone https://github.com/npstorey/civic-ai-tools.git
 cd civic-ai-tools
@@ -18,9 +28,10 @@ cd civic-ai-tools
 The setup script automatically:
 - Builds the OpenGov MCP server
 - Installs Data Commons MCP
-- Generates config files for both Cursor and Claude Code
+- Generates config files for VS Code, Cursor, and Claude Code
 
 Then:
+- **VS Code + Copilot**: Open the folder, reload window, use Copilot Chat in Agent mode
 - **Cursor**: Open the folder in Cursor (restart Cursor if servers don't appear)
 - **Claude Code**: Run `claude` and approve the MCP servers
 

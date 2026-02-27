@@ -228,6 +228,25 @@ else
     print_success "Created .cursor/mcp.json (with absolute paths)"
 fi
 
+# Generate VS Code + Copilot config (.vscode/mcp.json) - uses ${workspaceFolder} variable
+if [ -f "$PROJECT_DIR/.vscode/mcp.json.example" ]; then
+    mkdir -p "$PROJECT_DIR/.vscode"
+    if [ -f "$PROJECT_DIR/.vscode/mcp.json" ] && [ "$SHOULD_REGENERATE" = false ]; then
+        echo -e "${GREEN}[OK]${NC} .vscode/mcp.json already exists (for VS Code + Copilot)"
+    else
+        if [ -f "$PROJECT_DIR/.vscode/mcp.json" ]; then
+            echo "Updating .vscode/mcp.json with API keys from .env..."
+        else
+            echo "Creating .vscode/mcp.json for VS Code + Copilot..."
+        fi
+        sed -e "s|__SOCRATA_APP_TOKEN__|$SOCRATA_TOKEN|g" \
+            -e "s|__DC_API_KEY__|$DC_KEY|g" \
+            -e "s|__DATACOMMONS_MCP_PATH__|$DATACOMMONS_PATH|g" \
+            "$PROJECT_DIR/.vscode/mcp.json.example" > "$PROJECT_DIR/.vscode/mcp.json"
+        print_success "Created .vscode/mcp.json"
+    fi
+fi
+
 # Step 5: Data Commons API Key
 print_step "Checking Data Commons API key..."
 
@@ -253,13 +272,20 @@ if [ ${#ERRORS[@]} -eq 0 ]; then
     echo "  $PROJECT_DIR/"
     echo "  ├── .mcp-servers/opengov-mcp-server/  (cloned & built)"
     echo "  ├── .mcp.json                         (Claude Code config - auto-generated)"
-    echo "  └── .cursor/mcp.json                  (Cursor config - auto-generated with absolute paths)"
+    echo "  ├── .cursor/mcp.json                  (Cursor config - auto-generated)"
+    echo "  └── .vscode/mcp.json                  (VS Code + Copilot config - auto-generated)"
     echo ""
     echo "Next steps:"
     echo ""
     echo "  1. Add your API keys to .env (optional but recommended):"
     echo "     cp .env.example .env"
     echo "     # Edit .env with your API keys, then re-run ./scripts/setup.sh"
+    echo ""
+    echo "  For VS Code / Codespaces (with GitHub Copilot):"
+    echo "    1. Open the Command Palette (Ctrl+Shift+P)"
+    echo "    2. Run: Developer: Reload Window"
+    echo "    3. Open Copilot Chat and switch to Agent mode"
+    echo "    4. MCP tools are available automatically"
     echo ""
     echo "  For Cursor IDE:"
     echo "    1. Open this folder in Cursor"

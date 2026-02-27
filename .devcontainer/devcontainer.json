@@ -1,0 +1,22 @@
+{
+  "name": "Civic AI Tools",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
+  "postCreateCommand": "bash scripts/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "chat.agent.enabled": true,
+        "github.copilot.chat.agent.enabled": true
+      }
+    }
+  }
+}
