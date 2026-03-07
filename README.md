@@ -86,7 +86,8 @@ See [examples/README.md](examples/README.md) for the full list.
 ## Documentation
 
 - [docs/setup.md](docs/setup.md) — Complete setup, tool-specific instructions, and troubleshooting
-- [docs/opengov-skill.md](docs/opengov-skill.md) — OpenGov query patterns and SoQL syntax reference
+- [docs/mcp-servers.md](docs/mcp-servers.md) — Directory of civic data MCP servers
+- [docs/opengov-skill.md](docs/opengov-skill.md) — Socrata query patterns and SoQL syntax reference
 
 ## Contributing
 

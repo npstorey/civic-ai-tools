@@ -82,46 +82,45 @@ These changes affect the live deployment and should be done as one coordinated u
 
 ## TODO: MCP Server Inventory
 
-- [ ] Create `docs/mcp-servers.md` in civic-ai-tools
+- [x] Create `docs/mcp-servers.md` in civic-ai-tools
   - Table of known civic data MCP servers
   - Include: socrata-mcp-server (ours), socrata/odp-mcp (Socrata's official), any others found
   - Columns: Name, Data Source, Status, Transport, Notes
   - Mark which ones are included in civic-ai-tools setup vs. listed for reference
-- [ ] Link from README.md "What's included" section
+- [x] Link from README.md Documentation section
 
 ---
 
 ## TODO: Server Repo Documentation Cleanup (next session)
 
 ### socrata-mcp-server
-- [ ] Delete `server.log` from git tracking
-- [ ] Delete self-referential symlink (`opengov-mcp-server`)
-- [ ] Delete legacy `.eslintrc.json` (using `eslint.config.mjs`)
-- [ ] Delete `POLISH_SUMMARY.md` (stale artifact)
-- [ ] Move `commands.md` to `docs/`
-- [ ] Consolidate/delete `RELEASE_NOTES.md` and `docs/release-notes.md` (using GitHub Releases now)
-- [ ] Remove committed `.env` (use `.env.example` pattern)
-- [ ] Rewrite README.md — add civic context, related projects section, audience framing
-- [ ] Trim stale debugging history from CLAUDE.md
-- [ ] Add CODE_OF_CONDUCT.md
-- [ ] Add `.github/` directory with issue templates
-- [ ] Expand `.gitignore` (add .DS_Store patterns for subdirs)
-- [ ] Add personal project disclaimer
+- [x] Delete self-referential symlink (`opengov-mcp-server`)
+- [x] Delete legacy `.eslintrc.json` (using `eslint.config.mjs`)
+- [x] Delete `POLISH_SUMMARY.md` (stale artifact)
+- [x] Delete `commands.md` (content folded into README)
+- [x] Delete `docs/release-notes.md` (using GitHub Releases now)
+- [x] Add `.env.example` (`.env` was already gitignored)
+- [x] Rewrite README.md — add civic context, related projects section, audience framing
+- [x] Trim stale debugging history from CLAUDE.md
+- [x] Add CODE_OF_CONDUCT.md
+- [x] Add `.github/` directory with issue templates
+- [x] Add personal project disclaimer
+- [ ] Remove tracked `dist/` files from git (18 files committed despite .gitignore; Render rebuilds on deploy)
+- [ ] `server.log` was already gitignored (not tracked)
 
 ---
 
 ## TODO: Website Repo Documentation Cleanup (next session)
 
 ### civic-ai-tools-website
-- [ ] Add LICENSE file (MIT)
-- [ ] Add CONTRIBUTING.md
-- [ ] Add CODE_OF_CONDUCT.md
-- [ ] Move `project-plan.md` to `docs/` or `sprints/completed/`
-- [ ] Migrate `BACKLOG.md` to GitHub Issues
-- [ ] Move `RETROSPECTIVE.md` to `docs/`
-- [ ] Rewrite README.md — expand with feature description, screenshots, related projects, disclaimer
-- [ ] Add personal project disclaimer
-- [ ] Add `.github/` directory with issue templates
+- [x] Add LICENSE file (MIT)
+- [x] Add CONTRIBUTING.md
+- [x] Add CODE_OF_CONDUCT.md
+- [x] Move `project-plan.md` to `docs/`
+- [x] Migrate `BACKLOG.md` to GitHub Issues (#8-#11)
+- [x] Move `RETROSPECTIVE.md` to `docs/`
+- [x] Add personal project disclaimer and contributing section to README
+- [x] Add `.github/` directory with issue templates
 
 ---
 
