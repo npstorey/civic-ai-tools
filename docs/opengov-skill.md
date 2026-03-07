@@ -20,6 +20,7 @@ This skill provides specialized guidance for:
 - Discover columns first - check schema before querying unfamiliar datasets
 - Show exact queries used
 - Use inline citations
+- **Add a date filter** when querying high-volume datasets (>1M rows, e.g., 311 data) unless the user explicitly asks for all-time data. Use the Date Range Guidelines table to pick an appropriate range. **Tell the user** you applied a date filter, why (dataset size/performance), and that they can ask for a different range or all-time data if needed.
 
 **NEVER:**
 - Invent data points
@@ -214,6 +215,14 @@ ORDER BY year
 |---------|---------|-------|
 | [Purpose] | [Count] | `SELECT...` |
 ```
+
+## Uncertainty & Limitations Disclosure
+
+When presenting analysis, include structured caveats so users know what they can and can't conclude:
+
+- **Data completeness**: State what the results cover — e.g., "This covers 12,430 of ~300k annual records (last 30 days)." If you applied filters, say so.
+- **Field interpretation**: When a query depends on interpreting the user's intent as a specific field or value, say so — e.g., "I interpreted 'noise' as complaint_type ILIKE '%noise%' — verify this matches your intent."
+- **Limitations section**: End analysis responses with a brief **Limitations** block listing anything that qualifies the findings: date range used, missing fields, sample size, portal quirks, etc.
 
 ## Data Quality Checks
 
