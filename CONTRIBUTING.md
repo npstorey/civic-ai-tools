@@ -31,6 +31,18 @@ Thank you for your interest in contributing! This project aims to make public da
 - Update documentation if your change affects setup or usage
 - Be respectful in issues and pull requests
 
+## This is a multi-repo project
+
+Civic AI Tools spans three repositories. If you're unsure where to file an issue or contribute, start here — this is the main entry point.
+
+| Repo | What it covers | Issues |
+|------|---------------|--------|
+| **[civic-ai-tools](https://github.com/npstorey/civic-ai-tools)** (this repo) | Setup, MCP configs, skill docs, examples | [Issues](https://github.com/npstorey/civic-ai-tools/issues) |
+| **[socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server)** | The Socrata MCP server itself | [Issues](https://github.com/npstorey/socrata-mcp-server/issues) |
+| **[civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website)** | Demo website at civicaitools.org | [Issues](https://github.com/npstorey/civic-ai-tools-website/issues) |
+
+Not sure which repo? Open an issue here and we'll route it.
+
 ## Questions?
 
 Open an issue with your question — there are no bad questions here.
