@@ -2,7 +2,7 @@
 // Wrapper script to bootstrap global-agent for NTLM proxy support
 // This is used by city workers behind corporate proxies that require NTLM authentication
 //
-// Usage: Copy this file to .mcp-servers/opengov-mcp-server/proxy-wrapper.js
+// Usage: Copy this file to .mcp-servers/socrata-mcp-server/proxy-wrapper.js
 // See SETUP.md for full instructions
 
 import { bootstrap } from 'global-agent';

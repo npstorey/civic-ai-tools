@@ -18,7 +18,7 @@ NC='\033[0m'
 
 PROJECT_DIR="/workspaces/civic-ai-tools"
 MCP_SERVERS_DIR="$PROJECT_DIR/.mcp-servers"
-OPENGOV_DIR="$MCP_SERVERS_DIR/opengov-mcp-server"
+SOCRATA_DIR="$MCP_SERVERS_DIR/socrata-mcp-server"
 
 # Prevent git from prompting for credentials (hangs in Codespaces)
 export GIT_TERMINAL_PROMPT=0
@@ -32,50 +32,50 @@ echo -e "${NC}"
 WARNINGS=()
 
 # ──────────────────────────────────────────
-# Step 1: Clone OpenGov MCP server
+# Step 1: Clone Socrata MCP server
 # ──────────────────────────────────────────
-echo -e "\n${BLUE}>>> Step 1/3: Cloning OpenGov MCP server...${NC}"
+echo -e "\n${BLUE}>>> Step 1/3: Cloning Socrata MCP server...${NC}"
 
 mkdir -p "$MCP_SERVERS_DIR"
 
-if [ -d "$OPENGOV_DIR/.git" ]; then
+if [ -d "$SOCRATA_DIR/.git" ]; then
     echo -e "${GREEN}[OK]${NC} Already cloned"
 else
-    if timeout --kill-after=10 90 git clone --depth 1 https://github.com/npstorey/opengov-mcp-server.git "$OPENGOV_DIR" 2>&1; then
+    if timeout --kill-after=10 90 git clone --depth 1 https://github.com/npstorey/socrata-mcp-server.git "$SOCRATA_DIR" 2>&1; then
         echo -e "${GREEN}[OK]${NC} Cloned successfully"
     else
         echo -e "${RED}[FAIL]${NC} git clone failed (network issue?)"
-        WARNINGS+=("OpenGov MCP server failed to clone — run ./scripts/setup.sh to retry")
+        WARNINGS+=("Socrata MCP server failed to clone — run ./scripts/setup.sh to retry")
     fi
 fi
 
 # ──────────────────────────────────────────
-# Step 2: Build OpenGov MCP server
+# Step 2: Build Socrata MCP server
 # ──────────────────────────────────────────
-echo -e "\n${BLUE}>>> Step 2/3: Building OpenGov MCP server...${NC}"
+echo -e "\n${BLUE}>>> Step 2/3: Building Socrata MCP server...${NC}"
 
-if [ -d "$OPENGOV_DIR" ]; then
-    cd "$OPENGOV_DIR"
+if [ -d "$SOCRATA_DIR" ]; then
+    cd "$SOCRATA_DIR"
 
     if timeout --kill-after=10 120 npm install --no-fund --no-audit 2>&1; then
         echo -e "${GREEN}[OK]${NC} npm install succeeded"
     else
         echo -e "${RED}[FAIL]${NC} npm install failed"
-        WARNINGS+=("npm install failed for OpenGov MCP — run ./scripts/setup.sh to retry")
+        WARNINGS+=("npm install failed for Socrata MCP — run ./scripts/setup.sh to retry")
     fi
 
-    if [ -f "$OPENGOV_DIR/node_modules/.package-lock.json" ]; then
+    if [ -f "$SOCRATA_DIR/node_modules/.package-lock.json" ]; then
         if timeout --kill-after=10 60 npm run build 2>&1; then
             echo -e "${GREEN}[OK]${NC} Build succeeded"
         else
             echo -e "${RED}[FAIL]${NC} npm run build failed"
-            WARNINGS+=("OpenGov MCP build failed — run ./scripts/setup.sh to retry")
+            WARNINGS+=("Socrata MCP build failed — run ./scripts/setup.sh to retry")
         fi
     fi
 
     cd "$PROJECT_DIR"
 else
-    echo -e "${YELLOW}[SKIP]${NC} OpenGov directory not found (clone failed earlier)"
+    echo -e "${YELLOW}[SKIP]${NC} Socrata directory not found (clone failed earlier)"
 fi
 
 # ──────────────────────────────────────────

@@ -55,7 +55,7 @@ See [docs/setup.md](docs/setup.md) for detailed instructions and troubleshooting
 
 | MCP Server | Data Source | What you can query |
 |------------|-------------|-------------------|
-| **OpenGov MCP** | [NYC Open Data](https://data.cityofnewyork.us/) | 311 complaints, restaurant inspections, housing violations, traffic data, and 2,000+ other datasets |
+| **Socrata MCP** | [NYC Open Data](https://data.cityofnewyork.us/) | 311 complaints, restaurant inspections, housing violations, traffic data, and 2,000+ other datasets |
 | **Data Commons MCP** | [Google Data Commons](https://datacommons.org/) | Population, income, demographics, and other statistical indicators across cities, states, and countries |
 
 ## Requirements (local setup only)
@@ -80,7 +80,7 @@ See [examples/README.md](examples/README.md) for the full list.
 
 | Repository | Description |
 |-----------|-------------|
-| [opengov-mcp-server](https://github.com/npstorey/opengov-mcp-server) | The MCP server that connects AI tools to Socrata/OpenGov data portals. This repo uses it as a dependency. |
+| [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | The MCP server that connects AI tools to Socrata open data portals. This repo uses it as a dependency. |
 | [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | Demo website at [civicaitools.org](https://civicaitools.org) — side-by-side comparison of AI with and without live data access |
 
 ## Documentation

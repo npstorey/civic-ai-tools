@@ -5,7 +5,7 @@ This file provides guidance to AI coding agents (GitHub Copilot, Cursor, Claude 
 ## Project Overview
 
 A standalone example for querying civic data using MCP servers:
-- **OpenGov MCP** - NYC Open Data (data.cityofnewyork.us) via Socrata API
+- **Socrata MCP** - NYC Open Data (data.cityofnewyork.us) via Socrata API
 - **Data Commons MCP** - Google Data Commons for statistical data
 
 ## Setup
@@ -22,7 +22,7 @@ See [docs/setup.md](docs/setup.md) for detailed instructions.
 | Cursor IDE | `.cursor/mcp.json` |
 | VS Code / Copilot | `.vscode/mcp.json` |
 
-## OpenGov MCP Guidance
+## Socrata MCP Guidance
 
 **For detailed query patterns, SoQL syntax, and domain-specific workarounds, read [`docs/opengov-skill.md`](docs/opengov-skill.md).**
 
@@ -73,7 +73,7 @@ streamlit run examples/nyc_311_dashboard.py --server.headless=true
 
 ## Best Practices for Agents
 
-1. **Data Queries**: Use the OpenGov MCP tools to query NYC Open Data. Always check column names before building complex queries.
+1. **Data Queries**: Use the Socrata MCP tools to query NYC Open Data. Always check column names before building complex queries.
 
 2. **SSL Issues**: In corporate environments, you may need `verify=False` for requests due to proxy SSL interception.
 

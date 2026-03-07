@@ -105,37 +105,37 @@ if [ "$PREREQ_OK" = false ]; then
     exit 1
 fi
 
-# Step 2: Set up opengov-mcp-server
-print_step "Setting up OpenGov MCP Server..."
+# Step 2: Set up socrata-mcp-server
+print_step "Setting up Socrata MCP Server..."
 
 mkdir -p "$MCP_SERVERS_DIR"
 
-OPENGOV_DIR="$MCP_SERVERS_DIR/opengov-mcp-server"
+SOCRATA_DIR="$MCP_SERVERS_DIR/socrata-mcp-server"
 
-if [ -d "$OPENGOV_DIR" ]; then
-    echo -e "${GREEN}[OK]${NC} opengov-mcp-server already cloned"
+if [ -d "$SOCRATA_DIR" ]; then
+    echo -e "${GREEN}[OK]${NC} socrata-mcp-server already cloned"
 
     # Check if it needs to be built
-    if [ ! -f "$OPENGOV_DIR/dist/index.js" ]; then
-        print_step "Building opengov-mcp-server..."
-        cd "$OPENGOV_DIR"
+    if [ ! -f "$SOCRATA_DIR/dist/index.js" ]; then
+        print_step "Building socrata-mcp-server..."
+        cd "$SOCRATA_DIR"
         npm install
         npm run build
         cd "$PROJECT_DIR"
-        print_success "opengov-mcp-server built successfully"
+        print_success "socrata-mcp-server built successfully"
     else
-        echo -e "${GREEN}[OK]${NC} opengov-mcp-server is built"
+        echo -e "${GREEN}[OK]${NC} socrata-mcp-server is built"
     fi
 else
-    echo "Cloning opengov-mcp-server..."
-    git clone https://github.com/npstorey/opengov-mcp-server.git "$OPENGOV_DIR"
+    echo "Cloning socrata-mcp-server..."
+    git clone https://github.com/npstorey/socrata-mcp-server.git "$SOCRATA_DIR"
 
-    print_step "Building opengov-mcp-server..."
-    cd "$OPENGOV_DIR"
+    print_step "Building socrata-mcp-server..."
+    cd "$SOCRATA_DIR"
     npm install
     npm run build
     cd "$PROJECT_DIR"
-    print_success "opengov-mcp-server cloned and built successfully"
+    print_success "socrata-mcp-server cloned and built successfully"
 fi
 
 # Step 3: Install datacommons-mcp
@@ -270,7 +270,7 @@ if [ ${#ERRORS[@]} -eq 0 ]; then
     echo ""
     echo "Project structure:"
     echo "  $PROJECT_DIR/"
-    echo "  ├── .mcp-servers/opengov-mcp-server/  (cloned & built)"
+    echo "  ├── .mcp-servers/socrata-mcp-server/  (cloned & built)"
     echo "  ├── .mcp.json                         (Claude Code config - auto-generated)"
     echo "  ├── .cursor/mcp.json                  (Cursor config - auto-generated)"
     echo "  └── .vscode/mcp.json                  (VS Code + Copilot config - auto-generated)"

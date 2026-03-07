@@ -23,7 +23,7 @@ cp .env.example .env
 
 The setup script will:
 1. Check prerequisites (Node.js, Python 3.11+, git)
-2. Clone and build the OpenGov MCP server into `.mcp-servers/`
+2. Clone and build the Socrata MCP server into `.mcp-servers/`
 3. Install the `datacommons-mcp` Python package via uv
 4. **Auto-generate MCP config files** (`.mcp.json` and `.cursor/mcp.json`)
    - Reads API keys from `.env` if present
@@ -36,17 +36,17 @@ Here's exactly what `scripts/setup.sh` does at each step:
 #### Step 1: Check Prerequisites
 
 Verifies these tools are installed on your system:
-- **Node.js** and **npm** – required to build the OpenGov MCP server
+- **Node.js** and **npm** – required to build the Socrata MCP server
 - **git** – required to clone the MCP server repository
 - **Python 3** – checks version and warns if below 3.11 (required by datacommons-mcp)
 - **uv** – optional but recommended Python package manager (warns if missing but continues)
 
 If any required tool (node, npm, git, python3) is missing, the script exits with an error.
 
-#### Step 2: Set Up OpenGov MCP Server
+#### Step 2: Set Up Socrata MCP Server
 
 1. Creates `.mcp-servers/` directory if it doesn't exist
-2. Clones `https://github.com/npstorey/opengov-mcp-server.git` into `.mcp-servers/opengov-mcp-server/` (skips if already cloned)
+2. Clones `https://github.com/npstorey/socrata-mcp-server.git` into `.mcp-servers/socrata-mcp-server/` (skips if already cloned)
 3. Runs `npm install` to install Node.js dependencies
 4. Runs `npm run build` to compile TypeScript to JavaScript in `dist/`
 
@@ -86,7 +86,7 @@ Displays what was created and provides next steps for using the MCP servers with
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Node.js | 18+ | Runs opengov-mcp-server |
+| Node.js | 18+ | Runs socrata-mcp-server |
 | npm | 8+ | Installs Node dependencies |
 | Python | 3.11+ | Required by datacommons-mcp |
 | git | any | Clones MCP server |
@@ -114,7 +114,7 @@ civic-ai-tools/
 ├── .devcontainer/
 │   └── devcontainer.json       # GitHub Codespaces / Dev Container config
 ├── .mcp-servers/
-│   └── opengov-mcp-server/    # Cloned & built by setup script
+│   └── socrata-mcp-server/    # Cloned & built by setup script
 ├── .mcp.json                   # Claude Code CLI config (auto-generated, gitignored)
 ├── .mcp.json.example           # Template for Claude Code config
 ├── .cursor/
@@ -169,9 +169,9 @@ The fastest way to get started — no local install needed.
 
 For NYC city employees behind the corporate proxy (`bcpxy.nycnet`):
 
-1. **Build the OpenGov MCP server:**
+1. **Build the Socrata MCP server:**
    ```powershell
-   cd .mcp-servers/opengov-mcp-server
+   cd .mcp-servers/socrata-mcp-server
    npm install
    npm install global-agent --save
    npm run build
@@ -179,7 +179,7 @@ For NYC city employees behind the corporate proxy (`bcpxy.nycnet`):
 
 2. **Copy the proxy wrapper:**
    ```powershell
-   copy scripts\proxy-wrapper.js .mcp-servers\opengov-mcp-server\
+   copy scripts\proxy-wrapper.js .mcp-servers\socrata-mcp-server\
    ```
 
 3. **Copy and configure MCP settings:**
@@ -217,7 +217,7 @@ For NYC city employees behind the corporate proxy (`bcpxy.nycnet`):
 
 ## MCP Servers
 
-### OpenGov MCP Server
+### Socrata MCP Server
 
 Provides access to NYC Open Data portal (data.cityofnewyork.us) via Socrata API.
 
@@ -355,7 +355,7 @@ For public data APIs with no billing or private data risk, the current setup fol
    ```
 2. Verify the server exists:
    ```bash
-   ls .mcp-servers/opengov-mcp-server/dist/index.js
+   ls .mcp-servers/socrata-mcp-server/dist/index.js
    ```
 
 ### "datacommons-mcp: command not found"
@@ -415,14 +415,14 @@ Unlike Claude Code CLI which runs from the project directory, Cursor's MCP clien
 Your `.cursor/mcp.json` should have paths like:
 ```json
 {
-  "args": ["/Users/yourname/path/to/civic-ai-tools/.mcp-servers/opengov-mcp-server/dist/index.js"]
+  "args": ["/Users/yourname/path/to/civic-ai-tools/.mcp-servers/socrata-mcp-server/dist/index.js"]
 }
 ```
 
 NOT relative paths like:
 ```json
 {
-  "args": [".mcp-servers/opengov-mcp-server/dist/index.js"]
+  "args": [".mcp-servers/socrata-mcp-server/dist/index.js"]
 }
 ```
 

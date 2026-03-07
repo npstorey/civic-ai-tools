@@ -4,17 +4,17 @@
   //
   // Prerequisites:
   // 1. Run the setup script to build the OpenGov MCP server:
-  //    cd .mcp-servers/opengov-mcp-server && npm install && npm run build
+  //    cd .mcp-servers/socrata-mcp-server && npm install && npm run build
   // 2. Install global-agent and copy the proxy wrapper:
   //    npm install global-agent --save
-  //    copy scripts/proxy-wrapper.js .mcp-servers/opengov-mcp-server/
+  //    copy scripts/proxy-wrapper.js .mcp-servers/socrata-mcp-server/
   // 3. Get your Socrata app token from https://data.cityofnewyork.us/profile/edit/developer_settings
   //
   "servers": {
-    "opengov": {
+    "socrata": {
       "type": "stdio",
       "command": "node",
-      "args": ["${workspaceFolder}/.mcp-servers/opengov-mcp-server/proxy-wrapper.js", "--stdio"],
+      "args": ["${workspaceFolder}/.mcp-servers/socrata-mcp-server/proxy-wrapper.js", "--stdio"],
       "env": {
         "DEFAULT_DOMAIN": "data.cityofnewyork.us",
         "SOCRATA_APP_TOKEN": "YOUR_SOCRATA_TOKEN_HERE",

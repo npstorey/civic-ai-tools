@@ -5,10 +5,10 @@
   //
   // For city workers behind a corporate proxy, see mcp.json.city-proxy-example instead.
   "servers": {
-    "opengov": {
+    "socrata": {
       "type": "stdio",
       "command": "node",
-      "args": ["${workspaceFolder}/.mcp-servers/opengov-mcp-server/dist/index.js", "--stdio"],
+      "args": ["${workspaceFolder}/.mcp-servers/socrata-mcp-server/dist/index.js", "--stdio"],
       "env": {
         "DEFAULT_DOMAIN": "data.cityofnewyork.us",
         "SOCRATA_APP_TOKEN": "__SOCRATA_APP_TOKEN__",

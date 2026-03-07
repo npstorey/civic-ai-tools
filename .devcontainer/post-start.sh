@@ -17,7 +17,7 @@ NC='\033[0m'
 
 PROJECT_DIR="/workspaces/civic-ai-tools"
 MCP_SERVERS_DIR="$PROJECT_DIR/.mcp-servers"
-OPENGOV_DIR="$MCP_SERVERS_DIR/opengov-mcp-server"
+SOCRATA_DIR="$MCP_SERVERS_DIR/socrata-mcp-server"
 
 echo -e "\n${BLUE}>>> Generating MCP configuration...${NC}"
 
@@ -45,13 +45,13 @@ fi
 DATACOMMONS_PATH=$(command -v datacommons-mcp 2>/dev/null || echo "")
 
 # Determine which servers to include
-INCLUDE_OPENGOV=false
+INCLUDE_SOCRATA=false
 INCLUDE_DATACOMMONS=false
 
-if [ -f "$OPENGOV_DIR/dist/index.js" ]; then
-    INCLUDE_OPENGOV=true
+if [ -f "$SOCRATA_DIR/dist/index.js" ]; then
+    INCLUDE_SOCRATA=true
 else
-    echo -e "${YELLOW}[SKIP]${NC} OpenGov server not built — run ./scripts/setup.sh to fix"
+    echo -e "${YELLOW}[SKIP]${NC} Socrata server not built — run ./scripts/setup.sh to fix"
 fi
 
 if [ -n "$DATACOMMONS_PATH" ] && [ -n "$DC_KEY" ]; then
@@ -71,12 +71,12 @@ mkdir -p "$PROJECT_DIR/.vscode"
 
     NEED_COMMA=false
 
-    if $INCLUDE_OPENGOV; then
+    if $INCLUDE_SOCRATA; then
         $NEED_COMMA && echo ','
-        echo '    "opengov": {'
+        echo '    "socrata": {'
         echo '      "type": "stdio",'
         echo '      "command": "node",'
-        echo "      \"args\": [\"\${workspaceFolder}/.mcp-servers/opengov-mcp-server/dist/index.js\", \"--stdio\"],"
+        echo "      \"args\": [\"\${workspaceFolder}/.mcp-servers/socrata-mcp-server/dist/index.js\", \"--stdio\"],"
         echo '      "env": {'
         echo '        "DEFAULT_DOMAIN": "data.cityofnewyork.us",'
         if [ -n "$SOCRATA_TOKEN" ]; then
@@ -114,12 +114,12 @@ mkdir -p "$PROJECT_DIR/.vscode"
 
     NEED_COMMA=false
 
-    if $INCLUDE_OPENGOV; then
+    if $INCLUDE_SOCRATA; then
         $NEED_COMMA && echo ','
-        echo '    "opengov": {'
+        echo '    "socrata": {'
         echo '      "type": "stdio",'
         echo '      "command": "node",'
-        echo "      \"args\": [\".mcp-servers/opengov-mcp-server/dist/index.js\", \"--stdio\"],"
+        echo "      \"args\": [\".mcp-servers/socrata-mcp-server/dist/index.js\", \"--stdio\"],"
         echo '      "env": {'
         echo '        "DEFAULT_DOMAIN": "data.cityofnewyork.us",'
         if [ -n "$SOCRATA_TOKEN" ]; then
@@ -150,9 +150,9 @@ mkdir -p "$PROJECT_DIR/.vscode"
     echo '}'
 } > "$PROJECT_DIR/.mcp.json"
 
-if $INCLUDE_OPENGOV || $INCLUDE_DATACOMMONS; then
+if $INCLUDE_SOCRATA || $INCLUDE_DATACOMMONS; then
     echo -e "${GREEN}[OK]${NC} Created MCP config files"
-    $INCLUDE_OPENGOV && echo -e "       ${GREEN}✓${NC} OpenGov MCP (Socrata${SOCRATA_TOKEN:+ — API key set}${SOCRATA_TOKEN:- — no key, rate-limited})"
+    $INCLUDE_SOCRATA && echo -e "       ${GREEN}✓${NC} Socrata MCP (Socrata${SOCRATA_TOKEN:+ — API key set}${SOCRATA_TOKEN:- — no key, rate-limited})"
     $INCLUDE_DATACOMMONS && echo -e "       ${GREEN}✓${NC} Data Commons MCP"
 else
     echo -e "${YELLOW}[WARN]${NC} No MCP servers available"
@@ -161,7 +161,7 @@ fi
 if [ -z "$SOCRATA_TOKEN" ] && [ -z "$DC_KEY" ]; then
     echo ""
     echo -e "${YELLOW}API KEYS:${NC}"
-    echo "  No API keys detected. OpenGov works without a key (rate-limited)."
+    echo "  No API keys detected. Socrata works without a key (rate-limited)."
     echo "  For full access, set Codespaces Secrets in your repo settings:"
     echo "    → Settings → Secrets and variables → Codespaces"
     echo "    → Add SOCRATA_APP_TOKEN and/or DC_API_KEY"
