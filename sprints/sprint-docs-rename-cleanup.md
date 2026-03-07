@@ -1,7 +1,7 @@
 # Sprint: Documentation Cleanup & Repo Rename
 
 **Started:** 2026-03-07
-**Status:** In progress
+**Status:** Complete (except Future: Socrata Collaboration)
 
 ## Context
 
@@ -61,7 +61,7 @@ These changes affect the live deployment and should be done as one coordinated u
 - [x] Update Render repository link to `npstorey/socrata-mcp-server`
 - [x] Update `OPENGOV_MCP_URL` value in Vercel to new Render URL
 - [x] Verified live site still works at civicaitools.org
-- [ ] Rename env var: `OPENGOV_MCP_URL` → `SOCRATA_MCP_URL` in Vercel dashboard (after code deploy)
+- [x] Rename env var: `OPENGOV_MCP_URL` → `SOCRATA_MCP_URL` in Vercel dashboard
 - [x] Rename `opengovMcpTools` → `socrataMcpTools` in `src/lib/mcp/tools.ts`
 - [x] Update imports in `src/app/api/compare-stream/route.ts` and `src/app/api/compare/route.ts`
 - [x] Rename `src/lib/mcp/opengov-skill.ts` → `src/lib/mcp/socrata-skill.ts`
@@ -69,7 +69,7 @@ These changes affect the live deployment and should be done as one coordinated u
 - [x] Update imports in API routes
 - [x] Update GitHub display links in `src/app/about/page.tsx` and `src/components/SkillPromptDisclosure.tsx`
 - [x] Update `OPENGOV_MCP_URL` → `SOCRATA_MCP_URL` in `client.ts`, `README.md`, `CLAUDE.md`
-- [ ] Deploy and verify
+- [x] Deploy and verify
 
 ---
 
@@ -105,8 +105,8 @@ These changes affect the live deployment and should be done as one coordinated u
 - [x] Add CODE_OF_CONDUCT.md
 - [x] Add `.github/` directory with issue templates
 - [x] Add personal project disclaimer
-- [ ] Remove tracked `dist/` files from git (18 files committed despite .gitignore; Render rebuilds on deploy)
-- [ ] `server.log` was already gitignored (not tracked)
+- [x] Remove tracked `dist/` files from git (18 files committed despite .gitignore; Render rebuilds on deploy)
+- [x] `server.log` was already gitignored (not tracked)
 
 ---
 
