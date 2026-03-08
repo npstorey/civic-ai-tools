@@ -18,6 +18,7 @@ This skill provides specialized guidance for:
 - Discover columns first — check schema before querying unfamiliar datasets
 - Show exact queries used
 - Use inline citations
+- When the user specifies a date or time period (e.g., "in 2025", "last December", "this month"), ALWAYS use that date in your query. Default date ranges only apply when the user doesn't specify a time period.
 - Add date filters when querying large or high-volume datasets to avoid performance issues and overly broad results. Use the Date Range Guidelines table to pick an appropriate range. Tell the user you applied a date filter, why, and that they can ask for a different range or all-time data if needed.
 
 **NEVER:**
