@@ -1,10 +1,6 @@
-# Socrata MCP Companion Skill
+# Socrata MCP Companion Skill — Base Guidance
 
-> **Source of truth has moved.** This file is kept for reference. The canonical skill guidance now lives in [`docs/skills/`](./skills/) as modular files (`base.md` + `web.md`/`local.md` overlays). Edit those files instead.
-
-> **Note:** This was formerly called "OpenGov MCP" — renamed to avoid confusion with OpenGov Inc. The MCP server repo is now [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server).
-
-Guidance for querying Socrata open data portals through the Socrata MCP Server.
+Universal guidance for querying Socrata open data portals through the Socrata MCP Server.
 
 ## Purpose
 
@@ -18,11 +14,11 @@ This skill provides specialized guidance for:
 
 **ALWAYS:**
 - Assess query complexity before executing
-- Never hallucinate data - only report what tool calls return
-- Discover columns first - check schema before querying unfamiliar datasets
+- Never hallucinate data — only report what tool calls return
+- Discover columns first — check schema before querying unfamiliar datasets
 - Show exact queries used
 - Use inline citations
-- **Add a date filter** when querying high-volume datasets (>1M rows, e.g., 311 data) unless the user explicitly asks for all-time data. Use the Date Range Guidelines table to pick an appropriate range. **Tell the user** you applied a date filter, why (dataset size/performance), and that they can ask for a different range or all-time data if needed.
+- Add date filters when querying large or high-volume datasets to avoid performance issues and overly broad results. Use the Date Range Guidelines table to pick an appropriate range. Tell the user you applied a date filter, why, and that they can ask for a different range or all-time data if needed.
 
 **NEVER:**
 - Invent data points
@@ -34,17 +30,17 @@ This skill provides specialized guidance for:
 
 Evaluate complexity before executing, proceed silently if low risk.
 
-### GREEN (Low Risk) - Proceed Silently
+### GREEN (Low Risk) — Proceed Silently
 - Single city, <7 day range
-- 1-4 tool calls required
+- 1–4 tool calls required
 - <50k estimated records
 
-### YELLOW (Medium Risk) - Brief Warning
+### YELLOW (Medium Risk) — Brief Warning
 - 2+ cities OR full month range
-- 5-9 tool calls required
-- 50-150k estimated records
+- 5–9 tool calls required
+- 50–150k estimated records
 
-### RED (High Risk) - Stop & Offer Options
+### RED (High Risk) — Stop & Offer Options
 - 3+ cities with month+ ranges
 - 10+ tool calls required
 - >150k estimated records
@@ -135,9 +131,9 @@ ORDER BY year
 | LA 311 | ~4k/day | Up to 30 days | Up to 14 days |
 | Seattle 311 | ~1.5k/day | Up to 90 days | Up to 30 days |
 | SF 311 | ~2k/day | Up to 60 days | Up to 30 days |
-| Housing Violations | ~500-1k/day | Up to 90 days | Up to 30 days |
-| Building Permits | ~200-800/day | Up to 180 days | Up to 90 days |
-| Business Licenses | ~50-200/day | Up to 1 year | Up to 180 days |
+| Housing Violations | ~500–1k/day | Up to 90 days | Up to 30 days |
+| Building Permits | ~200–800/day | Up to 180 days | Up to 90 days |
+| Business Licenses | ~50–200/day | Up to 1 year | Up to 180 days |
 
 ## NYC Open Data Key Datasets
 
@@ -166,26 +162,26 @@ ORDER BY year
 
 ### Common Socrata API Errors
 
-**400 Bad Request** - SoQL syntax errors
+**400 Bad Request** — SoQL syntax errors
 - Check field names (case-sensitive)
 - Validate data types in comparisons
 - Ensure proper quoting of string values
 
-**404 Not Found** - Dataset ID or domain issues
+**404 Not Found** — Dataset ID or domain issues
 - Verify dataset ID format (4x4 pattern: `abcd-1234`)
 - Confirm domain is correct
 - Check if dataset is public/accessible
 
-**429 Too Many Requests** - Rate limiting
+**429 Too Many Requests** — Rate limiting
 - Implement delays between requests
 - Use Socrata App Token for higher limits
 
-**500 Server Error** - Complex queries or server issues
+**500 Server Error** — Complex queries or server issues
 - Simplify query complexity
 - Reduce result set size with LIMIT
 - Retry with exponential backoff
 
-## OpenGov MCP Server Tools
+## Socrata MCP Server Tools
 
 | Tool | Purpose | Returns |
 |------|---------|---------|
@@ -203,7 +199,7 @@ ORDER BY year
 [Visual comparison table]
 
 ## Executive Summary
-[2-3 paragraphs: findings, significance]
+[2–3 paragraphs: findings, significance]
 
 ## Detailed Analysis
 [Analysis with inline calculations]
@@ -252,7 +248,3 @@ SELECT category,
 GROUP BY category
 ORDER BY total_requests DESC
 ```
-
----
-
-This skill provides guidance for municipal data analysis through the OpenGov MCP Server for civic research projects.
