@@ -64,6 +64,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 |--------|------------|-----------|------------|--------|-------|
 | [open-census-mcp-server](https://github.com/brockwebb/open-census-mcp-server) | U.S. Census Bureau | stdio | brockwebb | Active | Natural language to Census variable codes via semantic matching. |
 | [mcp-census](https://github.com/shawndrake2/mcp-census) | U.S. Census Bureau | stdio | shawndrake2 | Active | Demographics, population, income, housing data. |
+| [censuschat](https://github.com/smach/censuschat) | U.S. Census Bureau | stdio | smach | Active | R package + MCP server with web chat interface and LLM evaluation framework. |
 
 ## U.S. Health & Public Health
 
@@ -71,6 +72,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 |--------|------------|-----------|------------|--------|-------|
 | [mimilabs](https://www.mimilabs.ai/mcp) | 50+ CMS/CDC/FDA datasets | stdio | mimilabs | Active | Medicare, Medicaid, CDC, FDA, hospital quality, provider directories. |
 | [medicare-mcp](https://github.com/openpharma-org/medicare-mcp) | CMS Medicare | stdio | openpharma-org | Active | Provider and claims data. |
+| PopHIVE MCP | CDC + Epic Cosmos EHR | stdio | Yale | Active | Near real-time health data combining CDC and Epic Cosmos EHR. Featured on Claude. |
 
 ## U.S. Economic Data
 
@@ -103,6 +105,9 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | [datos-gob-es-mcp](https://github.com/AlbertoUAH/datos-gob-es-mcp) | Spain (BOE + INE + AEMET + Datos.gob.es) | stdio | AlbertoUAH | Active | 11 tools, 5 resources, 6 prompts. Unified 4 Spanish data sources + 40,000+ datasets. |
 | [kolada-mcp](https://github.com/isakskogstad/Kolada-MCP) | Kolada (Sweden municipal statistics) | stdio | isakskogstad | Active | 5,000+ KPIs across 290 Swedish municipalities and 21 regions. |
 | [riksdag-regering-mcp](https://github.com/isakskogstad/riksdag-regering-mcp) | Swedish Parliament + Government | stdio | isakskogstad | Active | Open data from Swedish legislative and executive branches. |
+| [parliament-mcp](https://github.com/i-dot-ai/parliament-mcp) | UK Parliament | stdio | i-dot-ai | Active | 13 tools including semantic search via Qdrant. |
+| GovUK-MCP | UK government data | stdio | Stealth Labs | Active | 24 tools + 15 visual widgets for UK government data. |
+| [swedish-law-mcp](https://github.com/Ansvar-Systems/swedish-law-mcp) | Swedish, Danish, Finnish law | stdio | Ansvar-Systems | Active | Also Danish and Finnish law MCPs from the same maintainer. |
 
 ### Asia-Pacific
 
@@ -111,6 +116,14 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | [estat-mcp](https://github.com/ajtgjmdjp/estat-mcp) | e-Stat (Japan statistics) | stdio | ajtgjmdjp | Active | 3,000+ tables: population, economy, prices, labor, agriculture. |
 | [jpn-laws-mcp](https://github.com/michimani/jpn-laws-mcp-server) | Japanese laws (e-Gov) | stdio | michimani | Active | No API key required. |
 | [data-gov-hk-mcp](https://www.pulsemcp.com/servers/tonychan-data-gov-hk) | DATA.GOV.HK (Hong Kong) | stdio | tonychan | Active | Official Hong Kong open data portal. Search datasets, browse categories. |
+| [mcp-datagovmy](https://github.com/hithereiamaliff/mcp-datagovmy) | Malaysia data.gov.my | stdio | hithereiamaliff | Active | Includes GTFS transit data tools. |
+| [OpenDart-mcp](https://github.com/keonho-kim/OpenDart-mcp) | South Korea DART (corporate disclosures) | stdio | keonho-kim | Active | Korean financial disclosures via OpenDart API. |
+
+### Middle East
+
+| Server | Data Source | Transport | Maintainer | Status | Notes |
+|--------|------------|-----------|------------|--------|-------|
+| [budgetkey-mcp](https://github.com/openbudget/budgetkey-mcp) | Israel budget transparency | stdio | openbudget | Active | Israeli budget transparency data. |
 
 ### Americas
 
@@ -126,6 +139,12 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | Server | Data Source | Transport | Maintainer | Status | Notes |
 |--------|------------|-----------|------------|--------|-------|
 | [world-bank-data-mcp](https://github.com/llnormll/world-bank-data-mcp) | World Bank Data360 | stdio | llnormll | Active | 1,000+ indicators, 200+ countries. WDI, HNP, GDF, IDS datasets. |
+
+## Framework / Multi-Portal Servers
+
+| Server | Data Source | Transport | Maintainer | Status | Notes |
+|--------|------------|-----------|------------|--------|-------|
+| [OpenDataMCP](https://github.com/OpenDataMCP/OpenDataMCP) | Universal open data portals | stdio | OpenDataMCP | Active | Universal framework aiming to connect any open data portal to any LLM via MCP. Starting with Switzerland. |
 
 ## CKAN Servers
 
@@ -158,6 +177,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | [mcp-nutrition-tools](https://mcpservers.org/servers/zen-apps/mcp-nutrition-tools) | USDA FoodData Central | stdio | zen-apps | Active | 600,000+ foods. CC0 public domain. |
 | [mcp-wikidata](https://github.com/zzaebok/mcp-wikidata) | Wikidata | stdio | zzaebok | Active | Entity search, property retrieval, SPARQL queries. Runs on Cloudflare Workers. |
 | [foiagras](https://foiagras.com/mcp/) | Government transparency / FOIA | stdio | FOIA Gras | Active | Public records, meeting minutes, local government documents. |
+| [civicnet-mcp-server](https://github.com/Publik-Works/civicnet-mcp-server) | Federated civic infrastructure | stdio | Publik-Works | Active | Federated civic infrastructure with equity principles. |
 
 ---
 
@@ -168,7 +188,7 @@ The following civic data domains have **no or limited MCP server coverage** as o
 | Domain | Data Sources That Could Be Wrapped | Notes |
 |--------|-----------------------------------|-------|
 | **Elections / voting results** | State election boards, AP election data | Campaign finance (FEC) is covered, but actual election results are not |
-| **Universal transit (GTFS)** | GTFS feeds from any transit agency | Only city-specific servers exist |
+| **Universal transit (GTFS)** | GTFS feeds from any transit agency | International coverage exists (mcp-datagovmy includes GTFS for Malaysia) but US-specific coverage is still missing |
 | **Local 311 / permits** | Open311 API, municipal permit databases | No dedicated server found |
 | **Zoning / land use** | Municipal zoning databases | Highly local, fragmented data |
 | **Property records** | County assessor databases | Parcel data, assessments, ownership |

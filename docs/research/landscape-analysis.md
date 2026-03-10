@@ -31,6 +31,10 @@ Projects that use AI/LLMs to query or analyze government open data, the most dir
 | **ChatTCU** (Brazil) | [ODPL](https://repository.opendatapolicylab.org/genai/?slug=chattcu) | Brazil's Federal Court of Accounts ChatGPT-based chatbot for auditors to query case documents. | International government deployment of LLM on institutional data. |
 | **datHere AI Chatbot** ("The People's API") | [dathere.com](https://dathere.com/ai-chatbot/) | AI chatbot for CKAN data portals. Zero-copy approach (sends metadata context, not raw data). Claims 90% reduction in routine data requests. | Key competitor — same mission, different platform (CKAN vs. Socrata). Partnership with OKFN (Dec 2025). |
 | **NYC MyCity Chatbot** | [chat.nyc.gov](https://chat.nyc.gov) | NYC's AI chatbot for city services. Cost $600K+. Powered by Microsoft/OpenAI. Gained notoriety for giving incorrect legal advice (The Markup, March 2024). | Cautionary tale — demonstrates demand AND accuracy risks. Validates civic-ai-tools' focus on data grounding and verification. |
+| **GRASP** | [arXiv](https://arxiv.org/html/2503.23299) | RAG + agentic workflow chatbot for municipal budget queries. Achieved 78% accuracy vs. 60% for GPT-4o and 35% for Gemini on local budget questions. | Validates that structured retrieval dramatically improves accuracy on civic data. Strongest benchmark for municipal budget queries. |
+| **DataGemma** (Google) | [Paper](https://docs.datacommons.org/papers/DataGemma-FullPaper.pdf) | Fine-tuned Gemma 2 on Data Commons (Sept 2024). Retrieval-Interleaved Generation improved factuality from 5-17% to 58%; RAG achieved 98-99% accuracy on statistical claims. | Shows fine-tuning on structured civic data yields dramatic accuracy gains. Complements civic-ai-tools' retrieval approach. |
+| **NSDS AI Chatbot** | [FedScoop](https://fedscoop.com/ai-chatbot-part-of-federal-data-access-service/) | NSF's National Secure Data Service is building an AI chatbot for querying statistical agency data. BrightQuery won a $1.4M contract (Aug 2024). | Closest thing to a government-endorsed version of civic-ai-tools. Federal investment validates the concept. |
+| **City chatbot deployments** | Various | Denver's "Sunny" (Citibot, 72 languages), Palo Alto's "CityAssist" (late 2025 pilot), Covington KY's "Clive" (GPT-4o via Chatbase, under $200/year). | Shows even small cities are deploying LLM chatbots for citizen services. Wide range of budgets and approaches. |
 
 ### Academic Research
 
@@ -87,6 +91,9 @@ University labs and research programs working on AI + government/civic data.
 | **Northeastern Civic AI Lab** | [civicai.khoury.northeastern.edu](https://civicai.khoury.northeastern.edu/) | Research on gig work, political disinformation, journalist safety using AI. Named most impactful AI project by UNESCO-backed IRCAI. | Active |
 | **UChicago DSSG** | [dssg.uchicago.edu](https://dssg.uchicago.edu/) | Data Science for Social Good summer fellowship. Government and civic projects. | Active (seasonal) |
 | **Foundation for Civic AI** | [foundationcivic.ai](https://foundationcivic.ai/) | Provides GPU/cloud grants to social good organizations. 32 NVIDIA GPUs available. Building expert bench for nonprofits. | Active |
+| **MIT GOV/LAB** | [mitgovlab.org](https://mitgovlab.org/) | AI/ML for governance including NLP for municipal bond default prediction. | Active |
+| **MITRE FOIA Assistant** | [MITRE](https://www.mitre.org/news-insights/impact-story/mitre-tool-simplifies-freedom-information-act-requests) | BERT + spaCy tool for simplifying FOIA requests. Reduces complexity of filing public records requests. | Active |
+| **ACM DG.O** | [dgsociety.org](https://dgsociety.org/) | Premier academic venue for digital government. 2025 Call for Papers explicitly lists "AI, Generative AI, LLM, NLP" under "Public and Open Data Ecosystems." | Active |
 
 ---
 
@@ -103,6 +110,9 @@ Government programs and policies that reference AI + open data access.
 | **GSA USAi** (Aug 2025) | Government-wide AI testing platform. OneGov strategy for discounted AI services. | Federal infrastructure for AI adoption. |
 | **US Digital Corps MCP Pilot** | Pilot showed accuracy jumping from near 0% to 95% when querying USASpending and CDC PLACES data with MCP vs. without. | Strongest quantitative evidence for the MCP approach to government data. |
 | **FEMA AI Resource Portal** | LLM-based Smart Matching Wizard for disaster recovery resources across 50 states, territories, 80,000+ local governments, 574 tribal governments. | Large-scale federal AI deployment for navigating government resources. |
+| **OMB M-25-05** (Jan 2025) | Establishes "open by default" for federal data in machine-readable formats. | Creates the infrastructure foundation AI tools need. Policy mandate for AI-ready government data. |
+| **OMB M-25-21** (Apr 2025) | Connects federal AI use practices to open data requirements. | Links AI adoption policy to open data mandates. |
+| **Department of Labor Open Data Portal** | Launched a new open data portal designed for AI compatibility. | Federal agency explicitly designing data infrastructure for AI consumption. |
 
 ### United Kingdom
 
@@ -110,6 +120,8 @@ Government programs and policies that reference AI + open data access.
 |-----------|-------------|-----------|
 | **National Data Library** (100M+ pounds) | Backed at 2025 Spending Review. Published "Making Government Datasets Ready for AI" guidelines (Jan 2026) based on ODI framework. | UK is furthest ahead on formal AI+open data policy. |
 | **UK Government AI Partnerships** | Partnerships with Meta and Anthropic (Jan 2026) to develop AI-powered assistants for public services. | Validates the concept at the highest levels. Anthropic partnership is notable given civic-ai-tools uses Claude. |
+| **GOV.UK Chat** | LLM chatbot using RAG across 700,000+ government pages. Beta testing showed ~70% of testers found responses useful. | Large-scale RAG deployment on government content. Demonstrates both demand and the accuracy bar needed. |
+| **Nesta Policy Atlas** | LLM tool synthesizing 250M+ publications for policymakers. | Shows AI-powered synthesis at massive scale for government use. |
 | **Open Data Institute (ODI) LLM Research** | Found that LLMs provide unreliable answers about public services even as models improve. Smaller models often perform comparably for public sector use. | Validates civic-ai-tools' approach of grounding AI in authoritative data rather than relying on LLM training data. |
 
 ### International
@@ -120,6 +132,9 @@ Government programs and policies that reference AI + open data access.
 | **India: NSO eSankhyiki MCP** | Beta MCP server from Ministry of Statistics. 7 statistical data products. | MCP adoption spreading to emerging economies. |
 | **OECD "Governing with AI" report** | 200 real-world examples of AI in government. | Comprehensive international mapping. |
 | **Open Data Charter + UNESCO** | "Open data for AI: what now?" addressing policy implications. Catalogs examples from Chile, US, and others. | International policy context. |
+| **Singapore National AI Strategy 2.0** (Dec 2023) | Includes "Unlock government data for public good" as one of 15 key actions. Creates a "data concierge" concept. | Strongest international parallel to civic-ai-tools' mission. |
+| **GovTech Singapore Pair Suite** | 60,000+ registered government users, 10M+ messages. Includes "Pair Search" for intelligent search across government datasets. | Largest-scale reference deployment of LLM tools for government data access. |
+| **Rutgers Policy Lab** | Published paper arguing for government support of "Availability-Accessibility-Usability" strategy for open data in the AI era. [Paper](https://policylab.rutgers.edu/artificial-intelligence-and-open-data-for-public-good-implications-for-public-policy). | Academic policy framework supporting the civic-ai-tools approach. |
 
 ---
 
@@ -189,6 +204,17 @@ Unlike DC Compass (Esri-dependent, single city) or MyCity (proprietary, single c
 ### 4. Verification-first approach
 
 In a landscape where the most high-profile civic AI deployment (NYC MyCity) became notorious for hallucinations, civic-ai-tools embeds accuracy safeguards directly into skill guidance: zero-result verification, uncertainty caveats, AI accuracy disclaimers, and case-insensitive matching defaults.
+
+### 5. Quantitative evidence for the approach
+
+Emerging benchmarks validate the retrieval-grounded approach civic-ai-tools uses:
+
+- **GRASP**: 78% accuracy on municipal budget queries (vs. 60% GPT-4o baseline, 35% Gemini)
+- **DataGemma**: 98-99% RAG accuracy on statistical claims (vs. 5-17% without retrieval)
+- **US Digital Corps MCP pilot**: near 0% → 95% accuracy with MCP on USASpending/CDC PLACES data
+- **Singapore GovTech Pair Suite**: 60,000 government users actively using LLM tools for data access (10M+ messages)
+
+These numbers consistently show that structured retrieval from authoritative data sources — the core pattern behind civic-ai-tools — dramatically outperforms raw LLM generation on civic data questions.
 
 ### Gaps in the Landscape That civic-ai-tools Could Fill
 
