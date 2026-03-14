@@ -1,0 +1,11 @@
+{
+  "name": "civic-ai-tools",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate-directory": "node scripts/validate-directory.mjs",
+    "generate-directory-md": "node scripts/generate-directory-md.mjs",
+    "migrate-directory": "node scripts/migrate-directory.mjs"
+  }
+}
