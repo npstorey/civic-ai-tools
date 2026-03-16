@@ -53,9 +53,9 @@ Evaluate complexity before executing, proceed silently if low risk.
 - 10+ tool calls required
 - >150k estimated records
 
-## Mandatory Column Discovery
+## Mandatory Column Discovery — DO NOT SKIP
 
-Before querying ANY unfamiliar dataset, discover the schema first:
+Column names vary across portals and datasets. NEVER guess column names — guessing wastes tool calls on failed queries. ALWAYS run a schema discovery query first on any dataset you haven't seen before:
 
 ```
 Tool: get_data
@@ -64,6 +64,8 @@ Domain: [domain]
 Dataset_id: [dataset-id]
 Query: SELECT * LIMIT 1
 ```
+
+Read the returned column names carefully before constructing any aggregation or filter query. This one extra call saves 2-3 failed retries with wrong column names.
 
 ## Core SoQL Query Patterns
 
@@ -77,8 +79,8 @@ LIMIT 1000
 
 ### Common Filter Patterns
 ```sql
--- Text search
-WHERE field ILIKE '%search_term%'
+-- Text search (NEVER use ILIKE — it fails on many Socrata datasets, especially with GROUP BY)
+WHERE upper(field) LIKE '%SEARCH_TERM%'
 
 -- Date ranges
 WHERE date_field >= '2023-01-01' AND date_field < '2024-01-01'
@@ -301,7 +303,7 @@ A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.m
 When presenting analysis, include structured caveats so users know what they can and can't conclude:
 
 - **Data completeness**: State what the results cover — e.g., "This covers 12,430 of ~300k annual records (last 30 days)." If you applied filters, say so.
-- **Field interpretation**: When a query depends on interpreting the user's intent as a specific field or value, say so — e.g., "I interpreted 'noise' as complaint_type ILIKE '%noise%' — verify this matches your intent."
+- **Field interpretation**: When a query depends on interpreting the user's intent as a specific field or value, say so — e.g., "I interpreted 'noise' as upper(complaint_type) LIKE '%NOISE%' — verify this matches your intent."
 - **Limitations section**: End analysis responses with a brief **Limitations** block listing anything that qualifies the findings: date range used, missing fields, sample size, portal quirks, etc.
 
 ## Data Quality Checks
