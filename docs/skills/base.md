@@ -131,7 +131,15 @@ GROUP BY year
 ORDER BY year
 ```
 
-## Supported Domains
+## Domain Support
+
+**Any Socrata open data portal can be queried.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use the `search` tool to discover datasets on that domain, or use `get_data` with the domain directly. Do NOT refuse a query just because a city isn't listed below.
+
+To find a portal domain for a city, use common patterns: `data.cityofX.us`, `data.X.gov`, `data.Xcounty.gov`, `data.state.X.us`. If unsure, use the `search` tool with the city name.
+
+### Well-Tested Domains
+
+These portals have been extensively tested. Tool compatibility notes:
 
 | Domain | get_data | search | fetch | Status |
 |--------|----------|--------|-------|--------|
@@ -140,6 +148,10 @@ ORDER BY year
 | `data.sfgov.org` | Full | Limited | Unknown | Query-Preferred |
 | `data.seattle.gov` | Full | Full | Full | Fully Compatible |
 | `data.lacity.org` | Full | Limited | Fails | Query-Only |
+
+### Other Portals
+
+For portals not listed above, start with `search` to discover available datasets, then use `get_data` to query them. Most Socrata portals support all three tools. If `search` or `fetch` fails on a particular portal, fall back to `get_data` with a known dataset ID.
 
 ### Domain-Specific Workarounds
 
