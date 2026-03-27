@@ -153,6 +153,13 @@ These portals have been extensively tested. Tool compatibility notes:
 
 For portals not listed above, start with `search` to discover available datasets, then use `get_data` to query them. Most Socrata portals support all three tools. If `search` or `fetch` fails on a particular portal, fall back to `get_data` with a known dataset ID.
 
+### When a Portal Doesn't Work
+
+Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platforms. If a portal doesn't respond or returns errors, let the user know:
+- The city's data portal may not be Socrata-powered, so it isn't reachable through these tools yet
+- This is an actively developing project — support for more portal types is on the roadmap
+- Suggest trying one of the well-tested portals above, or ask if they're interested in data from a different city
+
 ### Domain-Specific Workarounds
 
 **San Francisco (`data.sfgov.org`):**
