@@ -238,14 +238,29 @@ if [ -z "$SOCRATA_TOKEN" ] || [ -z "$DC_KEY" ]; then
             echo ""  # newline after silent read
         fi
     else
-        # ── Non-interactive (e.g. Claude Code, CI): report what's missing ──
+        # ── Non-interactive (e.g. Claude Code, CI): give clear next steps ──
         echo ""
-        echo "MISSING_API_KEYS:"
-        [ -z "$SOCRATA_TOKEN" ] && echo "  - SOCRATA_APP_TOKEN (get one at https://data.cityofnewyork.us/profile/edit/developer_settings)"
-        [ -z "$DC_KEY" ]        && echo "  - DC_API_KEY (get one at https://apikeys.datacommons.org/)"
+        echo "ACTION REQUIRED: API keys are missing. Please provide them."
         echo ""
-        echo "To provide keys, re-run with flags:"
+        echo "The MCP servers work best with API keys (they increase rate limits)."
+        echo "Both are free. Here's where to get them:"
+        echo ""
+        if [ -z "$SOCRATA_TOKEN" ]; then
+            echo "  1. NYC Open Data (Socrata) App Token"
+            echo "     Sign up or log in, then create an app token at:"
+            echo "     https://data.cityofnewyork.us/profile/edit/developer_settings"
+            echo ""
+        fi
+        if [ -z "$DC_KEY" ]; then
+            echo "  2. Google Data Commons API Key"
+            echo "     Sign in with Google and copy your key at:"
+            echo "     https://apikeys.datacommons.org/"
+            echo ""
+        fi
+        echo "Once you have them, re-run setup with:"
         echo "  ./scripts/setup.sh --socrata-token YOUR_TOKEN --dc-api-key YOUR_KEY"
+        echo ""
+        echo "Or skip for now — the tools will still work with lower rate limits."
         echo ""
     fi
 fi

@@ -12,10 +12,14 @@ A standalone example for querying civic data using MCP servers:
 
 Run `./scripts/setup.sh` to install dependencies and verify configuration.
 
-If the setup script reports missing API keys, ask the user for them and re-run with flags:
-```bash
-./scripts/setup.sh --socrata-token TOKEN --dc-api-key KEY
-```
+**When the setup script reports missing API keys**, you MUST:
+1. Tell the user which keys are missing and share the sign-up links from the script output
+2. Ask the user to go get the keys and paste them into the chat
+3. Once the user provides the keys, re-run setup with the flags:
+   ```bash
+   ./scripts/setup.sh --socrata-token TOKEN --dc-api-key KEY
+   ```
+4. If the user wants to skip, that's fine — the tools still work with lower rate limits
 
 See [docs/setup.md](docs/setup.md) for detailed instructions.
 
