@@ -8,6 +8,12 @@ A standalone example for querying civic data using MCP servers:
 - **Socrata MCP** - NYC Open Data (data.cityofnewyork.us) via Socrata API
 - **Data Commons MCP** - Google Data Commons for statistical data
 
+## Strategic context — what not to include in this repo
+
+This repo is public. Strategic and relationship context — specific external stakeholders, prospective collaborators, pre-meeting strategy, private outreach plans, named individuals' opinions or quotes — lives in local-only planning docs outside this repo (workspace `CLAUDE.md`, `ROADMAP.md`, per-user auto-memory), not here.
+
+When contributing code, docs, commit messages, issue bodies, PR descriptions, or starter prompts for implementation chats that will commit to this repo, use neutral phrasing: "an external stakeholder," "an upcoming demo," "a follow-up meeting" — not specific names. If a task prompt you received includes strategic context, scrub it before producing any content destined for this repo.
+
 ## Setup
 
 Run `./scripts/setup.sh` to install dependencies and verify configuration.
