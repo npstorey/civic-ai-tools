@@ -11,7 +11,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | Server | Data Source | Transport | Maintainer | Notes |
 |--------|------------|-----------|------------|-------|
 | [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | Socrata open data portals (NYC, Chicago, SF, etc.) | stdio, http | [@npstorey](https://github.com/npstorey) | Pre-configured for NYC Open Data. Supports any Socrata portal. npm. |
-| [data-commons-mcp](https://github.com/datacommonsorg/data-commons-mcp) | Google Data Commons (UN, Census, WHO, CDC, etc.) | stdio | [@Google](https://github.com/Google) | Hosted free on Google Cloud. Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs. |
+| [datacommons-mcp](https://github.com/datacommonsorg/agent-toolkit) | Google Data Commons (UN, Census, WHO, CDC, etc.) | stdio, http | [@datacommonsorg](https://github.com/datacommonsorg) | Hosted HTTPS endpoint at api.datacommons.org/mcp (Google Cloud, free, launched 2026-02-09). Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs at docs.datacommons.org/mcp. |
 
 ## Other Socrata / Open Data Portal Servers
 

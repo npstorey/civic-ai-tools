@@ -34,11 +34,12 @@
   },
   {
     "id": "data-commons-mcp",
-    "name": "data-commons-mcp",
+    "name": "datacommons-mcp",
     "description": "Google Data Commons (UN, Census, WHO, CDC, etc.)",
-    "repoUrl": "https://github.com/datacommonsorg/data-commons-mcp",
+    "repoUrl": "https://github.com/datacommonsorg/agent-toolkit",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "census-demographics",
@@ -50,16 +51,16 @@
       "international",
       "global"
     ],
-    "maintainer": "Google",
+    "maintainer": "datacommonsorg",
     "status": "active",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Google Data Commons (UN, Census, WHO, CDC, etc.)"
     ],
     "verificationStatus": "official",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-04-14",
     "apiKeyRequired": true,
-    "notes": "Hosted free on Google Cloud. Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs.",
+    "notes": "Hosted HTTPS endpoint at api.datacommons.org/mcp (Google Cloud, free, launched 2026-02-09). Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs at docs.datacommons.org/mcp.",
     "included": true,
     "dataPlatform": [
       "data-commons"
