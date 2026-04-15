@@ -1,14 +1,15 @@
 # Skill Guidance — Modular Structure
 
-This directory contains the Socrata MCP companion skill guidance, split into a base document and modality-specific overlays.
+This directory contains the companion skill guidance for the MCP servers the civic-ai-tools stack uses. The Socrata skill is split into a base document plus modality overlays (web / local). The Data Commons skill is a single peer document — the second MCP server's two-tool surface is narrow enough that it does not need per-modality overlays.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `base.md` | Universal guidance: anti-hallucination, SoQL syntax, column discovery, key datasets, date range guidelines, error handling, uncertainty caveats, output format, data quality, advanced techniques |
-| `web.md` | Web overlay: aggressive date defaults, demo limits, token-conscious formatting, no cross-portal comparisons, local tools CTA |
-| `local.md` | Local overlay: relaxed date defaults, full capabilities, cross-portal comparisons encouraged, extended analysis OK |
+| `base.md` | Socrata universal guidance: anti-hallucination, SoQL syntax, column discovery, key datasets, date range guidelines, error handling, uncertainty caveats, output format, data quality, advanced techniques |
+| `web.md` | Socrata web overlay: aggressive date defaults, demo limits, token-conscious formatting, no cross-portal comparisons, local tools CTA |
+| `local.md` | Socrata local overlay: relaxed date defaults, full capabilities, cross-portal comparisons encouraged, extended analysis OK |
+| `data-commons.md` | Google Data Commons skill: two-tool workflow, DCID patterns, small-area coverage, aggregation-semantics risks, cross-source decision logic, attribution |
 
 ## How overlays work
 

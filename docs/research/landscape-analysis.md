@@ -2,7 +2,7 @@
 
 A map of projects, organizations, and initiatives at the intersection of artificial intelligence and civic/government data. Written to help position civic-ai-tools and identify collaboration opportunities.
 
-*Last updated: March 2026*
+*Last updated: April 2026*
 
 ---
 
@@ -20,6 +20,7 @@ Projects that use AI/LLMs to query or analyze government open data, the most dir
 | **Official Census MCP** | [GitHub](https://github.com/uscensusbureau/us-census-bureau-data-api-mcp) | Census Bureau's own MCP server for ACS and decennial census data. | Complementary — Census data is foundational context for municipal data analysis. |
 | **Official GovInfo MCP** | [govinfo.gov](https://www.govinfo.gov/features/mcp-public-preview) | GPO's server for Congressional Record, Federal Register, CFR. | Complementary — legislative and regulatory data. |
 | **CongressMCP** (Lawgiver.ai) | [congressmcp.lawgiver.ai](https://congressmcp.lawgiver.ai/) | Commercial MCP server with 113 functions for legislative intelligence. | Peer — demonstrates commercial viability of civic MCP servers. |
+| **Civic Analytics Agent Workflow** (sgarcese) | [GitHub](https://github.com/sgarcese/Civic-Analytics-Agent-Workflow-Claude-Skill) | Claude Skills pack (not a server) wrapping Boston + SF + Seattle + DC open data MCP servers with five methodology sub-skills: Bloomberg problem framing (JHU/HKS), J-PAL evidence analysis (MIT), GovLab/InnovateUS communication (NYU/Northeastern), cross-city benchmarking, and Results for America / PerformanceStat performance management. Master `SKILL.md` orchestrator uses lexical decision routing against user requests. | Peer on a complementary axis. civic-ai-tools organizes skill guidance by **data source** (Socrata, Data Commons); this pack organizes by **methodology phase** (frame → analyze → communicate → benchmark → perform). The two could compose: source-axis skills supply data mechanics (SoQL patterns, DCIDs, pagination), methodology-axis skills supply analytical rigor (evidence strength, equity framing, cost-per-outcome). Suggests a two-axis (methodology × source) pattern as a mature form of a civic-data skill registry. Concrete example of Shape A (lexical router) from `skill-routing-architectural-shapes.md`. |
 
 ### Non-MCP Projects
 
