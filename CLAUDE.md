@@ -73,3 +73,11 @@ Sprint-based work for the website lives in that repo's `/sprints/` folder. This 
 python scripts/mcp_demo.py              # Interactive demo
 python scripts/real_data_analysis.py    # Real data example
 ```
+
+## Claude Code skills
+
+### `publish-evidence`
+
+Bundled at `.claude/skills/publish-evidence/`. Publishes a completed civic-data analysis from a Claude Code session to the civicaitools.org evidence registry as a cryptographically signed, timestamped evidence package. Intended for frontier-model runs (Opus 4.7, 1M context) where the analysis depth exceeds what the civicaitools.org chat flow can cover under its token budget.
+
+Invoke by saying something like "publish this as evidence" after a Socrata or Data Commons MCP-backed analysis completes. Requires a `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) in the shell environment. See [`docs/publish-evidence.md`](docs/publish-evidence.md) for the end-to-end walkthrough and [`civic-ai-tools-website/docs/api/evidence-publish.md`](../civic-ai-tools-website/docs/api/evidence-publish.md) for the underlying POST contract.

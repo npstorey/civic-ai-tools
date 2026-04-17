@@ -41,6 +41,9 @@ venv/
 *.swp
 *.swo
 
+# Per-user Claude Code settings (permissions, etc.)
+.claude/settings.local.json
+
 # Temp files
 temp/
 
