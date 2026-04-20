@@ -131,6 +131,45 @@ GROUP BY year
 ORDER BY year
 ```
 
+### Date Arithmetic (Resolution Time, Duration, Elapsed Days)
+
+SoQL date arithmetic is narrow — most SQL-dialect patterns fail.
+
+**Works — use this first:**
+
+```sql
+-- date_diff_d(later, earlier) returns integer days; order matters for sign
+SELECT complaint_type,
+       AVG(date_diff_d(closed_date, created_date)) AS avg_resolution_days
+WHERE closed_date IS NOT NULL
+GROUP BY complaint_type
+```
+
+`date_diff_d` is the only SoQL query-time date-diff function that reliably works across portals (NYC, Chicago, etc.). Only the `_d` (days) suffix exists — there is no `date_diff_h`, `_m`, `_y`, or `_ym`.
+
+**Don't attempt — these all fail in a `$query`:**
+
+- `closed_date - created_date` — raw subtraction throws `type-mismatch` on `floating_timestamp`
+- `DATE_PART('day', col_a - col_b)` — same type-mismatch (the subtraction errors first)
+- `TIMESTAMPDIFF(day, a, b)` / `DATEDIFF(day, a, b)` — not SoQL functions
+- `datetime_diff(a, b, 'days')` — a pipeline **transform**, not a query function; fails with "No such function" when used in `$query`
+
+**Retry discipline — one strike and switch:**
+
+If a date-arithmetic query fails, do NOT rotate through SQL dialects. One failure is the signal to either (a) use `date_diff_d` if you weren't, or (b) fall back to client-side math. The wrong loop is cycling `TIMESTAMPDIFF → DATEDIFF → raw subtraction`; each one costs a tool call and none will ever work.
+
+**Client-side fallback:**
+
+For units `date_diff_d` doesn't give you (hours, months), or when the math is complex, fetch raw date columns and compute the difference in the analysis layer:
+
+```sql
+SELECT complaint_type, created_date, closed_date
+WHERE closed_date IS NOT NULL AND created_date IS NOT NULL
+LIMIT 500
+```
+
+Then compute the diff per row and aggregate in code. State it explicitly: "Resolution time computed client-side from raw created_date / closed_date columns (N rows)."
+
 ## Domain Support
 
 **Any Socrata open data portal can be queried.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use the `search` tool to discover datasets on that domain, or use `get_data` with the domain directly. Do NOT refuse a query just because a city isn't listed below.
@@ -347,7 +386,7 @@ SELECT category,
        COUNT(*) as total_requests,
        COUNT(CASE WHEN status = 'Closed' THEN 1 END) as closed_requests,
        AVG(CASE WHEN closed_date IS NOT NULL
-           THEN (closed_date - created_date) END) as avg_resolution_days
+           THEN date_diff_d(closed_date, created_date) END) as avg_resolution_days
 GROUP BY category
 ORDER BY total_requests DESC
 ```
