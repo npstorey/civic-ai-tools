@@ -170,6 +170,37 @@ Two independent registries composed by the application at request time:
 
 **When to use:** When the consumer serves users running substantively different analytical workflows (problem framing vs. descriptive analysis vs. adversarial benchmarking), AND the source set and methodology set both have more than one entry. For civic-ai-tools today the methodology dimension doesn't exist yet — introducing one is a standalone product decision, not a composition refactor. Post-M8 at the earliest.
 
+### Shape G — Meta-orchestrator MCP (executing router + skill registry)
+
+A meta-orchestrator MCP server that encapsulates the civic-ai-tools methodological stance and exposes it behind a small high-level tool surface (e.g., `civic_query(question, hints?)`). The meta-MCP internally:
+
+1. Classifies the query (reusing A/B internally).
+2. Loads relevant skill guidance from a curated or federated registry keyed by source × topic × jurisdiction.
+3. **Delegates tool calls to underlying data MCPs** (Socrata, Data Commons, future sources) — not just returning routing metadata but actually executing the fan-out.
+4. Aggregates per-source results and attribution into a response structure the client forwards into an evidence package.
+
+Unlike Shape C (advisory router — returns *advice* on which MCPs to call), Shape G is an **executing orchestrator** — it invokes them itself. Unlike Shapes A/B (which live inside the civicaitools.org chat flow), Shape G exposes the routing + skill-loading + orchestration as an MCP-protocol service consumable by any agent (Claude Code, Cursor, Claude Desktop, ChatGPT via MCP bridges, internal government tools).
+
+The skill registry half is the concern of [civic-ai-tools-website#57](https://github.com/npstorey/civic-ai-tools-website/issues/57). Shape G is the runtime consumer of that registry.
+
+Design issue: [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44).
+
+**Pros:**
+- Makes the civic-ai-tools stance portable — the philosophy becomes an MCP, not just one website's implementation. Any MCP-capable agent can plug in and inherit the stance without re-implementing it.
+- Closes the loop with the evaluation program ([civic-ai-tools#41](https://github.com/npstorey/civic-ai-tools/issues/41)): the eval corpus becomes a quality signal for which skill entries in the registry rise or fall.
+- Aligns with the evidence spin-out trajectory: orchestrator + registry + evidence pipeline together form the protocol-level spin-out artifact, not just an extracted library.
+- Registry-as-discovery: new city / topic / jurisdiction skills can be contributed by the community without app-level changes.
+- One integration point — a new user adds one MCP to their client and inherits the full civic-ai-tools stack, rather than composing Socrata MCP + Data Commons MCP + skill guidance themselves.
+
+**Cons:**
+- Major architectural work. Effectively requires Shape C (advisory router) as a precursor or re-implements it. Requires the skill registry (#57) to be real. Requires a taxonomy for categorization.
+- Delegation semantics aren't first-class in the MCP protocol today: exposing a high-level tool that fans out to child MCPs works, but composability across MCP clients (session/auth propagation, streaming semantics, error propagation, cost accounting) has sharp edges worth investigating before commit. See research task in the design issue.
+- Operational cost: a meta-MCP is the critical path for every delegated request. Latency and outage blast-radius both grow.
+- Attribution in evidence packages must generalize: the orchestrator's delegated tool calls need to surface as top-level `dataSources[]` entries, not as opaque "meta-orchestrator" invocations.
+- Governance: a federated / community-contributed registry creates a signal-vs-noise curation problem of its own.
+
+**When to use:** Post-M8 at the earliest. Triggered by real demand for agents outside civicaitools.org consuming civic-ai-tools' framework, OR by the evidence spin-out committing to an MCP-protocol packaging. Prerequisites: Shape A or B in production, skill registry (#57) partially designed, taxonomy drafted, and the MCP-protocol roadmap research in [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44) confirming the upstream isn't addressing meta-MCP-to-MCP delegation in a way that would change the design.
+
 ## Composition
 
 These are composable, not exclusive:
@@ -181,6 +212,7 @@ These are composable, not exclusive:
 - **D alone** — only works if all servers expose `prompts/list` uniformly.
 - **E** — orthogonal to A/B/C; it's about the within-axis shape of a registry, not the routing mechanism.
 - **F** — orthogonal to A/B/C and to E: it's about whether there's one axis or two. Can run lexical or classifier routing on each axis independently, and each axis can be hierarchical (E) within itself.
+- **G** — subsumes C (orchestrator *is* the router, executing delegated calls rather than advising on them), inherits A/B internally for classification, composes with E (hierarchical registry) and F (two-axis) at the registry level. Effectively the protocol-packaged form of "civic-ai-tools' stack as an MCP." Research-only until the MCP-protocol roadmap task in the design issue is complete.
 
 ## Tentative recommendation
 
@@ -190,16 +222,18 @@ These are composable, not exclusive:
 2. **Post-M8:** When the registry grows to 4+ sources OR token cost becomes measurable pain, implement Shape A as a lexical fast-path filter. Preserve "load all sources" as the fallback when no rule matches.
 3. **When A proves insufficient:** Add Shape B behind A as the fallback for ambiguous queries. The lexical filter catches the common case; the classifier handles the long tail.
 
-Defer C, D, E, F indefinitely unless a concrete need emerges that can't be met by A + B.
+Defer C, D, E, F, G indefinitely unless a concrete need emerges that can't be met by A + B.
 
 - **Shape C** becomes interesting only if civic-ai-tools becomes part of a broader MCP ecosystem where multiple clients benefit from shared routing.
 - **Shape D** is blocked on universal MCP `prompts/list` support across MCP servers in the ecosystem.
 - **Shape E** is blocked on having enough sources to justify the tree structure.
 - **Shape F** is blocked on civic-ai-tools not having a methodology axis yet. Introducing one is a standalone product decision (do we ship problem-framing / analytical / communication skills at all?) rather than a composition refactor. Worth revisiting after M8 when the core data-source axis is validated on a real demo and the evidence spin-out thinking in `evidence-spin-out-strategy.md` starts to commit to specific downstream consumers. Spiritually related to `sgarcese/Civic-Analytics-Agent-Workflow-Claude-Skill` in the landscape.
+- **Shape G** is blocked on both the skill registry ([civic-ai-tools-website#57](https://github.com/npstorey/civic-ai-tools-website/issues/57)) having a usable draft AND the MCP protocol roadmap research in [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44) confirming whether upstream is addressing meta-MCP-to-MCP delegation in a way that would change the design. Research phase only; implementation not scoped.
 
 ## Cross-references
 
-- Design issue: [civic-ai-tools-website#65](https://github.com/npstorey/civic-ai-tools-website/issues/65)
+- Design issue (Shapes A–F): [civic-ai-tools-website#65](https://github.com/npstorey/civic-ai-tools-website/issues/65)
+- Design issue (Shape G): [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44)
 - Current composition contract: `civic-ai-tools-website/src/lib/mcp/socrata-skill.ts` (post-M9.2 refactor)
 - Spin-out strategy: `evidence-spin-out-strategy.md` — dynamic skill routing is a multi-domain protocol requirement, since any evidence system serving multiple data domains hits the same prompt-size scaling problem
 - Data Commons skill: `civic-ai-tools/docs/skills/data-commons.md`
