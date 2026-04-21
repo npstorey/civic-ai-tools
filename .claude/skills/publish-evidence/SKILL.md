@@ -58,11 +58,11 @@ Sum `promptTokens` + `completionTokens` across **all captured turns**, not just 
 
 Before posting, confirm these are all true. If any is missing, ask the user before proceeding.
 
-1. **Authentication is configured.** One of these env vars must be set in the user's shell environment:
-   - `CIVICAITOOLS_SESSION_TOKEN` — the value of the `__Secure-next-auth.session-token` cookie from a signed-in civicaitools.org browser session, OR
-   - `CIVICAITOOLS_SESSION_TOKEN_OP` — a 1Password reference (`op://...`) resolved at run time.
+1. **Authentication is configured.** Check in this order (first match is enough):
+   - **Preferred:** a saved bearer token at `~/.config/civic-ai-tools/credentials.json`. Confirm with `python3 .claude/skills/publish-evidence/publish.py --list-tokens`. If nothing is saved, tell the user to run `python3 .claude/skills/publish-evidence/publish.py --login` once — that starts a browser-based device-authorization flow and saves a 90-day token. The user can also revoke tokens anytime from the civicaitools.org dashboard.
+   - **Legacy fallback:** `CIVICAITOOLS_SESSION_TOKEN` or `CIVICAITOOLS_SESSION_TOKEN_OP` set in the user's shell. Check presence without revealing the value: `[ -n "$CIVICAITOOLS_SESSION_TOKEN" ] || [ -n "$CIVICAITOOLS_SESSION_TOKEN_OP" ] && echo set || echo missing`. Never `echo`, `cat`, or otherwise print the value itself.
 
-   You can check presence without revealing the value: `[ -n "$CIVICAITOOLS_SESSION_TOKEN" ] || [ -n "$CIVICAITOOLS_SESSION_TOKEN_OP" ] && echo set || echo missing`. Never `echo`, `cat`, or otherwise print the value itself. If missing, point the user to the "Obtaining a session cookie" section of `civic-ai-tools-website/docs/api/evidence-publish.md` and stop.
+   If neither path is configured, prefer pointing the user at `--login` over the cookie path — it's the cleaner long-term story. See `civic-ai-tools-website/docs/api/evidence-publish.md#authentication`.
 
 2. **The analysis actually ran.** There must be at least one Socrata or Data Commons MCP tool call earlier in this conversation with a real result. Do not publish hypothetical or placeholder analyses.
 
@@ -131,7 +131,7 @@ The threshold can be overridden with `--max-inline-bytes N` (e.g., force-inline 
    python3 .claude/skills/publish-evidence/publish.py --payload /tmp/publish-evidence-<timestamp>.json
    ```
 
-   The script reads `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP`) from the environment. Never echo those values. Never pass them on the command line. Oversized fields are uploaded to Vercel Blob before the `/api/evidence` POST; each upload uses the same session cookie.
+   The script resolves auth in this order and uses the first that matches: saved bearer token → `CIVICAITOOLS_SESSION_TOKEN` → `CIVICAITOOLS_SESSION_TOKEN_OP`. Never echo those values. Never pass them on the command line. Oversized fields are uploaded to Vercel Blob before the `/api/evidence` POST; each upload uses the same credentials as the main POST.
 
 4. On success the script prints a JSON result with `slug`, `evidenceUrl`, `packageHash`, and `readbackUrl`. Show the user:
    - The full evidence URL (`https://civicaitools.org/evidence/<slug>`)
@@ -149,11 +149,8 @@ The threshold can be overridden with `--max-inline-bytes N` (e.g., force-inline 
 
 ## Privacy / secret hygiene
 
-- Never `cat`, `head`, `tail`, `echo`, or otherwise print `CIVICAITOOLS_SESSION_TOKEN` or the value referenced by `CIVICAITOOLS_SESSION_TOKEN_OP`.
-- Never include the session-token value or an `op://` reference in the JSON payload, in a commit, or in chat output.
+- Never `cat`, `head`, `tail`, `echo`, or otherwise print `CIVICAITOOLS_SESSION_TOKEN`, the value referenced by `CIVICAITOOLS_SESSION_TOKEN_OP`, or the contents of `~/.config/civic-ai-tools/credentials.json`.
+- Never include a session-token value, bearer token, or `op://` reference in the JSON payload, in a commit, or in chat output.
+- The credentials file is written with mode `0600` on the file and `0700` on the parent directory. Don't loosen those. If you need to inspect what's saved, use `publish.py --list-tokens` (display-safe summary — prefix + expiry + scope only).
 - The payload JSON contains the prompt text and full output (or transcript) — anything the user would see on the published evidence page. Do not paste it into another repo or share it outside the immediate conversation.
 - If any part of the captured content is sensitive and the user wants to omit their prompt text from the public record, set `promptVisibility: "hash_only"` (the server hashes it and stores only the hash). There is no equivalent for the transcript — if any transcript turn should not be public, switch back to `single_final_turn` or omit that content before composing the transcript.
-
-## Long-term cleanup
-
-Session-cookie auth is a dogfooding shim, not a durable contract. The cleaner long-term path (scoped API tokens) is tracked in [civic-ai-tools-website#73](https://github.com/npstorey/civic-ai-tools-website/issues/73). If the user asks for a better auth pattern, point them at that issue.

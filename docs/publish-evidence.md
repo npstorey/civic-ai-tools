@@ -8,34 +8,54 @@ The skill lives at `.claude/skills/publish-evidence/` in this repo. It is auto-d
 
 - **Claude Code**, pointing at this repo as cwd.
 - **The Socrata and Data Commons MCP servers** configured in `.mcp.json` (already set up in this repo via `./scripts/setup.sh`).
-- **A civicaitools.org GitHub login.** The skill reuses the website's session cookie for authentication. The longer-term path (scoped API tokens) is tracked in [civic-ai-tools-website#73](https://github.com/npstorey/civic-ai-tools-website/issues/73).
+- **A civicaitools.org GitHub login.** Sign in once at [civicaitools.org](https://civicaitools.org) before starting the device-authorization flow below.
 - **Python 3.8+** on PATH (the bundled script is stdlib-only).
 
-## One-time setup: session cookie
+## One-time setup: log in with the device flow
 
-The publish endpoint reads the NextAuth session cookie. To use it from Claude Code:
+The preferred auth path is an OAuth 2.0 device-authorization flow that saves a 90-day bearer token to `~/.config/civic-ai-tools/credentials.json` (file mode `0600`). Run it once:
+
+```bash
+python3 civic-ai-tools/.claude/skills/publish-evidence/publish.py --login
+```
+
+The script:
+
+1. Asks the civicaitools.org platform for a short user code and a verification URL.
+2. Opens your browser to the verification URL with the code prefilled (use `--no-browser` to disable). If you're not signed in, you'll hit a GitHub OAuth flow first.
+3. Waits while you click **Approve** on the authorization page. The page shows the client name ("Claude Code publish-evidence skill" by default; override with `--name "something else"`) and the scope (`evidence:publish`).
+4. Saves the returned bearer token to `~/.config/civic-ai-tools/credentials.json` and prints a summary.
+
+Useful follow-ups:
+
+- `publish.py --list-tokens` — show saved tokens (display-safe: prefix + scope + expiry only, never the full value).
+- `publish.py --logout` — delete the token for the current base URL from the credentials file. This does **not** revoke the token server-side; visit the [Dashboard → Tokens tab](https://www.civicaitools.org/dashboard) to revoke.
+- Visit the same Dashboard tab anytime to see active tokens, last-used timestamps, and a Revoke button per token.
+
+Tokens are valid for 90 days. When one expires or you revoke it, re-run `--login` to get a fresh token.
+
+### Legacy alternative: session cookie (still supported)
+
+If you already use the session-cookie path, it keeps working indefinitely. Responses now carry an `X-Auth-Deprecated: cookie` header as a nudge toward the bearer-token path.
+
+<details>
+<summary>Show legacy setup</summary>
 
 1. Open [civicaitools.org](https://civicaitools.org) in your browser and sign in with GitHub.
 2. Open browser devtools → Application (Chrome) or Storage (Firefox) → Cookies → `https://civicaitools.org`.
 3. Copy the **value** of the `__Secure-next-auth.session-token` cookie.
-4. Store it somewhere your shell can read it. Two supported options:
+4. Either:
 
-   **Option A — plain env var** (simplest):
    ```bash
-   # Add to ~/.zshrc, ~/.bashrc, or equivalent
+   # plain env var
    export CIVICAITOOLS_SESSION_TOKEN='<paste-cookie-value-here>'
-   ```
-
-   **Option B — 1Password reference** (preferred for Nathan's setup):
-   ```bash
-   # Store the cookie value in 1Password, then export only the reference
+   # or 1Password reference
    export CIVICAITOOLS_SESSION_TOKEN_OP='op://<vault>/<item>/<field>'
    ```
-   The publish script runs `op read` at invocation time to resolve the reference. Requires the [1Password CLI](https://developer.1password.com/docs/cli/) (`brew install --cask 1password-cli`) and an active CLI session.
 
-5. Reload your shell (`exec $SHELL`) so the variable is present.
+The session token expires — when you see `401 Unauthorized`, either re-copy the cookie or switch to `publish.py --login`.
 
-The session token expires. When you start seeing `401 Unauthorized` errors, sign in again and refresh the stored value.
+</details>
 
 Full authentication contract: [`civic-ai-tools-website/docs/api/evidence-publish.md#authentication`](../../civic-ai-tools-website/docs/api/evidence-publish.md#authentication).
 
@@ -148,16 +168,19 @@ CLI flags worth knowing:
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `401 Unauthorized` | Session cookie expired. | Sign back in at civicaitools.org, re-copy `__Secure-next-auth.session-token`, update your env var or 1Password item. |
-| `error: no session token provided` | Neither env var is set. | See "One-time setup: session cookie" above. |
-| `error: ``op`` (1Password CLI) not found` | Using `CIVICAITOOLS_SESSION_TOKEN_OP` without the CLI. | Install with `brew install --cask 1password-cli`, or switch to the plain env var. |
+| `401 Unauthorized` (bearer) | Saved token expired or was revoked. | Run `publish.py --logout && publish.py --login` to start a fresh device flow. |
+| `403 Forbidden` with scope mention | Token doesn't hold `evidence:publish`. | Shouldn't happen with the default `--login`; re-run the flow and confirm the approval page shows `evidence:publish`. |
+| `401 Unauthorized` (cookie) | Session cookie expired. | Either switch to bearer via `publish.py --login` (recommended) or re-copy the cookie. |
+| `error: no credentials available` | No saved token and neither legacy env var is set. | Run `publish.py --login`. |
+| `error: ``op`` (1Password CLI) not found` | Using `CIVICAITOOLS_SESSION_TOKEN_OP` without the CLI. | Install with `brew install --cask 1password-cli`, or switch to `publish.py --login`. |
 | Published package shows `operationType: "unknown"` | Tool call was reconstructed without an explicit `operationType`. | Pass `operationType` per tool call (`query`, `search`, `catalog`, `metadata`, `metrics`) in the payload. |
 | PROV-O graph missing a source | A tool call in the analysis didn't end up in `toolCalls[]`. | Walk through the conversation and add the missing call; republish. |
-| `--dry-run` exits 2 with "exceeds the … inline threshold" | A field (usually the transcript in `output`) is larger than 512 KB. | Expected in `--dry-run` — blob uploads are skipped there. Re-run without `--dry-run` and a valid session cookie; the field will upload to Vercel Blob and be referenced by hash. If you need the dry-run to succeed for debugging, raise `--max-inline-bytes`. |
+| `--dry-run` exits 2 with "exceeds the … inline threshold" | A field (usually the transcript in `output`) is larger than 512 KB. | Expected in `--dry-run` — blob uploads are skipped there. Re-run without `--dry-run` and valid credentials; the field will upload to Vercel Blob and be referenced by hash. If you need the dry-run to succeed for debugging, raise `--max-inline-bytes`. |
 | Multi-turn package detail page shows only the transcript, not per-turn UI | Expected for now. | Turn-by-turn rendering lives in `extensions["org.civicaitools.multi-turn"]` on the package and is a separate future website ticket. The transcript in `output` still captures every turn verbatim. |
 
 ## Privacy notes
 
 - The payload file contains the prompt and full markdown output. Delete the temp file after publishing.
-- Session-token values never leave your machine; the publish script passes them only in the `Cookie` header of the HTTPS POST. The skill is built to avoid echoing the value to logs, stdout, or saved files.
+- Saved bearer tokens live at `~/.config/civic-ai-tools/credentials.json` (file mode `0600`). The publish script never echoes the token value to stdout, stderr, or the payload.
+- Session-cookie values (legacy path) never leave your machine; the publish script passes them only in the `Cookie` header of the HTTPS POST.
 - The published prompt appears on the public evidence page. If your prompt is sensitive, ask Claude to set `promptVisibility: "hash_only"` before publishing; only the SHA-256 of the prompt will appear in the package.
