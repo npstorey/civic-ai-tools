@@ -205,7 +205,7 @@
   {
     "id": "boston-core-mcp",
     "name": "boston-core-mcp",
-    "description": "Official City of Boston MCP server for Analyze Boston open data portal",
+    "description": "Official City of Boston MCP server for Analyze Boston open data portal (v1 prototype)",
     "repoUrl": "https://github.com/thealphacubicle/boston-core-mcp",
     "transport": [
       "http"
@@ -226,7 +226,7 @@
     "dateModified": "2026-04-21",
     "toolCount": 5,
     "apiKeyRequired": false,
-    "notes": "Official. Deployed on AWS Lambda with CI/CD. 5 tools: search datasets, list all datasets, get dataset info, query data, get schema. One of the few official government-maintained MCP servers. Listed on mcpmarket.com/server/boston-core.",
+    "notes": "Official. V1 prototype; superseded by OpenContext (see opencontext entry) — the same author's v2 generalized framework. Deployed on AWS Lambda with CI/CD. 5 tools: search datasets, list all datasets, get dataset info, query data, get schema. Listed on mcpmarket.com/server/boston-core.",
     "license": "GPL-3.0",
     "programmingLanguage": "Python",
     "endpointUrl": "https://kdbjj7ebdewlcy24bt4wbf3uju0tjgdf.lambda-url.us-east-1.on.aws",
