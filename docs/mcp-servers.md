@@ -22,6 +22,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | [opengov-mcp-server](https://github.com/srobbin/opengov-mcp-server) | Socrata open data portals | stdio | [@srobbin](https://github.com/srobbin) | Active | No API key required. ~10 stars, available via npx. Built by co-founder of Chi Hack Night. |
 | [open-data-mcp](https://github.com/leomerida15/open-data-mcp) | Socrata open data portals | stdio | [@leomerida15](https://github.com/leomerida15) | Active | Socrata-based open data MCP. |
 | [nyc-mcp](https://lobehub.com/pl/mcp/forest-builds-nyc-mcp) | NYC Open Data (2,000+ datasets) | stdio | [@forest-builds](https://github.com/forest-builds) | Active | NYC-specific. City services, housing, transportation, events, spending. |
+| [boston-core-mcp](https://github.com/thealphacubicle/boston-core-mcp) | Analyze Boston (data.boston.gov) — 311 requests, crime, permits, transit, budget, housing, and more | http | City of Boston DoIT | Active | Official. Deployed on AWS Lambda with CI/CD. 5 tools: search datasets, list all datasets, get dataset info, query data, get schema. One of the few official government-maintained MCP servers. Listed on mcpmarket.com/server/boston-core. |
 
 ## U.S. Federal Government Servers
 

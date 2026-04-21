@@ -203,6 +203,39 @@
     ]
   },
   {
+    "id": "boston-core-mcp",
+    "name": "boston-core-mcp",
+    "description": "Official City of Boston MCP server for Analyze Boston open data portal",
+    "repoUrl": "https://github.com/thealphacubicle/boston-core-mcp",
+    "transport": [
+      "http"
+    ],
+    "categories": [
+      "open-data-portals"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "City of Boston DoIT",
+    "status": "active",
+    "dateAdded": "2026-04-21",
+    "dataSources": [
+      "Analyze Boston (data.boston.gov) — 311 requests, crime, permits, transit, budget, housing, and more"
+    ],
+    "verificationStatus": "official",
+    "dateModified": "2026-04-21",
+    "toolCount": 5,
+    "apiKeyRequired": false,
+    "notes": "Official. Deployed on AWS Lambda with CI/CD. 5 tools: search datasets, list all datasets, get dataset info, query data, get schema. One of the few official government-maintained MCP servers. Listed on mcpmarket.com/server/boston-core.",
+    "license": "GPL-3.0",
+    "programmingLanguage": "Python",
+    "endpointUrl": "https://kdbjj7ebdewlcy24bt4wbf3uju0tjgdf.lambda-url.us-east-1.on.aws",
+    "jurisdiction": "Boston, Massachusetts, United States",
+    "dataPlatform": [
+      "ckan"
+    ]
+  },
+  {
     "id": "us-census-bureau-data-api-mcp",
     "name": "census-mcp",
     "description": "U.S. Census Bureau / ACS",
