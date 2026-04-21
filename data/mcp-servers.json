@@ -236,6 +236,39 @@
     ]
   },
   {
+    "id": "opencontext",
+    "name": "opencontext",
+    "description": "Official City of Boston MCP server framework for civic open data portals — generalized template supporting CKAN and Socrata backends, with Boston running the production instance against Analyze Boston",
+    "repoUrl": "https://github.com/CityOfBoston/OpenContext",
+    "transport": [
+      "http"
+    ],
+    "categories": [
+      "open-data-portals"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "City of Boston DoIT",
+    "status": "beta",
+    "dateAdded": "2026-04-21",
+    "dataSources": [
+      "Analyze Boston (data.boston.gov) — 311 requests, crime, permits, transit, budget, housing, property assessments (CKAN-based)"
+    ],
+    "verificationStatus": "official",
+    "dateModified": "2026-04-21",
+    "toolCount": 6,
+    "apiKeyRequired": false,
+    "notes": "Official. Generalized framework designed for other cities to fork and deploy against their own portals (\"one fork = one MCP server\"). 6 tools: ckan__search_datasets, ckan__get_dataset, ckan__query_data, ckan__get_schema, ckan__execute_sql, ckan__aggregate_data. Ships SQL/SoQL validators with regex safety checks. Supersedes boston-core-mcp prototype by the same author. Upstream dev hub at github.com/thealphacubicle/OpenContext. MIT-licensed and self-hostable.",
+    "license": "MIT",
+    "programmingLanguage": "Python",
+    "endpointUrl": "https://data-mcp.boston.gov/mcp",
+    "jurisdiction": "Boston, Massachusetts, United States",
+    "dataPlatform": [
+      "ckan"
+    ]
+  },
+  {
     "id": "us-census-bureau-data-api-mcp",
     "name": "census-mcp",
     "description": "U.S. Census Bureau / ACS",
