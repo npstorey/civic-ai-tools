@@ -27,15 +27,24 @@ Capture modes:
                         Blob and referenced by content hash so the
                         request body stays under the Next.js ~4 MB cap.
 
+Authentication (checked in this order, first match wins):
+
+    1. Saved bearer token at ``~/.config/civic-ai-tools/credentials.json``
+       (device-flow minted, website#73). Run ``publish.py --login`` to
+       create one. Preferred for programmatic use.
+    2. ``CIVICAITOOLS_SESSION_TOKEN`` — NextAuth session cookie (legacy).
+    3. ``CIVICAITOOLS_SESSION_TOKEN_OP`` — 1Password reference resolved
+       via ``op read`` (legacy).
+
 Environment variables (read at run time, never logged):
 
     CIVICAITOOLS_SESSION_TOKEN      NextAuth session-token cookie value.
     CIVICAITOOLS_SESSION_TOKEN_OP   1Password reference (``op://...``)
-                                    resolved via ``op read``; used when
-                                    ``CIVICAITOOLS_SESSION_TOKEN`` is
-                                    unset.
+                                    resolved via ``op read``.
     CIVICAITOOLS_BASE_URL           Override the publish base URL
                                     (default ``https://www.civicaitools.org``).
+    XDG_CONFIG_HOME                 Respected when locating the
+                                    credentials file.
 
 Exit codes:
 
@@ -51,11 +60,16 @@ import argparse
 import hashlib
 import json
 import os
+import stat
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 import uuid
+import webbrowser
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 DEFAULT_BASE_URL = "https://www.civicaitools.org"
@@ -81,9 +95,123 @@ DEFAULT_MAX_INLINE_BYTES = 512 * 1024
 VERCEL_BLOB_API_URL = "https://vercel.com/api/blob"
 VERCEL_BLOB_API_VERSION = "12"
 
+# Device flow defaults (server sends interval; these are the floor).
+DEVICE_FLOW_MIN_INTERVAL_SECONDS = 5
+DEVICE_FLOW_MAX_WAIT_SECONDS = 15 * 60
+
+CREDENTIALS_FILE_VERSION = "1"
+DEFAULT_CLIENT_NAME = "Claude Code publish-evidence skill"
+
 
 def eprint(*args: Any, **kwargs: Any) -> None:
     print(*args, file=sys.stderr, **kwargs)
+
+
+# --------------------------------------------------------------------------
+# Credentials file (~/.config/civic-ai-tools/credentials.json)
+# --------------------------------------------------------------------------
+
+
+def credentials_path() -> Path:
+    """Resolve the credentials file path, respecting XDG_CONFIG_HOME.
+
+    Follows the GitHub CLI convention (``~/.config/civic-ai-tools/``)
+    rather than a dot-directory at ``$HOME`` so the file is cleanly
+    separated from runtime data and cache.
+    """
+    xdg = os.environ.get("XDG_CONFIG_HOME", "").strip()
+    if xdg:
+        base = Path(xdg)
+    else:
+        base = Path.home() / ".config"
+    return base / "civic-ai-tools" / "credentials.json"
+
+
+def load_credentials() -> dict[str, Any]:
+    path = credentials_path()
+    if not path.exists():
+        return {"version": CREDENTIALS_FILE_VERSION, "tokens": {}}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError) as exc:
+        eprint(
+            f"warning: could not read credentials file at {path}: {exc}. "
+            "Treating as empty; re-run `publish.py --login` to regenerate."
+        )
+        return {"version": CREDENTIALS_FILE_VERSION, "tokens": {}}
+    if not isinstance(data, dict) or not isinstance(data.get("tokens"), dict):
+        return {"version": CREDENTIALS_FILE_VERSION, "tokens": {}}
+    return data
+
+
+def save_credentials(creds: dict[str, Any]) -> None:
+    """Write the credentials file atomically with mode 0600 on the file,
+    0700 on the parent dir."""
+    path = credentials_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.chmod(path.parent, 0o700)
+    except OSError:
+        pass
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(creds, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+    os.chmod(tmp, stat.S_IRUSR | stat.S_IWUSR)
+    tmp.replace(path)
+    # `replace()` may preserve the tmp file's inode mode, but be explicit.
+    try:
+        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError:
+        pass
+
+
+def _parse_iso(value: str) -> datetime | None:
+    """Parse an ISO-8601 timestamp, tolerating trailing Z."""
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+def token_for_base_url(base_url: str) -> dict[str, Any] | None:
+    """Return the saved token entry for ``base_url`` if present and
+    not expired; otherwise None."""
+    creds = load_credentials()
+    entry = creds.get("tokens", {}).get(base_url.rstrip("/"))
+    if not entry:
+        return None
+    expires_at = entry.get("expires_at")
+    if expires_at:
+        parsed = _parse_iso(expires_at)
+        if parsed and parsed <= datetime.now(timezone.utc):
+            return None
+    return entry
+
+
+def upsert_token(base_url: str, entry: dict[str, Any]) -> None:
+    creds = load_credentials()
+    tokens = creds.setdefault("tokens", {})
+    tokens[base_url.rstrip("/")] = entry
+    creds["version"] = CREDENTIALS_FILE_VERSION
+    save_credentials(creds)
+
+
+def remove_token(base_url: str) -> bool:
+    creds = load_credentials()
+    tokens = creds.get("tokens", {})
+    key = base_url.rstrip("/")
+    if key not in tokens:
+        return False
+    del tokens[key]
+    save_credentials(creds)
+    return True
+
+
+# --------------------------------------------------------------------------
+# Auth resolution
+# --------------------------------------------------------------------------
 
 
 def resolve_session_token() -> str:
@@ -132,13 +260,36 @@ def resolve_session_token() -> str:
         return token
 
     eprint(
-        "error: no session token provided. Set CIVICAITOOLS_SESSION_TOKEN "
-        "to the value of the `__Secure-next-auth.session-token` cookie "
-        "from a signed-in civicaitools.org browser session, or set "
-        "CIVICAITOOLS_SESSION_TOKEN_OP to an `op://` reference. See "
+        "error: no credentials available. Run `publish.py --login` to "
+        "obtain a bearer token via the device-authorization flow, or set "
+        "CIVICAITOOLS_SESSION_TOKEN / CIVICAITOOLS_SESSION_TOKEN_OP for "
+        "the legacy cookie path. See "
         "civic-ai-tools-website/docs/api/evidence-publish.md#authentication."
     )
     sys.exit(1)
+
+
+def resolve_auth(base_url: str) -> tuple[str, str]:
+    """Return ``(method, value)`` where method is ``"bearer"`` or
+    ``"cookie"``. Saved bearer tokens take precedence; env vars are the
+    legacy fallback."""
+    bearer = token_for_base_url(base_url)
+    if bearer and bearer.get("access_token"):
+        return ("bearer", bearer["access_token"])
+    return ("cookie", resolve_session_token())
+
+
+def auth_headers(
+    method: str, value: str, cookie_name: str
+) -> dict[str, str]:
+    if method == "bearer":
+        return {"Authorization": f"Bearer {value}"}
+    return {"Cookie": f"{cookie_name}={value}"}
+
+
+# --------------------------------------------------------------------------
+# Trace + payload assembly (unchanged from pre-device-flow)
+# --------------------------------------------------------------------------
 
 
 def attr(key: str, value: str) -> dict[str, Any]:
@@ -354,10 +505,16 @@ def content_to_bytes(value: Any, content_type: str) -> bytes:
     return json.dumps(value).encode("utf-8")
 
 
+# --------------------------------------------------------------------------
+# Blob upload (via presigned tokens from /api/blob/upload-token)
+# --------------------------------------------------------------------------
+
+
 def mint_upload_token(
     base_url: str,
     pathname: str,
-    session_token: str,
+    auth_method: str,
+    auth_value: str,
     cookie_name: str,
 ) -> str:
     """Mint a presigned client token for a single blob upload.
@@ -377,16 +534,12 @@ def mint_upload_token(
         },
     }
     encoded = json.dumps(body).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=encoded,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "Cookie": f"{cookie_name}={session_token}",
-            "User-Agent": "civic-ai-tools-publish-evidence/0.2",
-        },
-    )
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+    }
+    headers.update(auth_headers(auth_method, auth_value, cookie_name))
+    req = urllib.request.Request(url, data=encoded, method="POST", headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             resp_body = resp.read().decode("utf-8")
@@ -406,21 +559,28 @@ def mint_upload_token(
         except Exception:
             detail = ""
         if exc.code == 401:
-            eprint(
-                "error: 401 Unauthorized from /api/blob/upload-token. The "
-                "session cookie is missing, invalid, or expired. Sign in "
-                "at civicaitools.org, re-copy the cookie, and update "
-                "CIVICAITOOLS_SESSION_TOKEN."
-            )
+            if auth_method == "bearer":
+                eprint(
+                    "error: 401 Unauthorized from /api/blob/upload-token. "
+                    "The saved bearer token is invalid, expired, or revoked. "
+                    "Run `publish.py --logout && publish.py --login` to "
+                    "start a fresh device-authorization flow."
+                )
+            else:
+                eprint(
+                    "error: 401 Unauthorized from /api/blob/upload-token. "
+                    "The session cookie is missing, invalid, or expired. "
+                    "Sign in at civicaitools.org, re-copy the cookie, and "
+                    "update CIVICAITOOLS_SESSION_TOKEN — or switch to bearer "
+                    "auth via `publish.py --login`."
+                )
             sys.exit(1)
         eprint(f"error: HTTP {exc.code} from /api/blob/upload-token.")
         if detail:
             eprint(f"  response body: {detail[:500]}")
         sys.exit(3)
     except urllib.error.URLError as exc:
-        eprint(
-            f"error: network failure minting upload token: {exc.reason}"
-        )
+        eprint(f"error: network failure minting upload token: {exc.reason}")
         sys.exit(3)
 
 
@@ -452,7 +612,7 @@ def put_to_blob_store(
             "x-vercel-blob-access": "public",
             "x-content-type": content_type,
             "Content-Type": content_type,
-            "User-Agent": "civic-ai-tools-publish-evidence/0.2",
+            "User-Agent": "civic-ai-tools-publish-evidence/0.3",
         },
     )
     try:
@@ -490,7 +650,8 @@ def upload_blob_ref(
     content_type: str,
     extension: str,
     base_url: str,
-    session_token: str,
+    auth_method: str,
+    auth_value: str,
     cookie_name: str,
 ) -> dict[str, Any]:
     """Upload ``value`` to Vercel Blob and return a BlobRef object.
@@ -509,7 +670,8 @@ def upload_blob_ref(
     client_token = mint_upload_token(
         base_url=base_url,
         pathname=pathname,
-        session_token=session_token,
+        auth_method=auth_method,
+        auth_value=auth_value,
         cookie_name=cookie_name,
     )
     blob_url = put_to_blob_store(
@@ -524,6 +686,11 @@ def upload_blob_ref(
         "contentType": content_type,
         "size": size,
     }
+
+
+# --------------------------------------------------------------------------
+# Request body assembly (unchanged apart from auth plumbing)
+# --------------------------------------------------------------------------
 
 
 def build_request_body(
@@ -572,10 +739,6 @@ def build_request_body(
         # would drop extra fields anyway.
         post_tool_calls.append(entry)
 
-    # Per-field encoding decisions. Each decision is a tuple:
-    #   (value, content_type, extension) -> inline_value_or_blob_ref
-    # The body is assembled from the resolved values; stats records
-    # which path each field took.
     stats: dict[str, Any] = {"fields": {}}
 
     def encode_field(
@@ -596,7 +759,7 @@ def build_request_body(
                 f"error: field `{field_name}` is {size:,} bytes which exceeds "
                 f"the {max_inline_bytes:,}-byte inline threshold, but blob "
                 "uploads are disabled (dry-run or --no-blob). Re-run without "
-                "--dry-run (with a valid session cookie) so the field can be "
+                "--dry-run (with valid credentials) so the field can be "
                 "uploaded to Vercel Blob, or raise --max-inline-bytes."
             )
             sys.exit(2)
@@ -633,10 +796,7 @@ def build_request_body(
 
     # When `trace` is a BlobRef the server can't walk spans to extract
     # skill metadata. Supply an explicit override so `skillMetadata.*`
-    # isn't blanked out on the package. Field names align with
-    # civic-ai-tools-website/src/lib/evidence/packager.ts#PackageInput
-    # (systemPromptHash — not skillTextHash — matches the `skill.text_hash`
-    # span attribute the packager reads).
+    # isn't blanked out on the package.
     trace_is_blob = isinstance(trace_value, dict) and "ref" in trace_value
     skill_text = payload.get("skillText")
     if trace_is_blob and skill_text:
@@ -657,9 +817,6 @@ def build_request_body(
             override["mcpServerUrl"] = mcp_server_url
         body["skillMetadataOverride"] = override
 
-    # Extensions: start from any caller-supplied block, then layer the
-    # multi-turn extension when applicable. Reverse-DNS keyed so new
-    # extensions can coexist without collision.
     extensions: dict[str, Any] = {}
     caller_extensions = payload.get("extensions")
     if caller_extensions:
@@ -685,26 +842,35 @@ def build_request_body(
     return body, stats
 
 
+# --------------------------------------------------------------------------
+# HTTP POST to /api/evidence
+# --------------------------------------------------------------------------
+
+
 def post_evidence(
     base_url: str,
     body: dict[str, Any],
-    session_token: str,
+    auth_method: str,
+    auth_value: str,
     cookie_name: str,
 ) -> dict[str, Any]:
     url = f"{base_url.rstrip('/')}/api/evidence"
     encoded = json.dumps(body).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=encoded,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "Cookie": f"{cookie_name}={session_token}",
-            "User-Agent": "civic-ai-tools-publish-evidence/0.2",
-        },
-    )
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+    }
+    headers.update(auth_headers(auth_method, auth_value, cookie_name))
+    req = urllib.request.Request(url, data=encoded, method="POST", headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=120) as resp:
+            deprecated = resp.headers.get("X-Auth-Deprecated")
+            if deprecated:
+                eprint(
+                    f"warning: server indicates this auth method is deprecated: "
+                    f"{deprecated}. Run `publish.py --login` to switch to a "
+                    "device-flow bearer token."
+                )
             resp_body = resp.read().decode("utf-8")
             return json.loads(resp_body)
     except urllib.error.HTTPError as exc:
@@ -714,20 +880,36 @@ def post_evidence(
         except Exception:
             detail = ""
         if exc.code == 401:
+            if auth_method == "bearer":
+                eprint(
+                    "error: 401 Unauthorized from /api/evidence. The saved "
+                    "bearer token is invalid, expired, or revoked. Run "
+                    "`publish.py --logout && publish.py --login` to start a "
+                    "fresh device-authorization flow."
+                )
+            else:
+                eprint(
+                    "error: 401 Unauthorized from /api/evidence. The session "
+                    "token is missing, invalid, or expired. Sign in again at "
+                    "https://civicaitools.org, re-copy the "
+                    f"`{cookie_name}` cookie value, and update "
+                    "CIVICAITOOLS_SESSION_TOKEN — or switch to bearer auth "
+                    "via `publish.py --login`."
+                )
+            sys.exit(1)
+        if exc.code == 403:
             eprint(
-                "error: 401 Unauthorized from /api/evidence. The session "
-                "token is missing, invalid, or expired. Sign in again at "
-                "https://civicaitools.org, re-copy the "
-                f"`{cookie_name}` cookie value, and update "
-                "CIVICAITOOLS_SESSION_TOKEN (or the 1Password item "
-                "referenced by CIVICAITOOLS_SESSION_TOKEN_OP)."
+                "error: 403 Forbidden from /api/evidence. The bearer token "
+                "is missing the evidence:publish scope. Run `publish.py "
+                "--login` and ensure the approval page showed scope "
+                "`evidence:publish`."
             )
             sys.exit(1)
         if exc.code == 404:
             eprint(
                 "error: 404 from /api/evidence. The server could not find "
                 "your user record. Try signing out + back in on "
-                "civicaitools.org, then re-copy the session cookie."
+                "civicaitools.org and re-running `publish.py --login`."
             )
             sys.exit(1)
         eprint(f"error: HTTP {exc.code} from /api/evidence.")
@@ -801,13 +983,169 @@ def _redacted_preview(
     return preview
 
 
+# --------------------------------------------------------------------------
+# Device authorization grant (RFC 8628)
+# --------------------------------------------------------------------------
+
+
+def _post_json(url: str, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+    """POST a JSON body and return ``(status, parsed_json)``. Does not
+    raise on non-200; caller inspects status."""
+    encoded = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=encoded,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.status, json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body_text = ""
+        try:
+            body_text = exc.read().decode("utf-8")
+        except Exception:
+            body_text = ""
+        try:
+            return exc.code, json.loads(body_text)
+        except json.JSONDecodeError:
+            return exc.code, {"error": "http_error", "body": body_text[:500]}
+    except urllib.error.URLError as exc:
+        return 0, {"error": "network_error", "reason": str(exc.reason)}
+
+
+def do_login(base_url: str, client_name: str, open_browser: bool) -> None:
+    """Run the device-authorization flow against ``base_url`` and save
+    the resulting bearer token to the credentials file."""
+    start_url = f"{base_url.rstrip('/')}/api/auth/device/code"
+    status, start = _post_json(
+        start_url,
+        {"name": client_name, "scope": "evidence:publish"},
+    )
+    if status != 200 or "device_code" not in start:
+        eprint(
+            "error: could not start device-authorization flow "
+            f"(HTTP {status}): {json.dumps(start)[:300]}"
+        )
+        sys.exit(3)
+
+    device_code = start["device_code"]
+    user_code = start["user_code"]
+    verification_uri = start["verification_uri"]
+    verification_uri_complete = start.get(
+        "verification_uri_complete", verification_uri
+    )
+    server_interval = int(start.get("interval", DEVICE_FLOW_MIN_INTERVAL_SECONDS))
+    expires_in = int(start.get("expires_in", DEVICE_FLOW_MAX_WAIT_SECONDS))
+
+    print(f"To authorize this client, visit:\n\n    {verification_uri}\n")
+    print(f"and enter the code:\n\n    {user_code}\n")
+    print(f"Or open the full URL directly:\n\n    {verification_uri_complete}\n")
+
+    if open_browser:
+        try:
+            webbrowser.open(verification_uri_complete)
+            print("(Opened your browser to the authorization page.)\n")
+        except Exception:
+            pass
+
+    print(
+        f"Waiting for approval... (polls every {server_interval}s, "
+        f"times out after {expires_in}s)"
+    )
+
+    token_url = f"{base_url.rstrip('/')}/api/auth/device/token"
+    interval = max(server_interval, DEVICE_FLOW_MIN_INTERVAL_SECONDS)
+    deadline = time.time() + min(expires_in, DEVICE_FLOW_MAX_WAIT_SECONDS)
+
+    while time.time() < deadline:
+        time.sleep(interval)
+        status, resp = _post_json(token_url, {"device_code": device_code})
+        if status == 200 and resp.get("access_token"):
+            entry = {
+                "access_token": resp["access_token"],
+                "token_type": resp.get("token_type", "Bearer"),
+                "expires_at": resp.get("expires_at"),
+                "scope": resp.get("scope", "evidence:publish"),
+                "name": client_name,
+                "created_at": datetime.now(timezone.utc)
+                .isoformat(timespec="seconds")
+                .replace("+00:00", "Z"),
+            }
+            upsert_token(base_url, entry)
+            print(
+                f"\nSuccess. Bearer token saved to {credentials_path()} "
+                f"(scope: {entry['scope']}, expires: {entry['expires_at']})."
+            )
+            return
+        error_code = resp.get("error")
+        if error_code == "authorization_pending":
+            continue
+        if error_code == "slow_down":
+            interval += 5
+            continue
+        if error_code == "expired_token":
+            eprint(
+                "error: device code expired before approval. Re-run "
+                "`publish.py --login`."
+            )
+            sys.exit(1)
+        # Unknown or terminal error — exit.
+        eprint(
+            f"error: device-flow token exchange failed "
+            f"(HTTP {status}): {json.dumps(resp)[:300]}"
+        )
+        sys.exit(1)
+
+    eprint(
+        "error: device-flow approval did not complete in time. Re-run "
+        "`publish.py --login`."
+    )
+    sys.exit(1)
+
+
+def do_logout(base_url: str) -> None:
+    removed = remove_token(base_url)
+    if removed:
+        print(f"Token for {base_url} removed from {credentials_path()}.")
+    else:
+        print(f"No saved token for {base_url} (nothing to remove).")
+
+
+def do_list_tokens() -> None:
+    creds = load_credentials()
+    tokens = creds.get("tokens", {})
+    if not tokens:
+        print(f"No saved tokens ({credentials_path()} is empty or missing).")
+        return
+    print(f"Saved tokens ({credentials_path()}):")
+    for url, entry in tokens.items():
+        prefix = (entry.get("access_token") or "")[:12]
+        expires = entry.get("expires_at") or "unknown"
+        scope = entry.get("scope") or "unknown"
+        name = entry.get("name") or "(no name)"
+        print(f"  {url}")
+        print(f"    name:    {name}")
+        print(f"    prefix:  {prefix}...")
+        print(f"    scope:   {scope}")
+        print(f"    expires: {expires}")
+
+
+# --------------------------------------------------------------------------
+# Entry point
+# --------------------------------------------------------------------------
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Publish a civic-data analysis to civicaitools.org."
+        description="Publish a civic-data analysis to civicaitools.org.",
     )
     parser.add_argument(
         "--payload",
-        required=True,
         help="Path to a JSON file describing the analysis (see script "
         "docstring or .claude/skills/publish-evidence/SKILL.md).",
     )
@@ -823,7 +1161,8 @@ def main() -> None:
         "--dev",
         action="store_true",
         help="Use the dev cookie name `next-auth.session-token` instead of "
-        "the production `__Secure-next-auth.session-token`.",
+        "the production `__Secure-next-auth.session-token`. Only applies "
+        "to cookie auth.",
     )
     parser.add_argument(
         "--dry-run",
@@ -846,7 +1185,52 @@ def main() -> None:
         f"{DEFAULT_MAX_INLINE_BYTES}). Fields larger than this are "
         "uploaded to Vercel Blob and referenced by hash.",
     )
+    # Auth subcommands (mutually exclusive so --login --logout can't race)
+    auth_group = parser.add_mutually_exclusive_group()
+    auth_group.add_argument(
+        "--login",
+        action="store_true",
+        help="Start a device-authorization flow and save a bearer token "
+        "to ~/.config/civic-ai-tools/credentials.json.",
+    )
+    auth_group.add_argument(
+        "--logout",
+        action="store_true",
+        help="Remove the saved token for --base-url from the credentials "
+        "file. Does not revoke the token server-side; use the dashboard "
+        "to revoke.",
+    )
+    auth_group.add_argument(
+        "--list-tokens",
+        action="store_true",
+        help="List saved tokens (display-safe fields only).",
+    )
+    parser.add_argument(
+        "--name",
+        default=DEFAULT_CLIENT_NAME,
+        help="Client name recorded on the token. Shown in the approval "
+        "page and the Dashboard tokens tab. Only used with --login.",
+    )
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Don't auto-open a browser window during --login.",
+    )
     args = parser.parse_args()
+
+    if args.login:
+        do_login(args.base_url, args.name, open_browser=not args.no_browser)
+        return
+    if args.logout:
+        do_logout(args.base_url)
+        return
+    if args.list_tokens:
+        do_list_tokens()
+        return
+
+    # Default path: publish an analysis.
+    if not args.payload:
+        parser.error("--payload is required (or pass --login / --logout / --list-tokens)")
 
     try:
         with open(args.payload, "r", encoding="utf-8") as fh:
@@ -876,7 +1260,7 @@ def main() -> None:
         print(json.dumps(_redacted_preview(body, payload, stats), indent=2))
         return
 
-    session_token = resolve_session_token()
+    auth_method, auth_value = resolve_auth(args.base_url)
     cookie_name = DEV_COOKIE_NAME if args.dev else PROD_COOKIE_NAME
 
     def do_upload(value: Any, content_type: str, extension: str) -> dict[str, Any]:
@@ -885,7 +1269,8 @@ def main() -> None:
             content_type=content_type,
             extension=extension,
             base_url=args.base_url,
-            session_token=session_token,
+            auth_method=auth_method,
+            auth_value=auth_value,
             cookie_name=cookie_name,
         )
 
@@ -894,8 +1279,10 @@ def main() -> None:
         max_inline_bytes=args.max_inline_bytes,
         blob_upload=do_upload,
     )
-    # Token value never flows through stdout/stderr from here on.
-    result = post_evidence(args.base_url, body, session_token, cookie_name)
+    # Auth value never flows through stdout/stderr from here on.
+    result = post_evidence(
+        args.base_url, body, auth_method, auth_value, cookie_name
+    )
 
     slug = result.get("slug")
     relative_url = result.get("url")
