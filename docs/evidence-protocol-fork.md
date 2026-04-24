@@ -5,7 +5,7 @@
 
 ## Context
 
-The evidence system that shipped in v0.6.0 is the most reusable piece of infrastructure this project has produced. Its primitives — canonical-JSON signing, Ed25519ph signatures, RFC 3161 timestamping via FreeTSA, Sigstore Rekor publishing, W3C PROV-O provenance graphs, content-addressable packages, a trust registry for key rotation, and an extensions architecture — are not civic-specific. Any AI-assisted analysis that needs tamper-evident provenance could use them: biomedical research, financial analysis, journalism, open science generally.
+The evidence system that shipped in v0.6.0 is the most reusable piece of infrastructure this project has produced. Its primitives — canonical-JSON signing, Ed25519 signatures, RFC 3161 timestamping via FreeTSA, Sigstore Rekor publishing, W3C PROV-O provenance graphs, content-addressable packages, a trust registry for key rotation, and an extensions architecture — are not civic-specific. Any AI-assisted analysis that needs tamper-evident provenance could use them: biomedical research, financial analysis, journalism, open science generally.
 
 Two futures are currently reachable. This document describes them at enough depth to support the three decision criteria and the 2026-12-31 resolution date from `ROADMAP.md` Section 6.
 
