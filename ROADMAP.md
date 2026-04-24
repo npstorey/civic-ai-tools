@@ -134,6 +134,10 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 
 - **Translation or internationalization.** The interface and documentation are English-only, as a scope decision rather than a backlog item. Translations would be welcome if community capacity emerged; the maintainer does not commit to maintaining translated surfaces.
 
+- **Adjudicative use of AI-generated outputs.** The project's evidence system discloses provenance; it does not certify that outputs are suitable for eligibility determinations, enforcement actions, benefits adjudication, policing or immigration workflows, health or safety emergency response, or any decision where a civic-data answer drives an individual's legal, material, or safety outcome. Users electing to rely on outputs in these contexts do so outside the project's scope, and the registry does not endorse such use.
+
+- **Uniform-quality coverage across every reachable data portal.** The system can connect to Socrata portals broadly and queries Data Commons and Boston OpenContext through their documented APIs. Higher-confidence skill guidance, tested query patterns, and known-limitation notes exist for a smaller, actively-maintained subset. The project does not claim every reachable portal is equally well-supported.
+
 ## 8. Governance
 
 **Cadence.** The roadmap refreshes once per quarter. Each refresh updates version and dates, migrates shipped Now items into "Recently shipped," and promotes Next items to Now as cycles start on them. v2026.Q2 is the first public version.
