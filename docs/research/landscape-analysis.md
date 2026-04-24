@@ -234,6 +234,10 @@ CKAN (`ckan.org`) is the open-data-platform alternative to Socrata; the ecosyste
 
 Croissant is an ML-dataset metadata standard from MLCommons, currently at version 1.1. ROADMAP.md Section 5 Later identifies Croissant as a potential **emitter-side extension** — evidence packages publishing Croissant metadata so ML workflows can consume them directly. The **consumer-side use** is distinct: AI clients discovering civic data through Croissant-tagged portals. The consumer side is not currently in scope as a deliverable; it is tracked as a research direction in `docs/research-agenda.md`.
 
+### Public AI and Sovereign AI
+
+Vocabulary used in AI-policy discourse to describe movements toward user-governable, publicly-accountable AI models — distinct from reliance on frontier proprietary foundation models alone. Relevant to civic-ai-tools' design discipline: the project's skill-guidance and constraint-layer architecture is mid-tier-model-friendly — the system works reasonably on governable smaller models, not only on frontier ones. The project is not specifically a Public AI or Sovereign AI project, but the adjacency is real and worth naming for funder and researcher audiences engaging those frames.
+
 ---
 
 ## Positioning: What Makes civic-ai-tools Unique
