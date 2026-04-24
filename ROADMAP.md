@@ -6,6 +6,8 @@
 
 *This roadmap describes the maintainer's current plans and commitments. Items under Now and Next are committed; items under Later are scoped but not committed to a horizon. Scope, cadence, and priorities may shift in response to contributor interest, technical discovery, and maintenance capacity. The commitments in Section 3 are durable independent of feature changes.*
 
+*See also: [README](README.md) for project navigation, [docs/research-agenda.md](docs/research-agenda.md) for research directions, and [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) for the ecosystem survey.*
+
 ---
 
 ## 1. What this project is, and why
