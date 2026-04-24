@@ -1,7 +1,7 @@
 # civic-ai-tools — public roadmap
 
 **Version:** 2026.Q2
-**Last updated:** 2026-04-23
+**Last updated:** 2026-04-24
 **Next scheduled refresh:** 2026-07-15
 
 *This roadmap describes the maintainer's current plans and commitments. Items under Now and Next are committed; items under Later are scoped but not committed to a horizon. Scope, cadence, and priorities may shift in response to contributor interest, technical discovery, and maintenance capacity. The commitments in Section 3 are durable independent of feature changes.*
@@ -12,7 +12,7 @@
 
 A published analysis of open civic data should survive scrutiny. Six months after it's written, a reader should be able to tell what the AI was asked, which public data sources it queried, which figures came from which query, what guidance the model was operating under, and whether the package has been independently attested to or withdrawn. They should be able to verify all of this without trusting the site that hosts it. That is the problem civic-ai-tools exists to work on — not "AI over civic data," but *legible, verifiable AI over civic data*, and the infrastructure it takes to make that real.
 
-In practical terms, civic-ai-tools is three open-source repositories. Together they let AI assistants (Claude Code, Cursor, Copilot, Codex, Claude Desktop, or any compliant client) query open civic data through the Model Context Protocol, and let anyone publish the result as a cryptographically signed evidence package. As of v0.8.0, three data sources are wired in — Socrata (NYC Open Data and others), Google Data Commons, and Boston OpenContext — behind a single routing registry; new sources slot in via a thin skill document and one registry entry. Audience: civic technologists, government data workers, journalists, students, and researchers who need AI outputs over civic data to be attributable and replayable.
+In practical terms, civic-ai-tools is three open-source repositories. Together they let AI assistants (Claude Code, Cursor, Copilot, Codex, Claude Desktop, or any compliant client) query open civic data through the Model Context Protocol, and let anyone publish the result as a cryptographically signed evidence package. As of v0.8.0, three data sources are wired in — Socrata (NYC Open Data and others), Google Data Commons, and Boston OpenContext — behind a single routing registry; new sources slot in via a thin skill document and one registry entry. Audience: civic technologists, government data workers, journalists, students, and researchers who need AI outputs over civic data to be attributable and replayable. A survey of adjacent projects — at the tool-server, platform, deliberative-tools-interop, and agentic-state-vision layers — lives at `docs/research/landscape-analysis.md`.
 
 ## 2. Vision pillars
 
@@ -147,6 +147,7 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 - **This roadmap** — themes, horizons, trust commitments, out-of-scope lines.
 - **GitHub Issues** — concrete scope, discussion, acceptance criteria. The authoritative backlog.
 - **`docs/adr/`** — architectural decisions, including the eventual evidence-system fork resolution.
+- **`docs/research/landscape-analysis.md`** — ecosystem survey of adjacent civic-AI, evidence, and gov-tech projects, and where this project sits among them.
 - **Per-release tags and their annotated messages** — the diff between one operational checkpoint and the next.
 
 **Audience routing.** The `/roadmap` page on civicaitools.org mirrors this document and adds a short top strip routing each audience — government partners, academic and policy partners, OSS contributors, journalists, funders, end users — to the adjunct best matched to them: `docs/trust-and-evidence.md`, `docs/research-agenda.md`, `docs/sustainability.md`, or `docs/evidence-protocol-fork.md`.
