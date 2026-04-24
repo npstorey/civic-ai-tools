@@ -72,7 +72,7 @@ The last three cycles. Each item is a user-visible outcome, not a feature name.
 
 - **Make the site's novel discipline legible within 90 seconds.** A first-time visitor should see that this is analysis-level cryptographic evidence over civic data — not a generic AI demo — in hero copy, About/Learn content, and post-response affordances. [website#61, website#86] — *Disclosure not validation; Accessible to non-programmers* — *journalists, government partners, students.*
 
-- **Make the evidence detail page readable on long analyses.** Dense traces produce long provenance chains; the page's visual hierarchy should keep them scannable. Design memo in progress. [website#84] — *Disclosure not validation* — *journalists, researchers.*
+- **Make the evidence detail page readable on long analyses.** Dense traces produce long provenance chains; the page's visual hierarchy should keep them scannable. Design memo landed 2026-04-23 (`civic-ai-tools-website/docs/evidence-detail-ux-memo.md`); implementation split across [website#88], [website#89], [website#90], [website#91], [website#92], with a server-side-narration design follow-on at [website#93]. — *Disclosure not validation* — *journalists, researchers.*
 
 ### Next
 
