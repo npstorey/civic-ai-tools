@@ -8,6 +8,8 @@ Civic AI Tools connects AI assistants (GitHub Copilot, Cursor, Claude Code) to p
 
 **Built for** civic technologists, government workers, journalists, and students exploring public data with AI.
 
+Civic AI Tools sits at one layer of a broader landscape where open data meets AI: projects in this space address making data discoverable to AI, making AI mediation legible to humans, feeding signal back to data publishers, and orchestrating AI across civic-data domains. This project focuses on the second layer — evidence packages that make AI analyses inspectable, reproducible, and cryptographically verifiable. See [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) for the wider landscape.
+
 ## What can you do with this?
 
 - Ask questions about NYC 311 complaints, restaurant inspections, or housing violations in plain English
@@ -85,9 +87,27 @@ See [examples/README.md](examples/README.md) for the full list.
 
 ## Documentation
 
-- [docs/setup.md](docs/setup.md) — Complete setup, tool-specific instructions, and troubleshooting
+### Getting started
+- [docs/setup.md](docs/setup.md) — Setup, tool-specific instructions, and troubleshooting
+- [docs/publish-evidence.md](docs/publish-evidence.md) — Publishing analyses from Claude Code to the evidence registry
+
+### Data and skills
 - [docs/mcp-servers.md](docs/mcp-servers.md) — Directory of civic data MCP servers
+- [docs/datasets.md](docs/datasets.md) — Curated dataset directory
 - [docs/opengov-skill.md](docs/opengov-skill.md) — Socrata query patterns and SoQL syntax reference
+- [docs/skills/](docs/skills/) — Per-source AI skill guidance
+
+### Governance and discipline
+- [ROADMAP.md](ROADMAP.md) — Public roadmap, trust commitments, and out-of-scope items
+- [docs/adr/](docs/adr/) — Architectural decision records
+- [docs/trust-and-evidence.md](docs/trust-and-evidence.md) — What "verifiable" means and how to verify a package
+- [docs/sustainability.md](docs/sustainability.md) — Project sustainability posture
+
+### Research
+- [docs/research-agenda.md](docs/research-agenda.md) — Research questions the project engages
+- [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) — Ecosystem survey of adjacent civic-AI and evidence projects
+- [docs/evidence-protocol-fork.md](docs/evidence-protocol-fork.md) — Long-form analysis of the evidence-system fork
+- [docs/research/](docs/research/) — Additional research artifacts
 
 ## Contributing
 
