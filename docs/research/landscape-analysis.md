@@ -6,6 +6,22 @@ A map of projects, organizations, and initiatives at the intersection of artific
 
 ---
 
+## 0. Components of AI-for-civic-data
+
+Projects in this space address different components of a shared problem: making AI-assisted use of public data trustworthy, reproducible, and usefully integrated into civic work. The four components below describe the sub-problems; each peer project surveyed in the sections that follow addresses one or more of them.
+
+1. **Discoverability of data to AI systems.** Can AI clients find and interpret civic datasets without heroic manual pre-work? Metadata standards (Croissant, DCAT, `schema.org/Dataset`), machine-tuned dataset catalogs, and structured-tool exposure via MCP are the current mechanisms.
+
+2. **Legibility of AI mediation to humans.** When AI answers a question from civic data, can a human inspect, reproduce, and challenge the answer? Evidence chains, provenance graphs, cited tool calls, and content-addressable durability are the mechanisms.
+
+3. **Feedback loop to data publishers.** Does signal from AI-analysis use return to portal operators — data-quality issues surfaced during analysis, gaps between user intent and available data, usage patterns that reveal dataset importance — and in what form could it be actionable?
+
+4. **AI orchestration for civic-data domains.** How does AI assistance adapt to the domain — per-source skill guidance, per-geography or per-topic orchestration, routing across multiple data systems, and identifying data-availability gaps as a natural byproduct of use?
+
+civic-ai-tools' primary focus is component 2 (the evidence system), with committed work on component 4 (see the Now and Next items in `ROADMAP.md`). Components 1 and 3, and additional aspects of 4, are research-phase — tracked in `docs/research-agenda.md` and the associated backlog issues. Peer-project coverage for each component is visible in the sections below.
+
+---
+
 ## 1. Direct Peers — LLM Projects for Government Data
 
 Projects that use AI/LLMs to query or analyze government open data, the most directly comparable to civic-ai-tools.
@@ -32,7 +48,7 @@ Projects that use AI/LLMs to query or analyze government open data, the most dir
 | **CensusGPT / textSQL** | [GitHub](https://github.com/caesarHQ/textSQL) | Open-source natural language to SQL for Census data. Includes sfGPT variant for San Francisco. | Peer — same concept, different architecture (text-to-SQL vs. MCP/SoQL). |
 | **StatGPT** (IMF / EPAM) | [statgpt.dialx.ai](https://statgpt.dialx.ai/about-us) | Natural language interface for IMF economic and financial data. StatGPT 2.0 launched Nov 2024. | Validates the approach at international institutional level. |
 | **ChatTCU** (Brazil) | [ODPL](https://repository.opendatapolicylab.org/genai/?slug=chattcu) | Brazil's Federal Court of Accounts ChatGPT-based chatbot for auditors to query case documents. | International government deployment of LLM on institutional data. |
-| **datHere AI Chatbot** ("The People's API") | [dathere.com](https://dathere.com/ai-chatbot/) | AI chatbot for CKAN data portals. Zero-copy approach (sends metadata context, not raw data). Claims 90% reduction in routine data requests. | Key competitor — same mission, different platform (CKAN vs. Socrata). Partnership with OKFN (Dec 2025). |
+| **datHere AI Chatbot** ("The People's API") | [dathere.com](https://dathere.com/ai-chatbot/) | AI chatbot for CKAN data portals. Zero-copy approach (sends metadata context, not raw data). Claims 90% reduction in routine data requests. | Key competitor — same mission, different platform (CKAN vs. Socrata). Partnership with OKFN (Dec 2025). Reproducibility is achieved via GitHub repos of analysis notebooks and demo scripts, which prioritizes developer workflow integration; civic-ai-tools' content-addressable evidence packages prioritize long-term archival durability against branch renames, force-pushes, and repo deletions. Different trade-offs on the reproducibility axis. |
 | **NYC MyCity Chatbot** | [chat.nyc.gov](https://chat.nyc.gov) | NYC's AI chatbot for city services. Cost $600K+. Powered by Microsoft/OpenAI. Gained notoriety for giving incorrect legal advice (The Markup, March 2024). | Cautionary tale — demonstrates demand AND accuracy risks. Validates civic-ai-tools' focus on data grounding and verification. |
 | **GRASP** | [arXiv](https://arxiv.org/html/2503.23299) | RAG + agentic workflow chatbot for municipal budget queries. Achieved 78% accuracy vs. 60% for GPT-4o and 35% for Gemini on local budget questions. | Validates that structured retrieval dramatically improves accuracy on civic data. Strongest benchmark for municipal budget queries. |
 | **DataGemma** (Google) | [Paper](https://docs.datacommons.org/papers/DataGemma-FullPaper.pdf) | Fine-tuned Gemma 2 on Data Commons (Sept 2024). Retrieval-Interleaved Generation improved factuality from 5-17% to 58%; RAG achieved 98-99% accuracy on statistical claims. | Shows fine-tuning on structured civic data yields dramatic accuracy gains. Complements civic-ai-tools' retrieval approach. |
@@ -195,6 +211,28 @@ Tools not specific to civic data but relevant as comparison points or underlying
 | **CKAN** | datHere AI Chatbot integration, ckanext-chat extension. | OKFN partnership is pushing AI-ready CKAN infrastructure. |
 | **Esri ArcGIS** | DC Compass (city-specific chatbot), ArcGIS Hub Assistant (beta). | Enterprise, city-by-city deployments. Expensive. |
 | **Google Data Commons** | MCP server (hosted, free), DataGemma (fine-tuned model for statistical queries). | Free and well-funded, but focused on statistical indicators rather than transactional/operational city data. |
+
+---
+
+## 7. Frameworks and principles
+
+Reference frameworks that appear in the broader AI-for-civic-data discussion. civic-ai-tools relates to each without adopting any as its core identity.
+
+### FAIR data principles
+
+Findable, Accessible, Interoperable, Reusable — an umbrella framework for data-stewardship discipline. Originated in scientific-data contexts (Wilkinson et al., 2016) and now a reference point for open-data and AI-ready-data conversations. civic-ai-tools' stance aligns implicitly on all four axes: MCP exposes data in discoverable and accessible forms, content-addressable evidence packages are interoperable and reusable across verification tools. Not framed as a FAIR-alignment project; the principles are a shorthand for funder and researcher audiences.
+
+### Digital Public Infrastructure (DPI)
+
+Vocabulary used in international-development and multilateral-funder contexts (World Bank, UN, India Stack) to describe shared digital rails for public services — identity, payments, data exchange. civic-ai-tools is adjacent: the verifiable-evidence layer is one candidate piece of DPI for AI-mediated public records, but the project does not claim to be DPI in full. See ROADMAP.md Section 1 for the adjacency acknowledgment.
+
+### CKAN ecosystem (`ecosystem.ckan.org`)
+
+CKAN (`ckan.org`) is the open-data-platform alternative to Socrata; the ecosystem page catalogs community-contributed extensions, clients, and adjacent tools. Relevant as a precedent for what a community-maintained registry of evidence-system extensions and clients would look like under a Path B spin-out. datHere, OKFN, and WPRDC work sits within this ecosystem.
+
+### Croissant (MLCommons) — two-sided use
+
+Croissant is an ML-dataset metadata standard from MLCommons, currently at version 1.1. ROADMAP.md Section 5 Later identifies Croissant as a potential **emitter-side extension** — evidence packages publishing Croissant metadata so ML workflows can consume them directly. The **consumer-side use** is distinct: AI clients discovering civic data through Croissant-tagged portals. The consumer side is not currently in scope as a deliverable; it is tracked as a research direction in `docs/research-agenda.md`.
 
 ---
 
