@@ -34,15 +34,15 @@ Seven disciplines describe what this project tries to hold itself to. They are n
 
 ## 3. Trust and reliability commitments
 
-These are the parts of the roadmap that hold *regardless of what features ship*. They are promises a solo maintainer can keep when feature work slips.
+These are the durable parts of the roadmap that hold *regardless of what features ship*. They are promises a solo maintainer can keep when feature work slips. Some are absolute commitments; others — those framed around numeric timelines — are operational targets the project aims for and publicly discloses when unable to meet.
 
 1. **Evidence-package verifiability, long-term.** Any evidence package published on or after v0.6.0 will remain cryptographically verifiable for at least **five years** after publication. The trust registry records every historical signing key; key material is never deleted, only superseded. The underlying cryptographic chain (Ed25519 signatures, FreeTSA RFC 3161 timestamps, Sigstore Rekor entries) is independent of civicaitools.org and remains externally verifiable by third-party tooling beyond that window. The five-year commitment covers operational aspects: trust-registry availability, verification-tooling maintenance, key-rotation runbook adherence.
 
 2. **Coordinated release cadence.** Meaningful scope ships on a one-to-two-week cycle with cross-repo coordinated version tags (most recently v0.8.0, 2026-04-23). Tags are the stable checkpoints contributors and partners can pin to. If the cadence materially changes, the next refresh will describe the new one; no silent slowdown.
 
-3. **Ninety-day notice on breaking changes.** Breaking changes to the evidence-package `formatVersion` schema, the signature-verification procedure, or the documented `POST /api/evidence` contract (see `civic-ai-tools-website/docs/api/evidence-publish.md`) get a minimum 90-day notice and a documented migration path. Older `formatVersion` values stay verifiable indefinitely.
+3. **Advance notice on breaking changes.** Breaking changes to the evidence-package `formatVersion` schema, the signature-verification procedure, or the documented `POST /api/evidence` contract (see `civic-ai-tools-website/docs/api/evidence-publish.md`) ship with advance notice and a documented migration path. The project targets 90 days of notice; a shorter notice period is published with rationale when that target cannot be met. Older `formatVersion` values stay verifiable indefinitely.
 
-4. **Security triage SLO.** Reports sent to the published security contact are acknowledged within **five business days**. Critical vulnerabilities — signing-key compromise, verification bypass, credential exposure — get a fix or a public advisory within **thirty days**, published via GitHub Security Advisories.
+4. **Security triage.** Reports sent to the published security contact receive acknowledgment; the project targets five business days, with longer turnaround possible during extended maintainer absence. Critical vulnerabilities — signing-key compromise, verification bypass, credential exposure — receive a fix or a public advisory published via GitHub Security Advisories; the project targets 30 days for that disclosure, with longer timelines publicly reported when they occur.
 
 5. **API stability for documented endpoints.** Endpoints documented in-repo (today, `POST /api/evidence`) follow the 90-day rule above. Undocumented and internal endpoints may change at will.
 
