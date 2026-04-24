@@ -158,7 +158,7 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 - **`docs/research/landscape-analysis.md`** — ecosystem survey of adjacent civic-AI, evidence, and gov-tech projects, and where this project sits among them.
 - **Per-release tags and their annotated messages** — the diff between one operational checkpoint and the next.
 
-**Audience routing.** The `/roadmap` page on civicaitools.org mirrors this document and adds a short top strip routing each audience — government partners, academic and policy partners, OSS contributors, journalists, funders, end users — to the adjunct best matched to them: `docs/trust-and-evidence.md`, `docs/research-agenda.md`, `docs/sustainability.md`, or `docs/evidence-protocol-fork.md`.
+**Audience routing.** The `/roadmap` page on civicaitools.org mirrors this document and adds a short audience-routing strip linking each audience — government partners, academic and policy partners, OSS contributors, journalists, funders, end users — to the adjunct best matched to them: `docs/trust-and-evidence.md`, `docs/research-agenda.md`, `docs/sustainability.md`, or `docs/evidence-protocol-fork.md`.
 
 **Feedback.** The fastest path to push back on this roadmap is an issue using the roadmap-change template. The project does not run a community chat at this stage; community capacity is a Later item, not a present commitment.
 
