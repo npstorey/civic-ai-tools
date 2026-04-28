@@ -68,39 +68,92 @@ Before posting, confirm these are all true. If any is missing, ask the user befo
 
 3. **A concrete final response exists** (or, in multi-turn mode, a coherent transcript). Publish what was actually said verbatim — partial completions and flagged uncertainties are fine; the attestation flow on civicaitools.org surfaces them.
 
+## Reading the session JSONL (verbatim capture, do not skip)
+
+Per [ADR-0003](../../../docs/adr/0003-evidence-capture-method.md), prose content (`prompt`, `output`, `turns[].content`) and tool args (`toolCalls[].args`) **must be read verbatim from the Claude Code session JSONL**. Do not write Python string literals from in-context memory for any prose field. Paraphrase looks close to verbatim but is not — earlier publishes that paraphrased introduced fabricated bracketed annotations like `[Tool calls: load Socrata MCP tools via ToolSearch...]` and hand-typed token counts that were off by ~14×. The publishing model is set to `claude-code-jsonl-readback`; the dry-run gate (see below) blocks payloads that show signs of paraphrase.
+
+### Locating the session JSONL
+
+The active session is being appended to in real time as you read this. Resolve the file path:
+
+1. **Encoded cwd directory.** Take the current working directory (run `pwd` if uncertain) and replace every `/` with `-`. Example: `/Users/foo/Code/civic-ai-tools` → `-Users-foo-Code-civic-ai-tools`. The session lives under `~/.claude/projects/<encoded-cwd>/`.
+2. **Session file.** The session you are publishing from is the most-recently-modified `.jsonl` in that directory. `ls -t ~/.claude/projects/<encoded-cwd>/*.jsonl | head -1` resolves it. (Each record carries a constant `sessionId`; you can sanity-check by reading the first non-meta record's `sessionId` field and comparing to the filename stem.)
+
+If the analysis happened in a different chat session than the publish (rare), ask the user for the session ID, then read `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl` directly.
+
+### Record shape
+
+Each line is one JSON record. Records you care about for capture:
+
+- `type: "user"` — user-typed messages and auto-emitted tool results. The genuine user prompt has `message.content` as a string (or a list with `text` blocks) and **does not** have `isMeta: true`. Tool results have `message.content` as a list of `tool_result` blocks — skip them; tool-call args come from the `tool_use` blocks instead.
+- `type: "assistant"` — assistant invocations, **one record per content block**. All records sharing the same `message.id` belong to the same invocation. Each record's `message.usage` field is identical across the group; first-write-wins for dedup. Content blocks are typed `text`, `tool_use`, or `thinking`.
+- `type: "system"`, `type: "file-history-snapshot"`, `type: "last-prompt"`, `type: "permission-mode"`, `type: "attachment"` — out of scope for this skill; ignore.
+
+Slash-command output (records whose string content starts with `<command-name>` or `<local-command-stdout>`) and any record with `isMeta: true` are noise — exclude them from prose capture.
+
+### Extraction algorithm
+
+For each user-typed message and each assistant invocation in the analysis window:
+
+1. **Group assistant records by `message.id`** in the order they first appear. Within a group, walk content blocks in document order.
+2. **Filter content blocks by type:**
+   - `text` blocks contribute to prose (`turns[].content`, `output`, single-turn assistant response).
+   - `tool_use` blocks contribute to `toolCalls[]` (see below). Their `input` field is the verbatim args dict.
+   - `thinking` blocks are excluded entirely. They have a `signature:` field that must never appear in the package.
+3. **Sum token usage from one record per `message.id`** (first-write-wins, since usage repeats):
+   - `promptTokens` ← `usage.input_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens` summed across unique `msg.id` values.
+   - `completionTokens` ← `usage.output_tokens` summed across unique `msg.id` values.
+   - Cache tokens fold into `promptTokens` per the package convention; do not surface them as a separate field.
+
+A short Python helper that reads the JSONL and emits the parsed-and-deduped structures is the cleanest way to assemble the payload. The builder pattern is fine for that reader and for the `toolCalls[]`/metadata wrapper. **Do not construct `prompt`, `output`, or `turns[].content` from Python string literals you typed in this conversation** — read them out of the JSONL records.
+
 ## Inputs to assemble
 
-You are assembling a JSON payload that you will pass to the bundled `publish.py` script. Gather the following from the conversation context. Ask for any you cannot infer rather than guessing.
+You are assembling a JSON payload that you will pass to the bundled `publish.py` script. Gather the following. Ask for any you cannot infer rather than guessing.
+
+Fields marked **verbatim from JSONL** must be filled by reading the session JSONL records as described above; do not write them from memory.
 
 | Field | How to populate |
 |------|--------|
-| `title` | A short, specific name for the analysis (≤80 chars, shown on the evidence detail page and in the URL slug). Derive from the user's original question. Ask the user to confirm. |
-| `summary` | 2–4 sentences for a non-technical reader. Neutral third-person voice (never "I" or "we"). Describe what was analyzed, what the key finding was, and any caveats or partial results. |
+| `title` | Inherently model-authored (per ADR-0003). A short, specific name for the analysis (≤80 chars, shown on the evidence detail page and in the URL slug). Derive from the user's original question. Ask the user to confirm. |
+| `summary` | Inherently model-authored. 2–4 sentences for a non-technical reader. Neutral third-person voice (never "I" or "we"). Describe what was analyzed, what the key finding was, and any caveats or partial results. |
 | `captureMode` | `"single_final_turn"` (default) or `"full_conversation"`. See "Capture modes" above. |
-| `prompt` | Single-turn: the user's original analysis question, verbatim. Multi-turn: the first user message in the captured window, OR a later semantic analysis question if the first turn is setup/clarification. Never a "publish this" follow-up. |
-| `output` | Single-turn: the assistant's final markdown response verbatim. Multi-turn: a rendered markdown transcript of every captured turn with `### Turn N — User` / `### Turn N — Assistant` headers (matching `turns[].index` and `turns[].role`). Preserve tables, citations, and caveats. |
-| `turns[]` | Required when `captureMode` is `full_conversation`. Array of `{ index, role, content }` objects, strictly increasing `index`. Roles are `user`, `assistant`, or `tool`. See "Turn roles" above. |
+| `captureMethod` | **Always** `"claude-code-jsonl-readback"` for skill-published packages. The server enum also accepts `"chat-flow-stream"` (website chat path) and `"claude-code-self-report"` (legacy paraphrase path, deprecated 2026-04-28); the skill never sets those. |
+| `prompt` | **Verbatim from JSONL.** Single-turn: the genuine user `message.content` from the user record that prompted the analysis, byte-for-byte. Multi-turn: the first genuine user message in the captured window, OR a later semantic analysis question if the first turn is setup/clarification. Never the "publish this" follow-up. Skip records with `isMeta: true` and slash-command output. |
+| `output` | **Verbatim from JSONL.** Single-turn: the final assistant invocation's `text`-typed content blocks, concatenated in document order. Multi-turn: a rendered markdown transcript built from `turns[]` with `### Turn N — User` / `### Turn N — Assistant` headers (`turns[].index`, `turns[].role`). Both shapes preserve tables, citations, and caveats exactly as the model emitted them. |
+| `turns[]` | **Verbatim from JSONL.** Required when `captureMode` is `full_conversation`. Array of `{ index, role, content }` objects, strictly increasing `index`. Roles are `user`, `assistant`, or `tool`. `content` is the concatenated `text`-typed blocks for assistant turns or the user's `message.content` string for user turns — never thinking, never tool_use markup, never paraphrase. See "Turn roles" above. |
 | `sessionBoundary` | Optional, full_conversation only. `"first_civic_tool_call"` (default) or `"session_start"`. Confirm with the user before setting to `session_start`. |
-| `model` | `anthropic/claude-opus-4-7` if you are Claude Opus 4.7 ("Opus 4.7" appears in the session's model identifier). Use the exact model slug from the current session. |
+| `model` | The model slug from the session's assistant records (`message.model`). For Claude Opus 4.7 that's `anthropic/claude-opus-4-7`. Use the exact slug, do not normalize. |
 | `portal` | `data.cityofnewyork.us` if any Socrata tool calls used NYC Open Data; otherwise the portal used; otherwise `n/a` for Data-Commons-only analyses. |
 | `promptVisibility` | `full_text` by default — the prompt goes into the package in the clear. Switch to `hash_only` only if the user explicitly asks to omit their prompt text. |
-| `tokenUsage.promptTokens`, `tokenUsage.completionTokens` | Single-turn: best available estimates for the one turn. Multi-turn: **sum across all captured turns**. If you cannot reasonably estimate, omit the inner fields (send an empty `{}`). |
+| `tokenUsage.promptTokens`, `tokenUsage.completionTokens` | **Verbatim from JSONL.** Sum per the algorithm above. Do not estimate from prose length, conversation context, or rule-of-thumb token-per-character ratios — those have been observed off by an order of magnitude. If the JSONL is unavailable for some reason, omit the inner fields (send an empty `{}`) rather than guess. |
 | `duration_ms` | Rough end-to-end wall-clock in milliseconds (single-turn) or the span of the captured turns (multi-turn). If unknown, omit. |
 | `toolCalls[]` | One entry per civic MCP tool call made in the captured window — see below. |
 
-### `toolCalls[]` reconstruction
+### `toolCalls[]` reconstruction (verbatim from JSONL)
 
-Walk through every tool call in the captured window. For each one, add an entry:
+Walk every assistant `tool_use` content block in the captured window. For each one with a civic MCP `name` (prefix `mcp__socrata__` or `mcp__data-commons__`), add an entry:
 
-- `name` — the underlying MCP tool name. Strip any `mcp__socrata__` / `mcp__data-commons__` prefix (e.g., `mcp__socrata__get_data` → `get_data`, `mcp__data-commons__search_indicators` → `search_indicators`).
-- `source` — `"socrata"` or `"data-commons"` based on the tool prefix. Exactly one of those two values.
-- `args` — the full arguments object you sent to the tool. Do not rewrite or trim; the server stores these verbatim in `queries[].arguments`.
-- `resultSummary` — optional `{ rows: number, columns: number }` if the tool result has tabular shape you can count. Skip otherwise.
+- `name` — the underlying MCP tool name with the prefix stripped (e.g., `mcp__socrata__get_data` → `get_data`, `mcp__data-commons__search_indicators` → `search_indicators`).
+- `source` — `"socrata"` or `"data-commons"` based on the prefix. Exactly one of those two values.
+- `args` — the `tool_use.input` field copied verbatim (a JSON object). Do not rewrite, trim, or reformat; the server stores these in `queries[].arguments`.
+- `resultSummary` — optional `{ rows: number, columns: number }` if the tool result (in the next user record's `tool_result.content`) has tabular shape you can count. Skip otherwise.
 - `duration_ms` — optional. Skip unless you have a real number.
 - `operationType` — optional. For Socrata, the server auto-derives from `args.type` (`query`, `catalog`, `metadata`, `metrics`); pass through the `args.type` value if you have it. For Data Commons, provide `search` for `search_indicators` and `query` for `get_observations`.
 - `turnIndex` — **multi-turn only**. The `turns[].index` the call belongs to. Used to emit `turn.index` on the `mcp_tool_call` span so future tooling can reconstruct turn grouping from the trace. The server drops this field at the `queries[]` boundary — don't rely on it being surfaced in the package's top-level `queries[]`.
 
 The script synthesizes a minimal OpenTelemetry trace with `mcp_tool_call` spans carrying `mcp.source`, `tool.name`, and `tool.operation_type` — that drives the server's PROV-O graph and `dataSources[]` builder, so **every MCP tool call must be represented here** for attribution to be correct.
+
+## Negative pattern scan (dry-run gate)
+
+`publish.py --dry-run` (and the live publish path) runs a negative pattern scan over `prompt`, `output`, and every `turns[].content` looking for markers that only appear when prose was paraphrased from memory rather than read from JSONL:
+
+- `<thinking>` — leaked thinking-block opening tag.
+- `tool_use` (literal substring with the underscore) — leaked tool-use markup.
+- `toolu_[A-Za-z0-9]+` — leaked tool-use ID.
+- `signature:` — leaked thinking-block signature field.
+
+If any pattern matches, the script exits with a clear error pointing to the field and the offending substring. Re-run the JSONL readback for that field — don't try to scrub the markers out of paraphrased prose. The scan is conservative on purpose; false positives are recoverable, false negatives compound the disclosure failure ADR-0003 documents.
 
 ### Optional: skill guidance capture
 

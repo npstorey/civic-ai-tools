@@ -60,6 +60,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
@@ -80,6 +81,32 @@ ALLOWED_SOURCES = {"socrata", "data-commons"}
 ALLOWED_PROMPT_VISIBILITY = {"full_text", "hash_only"}
 ALLOWED_CAPTURE_MODES = {"single_final_turn", "full_conversation"}
 ALLOWED_TURN_ROLES = {"user", "assistant", "tool"}
+# Capture-method enum per ADR-0003. The skill always emits
+# ``claude-code-jsonl-readback``; the other values exist so the server's
+# wider enum is reachable from the same validator if a payload sets one
+# explicitly. ``claude-code-self-report`` is deprecated for new publishes
+# but retained so legacy packages can be re-rendered with their actual
+# capture method labeled.
+ALLOWED_CAPTURE_METHODS = {
+    "chat-flow-stream",
+    "claude-code-jsonl-readback",
+    "claude-code-self-report",
+}
+DEFAULT_CAPTURE_METHOD = "claude-code-jsonl-readback"
+
+# Negative pattern scan — substrings / regexes that only appear when
+# prose was paraphrased from in-context memory rather than read from the
+# Claude Code session JSONL. Run as a dry-run + live-publish gate.
+# Per ADR-0003 and #60. The bare-string entries are fast substring
+# checks; the regex entry catches tool-use IDs of arbitrary suffix.
+LEAK_LITERAL_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("<thinking>", "leaked <thinking> block opening tag"),
+    ("tool_use", "leaked `tool_use` block markup"),
+    ("signature:", "leaked thinking-block `signature:` field"),
+)
+LEAK_REGEX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"toolu_[A-Za-z0-9]+"), "leaked tool-use id (toolu_...)"),
+)
 
 # Per-field size threshold at which content is uploaded to Vercel Blob
 # rather than inlined in the POST /api/evidence body. Chosen to leave
@@ -406,6 +433,86 @@ def _validate_turn(turn: dict[str, Any], idx: int) -> None:
         sys.exit(2)
 
 
+def _scan_for_leaks(field_label: str, value: str) -> list[tuple[str, str]]:
+    """Return ``[(pattern_label, snippet), ...]`` for every leak match in
+    ``value``. ``value`` is the prose content of a single field. The
+    snippet is a small window around the first occurrence, suitable for
+    embedding in an error message without dumping the whole field."""
+    if not isinstance(value, str) or not value:
+        return []
+    findings: list[tuple[str, str]] = []
+    for needle, label in LEAK_LITERAL_PATTERNS:
+        idx = value.find(needle)
+        if idx >= 0:
+            start = max(0, idx - 24)
+            end = min(len(value), idx + len(needle) + 24)
+            snippet = value[start:end].replace("\n", " ")
+            findings.append((label, f"...{snippet}..."))
+    for pattern, label in LEAK_REGEX_PATTERNS:
+        match = pattern.search(value)
+        if match:
+            start = max(0, match.start() - 24)
+            end = min(len(value), match.end() + 24)
+            snippet = value[start:end].replace("\n", " ")
+            findings.append((label, f"...{snippet}..."))
+    # Mention each pattern at most once per field, even if it occurs
+    # multiple times — the user only needs to see that the field needs a
+    # re-read, not every offset.
+    seen_labels: set[str] = set()
+    deduped: list[tuple[str, str]] = []
+    for label, snippet in findings:
+        if label in seen_labels:
+            continue
+        seen_labels.add(label)
+        deduped.append((label, snippet))
+    return deduped
+
+
+def negative_pattern_scan(payload: dict[str, Any]) -> None:
+    """Verify prose fields contain no markers indicating paraphrase from
+    memory rather than verbatim JSONL readback. Exits 2 with a clear
+    error if any leak is found. Per ADR-0003 and #60.
+
+    Scans ``prompt``, ``output`` (only when inline-string; BlobRef
+    ``output`` is uploaded after this gate, which is fine — the BlobRef
+    is hash-bound and the bytes were already vetted before upload), and
+    every ``turns[].content``.
+    """
+    fields_to_scan: list[tuple[str, str]] = []
+    prompt = payload.get("prompt")
+    if isinstance(prompt, str):
+        fields_to_scan.append(("prompt", prompt))
+    output = payload.get("output")
+    if isinstance(output, str):
+        fields_to_scan.append(("output", output))
+    turns = payload.get("turns")
+    if isinstance(turns, list):
+        for idx, turn in enumerate(turns):
+            if isinstance(turn, dict) and isinstance(turn.get("content"), str):
+                fields_to_scan.append((f"turns[{idx}].content", turn["content"]))
+
+    all_findings: list[tuple[str, str, str]] = []
+    for field_label, value in fields_to_scan:
+        for leak_label, snippet in _scan_for_leaks(field_label, value):
+            all_findings.append((field_label, leak_label, snippet))
+
+    if not all_findings:
+        return
+
+    eprint(
+        "error: negative pattern scan failed — payload contains markers that "
+        "only appear when prose is paraphrased from memory rather than read "
+        "verbatim from the Claude Code session JSONL (per ADR-0003)."
+    )
+    eprint("Re-read the affected field(s) directly from the session JSONL; do "
+           "not try to scrub the markers out of paraphrased prose.")
+    eprint("")
+    for field_label, leak_label, snippet in all_findings:
+        eprint(f"  - {field_label}: {leak_label}")
+        eprint(f"    near: {snippet}")
+    sys.exit(2)
+
+
 def validate_payload(payload: dict[str, Any]) -> None:
     required = [
         "title",
@@ -456,6 +563,13 @@ def validate_payload(payload: dict[str, Any]) -> None:
         eprint(
             f"error: captureMode must be one of "
             f"{sorted(ALLOWED_CAPTURE_MODES)} (got {capture_mode!r})"
+        )
+        sys.exit(2)
+    capture_method = payload.get("captureMethod", DEFAULT_CAPTURE_METHOD)
+    if capture_method not in ALLOWED_CAPTURE_METHODS:
+        eprint(
+            f"error: captureMethod must be one of "
+            f"{sorted(ALLOWED_CAPTURE_METHODS)} (got {capture_method!r})"
         )
         sys.exit(2)
     if capture_mode == "full_conversation":
@@ -790,6 +904,7 @@ def build_request_body(
         "promptVisibility": payload.get("promptVisibility", "full_text"),
         "title": payload["title"],
         "summary": payload["summary"],
+        "captureMethod": payload.get("captureMethod", DEFAULT_CAPTURE_METHOD),
     }
     if payload.get("duration_ms") is not None:
         body["duration_ms"] = payload["duration_ms"]
@@ -955,6 +1070,7 @@ def _redacted_preview(
     multi_turn_ext = ext.get("org.civicaitools.multi-turn")
     preview: dict[str, Any] = {
         "captureMode": stats.get("captureMode"),
+        "captureMethod": body.get("captureMethod"),
         "turnCount": stats.get("turnCount"),
         "title": body["title"],
         "model": body["model"],
@@ -1250,6 +1366,7 @@ def main() -> None:
         payload["captureMode"] = args.mode
 
     validate_payload(payload)
+    negative_pattern_scan(payload)
 
     if args.dry_run:
         body, stats = build_request_body(
