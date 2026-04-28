@@ -68,8 +68,9 @@ Full authentication contract: [`civic-ai-tools-website/docs/api/evidence-publish
 
    The skill auto-triggers on phrases like "publish this as evidence", "publish to civicaitools.org", "sign this analysis", or "make this a verifiable package."
 4. Claude will:
-   - Summarize what it's about to publish (title, summary, token usage, source list, capture mode).
-   - Write the payload to a temp file and run the publish script with `--dry-run` to show a redacted preview.
+   - Read the session JSONL at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl` to capture prose content (`prompt`, `output`, `turns[].content`), tool args, and per-invocation token usage verbatim. (See "Verbatim capture from JSONL" below for what this means and why.)
+   - Summarize what it's about to publish (title, summary, token usage, source list, capture mode, capture method).
+   - Write the payload to a temp file and run the publish script with `--dry-run` — which validates schema, runs the negative pattern scan, and prints a redacted preview.
    - Ask for your go-ahead.
 5. Confirm, and the skill POSTs to `civicaitools.org/api/evidence`. On success it prints:
    - The public URL (`https://civicaitools.org/evidence/<slug>`)
@@ -77,6 +78,20 @@ Full authentication contract: [`civic-ai-tools-website/docs/api/evidence-publish
    - A readback URL (`/api/evidence/<slug>`) for programmatic inspection
 
 6. Open the URL to run consistency or adversarial attestations from the dashboard.
+
+## Verbatim capture from JSONL
+
+Per [ADR-0003](./adr/0003-evidence-capture-method.md), packages published from this skill carry `captureMethod: "claude-code-jsonl-readback"` — meaning prose content and tool args are read directly from the Claude Code session log on disk (`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`), not reconstructed from the publishing model's in-context memory. This matters because:
+
+- The cryptographic signature on the package attests "this content was published and has not been tampered with since," not "this content matches the original session." For chat-flow packages those are the same (the website server captured bytes from the model stream); for skill-published packages they only line up if the skill reads the session log verbatim.
+- Earlier publishes that paraphrased from memory introduced fabricated bracketed annotations (e.g., `[Tool calls: load Socrata MCP tools via ToolSearch...]` that were never emitted in the original session) and hand-typed token counts that have been observed off by ~14× on prompt tokens.
+
+Two safeguards keep the skill on the verbatim path:
+
+1. **JSONL readback in `SKILL.md`.** The skill instructs the publishing model to walk the session JSONL line-by-line, group assistant content blocks by `message.id`, filter to `text`-typed blocks for prose, copy `tool_use.input` verbatim for tool args, and sum `usage.input_tokens + cache_creation_input_tokens + cache_read_input_tokens` and `usage.output_tokens` once per unique `message.id` for token totals.
+2. **Negative pattern scan in `publish.py --dry-run`.** The script scans `prompt`, `output`, and every `turns[].content` for substrings that only appear when prose was paraphrased — `<thinking>` tags, the literal text `tool_use`, `toolu_*` IDs, and `signature:` fields. Any match exits non-zero with the field name and a snippet, so you can re-read that field from the JSONL rather than ship a paraphrased package.
+
+If the dry-run scan flags a field, the fix is to re-read it from the JSONL — not to scrub the markers out of paraphrased prose.
 
 ## Capture modes: single turn vs. full conversation
 
@@ -156,13 +171,15 @@ python3 civic-ai-tools/.claude/skills/publish-evidence/publish.py \
     --dry-run   # optional: preview without POSTing
 ```
 
-The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and optional `captureMode`, `turns[]`, `sessionBoundary`, `model`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`.
+The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and optional `captureMode`, `captureMethod`, `turns[]`, `sessionBoundary`, `model`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`. `captureMethod` defaults to `"claude-code-jsonl-readback"` and is the only value the skill should set; the wider enum (`chat-flow-stream`, `claude-code-self-report`) is reachable for completeness only.
+
+When publishing without a Claude conversation in the loop, you are responsible for the JSONL readback yourself — copying prose into `prompt` / `output` / `turns[].content` from a Python string literal you typed will trip the negative pattern scan as soon as the captured session contained any thinking blocks or tool-use IDs.
 
 CLI flags worth knowing:
 
 - `--mode single_final_turn|full_conversation` — override the payload's `captureMode` without editing the file.
 - `--max-inline-bytes N` — per-field inline threshold (default 524288). Fields above this threshold upload to Vercel Blob via `/api/blob/upload-token` and are referenced by SHA-256 hash in the evidence package.
-- `--dry-run` — validate the payload, print a redacted preview, and exit without POSTing or uploading. Useful for debugging payload shape.
+- `--dry-run` — validate the payload, run the negative pattern scan, print a redacted preview, and exit without POSTing or uploading. Useful for debugging payload shape and for catching accidental paraphrase before publication.
 
 ## Troubleshooting
 
@@ -176,6 +193,7 @@ CLI flags worth knowing:
 | Published package shows `operationType: "unknown"` | Tool call was reconstructed without an explicit `operationType`. | Pass `operationType` per tool call (`query`, `search`, `catalog`, `metadata`, `metrics`) in the payload. |
 | PROV-O graph missing a source | A tool call in the analysis didn't end up in `toolCalls[]`. | Walk through the conversation and add the missing call; republish. |
 | `--dry-run` exits 2 with "exceeds the … inline threshold" | A field (usually the transcript in `output`) is larger than 512 KB. | Expected in `--dry-run` — blob uploads are skipped there. Re-run without `--dry-run` and valid credentials; the field will upload to Vercel Blob and be referenced by hash. If you need the dry-run to succeed for debugging, raise `--max-inline-bytes`. |
+| `--dry-run` exits 2 with "negative pattern scan failed" | A prose field (`prompt`, `output`, or a `turns[].content`) contains markers that only appear when the content was paraphrased rather than read from the session JSONL. | Re-read the offending field directly from `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl` — group assistant records by `message.id`, filter content blocks to `text` only, and copy verbatim. Don't try to scrub the markers out of paraphrased prose. |
 | Multi-turn package detail page shows only the transcript, not per-turn UI | Expected for now. | Turn-by-turn rendering lives in `extensions["org.civicaitools.multi-turn"]` on the package and is a separate future website ticket. The transcript in `output` still captures every turn verbatim. |
 
 ## Privacy notes
