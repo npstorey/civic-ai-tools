@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/npstorey-civic-ai-tools-badge.png)](https://mseep.ai/app/npstorey-civic-ai-tools)
+
 # Civic AI Tools
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/npstorey/civic-ai-tools)
