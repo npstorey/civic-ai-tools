@@ -1,10 +1,24 @@
 # ADR-0003: Capture-method differentiation for evidence packages
 
 - **Status:** Accepted
-- **Date:** 2026-04-28
+- **Date:** 2026-04-28 (originally Accepted); 2026-04-29 (briefly Proposed; re-Accepted same day after enforcement and §1 amendment shipped)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
+
+> **2026-04-29 status note (post-implementation, with §1 amendment).** ADR was Accepted 2026-04-28, downgraded to Proposed on 2026-04-29 morning after an audit found the website did not enforce the decision, and re-Accepted on 2026-04-29 once enforcement and a small body amendment shipped together.
+>
+> **What shipped in `civic-ai-tools-website`:** `captureMethodEnum` and a nullable `capture_method` column on `evidence_records` (Drizzle migration `drizzle/0007_capture_method.sql`); a `CaptureMethod` type and a conditional `metadata.captureMethod` field on `EvidencePackage` (covered by the canonical-JSON package hash and the platform Ed25519ph signature); required `captureMethod` validation on `POST /api/evidence` returning `400` on missing or invalid; explicit `captureMethod: 'chat-flow-stream'` in the chat-flow `src/components/PublishEvidenceDialog.tsx` request body; a "Captured via:" label on the evidence detail page next to the verification status; updated `docs/api/evidence-publish.md` (request schema row, notes-on-specific-fields entry, three example payloads, change log); three new tests in `src/lib/evidence/packager.test.ts` including a hash-sensitivity assertion that two packages identical except for `captureMethod` produce different normalized hashes (the load-bearing tamper-evidence assertion).
+>
+> **Amendment to Consequences §1 (legacy-default clause).** The original §1 last clause read:
+>
+> > "Default for packages predating this ADR (where the field is absent in storage): `claude-code-self-report` if they originated from the skill, `chat-flow-stream` otherwise. Pre-ADR records are not re-signed."
+>
+> Replaced 2026-04-29 with:
+>
+> > "Default for packages predating this ADR (where the field is absent in storage): rendered as 'Unknown (pre-ADR-0003)' on the detail page; the database column remains null. Pre-ADR records are not re-signed."
+>
+> Rationale: `evidence_records` does not record a reliable origin signal for pre-ADR packages — there is no `creator_auth_method`, no `client_id`, and `mcp_server` / `model` are not reliable discriminators between chat-flow and skill publishes. Inferring "originated from the skill" from indirect signals would require a heuristic that is itself a Principle 1 (disclosure, not validation) disclosure problem — silently mislabeling some legacy packages, with the labeling logic invisible to readers. Honest "Unknown (pre-ADR-0003)" is the right disclosure.
 
 ## Context
 
@@ -47,7 +61,7 @@ Introduce a `captureMethod` field on the evidence-package schema and require fut
 
 ## Consequences
 
-- **Package schema migration.** A new optional `captureMethod` field is added to the signed envelope (`civic-ai-tools-website/src/lib/evidence/packager.ts`). Default for new publishes from chat flow: `chat-flow-stream`. Default for new publishes from the skill: `claude-code-jsonl-readback`. Default for packages predating this ADR (where the field is absent in storage): `claude-code-self-report` if they originated from the skill, `chat-flow-stream` otherwise. Pre-ADR records are not re-signed.
+- **Package schema migration.** A new optional `captureMethod` field is added to the signed envelope (`civic-ai-tools-website/src/lib/evidence/packager.ts`). Default for new publishes from chat flow: `chat-flow-stream`. Default for new publishes from the skill: `claude-code-jsonl-readback`. Default for packages predating this ADR (where the field is absent in storage): rendered as 'Unknown (pre-ADR-0003)' on the detail page; the database column remains null. Pre-ADR records are not re-signed. *(Amended 2026-04-29 — see Status note for rationale; original clause inferred a method from skill/chat origin, but no reliable origin signal exists in `evidence_records`.)*
 - **publish-evidence skill update (civic-ai-tools).** SKILL.md must require: read each `turns[].content` from JSONL filtering to `text`-typed content blocks only; sum `usage` across unique `msg.id` invocations (cache tokens fold into `promptTokens`); set `captureMethod: "claude-code-jsonl-readback"` on the payload; verify against a negative pattern scan (no `<thinking>` tags, no `tool_use` literals, no `toolu_` IDs, no `signature:` fields) before dry-run completes. The Python builder pattern is fine for tool args; for prose content it must read JSONL, never write Python string literals from memory.
 - **Detail-page UI update (civic-ai-tools-website).** The page surfaces `captureMethod` near the verification status as a short label. Multi-turn package transcripts are rendered from `turns[]` rather than truncated `output` (the existing 2,000-char hard truncation in `ProvenanceChain.tsx:173` is replaced; tracked separately).
 - **Bronx package retroactive attestation.** The `a9e428…` Bronx package receives a human-expert attestation explicitly stating it was published before the JSONL fix and that its `tokenUsage` was hand-estimated. The attestation does not change the package's signature; it adds metadata visible on the detail page.
