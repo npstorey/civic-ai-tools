@@ -11,7 +11,7 @@
 
 This document layers the architecture in two ways:
 
-1. **By concern.** Static structural views (the standards stack, the identity ladder, the claims ontology family, the network signal model) are separated from dynamic flow views (publishing, verification, evaluation, network propagation).
+1. **By concern.** Static structural views (the standards stack, the identity ladder, the claims vocabulary family, the network signal model) are separated from dynamic flow views (publishing, verification, evaluation, network propagation).
 2. **By build state.** Every node and edge in every diagram is colored by how complete its implementation is today:
 
 | Color | State | Meaning |
@@ -63,7 +63,7 @@ flowchart TB
         croissant["Croissant 1.1 (dataset metadata)"]:::partial
         dcat["DCAT-US 3.0"]:::partial
         nanopub["nanopub assertion graph"]:::speculative
-        claims["claims.jsonld (typed claims, CACO)"]:::designed
+        claims["claims.jsonld (typed claims, Civic Claim Vocabulary)"]:::designed
     end
 
     subgraph L2["Layer 2 — Trace capture"]
@@ -216,15 +216,15 @@ flowchart LR
 
 ---
 
-## 5. The claims ontology family (static)
+## 5. The claims vocabulary family (static)
 
 Typed claims (`claims.jsonld`) are the project's contribution to the open-science / civic-data trust stack. They sit on top of existing W3C and community ontologies rather than replacing them.
 
 ```mermaid
 flowchart TB
-    CACO["CACO<br/>Civic Analysis Core Ontology<br/>(project-specific)"]:::designed
+    CCV["Civic Claim Vocabulary<br/>(project-specific)"]:::designed
 
-    subgraph Foundational["Foundational ontologies (external)"]
+    subgraph Foundational["Foundational vocabularies (external)"]
         PROV["W3C PROV-O<br/>provenance"]:::built
         SDMX["SDMX<br/>statistical data exchange"]:::speculative
         DataCube["W3C Data Cube<br/>multidimensional data"]:::speculative
@@ -239,8 +239,8 @@ flowchart TB
         Service["311 / service requests"]:::speculative
     end
 
-    Foundational --> CACO
-    CACO --> Domain
+    Foundational --> CCV
+    CCV --> Domain
 
     classDef built fill:#86efac,stroke:#166534,color:#000
     classDef partial fill:#fde68a,stroke:#92400e,color:#000
@@ -248,9 +248,9 @@ flowchart TB
     classDef speculative fill:#fca5a5,stroke:#991b1b,color:#000
 ```
 
-**Design principle:** the core ontology (CACO) is small and stable; domain extensions are governed separately and can evolve at their own pace. A claim conforms to CACO + zero or more domain extensions. This mirrors RO-Crate's profile mechanism and avoids the trap of a single monolithic ontology that no one wants to maintain.
+**Design principle:** the core (the Civic Claim Vocabulary) is small and stable; domain extensions are governed separately and can evolve at their own pace. A claim conforms to the Civic Claim Vocabulary + zero or more domain extensions. This mirrors RO-Crate's profile mechanism and avoids the trap of a single monolithic vocabulary that no one wants to maintain.
 
-**Relationship to nanopublications.** A nanopublication is an atomic claim with provenance, expressed as RDF named graphs. The end-state typed-claims layer is structurally similar; the open question (see §1) is whether to literally adopt nanopub's serialization or to define a parallel format that interoperates. The current direction under consideration is to adopt nanopub-shaped claims for the assertion graph and use RO-Crate for the package container. A v0.1 spec draft for CACO exists; no implementation yet.
+**Relationship to nanopublications.** A nanopublication is an atomic claim with provenance, expressed as RDF named graphs. The end-state typed-claims layer is structurally similar; the open question (see §1) is whether to literally adopt nanopub's serialization or to define a parallel format that interoperates. The current direction under consideration is to adopt nanopub-shaped claims for the assertion graph and use RO-Crate for the package container. A v0.1 spec draft for the Civic Claim Vocabulary exists; no implementation yet.
 
 ---
 
@@ -364,7 +364,7 @@ The following diagrams **do not** convert cleanly to BPMN and should remain in M
 
 - §1 Standards stack (static layered architecture, not a process)
 - §4 Identity ladder (static taxonomy, not a process)
-- §5 Claims ontology family (static type hierarchy, not a process)
+- §5 Claims vocabulary family (static type hierarchy, not a process)
 - §6 Network signals (mostly static; the propagation could be expressed as BPMN message flows but the value is marginal)
 
 Forcing static structure into BPMN would obscure rather than clarify. Use the right tool for each.
@@ -397,11 +397,11 @@ Forcing static structure into BPMN would obscure rather than clarify. Use the ri
 
 **ORCID.** Global researcher identifier (open, non-profit). The natural identity binding for academic users of the evidence system.
 
-**OWL (Web Ontology Language).** W3C standard for defining ontologies in RDF — vocabularies of classes, properties, and constraints. OWL lets a vocabulary author state things like "Person and Organization are both subclasses of Agent" or "every Activity has at least one wasAssociatedWith link to an Agent." Reasoners can use these axioms to infer new RDF triples from existing ones. PROV-O and (in the end state) CACO are OWL ontologies. Authors don't write OWL by hand for this project; they rely on existing ontologies that were authored in OWL.
+**OWL (Web Ontology Language).** W3C standard for defining ontologies in RDF — vocabularies of classes, properties, and constraints. OWL lets a vocabulary author state things like "Person and Organization are both subclasses of Agent" or "every Activity has at least one wasAssociatedWith link to an Agent." Reasoners can use these axioms to infer new RDF triples from existing ones. PROV-O is an OWL ontology. The Civic Claim Vocabulary is intentionally lighter-weight — it is a controlled vocabulary of typed claim shapes expressed in JSON-LD, not a full OWL ontology with rich axioms. Authors don't write OWL by hand for this project; they rely on existing ontologies that were authored in OWL.
 
 **PROV-O (W3C Provenance Ontology).** RDF/OWL ontology for representing provenance — entities, activities, agents, and the relationships between them (`wasGeneratedBy`, `wasDerivedFrom`, `wasAttributedTo`, etc.). The semantic backbone of the project's `provenance.jsonld`.
 
-**RDF (Resource Description Framework).** W3C standard data model for expressing data as triples (subject, predicate, object), where each part is an IRI or a literal. RDF is a data model, not a syntax — the same triple can be serialized as Turtle, N-Triples, RDF/XML, or JSON-LD. The point of RDF is composability: anyone can extend a graph by publishing new triples about existing IRIs without coordinating with the original publisher. PROV-O, Croissant, nanopubs, RO-Crate metadata, and CACO all use RDF as their data model. JSON-LD is the JSON-flavored serialization the project uses throughout.
+**RDF (Resource Description Framework).** W3C standard data model for expressing data as triples (subject, predicate, object), where each part is an IRI or a literal. RDF is a data model, not a syntax — the same triple can be serialized as Turtle, N-Triples, RDF/XML, or JSON-LD. The point of RDF is composability: anyone can extend a graph by publishing new triples about existing IRIs without coordinating with the original publisher. PROV-O, Croissant, nanopubs, RO-Crate metadata, and the Civic Claim Vocabulary all use RDF as their data model. JSON-LD is the JSON-flavored serialization the project uses throughout.
 
 **RFC 3161.** IETF standard for trusted timestamps. A Timestamp Authority (TSA) signs a hash with a timestamp, producing a token that proves "this hash existed by this time." freeTSA.org provides a free TSA.
 
@@ -425,13 +425,13 @@ Forcing static structure into BPMN would obscure rather than clarify. Use the ri
 
 **BYOK (Bring Your Own Key).** The pattern where consistency testing and adversarial evaluation are performed by the user or a third-party reviewer using their own LLM API keys, rather than the platform paying for evaluation inference. Makes evaluation costs zero for the platform and makes third-party evaluations more credible than self-evaluation.
 
-**CACO (Civic Analysis Core Ontology).** Project-specific minimal vocabulary for typed claims, designed to be small and stable. Domain extensions (housing, transit, budget, etc.) are governed separately. Currently exists as a v0.1 draft spec only.
-
 **captureMethod.** Field describing how a trace was captured (browser chat session vs. Claude Code publish skill vs. server-side replay, etc.). Specified in ADR-0003. Currently not enforced by the route handler — see open question below.
 
 **Civic AI Tools.** The project itself: opengov-mcp-server (MCP server for Socrata portals), the civicaitools.org website with chatbot and evidence publishing, the civic-ai-tools-website Next.js codebase, the Open Evidence Standard spec, and the cross-city directory of open data MCP servers.
 
-**claims.jsonld.** Designed but not built. Optional file in evidence packages containing typed claims that conform to CACO + zero or more domain extensions. The contribution that turns evidence packages from a "this AI ran this query" record into a corpus-queryable knowledge layer.
+**Civic Claim Vocabulary.** Project-specific controlled vocabulary of typed claim shapes for evidence packages, designed to be small and stable. Domain extensions (housing, transit, budget, etc.) are governed separately. Currently exists as a v0.1 draft spec only. Expressed in JSON-LD with references to W3C ontologies and Schema.org rather than as a heavyweight OWL ontology in its own right.
+
+**claims.jsonld.** Designed but not built. Optional file in evidence packages containing typed claims that conform to the Civic Claim Vocabulary + zero or more domain extensions. The contribution that turns evidence packages from a "this AI ran this query" record into a corpus-queryable knowledge layer.
 
 **Evidence package.** The signed, timestamped, citable artifact produced by publishing an analysis. End-state form: an RO-Crate directory containing trace, queries, data sources, metadata context, provenance graph, reasoning steps, cost report, summary, prompt, claims, upstream references, signature, and timestamp. Today's form: a single JSON blob plus a separate envelope row in the database — see open question below.
 

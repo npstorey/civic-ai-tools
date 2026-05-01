@@ -23,22 +23,22 @@ If any of those three is missing, the gate has not been passed and the item stay
 
 ### Worked example: `claims.jsonld`
 
-Today, `claims.jsonld` (the optional file in evidence packages containing typed claims that conform to CACO + zero or more domain extensions) is **designed, not built**. A v0.1 draft spec exists at `civic-ai-tools/docs/architecture/claims-ontology-draft-spec.md`. No code generates `claims.jsonld`. No published evidence package contains one.
+Today, `claims.jsonld` (the optional file in evidence packages containing typed claims that conform to the Civic Claim Vocabulary + zero or more domain extensions) is **designed, not built**. A v0.1 draft spec exists at `civic-ai-tools/docs/architecture/civic-claim-vocabulary-draft-spec.md`. No code generates `claims.jsonld`. No published evidence package contains one.
 
 The next gate is **designed → built**. The criterion that would fire it: at minimum one real adopter package whose verification or claim queries are blocked without `claims.jsonld`. Concretely, any of the following would satisfy:
 
 - A published evidence package whose author wants to assert structured trend or comparison claims that prose alone cannot make machine-comparable, and who is willing to author the file.
-- An external collaborator (Boston OpenContext, datHere, an academic partner) committing to consume typed claims from civic-ai-tools packages as part of a named integration, where the integration cannot proceed without typed claims existing.
+- An external collaborator with a published civic-data infrastructure project committing to consume typed claims from civic-ai-tools packages as part of a named integration, where the integration cannot proceed without typed claims existing.
 - A `guidance-quality` issue surfacing a real failure mode that typed claims would resolve (e.g., a published package whose unstructured claims could not be corroborated against a competing package's claims, blocking a meta-analysis the project committed to).
 
 The following **do not** satisfy:
 
 - A funder conversation in which typed claims came up as interesting.
 - A self-imposed sense that the spec feels incomplete without `claims.jsonld` shipping.
-- An external party expressing curiosity about whether the project supports CACO.
+- An external party expressing curiosity about whether the project supports the Civic Claim Vocabulary.
 - An ADR being drafted (drafting an ADR is *itself* downstream of the gate passing, not a substitute for it).
 
-While the gate has not fired, `claims.jsonld` stays in research-doc / draft-spec form only. The CACO domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-caco-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
+While the gate has not fired, `claims.jsonld` stays in research-doc / draft-spec form only. The Civic Claim Vocabulary domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
 
 ### Worked example: `upstream-evidence.json`
 
@@ -67,6 +67,6 @@ A violation looks like an ADR drafted, a schema field added, or spec text shippe
 ## References
 
 - `civic-ai-tools/docs/architecture/end-state-vision.md` — glossary entry, build-state coloring, open questions.
-- `civic-ai-tools/docs/architecture/claims-ontology-draft-spec.md` — the worked example above.
-- `civic-ai-tools-website/docs/proposed-issues/003-caco-domain-extensions-portfolio.md` — applies the doctrine as a promotion criterion for domain extensions.
+- `civic-ai-tools/docs/architecture/civic-claim-vocabulary-draft-spec.md` — the worked example above.
+- `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md` — applies the doctrine as a promotion criterion for domain extensions.
 - `civic-ai-tools/docs/adr/` — ADRs cite this doc by URL when their decisions involve a Xanadu-test gate.

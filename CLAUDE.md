@@ -67,6 +67,17 @@ Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
 
 Sprint-based work for the website lives in that repo's `/sprints/` folder. This repo holds MCP server configs, skill docs, and setup tooling.
 
+## Architecture documentation
+
+Canonical specifications and design decisions live in [`docs/architecture/`](docs/architecture/):
+
+- [`end-state-vision.md`](docs/architecture/end-state-vision.md) — layered architecture target with build-state coloring (built / partial / designed / speculative), full glossary, and the canonical list of open questions. Update when an open question resolves.
+- [`open-evidence-standard.md`](docs/architecture/open-evidence-standard.md) — Open Evidence Standard v0.1 draft. Normative spec for evidence-package shape, signing, verification, captureMethod, withdrawal lifecycle. Honors what the codebase actually enforces today.
+- [`civic-claim-vocabulary-draft-spec.md`](docs/architecture/civic-claim-vocabulary-draft-spec.md) — Civic Claim Vocabulary v0.1 draft. The typed-claims layer that sits on top of the Open Evidence Standard. Reserved but not yet built; gated by the Xanadu doctrine.
+- [`xanadu-doctrine.md`](docs/architecture/xanadu-doctrine.md) — project discipline gating spec growth: do not promote anything to a higher build state without a real package or adopter that needs it.
+
+ADRs in [`docs/adr/`](docs/adr/) record settled decisions; the architecture docs above describe the artifacts those decisions are about. ADRs cite the doctrine and specs by URL when their decisions involve a Xanadu-test gate.
+
 ## Running Scripts
 
 ```bash
