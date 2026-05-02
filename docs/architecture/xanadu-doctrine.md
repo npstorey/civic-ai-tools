@@ -1,9 +1,12 @@
-# Xanadu doctrine
-
-**Status:** Doctrine. Cited by ADRs and spec drafts; not itself an ADR.
-**Companion:** Glossary entry in `civic-ai-tools/docs/architecture/end-state-vision.md` (search for "Xanadu test (doctrine)").
-
 ---
+Status: Doctrine
+Last updated: 2026-05-02
+Maintainer: [TK: leave as placeholder]
+---
+
+*Companion: Glossary entry in `civic-ai-tools/docs/architecture/end-state-vision.md` (search for "Xanadu test (doctrine)"). The doctrine is also cited by ADRs and spec drafts; it is not itself an ADR.*
+
+# Xanadu doctrine
 
 ## The doctrine
 
