@@ -1,11 +1,14 @@
-# Civic AI Tools — End-State Architecture Vision
+---
+Status: Vision document (not current state)
+Last updated: 2026-05-01
+Maintainer: [TK: name or role]
+---
 
 > **Status:** Vision document, not current state. This describes the desired end-state architecture once the open-standards layering is fully realized. For what is actually built and decided today, see the ADRs in `civic-ai-tools/docs/adr/` and `civic-ai-tools-website/docs/adr/`. This document should be updated as ADRs land that resolve the open questions described below.
->
-> **Last updated:** 2026-05-01
-> **Maintainer:** [TK: name or role]
 
 ---
+
+# Civic AI Tools — End-State Architecture Vision
 
 ## How to read this document
 
