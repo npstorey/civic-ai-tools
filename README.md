@@ -103,6 +103,14 @@ See [examples/README.md](examples/README.md) for the full list.
 - [docs/trust-and-evidence.md](docs/trust-and-evidence.md) — What "verifiable" means and how to verify a package
 - [docs/sustainability.md](docs/sustainability.md) — Project sustainability posture
 
+### Architecture
+- [docs/architecture/](docs/architecture/) — Canonical architecture documents and spec drafts (internal working drafts; not stable specs)
+- [docs/architecture/end-state-vision.md](docs/architecture/end-state-vision.md) — Layered architecture target with build-state coloring and full glossary
+- [docs/architecture/open-evidence-standard.md](docs/architecture/open-evidence-standard.md) — Internal working draft of the Open Evidence Standard (pre-v0.1)
+- [docs/architecture/civic-claim-vocabulary-draft-spec.md](docs/architecture/civic-claim-vocabulary-draft-spec.md) — Internal working draft of the Civic Claim Vocabulary, the typed-claims layer (pre-v0.1)
+- [docs/architecture/xanadu-doctrine.md](docs/architecture/xanadu-doctrine.md) — Project discipline gating spec growth
+- **[docs/architecture/open-questions.md](docs/architecture/open-questions.md)** — Open questions registry. Canonical home for unresolved decisions affecting the architecture and standards. Start here when deciding what's settled vs. what's still in flight.
+
 ### Research
 - [docs/research-agenda.md](docs/research-agenda.md) — Research questions the project engages
 - [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) — Ecosystem survey of adjacent civic-AI and evidence projects

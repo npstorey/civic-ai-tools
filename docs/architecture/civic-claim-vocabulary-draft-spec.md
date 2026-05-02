@@ -1,8 +1,12 @@
 ---
-Status: Draft v0.1 (pre-implementation)
+Status: Internal working draft (pre-v0.1)
 Last updated: 2026-05-01
 Maintainer: [TK: leave as placeholder]
 ---
+
+> **Status: Internal working draft, pre-v0.1. Not for external review.**
+>
+> This document represents the project's current internal best-thinking on the Civic Claim Vocabulary. It is not a stable specification. The document's framing as a vocabulary (rather than a full ontology) is itself an open question; see `civic-ai-tools/docs/architecture/open-questions.md`.
 
 This document is a draft specification, not an Architecture Decision Record. ADRs in this directory track decisions; spec drafts track the artifacts those decisions are about.
 
@@ -11,7 +15,6 @@ This document is the draft specification of the Civic Claim Vocabulary, the proj
 # Open Evidence Standard — Typed Claims Layer
 
 **Spec extension draft v0.1**
-**Status:** Draft for discussion, not normative
 **Companion file:** `claims.jsonld` (added to evidence package)
 
 ---
@@ -53,7 +56,9 @@ This spec does **not** define:
 
 ### 3.1 File location
 
-Typed claims live in a single file at the package root:
+> ⚠ **Subject to Open Question #5 — `claims.jsonld` and `upstream-evidence.json` implementation timing.** Also subject to Open Question #1 (package format) — the multi-file directory layout shown below is the current direction, not the current shape. Today the published package is a single canonical JSON object; if Open Question #1 resolves toward RO-Crate / multi-file, the layout shown here becomes the canonical home for `claims.jsonld`. Until then, this section describes intent rather than a normative requirement.
+
+The current direction is for typed claims to live in a single file at the package root:
 
 ```
 evidence-package/
@@ -164,7 +169,26 @@ Every claim has a scope expressing where and when it applies.
 }
 ```
 
-The Civic Claim Vocabulary defines a small taxonomy of `ccv:GeographicScope` subtypes for common civic units: NeighborhoodTabulationArea, CensusTract, CensusBlock, ZIPCodeTabulationArea, CityCouncilDistrict, CommunityBoardDistrict, PolicePrecinct, SchoolDistrict, MunicipalBoundary, CountyBoundary, StateBoundary. Domain extensions MAY add more.
+The Civic Claim Vocabulary defines a small taxonomy of `ccv:GeographicScope` subtypes for common civic units. Each subtype names the canonical reference standard or authority where one exists; subtypes without a clean canonical reference are flagged for follow-up.
+
+| Subtype | Reference standard / authority |
+|---|---|
+| `ccv:CensusTract` | US Census Bureau [TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) (`tract` shapefile, GEOID encoding) |
+| `ccv:CensusBlock` | US Census Bureau TIGER/Line (`tabblock` shapefile) |
+| `ccv:CensusBlockGroup` | US Census Bureau TIGER/Line (`bg` shapefile) |
+| `ccv:ZIPCodeTabulationArea` | US Census Bureau TIGER/Line ZCTA (`zcta` shapefile); the ZCTA is the Census-derived approximation of USPS ZIP areas, not the USPS routing dataset itself |
+| `ccv:SchoolDistrict` | US Census Bureau [Education Demographic and Geographic Estimates (EDGE)](https://nces.ed.gov/programs/edge/Geographic/SchoolLocations) plus TIGER/Line school-district shapefiles |
+| `ccv:MunicipalBoundary` | US Census Bureau TIGER/Line `place` shapefile (incorporated places + Census-designated places); other jurisdictions: country-specific gazetteers |
+| `ccv:CountyBoundary` | US Census Bureau TIGER/Line `county` shapefile (FIPS county code) |
+| `ccv:StateBoundary` | US Census Bureau TIGER/Line `state` shapefile (FIPS state code); ISO 3166-2 for international subdivisions |
+| `ccv:NeighborhoodTabulationArea` | NYC Department of City Planning [NTA](https://www.nyc.gov/site/planning/data-maps/open-data.page#other) (NYC-specific; analogous boundaries elsewhere are typically jurisdiction-defined and lack a uniform standard) |
+| `ccv:CommunityBoardDistrict` | NYC Department of City Planning [Community District boundary file](https://www.nyc.gov/site/planning/data-maps/open-data.page#district_political) (NYC-specific) |
+| `ccv:CityCouncilDistrict` | Jurisdiction-specific. Reference the publishing city's council-district authority (e.g. NYC City Council district shapefile via NYC OpenData). No single cross-city canonical authority. |
+| `ccv:PolicePrecinct` | Jurisdiction-specific. NYC: NYPD precinct boundaries via NYC OpenData. LA: LAPD division boundaries via LA GeoHub. No cross-jurisdiction standard. **Flagged for follow-up:** the namespace name `PolicePrecinct` may be too NYC-coded; some jurisdictions use "district," "division," "ward," etc. |
+
+Domain extensions MAY add more. International equivalents (statistical-area-1 in Australia, OA in the UK, etc.) should be added as domain extensions rather than core subtypes.
+
+For arbitrary geometries that do not fit any of the named subtypes, claims MAY use `ccv:GeographicScope` directly with a `geo:hasGeometry` value pointing at an OGC GeoSPARQL geometry literal (WKT, GML, or GeoJSON-LD).
 
 Temporal scope uses W3C OWL-Time directly. No additions to the claim vocabulary are needed.
 
@@ -195,6 +219,8 @@ The Civic Claim Vocabulary defines a starting set of confidence methods:
 | `ccv:NotApplicable` | The claim is qualitative or definitional; numeric confidence does not apply |
 
 `ccv:NotApplicable` is permitted but MUST be accompanied by a description explaining why a quantified confidence is not appropriate.
+
+**The list is extensible by domain extensions.** Domain extensions MAY define additional confidence methods under their own namespace (for example, `nyc-housing:RentRollSampleConfidence` or `transit:ScheduleAdherenceConfidence`), in the same way they MAY add to the `ccv:GeographicScope` subtype taxonomy. New methods MUST satisfy the §2 principle 6 requirement (confidence is method-derived, traceable to a recorded calculation in the package) and SHOULD be registered in the extension registry alongside the extension that defines them.
 
 ### 4.6 AnalyticalDerivation
 
@@ -340,9 +366,11 @@ A lightweight registry at `civicaitools.org/vocabulary-registry` lists known ext
 
 ### 6.3 Governance of the Civic Claim Vocabulary itself
 
-Changes to the Civic Claim Vocabulary follow a public-comment process:
-- Minor (additive, non-breaking): 30-day comment period
-- Major (breaking): 90-day comment period plus migration guide
+> ⚠ **Future intent — not in force at v0.1.** When the standard reaches v1.0 and a public-comment process is established, the project intends to use comment periods of approximately the durations below. **v0.1-stage development does not follow these periods**; the spec is iterating internally and changes land as soon as the small set of active collaborators agrees. The numbers below are placeholders for a later governance regime.
+
+Future intent for changes to the Civic Claim Vocabulary at v1.0 and beyond:
+- Minor (additive, non-breaking): approximately a 30-day comment period
+- Major (breaking): approximately a 90-day comment period plus migration guide
 - All versions remain resolvable at versioned URIs forever
 
 ---

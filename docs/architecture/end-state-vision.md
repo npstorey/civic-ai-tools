@@ -2,7 +2,7 @@
 
 > **Status:** Vision document, not current state. This describes the desired end-state architecture once the open-standards layering is fully realized. For what is actually built and decided today, see the ADRs in `civic-ai-tools/docs/adr/` and `civic-ai-tools-website/docs/adr/`. This document should be updated as ADRs land that resolve the open questions described below.
 >
-> **Last updated:** [TK: date]
+> **Last updated:** 2026-05-01
 > **Maintainer:** [TK: name or role]
 
 ---
@@ -451,16 +451,15 @@ Forcing static structure into BPMN would obscure rather than clarify. Use the ri
 
 ## Open questions
 
-These are the design decisions whose resolution would change the diagrams above. Each should produce an ADR (or set of ADRs) when resolved.
+Open questions affecting the architecture and standards are tracked in [`civic-ai-tools/docs/architecture/open-questions.md`](open-questions.md). The registry is the canonical home; this section is preserved here only as a pointer.
 
-1. **Package format: single JSON blob (today) vs. multi-file directory / RO-Crate (end state).** Most consequential current decision. Constrains §1 L3, §2 packaging, §3 offline verification, §6 transport choice.
-2. **Federation substrate: atproto vs. KOI vs. nanopub network vs. all three layered.** Constrains §1 L7, §6 transport.
-3. **First non-GitHub identity provider: ORCID vs. sigstore OIDC keyless vs. did:web for institutional publishers.** Constrains §1 L6, §4 identity ladder.
-4. **Trace capture: keep hand-rolled OTel JSON, adopt real OTel SDK, or layer Agent Receipts over (or under) OTel.** Constrains §1 L2, §2 trace capture leg.
-5. **Whether `claims.jsonld` and `upstream-evidence.json` should be implemented now or held until a real package needs them (Xanadu test).** Constrains §1 L3, §5, §6.
-6. ~~**captureMethod enforcement.** Pre-architecture: ADR-0003 says Accepted, code does not enforce. Resolve before further architecture work to keep the ADR system trustworthy.~~ **Resolved 2026-04-29.** ADR-0003 is now genuinely Accepted: captureMethod is a required field on `/api/evidence`, covered by the canonical-JSON package hash and the platform signature (enforced by a hash-sensitivity test), persisted to the database, surfaced on the detail page near verification status, and labeled `Unknown (pre-ADR-0003)` for legacy packages. ADR-0003 §1 was amended in place with quoted before/after text and explicit rationale. Pre-architecture gap closed.
-7. **Producer-type scope.** Is the standard "trust infrastructure for AI civic analysis" or "trust infrastructure for civic analysis where AI is one producer type"? This decision affects the spec preamble, RO-Crate positioning, competitive landscape, adoption story (especially academic adoption), and the first-extension portfolio. Resolution would produce both an ADR locking in the scope and (if generalized) a spec change adding `producer.type` and per-producer-type evaluation profiles. Constrains §Standards stack positioning, §5 claims layer, §7 evaluation flow.
-8. **Croissant outbound metadata.** Should every published evidence page carry a Croissant metadata file at a well-known location for dataset-crawler discoverability, in addition to the inbound use of Croissant for characterizing queried datasets in `data-sources.json`? This is independent of the package-format decision (#1) — both single-blob and multi-file packages can expose Croissant metadata as a sibling resource. Constrains §1 L3, §6 network signals (a discoverable package is more valuable to all four audiences).
+The most consequential currently-open questions for context (see the registry for full detail and stake-bearing spec sections):
+
+- **[Q1 — Package format](open-questions.md#q1--package-format).** Most consequential current decision. Today: single JSON blob plus DB-resident envelope. End-state direction: multi-file RO-Crate / WRROC profile that embeds the signature + RFC 3161 token + Rekor proof in the package. Drives whether third-party offline verification is possible.
+- **[Q7 — Producer-type scope](open-questions.md#q7--producer-type-scope).** Is the standard for AI-produced civic analysis specifically, or for civic analysis where AI is one producer type? Drives Q9 (AI-specific commitments inventory), Q13 (naming), Q14 (geographic-scope nullability).
+- **[Q11 — Typed claims as a kind of attestation](open-questions.md#q11--typed-claims-as-a-kind-of-attestation).** Restructuring the typed-claims layer (§5 claims vocabulary family) as a kind of attestation. Promoted to issue 006.
+
+Question #6 (captureMethod enforcement) resolved 2026-04-29 by [ADR-0003](../adr/0003-evidence-capture-method.md); see registry for the resolution log entry.
 
 ---
 
@@ -468,7 +467,7 @@ These are the design decisions whose resolution would change the diagrams above.
 
 Update this document when:
 
-- An ADR resolves an open question → update the relevant diagram nodes from speculative/designed to built/partial, and remove the question from §Open questions.
+- An ADR resolves an open question → update the relevant diagram nodes from speculative/designed to built/partial, and update the registry entry in [`open-questions.md`](open-questions.md) to point at the resolving ADR.
 - A new external standard becomes relevant → add to §1 stack and §Glossary.
 - A new diagram is added → cross-reference from §How to read this document and tag each node with its build state.
 

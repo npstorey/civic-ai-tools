@@ -1,10 +1,12 @@
 ---
-Status: Draft v0.1 (pre-stable, not for adoption)
+Status: Internal working draft (pre-v0.1)
 Last updated: 2026-05-01
 Maintainer: [TK: leave as placeholder]
 ---
 
-> **This document is a working draft.** It represents the project's current best-thinking on the Open Evidence Standard. It is not yet a specification any third party should implement against. Major open questions are tracked inline and in the companion vision document. Stakeholder review is invited; no formal review process is yet defined.
+> **Status: Internal working draft, pre-v0.1. Not for external review.**
+>
+> This document represents the project's current internal best-thinking on the Open Evidence Standard. It is not a stable specification. Several substantive sections depend on open questions that have not yet been resolved (see `civic-ai-tools/docs/architecture/open-questions.md`). The document is shared publicly only to make it easier for the project's small set of active collaborators to discuss specific sections; it should not be implemented against. Sections subject to pending open questions are marked inline.
 
 ---
 
@@ -18,7 +20,9 @@ Conformance language follows [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) 
 
 ## 1. Introduction and scope
 
-The Open Evidence Standard defines the structure, signing, and verification properties of an **evidence package**: a content-addressable, cryptographically signed record of a single AI-assisted civic-data analysis. A conformant package is verifiable by any third party using only the package itself, the published trust registry, and the public infrastructure of FreeTSA and Sigstore Rekor. No part of verification depends on trusting `civicaitools.org`.
+The Open Evidence Standard defines the structure, signing, and verification properties of an **evidence package**: a content-addressable, cryptographically signed record of a single AI-assisted civic-data analysis.
+
+> ⚠ **Subject to Open Question #1 — package format.** Today, third-party verification of a published package depends on calling `civicaitools.org` server endpoints (specifically `GET /api/evidence/<slug>/verify`, which composes the package JSON with DB-resident signature + RFC 3161 token + Rekor proof). The cryptographic envelope is split between the Vercel Blob package and the Postgres `evidence_records` row. End-state verifiability — the package alone plus the public trust registry plus FreeTSA + Sigstore Rekor, with no civicaitools.org dependency — is the target shape under Open Question #1 (multi-file package format / RO-Crate compatibility profile). See §13 for the current verification surface and the target end-state.
 
 ### 1.1 What this document covers
 
@@ -40,7 +44,7 @@ The Open Evidence Standard defines the structure, signing, and verification prop
 
 ### 1.3 Producer-type scope
 
-> **Status: open question — see `civic-ai-tools/docs/architecture/end-state-vision.md` §Open questions item #7 (producer-type scope).**
+> ⚠ **Subject to Open Question #7 — producer-type scope.** Also subject to Open Question #9 (AI-specific commitments inventory and the path to generalization).
 
 This v0.1 draft is written from the assumption that the package's analytical content is produced by an AI client (an LLM with optional MCP tool calls). The cryptographic envelope, identity binding, withdrawal lifecycle, and trust-registry semantics are producer-type-agnostic; the trace-capture and skill-metadata sections currently presuppose an AI producer. Generalization to human and hybrid producers is an open question and would land as a separate ADR plus a `producer.type` field on the package.
 
@@ -60,7 +64,7 @@ Every product surface that renders evidence packages, every downstream consumer 
 
 The intent is to prevent the architecture from drifting into automated truth-scoring — a regime that has historically gone badly (content moderation, credit scoring, citation metrics). Implementers MUST NOT use evidence-package signals to compute platform-issued correctness verdicts, rank-by-trust scores, or any equivalent consensus collapse. Consumer-side aggregation (citation graphs, contradiction surfacing, meta-analysis) is permitted and encouraged, provided the preamble's framing accompanies the surfaced result.
 
-This is the only normative requirement in this document that is not enforced by code. It is enforced by stewardship of the standard.
+This is the only normative requirement in this document that is not enforced by code. **Enforcement of this requirement is currently editorial and reputational only.** No standards body, no certification regime, no audit, and no automated check exists today to verify that downstream implementations honor it. This is a v0.1 limitation. Future versions of the standard may define a stewardship process — a public consultation forum, a conformance self-attestation, or a reference test corpus — through which implementers demonstrate the preamble is surfaced. Until such a process exists, the requirement holds normatively, and breaches are addressed in conversation with the implementer rather than through enforcement infrastructure.
 
 ---
 
@@ -88,7 +92,7 @@ A broader vocabulary covering the surrounding architectural standards (PROV-O, C
 
 A conformant evidence package is a single JSON object whose canonical-JSON serialization is the input to the SHA-256 package hash.
 
-> **Status: open question — see `end-state-vision.md` §Open questions item #1 (package format).** The current implementation is a single canonical JSON object plus a database-resident envelope. The current direction is a multi-file directory with an RO-Crate / WRROC compatibility profile, in which the canonical JSON object would become one artifact in a larger package. This v0.1 normalizes the single-blob form because that is what the publish path produces today; section §4 will be revised when the format decision lands.
+> ⚠ **Subject to Open Question #1 — package format.** The current implementation is a single canonical JSON object plus a database-resident envelope. The current direction is a multi-file directory with an RO-Crate / WRROC compatibility profile, in which the canonical JSON object would become one artifact in a larger package. This v0.1 normalizes the single-blob form because that is what the publish path produces today; section §4 will be revised when the format decision lands.
 
 ### 4.1 Top-level fields
 
@@ -98,9 +102,9 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 |---|---|---|---|
 | `metadata` | object | yes | See §4.2. |
 | `prompt` | object | yes | See §4.3. |
-| `queries` | array of objects | yes | One entry per tool call observed during the analysis. May be empty. |
-| `dataSources` | array of objects | yes | One entry per data source touched by the analysis, derived from `queries[]` and the trace. |
-| `cost` | object | yes | Token-usage and timing summary. |
+| `queries` | array of objects | yes | One entry per tool call observed during the analysis. May be empty when the analysis made no tool calls. |
+| `dataSources` | array of objects | yes | One entry per data source touched by the analysis, derived from `queries[]` and the trace. May be empty when `queries[]` is empty (no tool calls means no data sources to enumerate). |
+| `cost` | object | yes | Token-usage and timing summary. See §4.7. |
 | `skillMetadata` | object | yes | Skill-guidance hash, MCP server URL, and skill text or BlobRef. |
 | `output` | string \| BlobRef | yes | The assistant's final response text, or a BlobRef. See §4.5. |
 | `trace` | object \| BlobRef | yes | OpenTelemetry-shaped trace, or a BlobRef to the same. |
@@ -152,11 +156,19 @@ A verifier encountering a BlobRef MUST:
 
 A BlobRef whose fetch fails, whose hash mismatches, or whose size mismatches MUST cause the verifier to report `ok: false` for that reference. A package MAY remain otherwise verifiable when one of its BlobRefs fails, but downstream consumers SHOULD treat a package with a failed BlobRef as missing the corresponding content.
 
+> ⚠ **Subject to Open Question #2 — federation substrate.** BlobRef URLs in the reference implementation point at the deployment's Vercel Blob storage. The substitution mechanism is a single-host content-addressable pattern, not a federation-aware one. Generalizing to multi-host or multi-registry blob storage — including content-addressable storage that does not require an HTTPS-fetchable URL at all (e.g. IPFS-style addressing) — depends on which federation substrate Open Question #2 selects. The shape of `BlobRef` and the verification rules above are unchanged for v0.1; a future revision will specify how non-Vercel hosts and federation-substrate-native addressing fit.
+
 ### 4.6 `extensions` (optional)
 
 Implementations MAY add fields under `extensions` keyed by reverse-DNS identifiers (`org.civicaitools.notebook`, `org.<your-domain>.<your-extension>`). All extension content is part of the canonical JSON and is therefore covered by the package hash and the platform signature. Extensions are advisory — they MUST NOT change the meaning of fields defined in this standard, and a verifier MAY ignore unknown extensions without breaking conformance.
 
 The `org.civicaitools.notebook` extension is a content-format marker (a Jupyter-style cell list) emitted by the canonical reference implementation. External implementations are not required to emit it.
+
+### 4.7 `cost` object framing
+
+The `cost` object's current schema (`promptTokens`, `completionTokens`, `totalTokens`, `model`, `durationMs`) is AI-LLM-specific. It presupposes that the analysis was produced by a token-billed language model.
+
+> ⚠ **Subject to Open Question #7 — producer-type scope.** The `cost` object's schema is currently AI-specific. If Open Question #7 resolves toward generalization to human-authored or hybrid-authored packages, this object will need a producer-type-aware shape (human time, compute time, third-party API costs, etc.). The current shape stays normative for AI-produced packages in v0.1; downstream generalization will land as a separate revision.
 
 ---
 
@@ -201,7 +213,7 @@ Signing is best-effort at publish time. If the signing leg fails, the database r
 
 A conformant evidence package SHOULD also carry an RFC 3161 trusted timestamp from a public TSA and a Sigstore Rekor inclusion proof. The reference implementation uses `freetsa.org` for the timestamp and Rekor's `hashedrekord` v0.0.1 entry type for the transparency log. Both are best-effort: failures persist as `null` columns and the package remains queryable.
 
-A verifier checks RFC 3161 against FreeTSA's published CA chain and Rekor inclusion against `rekor.sigstore.dev`. Neither check requires `civicaitools.org`.
+A verifier checks RFC 3161 against FreeTSA's published CA chain and Rekor inclusion against `rekor.sigstore.dev` once it has obtained the timestamp token and the Rekor entry id. The cryptographic *check* of these proofs requires only public infrastructure; the *retrieval* of the proofs themselves currently depends on `civicaitools.org` because the package JSON does not embed them. See §13 for the full verification surface and the Open Question #1 callout in §4 for the target end-state where these are embedded in the package itself.
 
 ### 6.3 Trust registry
 
@@ -237,7 +249,7 @@ The rotation runbook is at `civic-ai-tools-website/docs/key-rotation.md`.
 
 ## 7. Trace capture
 
-> **Status: open question — see `end-state-vision.md` §Open questions item #4 (trace capture).**
+> ⚠ **Subject to Open Question #4 — trace capture.** The reference implementation uses hand-rolled OTel-shaped JSON. Adopting a real OpenTelemetry SDK or layering Agent Receipts (W3C Verifiable Credentials over MCP tool calls) over or under the OTel layer is the resolution surface.
 
 The reference implementation captures a hand-rolled OpenTelemetry-shaped JSON document covering five span kinds: `analysis` (root), `skill_fetch`, `llm_inference`, `mcp_tool_call`, and `synthesis`. The trace is embedded in the package as the `trace` field (or a BlobRef to the same). The PROV-O graph in `provenance` is derived from this trace at publish time.
 
@@ -249,7 +261,7 @@ This v0.1 draft normalizes the current span-kind set as conformant; the resoluti
 
 ## 8. Identity binding
 
-> **Status: open question — see `end-state-vision.md` §Open questions item #3 (first non-GitHub identity provider).**
+> ⚠ **Subject to Open Question #3 — first non-GitHub identity provider.** GitHub OAuth is the only currently-implemented binding. The graded ladder (pseudonymous → GitHub → ORCID → DNS-bound `did:web` → notarized) is informative direction.
 
 The reference implementation binds package authorship to a GitHub OAuth account. The DB columns recording authorship (`github_id`, `display_name`, `github_profile_url`) are GitHub-specific. The signing key is platform-held; the user does not currently sign their own packages.
 
@@ -277,6 +289,8 @@ Pre-ADR-0003 packages persist with a `null` capture-method column on the databas
 
 Future capture methods (for example, a hook-based path that records bytes at message-emission time, or a third-party signed self-attestation) extend this enum. Per ADR-0003, an enum extension is a vocabulary change, not a key change — the platform continues to sign all capture methods under the same trust-registry keys; the label is the differentiation.
 
+> ⚠ **Subject to forward-extensibility — the current vocabulary is Claude-Code-specific.** The three values above (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`) anchor on the publishing surfaces that exist today: a website chat flow and a Claude Code skill. Other CLIs (Codex CLI, Cursor's MCP runtime, Gemini CLI), other IDEs (VS Code with GitHub Copilot, Zed), other execution environments (sandboxed runners, hosted notebooks), and speculative future surfaces (a sandbox-environment capture, an MCP-host-agnostic capture protocol) will need new vocabulary values. The current values stay normative for v0.1; ADR-0003 governs the existing vocabulary, and future extensions will require their own ADRs that preserve the structural property each value carries (verbatim-by-construction at *some* layer, with the layer named).
+
 ---
 
 ## 10. Withdrawal and reinstatement lifecycle
@@ -297,7 +311,7 @@ The reference implementation currently supports a single withdraw → reinstate 
 
 ## 11. Typed claims
 
-> **Status: open question — see `end-state-vision.md` §Open questions item #5 (`claims.jsonld` and `upstream-evidence.json` implementation timing).**
+> ⚠ **Subject to Open Question #5 — `claims.jsonld` and `upstream-evidence.json` implementation timing.** Designed but not built. Also subject to Open Question #11 (typed claims as a kind of attestation), which may reframe how `claims.jsonld` integrates with the attestations infrastructure.
 
 The Open Evidence Standard reserves space for a typed-claims layer in which a published package OPTIONALLY carries a `claims.jsonld` companion file containing structured assertions (TrendClaim, ComparisonClaim, ObservationClaim, etc.) that conform to the Civic Claim Vocabulary plus zero or more domain extensions. The v0.1 draft specification is at `civic-ai-tools/docs/architecture/civic-claim-vocabulary-draft-spec.md`.
 
@@ -309,7 +323,7 @@ The Xanadu doctrine (`xanadu-doctrine.md`) gates promotion of typed claims from 
 
 ## 12. Upstream evidence references
 
-> **Status: open question — see `end-state-vision.md` §Open questions item #5.**
+> ⚠ **Subject to Open Question #5 — `claims.jsonld` and `upstream-evidence.json` implementation timing.** Also subject to Open Question #12 (attestations as the implementation path for upstream-evidence references), which may collapse this section into the attestations infrastructure rather than implementing a separate `upstream-evidence.json` companion file.
 
 The Open Evidence Standard reserves space for an `upstream-evidence.json` companion file that declares relationships to other evidence packages: `derived_from`, `compares_to`, `extends`, `replicates`, `contradicts`, `evaluates`. This enables citation graphs, cross-package meta-analysis, and adversarial-evaluation chains where the evaluation is itself a separately-signed evidence package linked to the original.
 
@@ -319,43 +333,70 @@ No code path currently generates `upstream-evidence.json`. No published package 
 
 ## 13. Verification properties
 
-A verifier holding only a fetched evidence package, the trust registry, and access to FreeTSA and Rekor MUST be able to perform the following checks. Each check corresponds to code in the reference verify endpoint (`GET /api/evidence/<slug>/verify`) but does not depend on it — an offline implementation produces the same results.
+> ⚠ **Subject to Open Question #1 — package format.** The current verification surface is split between the public package (Vercel Blob) and the private database row. End-state verification — package alone plus public infrastructure, with no `civicaitools.org` dependency — is the target shape under Open Question #1.
 
-### 13.1 What a verifier can check today
+### 13.1 What a verifier can check today, and what they need to do it
 
-1. **Package integrity.** Recompute the SHA-256 over the canonical JSON of the fetched package; the result MUST equal the `packageHash` in the URL slug and the database row.
-2. **Signature mathematics.** Verify the Ed25519ph signature over the package-hash hex string against the embedded `publicKey`. A mismatch fails this check.
-3. **Trust-registry verdict.** Look up the envelope's `(kid, publicKey)` pair in the registry; apply the status semantics from §6.3.
-4. **Timestamp validity.** When present, verify the RFC 3161 token against FreeTSA's CA chain.
-5. **Transparency-log inclusion.** When present, resolve the Rekor entry id and verify the inclusion proof against `rekor.sigstore.dev`.
-6. **BlobRef integrity.** For every BlobRef in the package (in `output`, `trace`, or `skillMetadata.skillText`), fetch, recompute SHA-256, and confirm size. See §4.5.
-7. **Lifecycle state.** Detect withdrawal or reinstatement via the database row's lifecycle columns and verify the corresponding lifecycle signatures and timestamps. Surfaces MUST render the lifecycle state.
-8. **`captureMethod` label.** Read `metadata.captureMethod`; render it alongside the signature verdict. The label is covered by the signature.
+A verifier today needs five sources, not three. All five MUST be available for the check listed against each.
+
+| Source | Public? | What the verifier reads from it |
+|---|---|---|
+| The package JSON at the Vercel Blob URL | Public, content-addressable | Package contents, `metadata.captureMethod`, `metadata.signingKeyId`, BlobRef entries |
+| `civicaitools.org/api/evidence/<slug>/verify` (or DB row) | Public-readable, server-composed | Signature envelope (`signature`, `publicKey`, `algorithm`, `kid`), RFC 3161 timestamp token, Rekor entry id + inclusion proof, lifecycle state |
+| `civicaitools.org/.well-known/evidence-public-keys.json` | Public | Trust registry entries for `(kid, publicKey, status, lifecycle dates)` |
+| FreeTSA's CA chain (or any equivalent TSA the publisher has switched to) | Public | RFC 3161 verification root |
+| Sigstore Rekor (`rekor.sigstore.dev`) | Public | Inclusion-proof verification root |
+
+Given those five sources, the checks the verifier can perform are:
+
+1. **Package integrity.** Recompute the SHA-256 over the canonical JSON of the fetched package; the result MUST equal the `packageHash` in the URL slug and the verify-endpoint response.
+2. **Signature mathematics.** Verify the Ed25519ph signature (obtained from the verify endpoint) over the package-hash hex string against the embedded `publicKey`. A mismatch fails this check.
+3. **Trust-registry verdict.** Look up the envelope's `(kid, publicKey)` pair in the trust registry; apply the status semantics from §6.3.
+4. **`metadata.signingKeyId` consistency.** Confirm the `kid` from the signature envelope equals `metadata.signingKeyId` in the package. A mismatch indicates an envelope-vs-canonical drift (see §6.1).
+5. **Timestamp validity.** When the verify endpoint returns a non-null RFC 3161 token, verify the token against FreeTSA's CA chain. The verification math itself does not depend on `civicaitools.org`.
+6. **Transparency-log inclusion.** When the verify endpoint returns a non-null Rekor entry id, resolve the entry against `rekor.sigstore.dev` and verify the inclusion proof. The math does not depend on `civicaitools.org`.
+7. **BlobRef integrity.** For every BlobRef in the package, fetch the URL over HTTPS, recompute SHA-256, and confirm size. See §4.5.
+8. **Lifecycle state.** Detect withdrawal or reinstatement via the verify endpoint's lifecycle fields and verify the corresponding lifecycle signatures and timestamps. Surfaces MUST render the lifecycle state.
+9. **`captureMethod` label.** Read `metadata.captureMethod`; render it alongside the signature verdict. The label is covered by the signature.
+
+The verify endpoint is currently the single point through which the signature, RFC 3161 token, and Rekor proof are exposed. A verifier who fetches only the Vercel Blob package and the public trust registry has only the package contents and the trust-registry contract — they cannot complete checks 2, 5, 6, or 8 without `civicaitools.org`.
 
 ### 13.2 What a verifier cannot check today
 
-A verifier cannot determine, from the package alone, any of:
+A verifier cannot determine, from any combination of the sources above, any of:
 
 1. Whether the captured analysis matches what was actually generated in the original session. The `captureMethod` label is the structural answer to this question; verbatim guarantees follow from the labeled mechanism, not from the signature.
 2. Whether the assistant's prose or numerical outputs are correct. Correctness review is a separate, separately-signed attestation (see §15).
 3. Whether the analysis was authored under coercion, paid promotion, or other conflicts of interest. The standard surfaces identity and provenance; the consumer applies judgment.
-4. Whether the package's claims have been corroborated or contradicted by other packages. Cross-package operations require the upstream-evidence layer (§12, deferred).
+4. Whether the package's claims have been corroborated or contradicted by other packages. Cross-package operations require the upstream-evidence layer (§12, deferred; subject to Open Question #12).
+5. Whether the `civicaitools.org` verify endpoint itself is reporting the proofs honestly. A verifier who fetches the proofs through the verify endpoint trusts that the platform did not silently substitute them. Mitigation today: the package hash is content-addressable and the trust registry is independently fetchable, so substitution would have to be consistent across the package, the registry, and the verify endpoint to avoid detection — but a malicious or compromised platform could in principle stage that. The end-state architecture removes this trust dependency by embedding the proofs in the package itself (§13.3).
 
 ### 13.3 Target end-state verifiability
 
-The end-state architecture extends verifier checks with: (a) full offline verification including identity-binding strength once the graded ladder ships, (b) cross-package corroboration once `upstream-evidence.json` ships, (c) typed-claim conformance once `claims.jsonld` ships. None of these are conformant requirements in v0.1.
+The end-state property the project is building toward: a verifier holding the package alone plus the public trust registry plus FreeTSA + Sigstore Rekor — with **no** `civicaitools.org` server dependency — can perform every check in §13.1. This requires:
+
+- **(a) Embedding the signature envelope in the package itself.** The signature, public key, kid, and algorithm move from the database row into the canonical JSON or into a sibling artifact in a multi-file package layout. Subject to Open Question #1 (package format).
+- **(b) Embedding the RFC 3161 token and Rekor entry id (with inclusion proof) in the package or a sibling artifact.** Same dependency.
+- **(c) Embedding the lifecycle state (withdrawal / reinstatement signatures and timestamps) in a content-addressable companion that updates the package's logical state without modifying the original signed artifact.**
+- **(d) A graded identity binding** that can be resolved from the package + public infrastructure. Subject to Open Question #3.
+- **(e) Cross-package corroboration via `upstream-evidence.json` or via the attestations infrastructure** (subject to Open Question #12).
+- **(f) Typed-claim conformance via `claims.jsonld`** (subject to Open Question #5).
+
+None of these are conformant requirements in v0.1. The current spec describes the current shape honestly; this section names the target so adopters and reviewers can see the gap.
+
+A real test of (a) and (b) — performed by an external party with no access to `civicaitools.org` server endpoints, against a real published package — is itself an open question (Open Question #15). Until that test is performed and passes, the offline-verifiability claim is a target, not a property.
 
 ---
 
 ## 14. Federation and discoverability
 
-> **Status: open question — see `end-state-vision.md` §Open questions items #2 (federation substrate) and #8 (Croissant outbound metadata).**
+> ⚠ **Subject to Open Question #2 — federation substrate.** Also subject to Open Question #8 — Croissant outbound metadata. Both are independent of the package format (§4) and the cryptographic envelope (§6).
 
 The reference implementation publishes packages as stable URLs on `civicaitools.org`. There is currently no federation transport: a package's canonical home is the URL on the publisher's registry; cross-registry discovery is manual.
 
-The current direction names three candidate federation substrates (atproto firehose / labelers, KOI net with sensor nodes, nanopub network) and an orthogonal discoverability mechanism (outbound Croissant metadata at a well-known location on each evidence page, making packages discoverable via Hugging Face / Kaggle / CKAN / Schema.org-aware crawlers). Both questions are independent of the package format (§4) and the cryptographic envelope (§6).
+The current direction names three candidate federation substrates (atproto firehose / labelers, KOI net with sensor nodes, nanopub network) and an orthogonal discoverability mechanism (outbound Croissant metadata at a well-known location on each evidence page, making packages discoverable via Hugging Face / Kaggle / CKAN / Schema.org-aware crawlers).
 
-This v0.1 draft makes no normative claim about federation transport or outbound metadata. Adopters running their own registries SHOULD publish to a stable, content-addressable URL and SHOULD honor the trust-registry contract for their own signing keys, but no specific federation protocol is required.
+This v0.1 draft makes no normative claim about federation transport or outbound metadata. Adopters running their own registries SHOULD publish to a stable, content-addressable URL and SHOULD honor the trust-registry contract for their own signing keys, but no specific federation protocol is required. As Open Question #2 resolves toward a specific substrate, this section will gain normative content describing how packages propagate across registries; until then, single-registry deployments and hand-replication between registries are the only patterns the standard contemplates.
 
 ---
 
@@ -380,7 +421,7 @@ Until then, implementations referencing the attestation surface SHOULD treat it 
 
 ## 16. Conformance
 
-> **Status: open question.** Formal conformance criteria are themselves an open question. This section documents the operational understanding of conformance as it stands today.
+> ⚠ **Subject to open question — formal conformance criteria.** Formal conformance criteria, a reference test corpus, and a conformance-claims registration mechanism are themselves an open question. This section documents the operational understanding of conformance as it stands today.
 
 A **conformant package** is a JSON object satisfying §4 that, when SHA-256-hashed in canonical form, produces a hash matching the URL slug and matching a successful Ed25519ph signature verification under the trust-registry contract (§6).
 
