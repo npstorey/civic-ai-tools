@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="760" viewBox="0 0 680 760" role="img" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <title>Civic AI Tools end-state architecture overview</title>
+  <desc>Layered architecture diagram showing the seven layers of the open standards stack, the package construction flow, identity ladder, and network signal model. Boxes are color-coded by build state: green=built, amber=partial, orange=designed not built, red=speculative.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <style>
+    .t  { font-size: 14px; font-weight: 400; }
+    .ts { font-size: 12px; font-weight: 400; }
+    .th { font-size: 14px; font-weight: 500; }
+    .arr { stroke: #5F5E5A; stroke-width: 1.5; fill: none; }
+    .built     { fill: #EAF3DE; stroke: #3B6D11; }
+    .built-tx-th { fill: #173404; }
+    .built-tx-ts { fill: #27500A; }
+    .partial   { fill: #FAEEDA; stroke: #854F0B; }
+    .partial-tx-th { fill: #412402; }
+    .partial-tx-ts { fill: #633806; }
+    .designed  { fill: #FAECE7; stroke: #993C1D; }
+    .designed-tx-th { fill: #4A1B0C; }
+    .designed-tx-ts { fill: #712B13; }
+    .speculative { fill: #FCEBEB; stroke: #A32D2D; }
+    .speculative-tx-th { fill: #501313; }
+    .speculative-tx-ts { fill: #791F1F; }
+    .neutral   { fill: #F1EFE8; stroke: #5F5E5A; }
+    .neutral-tx-th { fill: #2C2C2A; }
+    .neutral-tx-ts { fill: #444441; }
+  </style>
+
+  <text class="th neutral-tx-th" x="40" y="30">End-state architecture</text>
+  <text class="ts neutral-tx-ts" x="40" y="48">Layered standards stack with build state encoded by color</text>
+
+  <rect x="40" y="68" width="14" height="14" rx="3" stroke-width="0.5" class="neutral"/>
+  <text class="ts neutral-tx-ts" x="60" y="80">Legend:</text>
+  <rect x="115" y="68" width="14" height="14" rx="3" stroke-width="0.5" class="built"/>
+  <text class="ts neutral-tx-ts" x="135" y="80">Built</text>
+  <rect x="180" y="68" width="14" height="14" rx="3" stroke-width="0.5" class="partial"/>
+  <text class="ts neutral-tx-ts" x="200" y="80">Partial</text>
+  <rect x="252" y="68" width="14" height="14" rx="3" stroke-width="0.5" class="designed"/>
+  <text class="ts neutral-tx-ts" x="272" y="80">Designed</text>
+  <rect x="338" y="68" width="14" height="14" rx="3" stroke-width="0.5" class="speculative"/>
+  <text class="ts neutral-tx-ts" x="358" y="80">Speculative</text>
+
+  <rect x="40" y="100" width="600" height="44" rx="8" stroke-width="0.5" class="speculative"/>
+  <text class="th speculative-tx-th" x="340" y="120" text-anchor="middle" dominant-baseline="central">L7 — Network signals and coordination</text>
+  <text class="ts speculative-tx-ts" x="340" y="138" text-anchor="middle" dominant-baseline="central">atproto firehose · KOI net · nanopub network</text>
+
+  <rect x="40" y="156" width="290" height="44" rx="8" stroke-width="0.5" class="partial"/>
+  <text class="th partial-tx-th" x="185" y="176" text-anchor="middle" dominant-baseline="central">L6 — Identity</text>
+  <text class="ts partial-tx-ts" x="185" y="194" text-anchor="middle" dominant-baseline="central">GitHub today · ORCID, DID, DNS planned</text>
+
+  <rect x="350" y="156" width="290" height="44" rx="8" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="495" y="176" text-anchor="middle" dominant-baseline="central">L5 — Archival</text>
+  <text class="ts built-tx-ts" x="495" y="194" text-anchor="middle" dominant-baseline="central">Rekor live · Zenodo DOI designed</text>
+
+  <rect x="40" y="212" width="600" height="44" rx="8" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="340" y="232" text-anchor="middle" dominant-baseline="central">L4 — Cryptographic envelope</text>
+  <text class="ts built-tx-ts" x="340" y="250" text-anchor="middle" dominant-baseline="central">Ed25519ph signature · RFC 3161 timestamp · trust registry</text>
+
+  <rect x="40" y="268" width="600" height="56" rx="8" stroke-width="0.5" class="partial"/>
+  <text class="th partial-tx-th" x="340" y="290" text-anchor="middle" dominant-baseline="central">L3 — Semantic packaging</text>
+  <text class="ts partial-tx-ts" x="340" y="308" text-anchor="middle" dominant-baseline="central">PROV-O built · Croissant partial · RO-Crate, claims.jsonld pending</text>
+
+  <rect x="40" y="336" width="600" height="44" rx="8" stroke-width="0.5" class="partial"/>
+  <text class="th partial-tx-th" x="340" y="356" text-anchor="middle" dominant-baseline="central">L2 — Trace capture</text>
+  <text class="ts partial-tx-ts" x="340" y="374" text-anchor="middle" dominant-baseline="central">OTel hand-rolled today · Agent Receipts speculative</text>
+
+  <rect x="40" y="392" width="600" height="44" rx="8" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="340" y="412" text-anchor="middle" dominant-baseline="central">L1 — Tool execution</text>
+  <text class="ts built-tx-ts" x="340" y="430" text-anchor="middle" dominant-baseline="central">MCP servers · Socrata, CKAN, ArcGIS, Census</text>
+
+  <text class="th neutral-tx-th" x="40" y="478">Identity ladder</text>
+  <text class="ts neutral-tx-ts" x="40" y="496">Graded binding strength surfaced as filterable signal</text>
+
+  <rect x="40" y="510" width="110" height="50" rx="6" stroke-width="0.5" class="speculative"/>
+  <text class="th speculative-tx-th" x="95" y="530" text-anchor="middle" dominant-baseline="central">Pseudonymous</text>
+  <text class="ts speculative-tx-ts" x="95" y="548" text-anchor="middle" dominant-baseline="central">self-keypair</text>
+
+  <rect x="160" y="510" width="110" height="50" rx="6" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="215" y="530" text-anchor="middle" dominant-baseline="central">Weak</text>
+  <text class="ts built-tx-ts" x="215" y="548" text-anchor="middle" dominant-baseline="central">GitHub OIDC</text>
+
+  <rect x="280" y="510" width="110" height="50" rx="6" stroke-width="0.5" class="designed"/>
+  <text class="th designed-tx-th" x="335" y="530" text-anchor="middle" dominant-baseline="central">Moderate</text>
+  <text class="ts designed-tx-ts" x="335" y="548" text-anchor="middle" dominant-baseline="central">ORCID</text>
+
+  <rect x="400" y="510" width="120" height="50" rx="6" stroke-width="0.5" class="designed"/>
+  <text class="th designed-tx-th" x="460" y="530" text-anchor="middle" dominant-baseline="central">Institutional</text>
+  <text class="ts designed-tx-ts" x="460" y="548" text-anchor="middle" dominant-baseline="central">DNS / did:web</text>
+
+  <rect x="530" y="510" width="110" height="50" rx="6" stroke-width="0.5" class="speculative"/>
+  <text class="th speculative-tx-th" x="585" y="530" text-anchor="middle" dominant-baseline="central">Strong</text>
+  <text class="ts speculative-tx-ts" x="585" y="548" text-anchor="middle" dominant-baseline="central">notarized</text>
+
+  <line x1="150" y1="535" x2="158" y2="535" class="arr" marker-end="url(#arrow)"/>
+  <line x1="270" y1="535" x2="278" y2="535" class="arr" marker-end="url(#arrow)"/>
+  <line x1="390" y1="535" x2="398" y2="535" class="arr" marker-end="url(#arrow)"/>
+  <line x1="520" y1="535" x2="528" y2="535" class="arr" marker-end="url(#arrow)"/>
+
+  <text class="th neutral-tx-th" x="40" y="600">Publish flow at a glance</text>
+  <text class="ts neutral-tx-ts" x="40" y="618">User analysis flows down through trace, package, signing, store</text>
+
+  <rect x="40" y="630" width="90" height="50" rx="6" stroke-width="0.5" class="neutral"/>
+  <text class="th neutral-tx-th" x="85" y="650" text-anchor="middle" dominant-baseline="central">User</text>
+  <text class="ts neutral-tx-ts" x="85" y="668" text-anchor="middle" dominant-baseline="central">prompt + run</text>
+
+  <rect x="146" y="630" width="100" height="50" rx="6" stroke-width="0.5" class="partial"/>
+  <text class="th partial-tx-th" x="196" y="650" text-anchor="middle" dominant-baseline="central">Trace</text>
+  <text class="ts partial-tx-ts" x="196" y="668" text-anchor="middle" dominant-baseline="central">OTel</text>
+
+  <rect x="262" y="630" width="100" height="50" rx="6" stroke-width="0.5" class="partial"/>
+  <text class="th partial-tx-th" x="312" y="650" text-anchor="middle" dominant-baseline="central">Package</text>
+  <text class="ts partial-tx-ts" x="312" y="668" text-anchor="middle" dominant-baseline="central">single blob</text>
+
+  <rect x="378" y="630" width="100" height="50" rx="6" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="428" y="650" text-anchor="middle" dominant-baseline="central">Sign</text>
+  <text class="ts built-tx-ts" x="428" y="668" text-anchor="middle" dominant-baseline="central">Ed25519ph</text>
+
+  <rect x="494" y="630" width="100" height="50" rx="6" stroke-width="0.5" class="built"/>
+  <text class="th built-tx-th" x="544" y="650" text-anchor="middle" dominant-baseline="central">Timestamp</text>
+  <text class="ts built-tx-ts" x="544" y="668" text-anchor="middle" dominant-baseline="central">RFC 3161 + Rekor</text>
+
+  <line x1="130" y1="655" x2="144" y2="655" class="arr" marker-end="url(#arrow)"/>
+  <line x1="246" y1="655" x2="260" y2="655" class="arr" marker-end="url(#arrow)"/>
+  <line x1="362" y1="655" x2="376" y2="655" class="arr" marker-end="url(#arrow)"/>
+  <line x1="478" y1="655" x2="492" y2="655" class="arr" marker-end="url(#arrow)"/>
+
+  <text class="ts neutral-tx-ts" x="40" y="710">Open questions resolve as ADRs land. See end-state-vision.md §Open questions for the current list.</text>
+  <text class="ts neutral-tx-ts" x="40" y="728">Most consequential pending decision: package format (single JSON blob vs. RO-Crate directory).</text>
+</svg>

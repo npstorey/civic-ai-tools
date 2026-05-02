@@ -67,6 +67,18 @@ Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
 
 Sprint-based work for the website lives in that repo's `/sprints/` folder. This repo holds MCP server configs, skill docs, and setup tooling.
 
+## Architecture documentation
+
+Canonical specifications and design decisions live in [`docs/architecture/`](docs/architecture/):
+
+- [`end-state-vision.md`](docs/architecture/end-state-vision.md) — layered architecture target with build-state coloring (built / partial / designed / speculative) and full glossary. Update when an open question resolves.
+- [`open-evidence-standard.md`](docs/architecture/open-evidence-standard.md) — Internal working draft of the Open Evidence Standard (pre-v0.1, not for external review). Spec for evidence-package shape, signing, verification, captureMethod, withdrawal lifecycle. Honors what the codebase actually enforces today; sections subject to open questions are marked inline.
+- [`civic-claim-vocabulary-draft-spec.md`](docs/architecture/civic-claim-vocabulary-draft-spec.md) — Internal working draft of the Civic Claim Vocabulary (pre-v0.1). The typed-claims layer that sits on top of the Open Evidence Standard. Reserved but not yet built; gated by the Xanadu doctrine.
+- [`xanadu-doctrine.md`](docs/architecture/xanadu-doctrine.md) — project discipline gating spec growth: do not promote anything to a higher build state without a real package or adopter that needs it.
+- **[`open-questions.md`](docs/architecture/open-questions.md)** — Living registry of unresolved decisions affecting the architecture and standards. Canonical home for what's still in flight. Spec sections that depend on unresolved questions cite this registry by question number; future ADRs that resolve a question update the registry entry to point at the resolution.
+
+ADRs in [`docs/adr/`](docs/adr/) record settled decisions; the architecture docs above describe the artifacts those decisions are about. ADRs cite the doctrine and specs by URL when their decisions involve a Xanadu-test gate.
+
 ## Running Scripts
 
 ```bash
