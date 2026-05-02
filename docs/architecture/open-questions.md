@@ -150,7 +150,7 @@ Each entry uses the following fields:
 - **Stakes.** The Civic Claim Vocabulary draft spec's required-properties table (§4.3); the §8.1 anti-patterns prohibition on implicit scope; downstream extension authoring patterns.
 - **Current direction.** Required at v0.1. Open whether v1.0 keeps the requirement or moves to "scope present unless explicitly waived with a documented reason."
 - **Resolution criteria.** Tied to Q7 — if Q7 resolves toward generalization, Q14 follows. If Q7 resolves toward staying civic-focused, Q14 may resolve to "stay required, document why."
-- **Notes.** Listed separately from Q9 because it's a vocabulary-spec concern rather than a producer-type-spec concern; same upstream dependency though.
+- **Notes.** Listed separately from Q9 because it's a vocabulary-spec concern rather than a producer-type-spec concern; same upstream dependency though. **Specific instance:** the CCV draft's `ccv:PolicePrecinct` subtype namespace name is NYC-coded (other jurisdictions use "district," "division," "ward"); renaming it generally — and similar surface-level civic-isms throughout the geographic-scope taxonomy — requires resolving the civic-vs-general scope question that this entry tracks.
 
 ### Q15 — External verification testing
 
@@ -160,6 +160,15 @@ Each entry uses the following fields:
 - **Current direction.** Defer until Q1 resolves enough to know what verification of a conformant package looks like (today, verification requires `civicaitools.org`; end-state, verification requires only public infrastructure). The test should be performed at the end-state, not the current state.
 - **Resolution criteria.** Q1 resolves to a multi-file format that embeds the proofs in the package, AND an external party (academic partner, security researcher, an adjacent civic-tech project) performs full verification with no access to civicaitools.org server endpoints AND the verification succeeds.
 - **Notes.** Until this test is performed and passes, the offline-verifiability claim is a target, not a property. The §13.3 target end-state subsection in the Open Evidence Standard is honest about this.
+
+### Q16 — Formal conformance criteria
+
+- **Status.** Open.
+- **Origin.** Open Evidence Standard §16 (current internal working draft).
+- **Stakes.** §16 of the Open Evidence Standard; future adopter onboarding; whether the spec can ever leave v0.x without this resolution.
+- **Current direction.** Conformance is currently described operationally (a conformant package is one that satisfies §4 and verifies under §6 / §13; a conformant publisher is one that validates the publish-route required-field set and signs with a registry-listed key; a conformant verifier is one that performs the §13.1 checks). Formal criteria, a reference test corpus, and a conformance-claims registration mechanism are deferred until external implementations surface what's needed.
+- **Resolution criteria.** At least one external implementation attempt that surfaces what formal conformance would need to specify; alternatively, a formal conformance test suite drafted as part of moving toward v1.0.
+- **Notes.** Connected to Q15 (verification testing outside `civicaitools.org`); a serious external verification attempt would likely produce the requirements list for formal conformance. Likely also connected to Q1 (package format) — a multi-file end-state package may need a different conformance shape than a single-blob package.
 
 ---
 

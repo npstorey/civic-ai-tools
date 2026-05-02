@@ -421,7 +421,7 @@ Until then, implementations referencing the attestation surface SHOULD treat it 
 
 ## 16. Conformance
 
-> ⚠ **Subject to open question — formal conformance criteria.** Formal conformance criteria, a reference test corpus, and a conformance-claims registration mechanism are themselves an open question. This section documents the operational understanding of conformance as it stands today.
+> ⚠ **Subject to Open Question #16 — formal conformance criteria.** Formal conformance criteria, a reference test corpus, and a conformance-claims registration mechanism are themselves an open question. This section documents the operational understanding of conformance as it stands today.
 
 A **conformant package** is a JSON object satisfying §4 that, when SHA-256-hashed in canonical form, produces a hash matching the URL slug and matching a successful Ed25519ph signature verification under the trust-registry contract (§6).
 
