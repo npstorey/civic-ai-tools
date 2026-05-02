@@ -170,6 +170,15 @@ Each entry uses the following fields:
 - **Resolution criteria.** At least one external implementation attempt that surfaces what formal conformance would need to specify; alternatively, a formal conformance test suite drafted as part of moving toward v1.0.
 - **Notes.** Connected to Q15 (verification testing outside `civicaitools.org`); a serious external verification attempt would likely produce the requirements list for formal conformance. Likely also connected to Q1 (package format) — a multi-file end-state package may need a different conformance shape than a single-blob package.
 
+### Q17 — BPMN conversion of process-flow diagrams
+
+- **Status.** Open.
+- **Origin.** `end-state-vision.md` §8 — identified as feasible for the publish flow (§2), the verification flow (§3), and the BYOK evaluation flow (§7); not yet executed.
+- **Stakes.** Audiences that prefer process-modeling rigor (MetaGov interop work, deliberative tool integration, formal architecture review). Limited stakes today; the project already has BPMN tooling in use for response visualization (`civic-ai-tools-website` Explore page), so the conversion is operationally tractable when needed.
+- **Current direction.** Defer until an audience explicitly asks for BPMN versions. Static diagrams (the §1 standards stack, the §4 identity ladder, the §5 claims taxonomy, the §6 network 2×2) do not convert cleanly and stay in Mermaid regardless.
+- **Resolution criteria.** A named audience or use case that requires BPMN process notation specifically. Not driven by spec evolution; driven by audience need.
+- **Notes.** §8 of the vision doc names the candidate diagrams and the pools/lanes for each (e.g., the publish flow's pools: User, Skill, MCP server, Trace, Packager, Signer, Timestamp/Rekor, Store, Zenodo). Conversion is a mechanical translation when the time comes.
+
 ---
 
 ## Resolution log
