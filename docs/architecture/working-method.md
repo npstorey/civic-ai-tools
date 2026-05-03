@@ -1,6 +1,6 @@
 ---
 Status: Doctrine
-Last updated: 2026-05-02
+Last updated: 2026-05-03
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -64,6 +64,64 @@ The default in many projects is "every decision becomes an issue immediately." T
 - **Conflation of work units with thinking units.** A single registry question may resolve via three issues, or via no issues, or via a spec revision that itself spawned a discussion. Forcing every question into a single-issue mold is a category error.
 
 The registry exists precisely to absorb that thinking work without absorbing the issue-tracker semantics. Issues come later, when the question is ready for them.
+
+## Memory and instruction surfaces
+
+The four surfaces above govern how unresolved decisions move through to resolution. Two further surface categories carry coordination content for working sessions: **memory surfaces** and **instruction surfaces**. They follow the same surface discipline — one canonical home per piece of knowledge, explicit conditions for what belongs where — but their purpose differs from the decision surfaces. Memory and instruction surfaces help future sessions find canonical sources; they do not replace them.
+
+- **`civic-ai-tools-project/MEMORY.md` and topic files at `~/.claude/projects/-Users-nathanstorey-Code-civic-ai-tools-project/memory/*.md` — memory surfaces.** Durable cross-session knowledge. MEMORY.md is the index: one-line entries pointing at topic files (format: `- [Title](file.md) — one-line hook`). Topic files carry the durable content with YAML frontmatter (`name`, `description`, `type`). Read by working sessions in this workspace.
+
+- **`civic-ai-tools-project/CLAUDE.md` and per-repo `CLAUDE.md` files in `civic-ai-tools/`, `civic-ai-tools-website/`, `socrata-mcp-server/` — instruction surfaces.** Stable references loaded at session start. The workspace CLAUDE.md carries cross-repo conventions and pointers; per-repo CLAUDE.md files carry repo-specific instructions and architecture pointers.
+
+### Conditions for adding to memory surfaces
+
+A piece of content belongs in memory only if all of the following hold:
+
+1. **Durable.** The knowledge will still be true and load-bearing in three months. Volatile knowledge belongs elsewhere.
+2. **Not session-state.** Meeting follow-ups, in-flight outreach, and "active as of [date]" tracking are session-state, not durable knowledge — they belong in a personal notes system, calendar, or project tracker, outside the memory system.
+3. **Not derivable from canonical sources.** If the knowledge can be reconstructed from `git log`, `gh pr list`, `gh issue list`, code, or tracked docs, memory must not duplicate it.
+4. **Not duplicated in tracked docs.** If the knowledge already lives in CLAUDE.md, an architecture doc, code, or a public repo, point at the canonical home; do not restate.
+
+Two structural rules:
+
+- **Topic files carry content; MEMORY.md is an index.** Do not store content directly in MEMORY.md.
+- **Current state is in-place updateable.** Use `## Current status` and edit in place; avoid `## State as of [date]` headings, which invite drift.
+
+### Conditions for adding to instruction surfaces
+
+A piece of content belongs in CLAUDE.md only if all of the following hold:
+
+1. **Stable.** The reference does not change session-to-session. Changing project state belongs in memory or in tracked docs.
+2. **Coordination shape.** Docs maps, file locations, live services, pointers to canonical sources, and project-wide conventions are the right shape for instruction surfaces.
+3. **Not duplicated in canonical sources.** Point at the canonical home; do not restate.
+
+One structural rule:
+
+- **Per-repo CLAUDE.md files should match each other's conventions.** When one is updated with a new section, the others should be reviewed for the same disposition — either add the section, or note explicitly why it does not apply to that repo.
+
+### Cross-cutting principles (apply to all six surfaces)
+
+- **One canonical home per piece of knowledge.** If content appears in three places, two of them are wrong. Pick the canonical home; replace the others with pointers.
+- **Pause-and-audit on transitions.** Content moving between surfaces — memory to instructions, internal working draft to externally shared, gitignored to tracked, private to public — requires deliberate review before the change lands. The session proposing the transition surfaces it; the user reviews and approves.
+- **Track surface-to-surface moves.** Adding silently is how multi-place duplications accumulate. When content moves between surfaces, note the move in the commit or PR description.
+
+### Relationship to the Xanadu doctrine
+
+The Xanadu doctrine governs **spec growth**: do not promote anything in the spec to a higher build state without a real package or adopter that needs it. This section governs **surface growth**: do not duplicate, accumulate, or misclassify content across the project's coordination surfaces. The two are complementary — the doctrine prevents speculative spec growth; this section prevents accumulation-without-conditions on the surfaces around the spec.
+
+### Worked examples
+
+From the 2026-05 architecture-foundation cleanup arc.
+
+- **Strategic-context exclusion rule, four-place duplication.** The "no specific external stakeholder names in public surface area" rule appeared in workspace CLAUDE.md (canonical home), every per-repo CLAUDE.md (appropriate restatement — each repo is independently public), and inline in workspace MEMORY.md (pure duplication). The MEMORY.md restatement was dropped during the cleanup; the per-repo restatements stayed because each repo is independent.
+- **Session narratives in memory, ~30 KB.** Pre-cleanup MEMORY.md carried session-by-session narrative for shipped milestones. Canonical source is `git log` and PR descriptions; future sessions reconstruct via `gh pr list --state closed`. The block was dropped wholesale.
+- **Meeting tracking in memory.** Inline "met X on Y date, follow up after Z" entries plus an orphan topic file. Session-state, not durable knowledge. Both dropped; future meeting tracking goes outside the memory system entirely.
+- **Decision restatements duplicating ADR / spec text, ~3 KB.** Pre-cleanup MEMORY.md had a "Key decisions made" section restating decisions documented in the OES draft, ADR-0003, and the architecture docs. Section dropped; canonical homes are the ADRs and specs.
+
+### What this section explicitly avoids
+
+- **Memory and instruction surfaces becoming parallel canonical sources.** They are coordination surfaces — they help future sessions find canonical sources, not replace them. If a memory or CLAUDE.md entry feels like the source of truth for some piece of knowledge, the right move is to put the knowledge in a tracked doc and have the coordination surface point at it.
+- **Adding-without-conditions accumulation.** The pre-cleanup MEMORY.md had grown well past its size target through months of adding without explicit conditions. The conditions above exist to gate accumulation. A session adding to memory or CLAUDE.md should be able to articulate which condition the content satisfies; if it cannot, the content does not belong on that surface.
 
 ## Companion documents
 
