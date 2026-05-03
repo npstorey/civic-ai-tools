@@ -4,11 +4,11 @@ Last updated: 2026-05-03
 Maintainer: [TK: leave as placeholder]
 ---
 
-# Working method for unresolved decisions
+# Working method
 
 ## Purpose
 
-The working method governs how unresolved decisions affecting the project's architecture and standards get tracked, surfaced, and progressed. It exists because the project needs a way to absorb thinking work — exploration, framing, deferring, retiring — without creating premature execution pressure. It is load-bearing project discipline, equivalent in stature to the Xanadu doctrine: the doctrine governs *what gets into the spec*; this method governs *how decisions get there*.
+The working method governs how the project handles unresolved decisions and how content moves between its coordination surfaces (decision surfaces, memory surfaces, instruction surfaces). It exists because the project needs a way to absorb thinking work — exploration, framing, deferring, retiring — without creating premature execution pressure, and to gate accumulation across the coordination surfaces. It is load-bearing project discipline, equivalent in stature to the Xanadu doctrine: the doctrine governs *what gets into the spec*; this method governs *how decisions reach resolution and how content reaches the right surface*.
 
 ## The four surfaces
 
