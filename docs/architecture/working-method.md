@@ -54,6 +54,8 @@ The two are complementary:
 
 A question can sit in the registry indefinitely without violating the doctrine — research and direction-noting are explicitly exempt from the gate. What the doctrine prevents is the speculative direction *jumping straight into spec text* without passing the gate. The working method's promotion criteria are the procedural form of the same principle.
 
+The [chat-type taxonomy](chat-type-taxonomy.md) is the third complementary doctrine. The three divide cleanly: Xanadu governs **spec growth** (what enters or is promoted in the spec); the working method governs **surface content placement** (what belongs in registry vs. issues vs. ADRs vs. specs vs. memory vs. instructions); the chat-type taxonomy governs **conversation surfaces** (which kind of chat is appropriate for which kind of work). A productive session typically draws on all three — the right chat type for the work, producing the right kind of content for the right surface, only promoting spec content when warranted.
+
 ## What this method explicitly avoids
 
 The default in many projects is "every decision becomes an issue immediately." The cost is real:
@@ -127,6 +129,7 @@ From the 2026-05 architecture-foundation cleanup arc.
 
 - [`open-questions.md`](open-questions.md) — the registry itself. Live document.
 - [`xanadu-doctrine.md`](xanadu-doctrine.md) — the spec-growth gate. Cited by ADRs and spec drafts when decisions involve a Xanadu-test transition.
+- [`chat-type-taxonomy.md`](chat-type-taxonomy.md) — the conversation-surface discipline. Defines the seven project-specific chat types, their proper uses, and the closure rules that hold them apart. Companion doctrine to this method and to `xanadu-doctrine.md`.
 - [`../adr/`](../adr/) — Architectural Decision Records. The ADR log. ADR-0001 (roadmap governance), ADR-0002 (commitments vs. targets), ADR-0003 (capture-method differentiation) are the current set.
 - [`end-state-vision.md`](end-state-vision.md) — architectural rationale and the layered standards stack. Vision-doc updates follow this method when they touch unresolved questions.
 - [`open-evidence-standard.md`](open-evidence-standard.md) and [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) — the canonical spec drafts. Both internal working drafts (pre-v0.1) at the time this method was formalized.
