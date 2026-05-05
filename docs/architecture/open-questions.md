@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-05-01
+Last updated: 2026-05-05
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -178,6 +178,19 @@ Each entry uses the following fields:
 - **Current direction.** Defer until an audience explicitly asks for BPMN versions. Static diagrams (the §1 standards stack, the §4 identity ladder, the §5 claims taxonomy, the §6 network 2×2) do not convert cleanly and stay in Mermaid regardless.
 - **Resolution criteria.** A named audience or use case that requires BPMN process notation specifically. Not driven by spec evolution; driven by audience need.
 - **Notes.** §8 of the vision doc names the candidate diagrams and the pools/lanes for each (e.g., the publish flow's pools: User, Skill, MCP server, Trace, Packager, Signer, Timestamp/Rekor, Store, Zenodo). Conversion is a mechanical translation when the time comes.
+
+### Q18 — Standards adoption review: Blake3, Data Package Standard, DCAT-US3, CODATA semantic markdown
+
+- **Status.** Open.
+- **Origin.** Surfaced 2026-05-01 in a collaboration session with datHere on the Open Evidence Standard. Captured as a candidate-set for systematic evaluation against the existing architecture stack, rather than handled ad-hoc, so each candidate either lands as an ADR adopting it (with rationale) or as a documented decision-not-to-adopt (with reason).
+- **Stakes (per candidate).**
+  - **Blake3.** The Open Evidence Standard §6.1 (signature / package hash). CKAN already uses Blake3 for tamper-evident metadata; potential supplement or replacement for SHA-256 in the package-hash construction.
+  - **Data Package Standard (Open Knowledge Foundation).** `end-state-vision.md` §1 L3 (semantic packaging) and the Open Evidence Standard §4 (evidence-package structure). Direct alternative or complement to RO-Crate; supports custom dialects (e.g., an "evidence" dialect). Interacts with Q1 (package format) — Q1's current direction (multi-file directory with an RO-Crate / WRROC compatibility profile) would be reopened if Data Package adoption were committed.
+  - **DCAT-US3.** `end-state-vision.md` §1 L3 and the data-source description layer. Federal data catalog standard; relevant to cross-portal interop and dataset metadata.
+  - **CODATA semantic markdown.** `end-state-vision.md` §1 L3 and the human-readable metadata layer. Alternative or complement to JSON-LD for the data-coordinator persona that surfaced in the working session as a target audience.
+- **Current direction.** No commitment. Each candidate evaluated independently on (a) what problem it solves in the current architecture, (b) whether that problem is already addressed by something already in the stack, (c) cost of adoption (implementation, dependency surface, governance overhead, breaking-change risk), (d) cost of not adopting (interop friction, missed network effect, friction with the datHere ecosystem and downstream WPRDC adoption per the [landscape analysis](../research/landscape-analysis.md)).
+- **Resolution criteria.** Each candidate resolves independently. For each, either an ADR adopting the standard (with rationale) or a documented not-adopting decision (with reason). Resolution requires real adopter need per the [Xanadu doctrine](xanadu-doctrine.md) — datHere, WPRDC, or another named adopter blocked or materially friction'd without the change. "It would be cleaner if" is not sufficient.
+- **Notes.** Coordination with datHere on this candidate set is ongoing. The Data Package Standard candidate is the most consequential structurally because it interacts with Q1 (and reopens that direction if adopted); the other three can be evaluated more independently. Each candidate should land as a separate ADR or registry-resolution entry rather than being bundled, so adoption rationale (or non-adoption reason) is durable per-standard.
 
 ---
 
