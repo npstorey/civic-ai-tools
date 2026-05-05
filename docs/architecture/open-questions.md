@@ -181,7 +181,7 @@ Each entry uses the following fields:
 
 ### Q18 — Standards adoption review: Blake3, Data Package Standard, DCAT-US3, CODATA semantic markdown
 
-- **Status.** Open.
+- **Status.** Promoted to GitHub issue [npstorey/civic-ai-tools#67](https://github.com/npstorey/civic-ai-tools/issues/67). Each candidate evaluated independently within that issue; resolution lands as a per-candidate ADR or documented not-adopting decision.
 - **Origin.** Surfaced 2026-05-01 in a collaboration session with datHere on the Open Evidence Standard. Captured as a candidate-set for systematic evaluation against the existing architecture stack, rather than handled ad-hoc, so each candidate either lands as an ADR adopting it (with rationale) or as a documented decision-not-to-adopt (with reason).
 - **Stakes (per candidate).**
   - **Blake3.** The Open Evidence Standard §6.1 (signature / package hash). CKAN already uses Blake3 for tamper-evident metadata; potential supplement or replacement for SHA-256 in the package-hash construction.
