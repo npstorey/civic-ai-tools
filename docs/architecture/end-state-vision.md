@@ -136,8 +136,8 @@ sequenceDiagram
     Pkg->>Z: deposit (optional, async)
     Z-->>Pkg: DOI (asynchronous)
 
-    Note over Trace: 🟨 OTel hand-rolled JSON today;<br/>🟥 Agent Receipts integration speculative
-    Note over Pkg: 🟨 Single JSON blob today;<br/>🟧 Multi-file RO-Crate target
+    Note over Trace: 🟨 OTel hand-rolled JSON today; 🟥 Agent Receipts integration speculative
+    Note over Pkg: 🟨 Single JSON blob today; 🟧 Multi-file RO-Crate target
     Note over Sign,TS: 🟩 Ed25519ph + RFC 3161 + Rekor live
     Note over Z: 🟧 Zenodo Phase 6, not built
 ```
@@ -178,7 +178,7 @@ sequenceDiagram
 
     Note over V,Reg: 🟩 Signature + registry verification live
     Note over V,Rkr: 🟩 Rekor lookup live
-    Note over V,ID: 🟨 GitHub identity only;<br/>🟧 ORCID/DID/DNS designed
+    Note over V,ID: 🟨 GitHub identity only; 🟧 ORCID/DID/DNS designed
     Note over V,UP: 🟧 upstream-evidence not built
 ```
 
@@ -306,10 +306,10 @@ quadrantChart
     title Identity strength × Claim corroboration
     x-axis Low corroboration --> High corroboration
     y-axis Weak identity --> Strong identity
-    quadrant-1 Strong identity, corroborated<br/>(institutional record)
-    quadrant-2 Strong identity, contested<br/>(most interesting for journalists/auditors)
-    quadrant-3 Weak identity, contested<br/>(noise / spam / contrarians)
-    quadrant-4 Weak identity, corroborated<br/>(community knowledge)
+    quadrant-1 Strong identity, corroborated (institutional record)
+    quadrant-2 Strong identity, contested (most interesting for journalists/auditors)
+    quadrant-3 Weak identity, contested (noise / spam / contrarians)
+    quadrant-4 Weak identity, corroborated (community knowledge)
 ```
 
 **Critical preamble (must appear in any spec or product surface):**
@@ -345,7 +345,7 @@ sequenceDiagram
     Sig-->>E: signed evaluation
     E->>Store: publish at stable URL
 
-    Note over E,LLM: 🟥 Not built;<br/>🟧 designed in spec
+    Note over E,LLM: 🟥 Not built; 🟧 designed in spec
     Note over E,Sig: 🟩 Signing infrastructure reusable
 ```
 
