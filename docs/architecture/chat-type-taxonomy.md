@@ -16,7 +16,7 @@ This document names the types, their proper uses, their failure modes, and the d
 
 The taxonomy below is project-specific. There is also a broader, cross-project chat taxonomy that includes work outside this project (personal reflection, cross-project learning, system-level workflow questions). That broader taxonomy is tracked separately in a personal-system surface outside any single project repo. References to "Personal Reflection / Learning" in this document refer to that broader system.
 
-## The seven project-specific types
+## The eight project-specific types
 
 ### 1. Strategic chat
 
@@ -133,6 +133,29 @@ A productive distinction: strategic and planning chats *use* the conventions; me
 A second failure mode: meta chats that get used as a refuge from doing actual work. If you find yourself opening a meta chat to think about how to think about the work instead of doing the work, the meta chat is procrastination. The taxonomy is a tool, not a stage.
 
 **Why this type matters:** without an explicit meta type, taxonomy maintenance happens accidentally inside other chat types — usually planning chats that have drifted. The taxonomy ends up evolving through accumulated drift rather than deliberate revision. A named meta type makes taxonomy revision a first-class activity with its own discipline.
+
+### 8. Comms chat
+
+**Purpose:** coordinating external relationships — logging incoming messages from prospective collaborators, drafting outbound updates, maintaining the opportunity backlog, preparing pre-meeting briefs, evaluating new outreach. The output is *managed external state* (a logged opportunity, a sent update, a prepared brief), distinct from project artifacts (Planning/Implementation) or strategic conclusions (Strategic).
+
+**Surface:** access to `civic-ai-ops` artifacts (incoming-message log, opportunity tracker, draft updates) is the load-bearing requirement. Optional access to `civic-ai-tools-project` artifacts when an update needs to cite shipped project work; access happens via absolute paths on explicit direction, not by including civic-ai-tools-project in default context. Chat-history search optional, useful when relationship context lives primarily in prior chats.
+
+**Examples:** drafting a status update to a prospective collaborator that references a recently shipped feature; logging the outcome of a meeting and updating the opportunity tracker; preparing a pre-meeting brief; reviewing the opportunity backlog to decide which to prioritize this week; routing an incoming message to either a draft response or the opportunity log.
+
+**Lifecycle:** short to medium per coordination event. The civic-ai-ops surface itself is long-lived, but each chat is bounded to a single coordination scope (this update, this meeting prep, this backlog review).
+
+**Closure rule:** close when the bounded coordination event is done — the update is sent, the brief is produced, the opportunity is logged. Do not let comms chats drift into project planning even when an update touches project context. If an update reveals new project work that needs scoping, route the project work to a planning chat opened against `civic-ai-tools-project`.
+
+**Failure modes:**
+
+- Drift into project execution. A comms chat starts as "draft an update about X" and ends up scoping new work in `civic-ai-tools-project`. Recognize the genre shift; route project work to a planning chat rather than handling it here.
+- Cross-contamination of memory. Stakeholder names, opportunity statuses, or pre-meeting context leaking into `civic-ai-tools-project`'s tracked or memory surfaces. The workspace's stakeholder/relationship-content boundary rule (see workspace `CLAUDE.md`) is the discipline that prevents this; respect it. Stakeholder content lives in `civic-ai-ops` only.
+
+**Distinction from other types:**
+
+- *Strategic chat* thinks through cross-cutting questions whose answers shape project direction. Comms chats handle bounded relationship events.
+- *Planning B/C/D* coordinates project execution. Comms chats coordinate external relationships, which is a different domain even when both involve "drafting and deciding."
+- *Orchestration chat* coordinates in-flight implementation streams within the project. Comms chats coordinate external state outside the project.
 
 ## On chats that resist typing
 
