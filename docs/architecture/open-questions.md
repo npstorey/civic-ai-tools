@@ -194,7 +194,7 @@ Each entry uses the following fields:
 
 ### Q19 — OpenContext as unified upstream MCP framework for portal access
 
-- **Status.** Open.
+- **Status.** Promoted to GitHub issue [npstorey/civic-ai-tools#68](https://github.com/npstorey/civic-ai-tools/issues/68). Resolution lands as either an ADR adopting OpenContext (full or partial) with rationale, or a documented not-adopting decision.
 - **Origin.** Surfaced 2026-05-09 from landscape observation. OpenContext (`github.com/CityOfBoston/OpenContext`, production at `data-mcp.boston.gov/mcp`) is a generalized civic-data MCP-server framework already consumed by the website as one of its three MCP sources alongside `socrata-mcp.civicaitools.org` and Data Commons. Question: rather than keeping a separately-maintained per-portal Socrata MCP server, consume OpenContext as the unified upstream framework for portal access across portal types (Socrata, CKAN, ArcGIS Hub). Existing landscape memory: see `project_opencontext_landscape.md`.
 - **Stakes.**
   - `end-state-vision.md` §1 L1 (tool execution layer) — OpenContext could become the canonical adapter the project uses for civic-data portal access, replacing or supplementing `socrata-mcp-server` as a separately-maintained tool.
