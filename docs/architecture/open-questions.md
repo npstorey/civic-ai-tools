@@ -192,6 +192,23 @@ Each entry uses the following fields:
 - **Resolution criteria.** Each candidate resolves independently. For each, either an ADR adopting the standard (with rationale) or a documented not-adopting decision (with reason). Resolution requires real adopter need per the [Xanadu doctrine](xanadu-doctrine.md) — datHere, WPRDC, or another named adopter blocked or materially friction'd without the change. "It would be cleaner if" is not sufficient.
 - **Notes.** Coordination with datHere on this candidate set is ongoing. The Data Package Standard candidate is the most consequential structurally because it interacts with Q1 (and reopens that direction if adopted); the other three can be evaluated more independently. Each candidate should land as a separate ADR or registry-resolution entry rather than being bundled, so adoption rationale (or non-adoption reason) is durable per-standard.
 
+### Q19 — OpenContext as unified upstream MCP framework for portal access
+
+- **Status.** Open.
+- **Origin.** Surfaced 2026-05-09 from landscape observation. OpenContext (`github.com/CityOfBoston/OpenContext`, production at `data-mcp.boston.gov/mcp`) is a generalized civic-data MCP-server framework already consumed by the website as one of its three MCP sources alongside `socrata-mcp.civicaitools.org` and Data Commons. Question: rather than keeping a separately-maintained per-portal Socrata MCP server, consume OpenContext as the unified upstream framework for portal access across portal types (Socrata, CKAN, ArcGIS Hub). Existing landscape memory: see `project_opencontext_landscape.md`.
+- **Stakes.**
+  - `end-state-vision.md` §1 L1 (tool execution layer) — OpenContext could become the canonical adapter the project uses for civic-data portal access, replacing or supplementing `socrata-mcp-server` as a separately-maintained tool.
+  - Maintenance surface of `socrata-mcp-server` itself. A unified upstream framework collapses N per-portal connectors into one consumed dependency. The trade is reduced maintenance vs. dependency on an upstream not under project control.
+  - Multi-portal coverage path (additional cities, ArcGIS Hub coverage, additional CKAN deployments). A unified framework lowers the marginal cost of each new portal but couples coverage timelines to upstream prioritization.
+  - Relationship to Q18 (standards adoption review). Q18's candidate set is about evidence-side standards (Blake3, Data Package Standard, DCAT-US3, CODATA semantic markdown); this question is on a different axis (portal-access tooling), so it should not be bundled with Q18, but the per-candidate ADR-or-documented-not-adopting evaluation discipline is a useful template.
+- **Current direction.** No commitment. Evaluate against:
+  - (a) What does OpenContext solve that the current per-portal approach does not? (Probable: ArcGIS Hub coverage, unified tool surface across portal types, multi-cloud deployment support — verify against the upstream repo before relying on these in an ADR.)
+  - (b) Cost of adoption — migrating away from `socrata-mcp-server` as the project's own MCP layer (or restructuring it as an OpenContext deployment), upstream-dependency surface, governance footing for an external-org-led project, contribution path back upstream.
+  - (c) Cost of not adopting — continued per-portal maintenance burden, divergence from a framework other portals may also adopt, ArcGIS Hub coverage remaining out of scope.
+  - (d) Is partial adoption viable? E.g., adopt OpenContext for ArcGIS Hub coverage only while keeping `socrata-mcp-server` for Socrata-portal access; or the inverse.
+- **Resolution criteria.** Either (a) an ADR adopting OpenContext (full or partial — e.g., for ArcGIS Hub specifically) with rationale, or (b) a documented decision-not-to-adopt with reason. Per the [Xanadu doctrine](xanadu-doctrine.md), resolution requires a real adopter or maintenance need: the maintenance argument (cost of N per-portal connectors vs. one consumed framework) is plausibly sufficient, but should be evaluated concretely against the actual maintenance load of `socrata-mcp-server` rather than abstractly.
+- **Notes.** The website already consumes OpenContext for Boston-portal access (`data-mcp.boston.gov/mcp` is in the MCP source set), so the project is already a downstream user of OpenContext for one portal — the question is whether to extend that to portal access generally and retire or restructure the project's own per-portal MCP layer in the process.
+
 ---
 
 ## Resolution log
