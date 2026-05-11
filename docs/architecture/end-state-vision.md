@@ -306,10 +306,10 @@ quadrantChart
     title Identity strength × Claim corroboration
     x-axis Low corroboration --> High corroboration
     y-axis Weak identity --> Strong identity
-    quadrant-1 Strong identity, corroborated (institutional record)
-    quadrant-2 Strong identity, contested (most interesting for journalists/auditors)
-    quadrant-3 Weak identity, contested (noise / spam / contrarians)
-    quadrant-4 Weak identity, corroborated (community knowledge)
+    quadrant-1 "Strong identity, corroborated (institutional record)"
+    quadrant-2 "Strong identity, contested (most interesting for journalists/auditors)"
+    quadrant-3 "Weak identity, contested (noise / spam / contrarians)"
+    quadrant-4 "Weak identity, corroborated (community knowledge)"
 ```
 
 **Critical preamble (must appear in any spec or product surface):**
@@ -338,7 +338,7 @@ sequenceDiagram
 
     E->>P: fetch package
     P-->>E: package + provenance
-    E->>LLM: replay analysis with own key<br/>(consistency: N runs;<br/>adversarial: independent rubric eval)
+    E->>LLM: replay analysis with own key<br/>(consistency: N runs,<br/>adversarial: independent rubric eval)
     LLM-->>E: results
     E->>E: compute stability metrics<br/>or rubric scores
     E->>Sig: sign evaluation attestation<br/>(linked to original package hash)
