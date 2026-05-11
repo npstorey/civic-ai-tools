@@ -306,10 +306,10 @@ quadrantChart
     title Identity strength × Claim corroboration
     x-axis Low corroboration --> High corroboration
     y-axis Weak identity --> Strong identity
-    quadrant-1 "Strong identity, corroborated (institutional record)"
-    quadrant-2 "Strong identity, contested (most interesting for journalists/auditors)"
-    quadrant-3 "Weak identity, contested (noise / spam / contrarians)"
-    quadrant-4 "Weak identity, corroborated (community knowledge)"
+    quadrant-1 "Institutional record"
+    quadrant-2 "Most interesting (auditor focus)"
+    quadrant-3 "Noise / spam / contrarians"
+    quadrant-4 "Community knowledge"
 ```
 
 **Critical preamble (must appear in any spec or product surface):**
