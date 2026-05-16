@@ -209,6 +209,69 @@ Each entry uses the following fields:
 - **Resolution criteria.** Either (a) an ADR adopting OpenContext (full or partial — e.g., for ArcGIS Hub specifically) with rationale, or (b) a documented decision-not-to-adopt with reason. Per the [Xanadu doctrine](xanadu-doctrine.md), resolution requires a real adopter or maintenance need: the maintenance argument (cost of N per-portal connectors vs. one consumed framework) is plausibly sufficient, but should be evaluated concretely against the actual maintenance load of `socrata-mcp-server` rather than abstractly.
 - **Notes.** The website already consumes OpenContext for Boston-portal access (`data-mcp.boston.gov/mcp` is in the MCP source set), so the project is already a downstream user of OpenContext for one portal — the question is whether to extend that to portal access generally and retire or restructure the project's own per-portal MCP layer in the process.
 
+### Q20 — Visibility lifecycle and attest/publish semantics
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#71](https://github.com/npstorey/civic-ai-tools/issues/71). Direction is in place; implementation work scoped.
+- **Origin.** Surfaced 2026-05-15 in the integration-arc planning conversation that produced `docs/proposals/data-concierge-integration.md` (the Pittsburgh / WPRDC pilot integration arc). The pilot's internal-questions-on-internal-data scenario requires a way to cryptographically sign claims that aren't (yet) public.
+- **Stakes.** The Open Evidence Standard envelope schema; publication semantics throughout; integration with the pilot's internal-data use case. The adoption story also shifts from "publish your claim to the world" to "sign and share with colleagues; publish later if you choose."
+- **Current direction.** Two modes: `published` (content + commitment fully public; corroboration network active) and `committed` (commitment publicly registered; content access-controlled at a host or recipient-distributed). `group` reserved for a future extension. Publication is a separate signed `publication-record` claim referencing the committed claim; multiple parties can publish the same committed claim. Publication is irreversible at the protocol level; withdrawal is an author-signed meta-attestation.
+- **Resolution criteria.** Issue #71 ships an ADR + spec amendment + reference implementation on civicaitools.org.
+- **Notes.** The truly-no-public-footprint mode contemplated in early drafts is dropped — every claim has a public commitment; what varies is content access. Cryptographic primitives at play: hash (fingerprint, not encryption), signature (author-held), encryption (recipient-held; layered on top, optional).
+
+### Q21 — Canonical notebook format for datHere captureMethod
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#69](https://github.com/npstorey/civic-ai-tools/issues/69). Recommendation in place; pending alignment with the pilot integration partner.
+- **Origin.** Surfaced 2026-05-15 in the integration-arc planning conversation. The datHere captureMethod variant (the A-G envelope) requires a deterministic notebook format for section E.
+- **Stakes.** The OES captureMethod variant (extends ADR-0003); the Civic AI Tools answer pipeline; cross-host interop with the pilot integration partner. Notebook format choice affects determinism guarantees, ecosystem availability, and the diff / review experience for evidence packages.
+- **Current direction.** Jupyter v1 (matches the existing pilot-integration-partner pattern; widely supported); spec admits Marimo as a valid alternative (better determinism via reactive evaluation, no hidden state, cleaner diffs). The property that matters is "deterministically produces F from a defined runtime environment."
+- **Resolution criteria.** Issue #69 ships an ADR + spec amendment that locks the v1 format and admits alternatives. Confirmation from the pilot integration partner that Jupyter is acceptable as the v1 default.
+- **Notes.** Protocol shouldn't lock to a single notebook tool long-term; alternatives are admitted by spec.
+
+### Q22 — Host as typeable subject + host self-attestation shape
+
+- **Status.** Open. Proposed-issue draft at `civic-ai-tools-website/docs/proposed-issues/008-host-self-attestation-pattern.md`. Will be promoted to an issue when the typed-attestation primitive (#70) lands.
+- **Origin.** Surfaced 2026-05-15 in the architecture-conversation work on the host-and-trust layer. Hosts are load-bearing infrastructure but live implicitly today — no protocol-expressible way for a host to describe itself or be the subject of third-party attestations.
+- **Stakes.** The OES ontology (host as a `subjectCategory` value, `host-self-attestation` and `host-evaluation` as `claimType` values); the host-and-trust layer of the architecture; downstream multi-host federation work; cross-host policy expression including the adversarial-eval-on-publication requirement (Q25).
+- **Current direction.** Hosts are first-class subjects in the OES ontology. v1 self-attestation includes: `hostIdentifier`, `claimTypesServed`, `filterPolicy`, `governance`, `retention`, optional `requiresAdversarialEvalOnPublication`. civicaitools.org is the first reference implementation. Third-party host evaluations are a follow-on.
+- **Resolution criteria.** Proposed-issue 008 is promoted to a GitHub issue when #70 (typed attestation primitive) lands. Resolution lands as an ADR + spec section + reference implementation.
+- **Notes.** Builds on the unified node primitive — host self-attestations are just OES claims with a particular `claimType`.
+
+### Q23 — Provenance graph rendering with meta-attestation layer
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#70](https://github.com/npstorey/civic-ai-tools/issues/70). Scoped within the broader attestation primitive work.
+- **Origin.** Surfaced 2026-05-15 in the architecture-conversation work on the unified node primitive. With meta-attestations as first-class claims (Q11 + this question's scope), the provenance graph rendering needs to distinguish object-layer edges from meta-attestation-layer edges.
+- **Stakes.** The evidence detail page's provenance graph rendering; consumer-side filter language interactions; the OES spec's recommended display affordances.
+- **Current direction.** Within issue #70's scope. Specifics: object-layer edges keep current rendering; meta-attestation-layer edges get distinct styling; the detail page surfaces aggregate stats ("this answer has N corroborations and M contradictions") with drill-down.
+- **Resolution criteria.** Issue #70 ships the rendering update alongside the broader attestation primitive.
+- **Notes.** Coordinates with the eventual host-self-attestation rendering (Q22) — host self-attestations are also a kind of meta-attestation but visually distinct from object-vs-object meta-attestations.
+
+### Q24 — Embed-vs-reference policy for attestations in published artifacts
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#69](https://github.com/npstorey/civic-ai-tools/issues/69). Direction in place; specifics in flight.
+- **Origin.** Surfaced 2026-05-15 in the integration-arc planning conversation on the published frontmatter (git-host pattern). The frontmatter can reference attestations (pointer + hash) or embed them (envelope inline). Both have trade-offs.
+- **Stakes.** The frontmatter schema; the published-artifact size and self-containedness; the verification experience for readers who don't fetch external resources.
+- **Current direction.** Support both; default to reference. Embeds are an optimization for stable / canonical attestations (e.g., the "admin approve" attestation that's load-bearing for trust). Embeds carry their own signatures, so a reader can verify the embed without trusting the surrounding frontmatter.
+- **Resolution criteria.** Issue #69 ships the frontmatter schema and the embed-vs-reference rules.
+- **Notes.** This question also applies to "what attestations does a published claim's metadata reference?" — adversarial-eval references (Q25) are the immediate case.
+
+### Q25 — Adversarial-evaluation requirement strength on publication-records
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#72](https://github.com/npstorey/civic-ai-tools/issues/72). Direction in place; specifics in flight.
+- **Origin.** Surfaced 2026-05-15 in the architecture-conversation work on operationalizing the existing adversarial attestation type (see #41) as a publication-time gate per the attest-by-default / publish-by-choice lifecycle (Q20).
+- **Stakes.** The publication-record creation flow; the host self-attestation schema (which carries the requirement expression — see Q22); the OES spec's recommended-host-policy section; consumer expectations of evidence-package trust.
+- **Current direction.** Three options under consideration: (a) protocol-mandatory (publication-record validation fails without ≥1 adversarial-eval reference); (b) host-policy (hosts declare in their self-attestations whether they require evals; consumers filter accordingly); (c) default-on at the publisher tool (civicaitools.org default-runs an eval before allowing publication; configurable opt-out). Recommendation: (b) + (c) combined. Avoids ossifying a particular methodology at the protocol layer.
+- **Resolution criteria.** Issue #72 ships an ADR documenting the decision + reference implementation.
+- **Notes.** Builds on the existing adversarial attestation type (#41 introduces it; #72 operationalizes it as a publication gate). Q26 covers the related question of what constitutes a valid evaluator.
+
+### Q26 — Valid evaluator definition (identity binding + methodology declaration)
+
+- **Status.** Promoted to issue [npstorey/civic-ai-tools#72](https://github.com/npstorey/civic-ai-tools/issues/72). Scoped within the adversarial-eval work.
+- **Origin.** Surfaced 2026-05-15 alongside Q25: if hosts can require adversarial-eval references on publication-records, what makes an evaluator's attestation count? Identity-binding strength? Methodology declaration? Consortium endorsement?
+- **Stakes.** The adversarial-evaluation attestation schema; consumer trust in the evaluation signal; the federation property (evaluators can be diverse) vs. the gatekeeping risk (a single trusted evaluator becomes a single point of failure).
+- **Current direction.** Evaluator identity carries the same `bindingTier` field as any signer (pseudonymous / OIDC / ORCID / institutional / strong). Methodology declaration is required content of the evaluation attestation: test set, evaluator model, scoring rubric, prompt-set version. Consumers and hosts filter on bindingTier and on methodology specifics. No central registry of "approved evaluators."
+- **Resolution criteria.** Issue #72 ships the evaluator-identity + methodology-declaration spec.
+- **Notes.** The federation property protects against gatekeeping — anyone with appropriate identity binding can produce an evaluation attestation; hosts and consumers decide whose attestations to weight.
+
 ---
 
 ## Resolution log
