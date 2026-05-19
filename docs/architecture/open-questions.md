@@ -220,12 +220,10 @@ Each entry uses the following fields:
 
 ### Q21 — Canonical notebook format for datHere captureMethod
 
-- **Status.** Promoted to issue [npstorey/civic-ai-tools#69](https://github.com/npstorey/civic-ai-tools/issues/69). Recommendation in place; pending alignment with the pilot integration partner.
+- **Status.** Resolved 2026-05-18. See [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) and [OES §9.1.2](open-evidence-standard.md#912-notebook-format).
 - **Origin.** Surfaced 2026-05-15 in the integration-arc planning conversation. The datHere captureMethod variant (the A-G envelope) requires a deterministic notebook format for section E.
-- **Stakes.** The OES captureMethod variant (extends ADR-0003); the Civic AI Tools answer pipeline; cross-host interop with the pilot integration partner. Notebook format choice affects determinism guarantees, ecosystem availability, and the diff / review experience for evidence packages.
-- **Current direction.** Jupyter v1 (matches the existing pilot-integration-partner pattern; widely supported); spec admits Marimo as a valid alternative (better determinism via reactive evaluation, no hidden state, cleaner diffs). The property that matters is "deterministically produces F from a defined runtime environment."
-- **Resolution criteria.** Issue #69 ships an ADR + spec amendment that locks the v1 format and admits alternatives. Confirmation from the pilot integration partner that Jupyter is acceptable as the v1 default.
-- **Notes.** Protocol shouldn't lock to a single notebook tool long-term; alternatives are admitted by spec.
+- **Resolution.** Jupyter Notebook Format v4.5+ (nbformat 4) is the v1 default, matching the pilot integration partner's existing pattern and the broadest ecosystem support (rendering, diffing, archival, citation tooling). The standard admits alternative notebook formats — most notably Marimo, which has stronger determinism via reactive evaluation — as conforming formats for `datHere`-captured packages provided they (a) produce a self-contained executable representation reproducible against the documented runtime, (b) carry an explicit content-type marker, and (c) are accompanied by a renderer that produces section F. The protocol-level property locked is *deterministic reproducibility*, not the choice of engine. A future ADR may promote Marimo (or another format) to a second normative default without superseding ADR-0004 if a real adopter requires it.
+- **Notes.** Retained as a Resolved entry for the historical record. Confirmation from the pilot integration partner is being routed through the Phase 1 draft-PR review on `feat/dathere-envelope`.
 
 ### Q22 — Host as typeable subject + host self-attestation shape
 
@@ -247,12 +245,10 @@ Each entry uses the following fields:
 
 ### Q24 — Embed-vs-reference policy for attestations in published artifacts
 
-- **Status.** Promoted to issue [npstorey/civic-ai-tools#69](https://github.com/npstorey/civic-ai-tools/issues/69). Direction in place; specifics in flight.
+- **Status.** Resolved 2026-05-18. See [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) and [OES §9.3](open-evidence-standard.md#93-embed-vs-reference-policy-for-cross-host-publication).
 - **Origin.** Surfaced 2026-05-15 in the integration-arc planning conversation on the published frontmatter (git-host pattern). The frontmatter can reference attestations (pointer + hash) or embed them (envelope inline). Both have trade-offs.
-- **Stakes.** The frontmatter schema; the published-artifact size and self-containedness; the verification experience for readers who don't fetch external resources.
-- **Current direction.** Support both; default to reference. Embeds are an optimization for stable / canonical attestations (e.g., the "admin approve" attestation that's load-bearing for trust). Embeds carry their own signatures, so a reader can verify the embed without trusting the surrounding frontmatter.
-- **Resolution criteria.** Issue #69 ships the frontmatter schema and the embed-vs-reference rules.
-- **Notes.** This question also applies to "what attestations does a published claim's metadata reference?" — adversarial-eval references (Q25) are the immediate case.
+- **Resolution.** Both forms are supported; reference is the default. Reference entries carry `{ kind, targetHash, attestationHash, attestationUrl }` and require a reader to fetch the attestation and verify its signature. Embed entries carry the full signed attestation envelope inline and require no fetch. Implementations SHOULD prefer reference form for routine attestations (corroborations, contradictions, citations) and SHOULD use embed form only when an attestation is structurally tied to the published claim's trust state (e.g., an admin-approve attestation that establishes a corroboration relationship). Both forms preserve independent verifiability — embedded attestations carry their own signatures, so the embed/reference distinction is a fetch-time vs. frontmatter-size trade, not a trust trade.
+- **Notes.** Retained as a Resolved entry for the historical record. Question also applied conceptually to adversarial-eval references (Q25); the resolution here covers the general embed-vs-reference shape, while Q25's adversarial-eval-specific gating rules remain in flight on issue #72.
 
 ### Q25 — Adversarial-evaluation requirement strength on publication-records
 
@@ -279,6 +275,8 @@ Each entry uses the following fields:
 This section records resolved questions for the historical record. Migrated from `end-state-vision.md` §Open questions where applicable.
 
 - **Q6 — captureMethod enforcement.** Resolved 2026-04-29 by [ADR-0003](../adr/0003-evidence-capture-method.md). See entry above for context.
+- **Q21 — Canonical notebook format for datHere captureMethod.** Resolved 2026-05-18 by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) and [OES §9.1.2](open-evidence-standard.md#912-notebook-format). Jupyter v4.5+ as the v1 default; spec admits Marimo and other deterministic-reproducible notebook formats with content-type marker + renderer. See entry above for context.
+- **Q24 — Embed-vs-reference policy for attestations in published artifacts.** Resolved 2026-05-18 by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) and [OES §9.3](open-evidence-standard.md#93-embed-vs-reference-policy-for-cross-host-publication). Both forms supported; reference is the default; embeds preserved for trust-load-bearing attestations. See entry above for context.
 
 ---
 
