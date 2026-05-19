@@ -268,6 +268,15 @@ Each entry uses the following fields:
 - **Resolution criteria.** Issue #72 ships the evaluator-identity + methodology-declaration spec.
 - **Notes.** The federation property protects against gatekeeping — anyone with appropriate identity binding can produce an evaluation attestation; hosts and consumers decide whose attestations to weight.
 
+### Q27 — Schema version bump trigger for the OES spec
+
+- **Status.** Open.
+- **Origin.** Surfaced 2026-05-18 during the Phase 1 spec lockdown work on civic-ai-tools#69. [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) adds non-breaking additions to the spec (enum extension + optional fields) without bumping the schema version (still 0.1.0). Semver MINOR bump would be correct in spirit; pre-v1.0 the project is treating 0.1.0 as "first internal working draft" rather than strict semver.
+- **Stakes.** OES spec versioning discipline; downstream consumer-pinning ergonomics; coordination with the Pittsburgh arc cohort of changes (datHere via ADR-0004, then anticipated ADR-0006 unified primitive, then visibility lifecycle via [civic-ai-tools#71](https://github.com/npstorey/civic-ai-tools/issues/71), then attestations via [civic-ai-tools#70](https://github.com/npstorey/civic-ai-tools/issues/70)).
+- **Current direction.** Stay at 0.1.0 through the Pittsburgh arc; revisit at arc completion. Triggers to consider for v0.2.0 and beyond: Pittsburgh arc completes; first external adopter pinning a version; first breaking change to the schema.
+- **Resolution criteria.** Either (a) the Pittsburgh arc completes and a version bump decision lands as an explicit changelog entry, or (b) a real adopter pinning a specific version forces the question.
+- **Notes.** Loosely related to Q15 (external verification testing) and Q16 (formal conformance criteria) — both involve external implementations that would benefit from stable version markers.
+
 ---
 
 ## Resolution log

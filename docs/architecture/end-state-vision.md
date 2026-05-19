@@ -428,7 +428,7 @@ Forcing static structure into BPMN would obscure rather than clarify. Use the ri
 
 **BYOK (Bring Your Own Key).** The pattern where consistency testing and adversarial evaluation are performed by the user or a third-party reviewer using their own LLM API keys, rather than the platform paying for evaluation inference. Makes evaluation costs zero for the platform and makes third-party evaluations more credible than self-evaluation.
 
-**captureMethod.** Field describing how a trace was captured (browser chat session vs. Claude Code publish skill vs. server-side replay, etc.). Specified in ADR-0003. Currently not enforced by the route handler — see open question below.
+**captureMethod.** Field describing how a package's content was captured. Enforced at the publish route since 2026-04-29; covered by the canonical-JSON package hash and the platform Ed25519ph signature, so the label itself is tamper-evident. Four enum values: `chat-flow-stream` (website chat flow, wire-layer verbatim), `claude-code-jsonl-readback` (Claude Code publish skill, JSONL-layer verbatim), `claude-code-self-report` (legacy, deprecated 2026-04-28), and `datHere` (Civic AI Tools answer pipeline producing cross-host A-G envelopes, reproducible-by-construction against documented runtime). Original three values specified in ADR-0003; `datHere` variant specified in ADR-0004.
 
 **Civic AI Tools.** The project itself: opengov-mcp-server (MCP server for Socrata portals), the civicaitools.org website with chatbot and evidence publishing, the civic-ai-tools-website Next.js codebase, the Open Evidence Standard spec, and the cross-city directory of open data MCP servers.
 

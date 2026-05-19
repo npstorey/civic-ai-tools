@@ -110,7 +110,7 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 | `trace` | object \| BlobRef | yes | OpenTelemetry-shaped trace, or a BlobRef to the same. |
 | `summary` | string | optional | Short, indexable, citation-ready summary of the analysis. Required when `metadata.captureMethod == "datHere"` (see §9.1). When present, part of canonical JSON and therefore covered by the package hash and signature. |
 | `provenance` | object | optional | W3C PROV-O JSON-LD graph derived from `trace` at publish time. Present when the trace was inspectable inline; omitted when `trace` is a BlobRef and no override is supplied. |
-| `extensions` | object | optional | Reverse-DNS-keyed implementation-specific artifacts (e.g. `org.civicaitools.notebook`, `org.civicaitools.dathere.environment`). Included in the canonical JSON and therefore covered by the package hash. |
+| `extensions` | object | optional | Reverse-DNS-keyed implementation-specific artifacts (e.g. `org.civicaitools.notebook`, `org.civicaitools.environment`). Included in the canonical JSON and therefore covered by the package hash. |
 
 ### 4.2 `metadata` object
 
@@ -161,11 +161,11 @@ A BlobRef whose fetch fails, whose hash mismatches, or whose size mismatches MUS
 
 ### 4.6 `extensions` (optional)
 
-Implementations MAY add fields under `extensions` keyed by reverse-DNS identifiers (`org.civicaitools.notebook`, `org.civicaitools.dathere.environment`, `org.<your-domain>.<your-extension>`). All extension content is part of the canonical JSON and is therefore covered by the package hash and the platform signature. Extensions are advisory — they MUST NOT change the meaning of fields defined in this standard, and a verifier MAY ignore unknown extensions without breaking conformance.
+Implementations MAY add fields under `extensions` keyed by reverse-DNS identifiers (`org.civicaitools.notebook`, `org.civicaitools.environment`, `org.<your-domain>.<your-extension>`). All extension content is part of the canonical JSON and is therefore covered by the package hash and the platform signature. Extensions are advisory — they MUST NOT change the meaning of fields defined in this standard, and a verifier MAY ignore unknown extensions without breaking conformance.
 
 The `org.civicaitools.notebook` extension is a content-format marker (a Jupyter-style cell list) emitted by the canonical reference implementation. External implementations are not required to emit it. Under `captureMethod: datHere`, this extension is promoted from informative to normatively required and carries the deterministic notebook of section E (see §9.1).
 
-The `org.civicaitools.dathere.environment` extension carries environment metadata (model version, temperature, sampling parameters, tool definitions, publishing-host identifier) required by the `datHere` captureMethod variant. See §9.1 for its required shape. Other implementations MAY define their own reverse-DNS-keyed extensions for content not otherwise covered by the standard.
+The `org.civicaitools.environment` extension carries environment metadata (model version, temperature, sampling parameters, tool definitions, publishing-host identifier) required by the `datHere` captureMethod variant. See §9.1 for its required shape. Other implementations MAY define their own reverse-DNS-keyed extensions for content not otherwise covered by the standard.
 
 ### 4.7 `cost` object framing
 
@@ -307,7 +307,7 @@ The A-G section-to-field mapping:
 |---|---|---|
 | A | Initial prompt — the user's question, verbatim | `prompt.text` (with `prompt.visibility == "full_text"`) |
 | B | System prompt(s) active for the model | `skillMetadata.skillText` |
-| C | Model card + environment metadata: model ID/version, temperature, sampling parameters, MCP server URLs, tool definitions, publishing-host identifier | `cost.model` + `skillMetadata.mcpServerUrl` + `extensions["org.civicaitools.dathere.environment"]` (§9.1.1) |
+| C | Model card + environment metadata: model ID/version, temperature, sampling parameters, MCP server URLs, tool definitions, publishing-host identifier | `cost.model` + `skillMetadata.mcpServerUrl` + `extensions["org.civicaitools.environment"]` (§9.1.1) |
 | D | Deliberative trace: thinking, tool calls, and tool results in order | `trace` (OTel-shaped, or BlobRef) + `queries[]` |
 | E | Answer notebook — a notebook that, when executed against the documented runtime, produces F | `extensions["org.civicaitools.notebook"]` (§9.1.2) |
 | F | The rendered answer | `output` (string or BlobRef) |
@@ -321,7 +321,7 @@ A conformant `datHere`-captured package MUST satisfy *every* requirement below, 
 
 1. **Prompt visibility.** `prompt.visibility` MUST be `"full_text"`. The hash-only mode is incompatible with the A-G envelope, which requires section A to be readable.
 2. **System prompt(s) present.** `skillMetadata.skillText` MUST be non-empty (inline string or BlobRef) and MUST reflect the composed system prompt set the model was operating under at the time of the analysis.
-3. **Environment metadata present.** The `extensions["org.civicaitools.dathere.environment"]` object MUST be present and MUST contain at least: `modelVersion` (string), `temperature` (number), `mcpServers` (array of objects with `url` and optional `name`), `toolDefinitions` (array of tool-schema objects, OR a BlobRef when large), `host` (string identifying the publishing host, e.g. `"civicaitools.org"` or an external publisher's host identifier). Additional fields are permitted under reverse-DNS sub-namespacing.
+3. **Environment metadata present.** The `extensions["org.civicaitools.environment"]` object MUST be present and MUST contain at least: `modelVersion` (string), `temperature` (number), `mcpServers` (array of objects with `url` and optional `name`), `toolDefinitions` (array of tool-schema objects, OR a BlobRef when large), `host` (string identifying the publishing host, e.g. `"civicaitools.org"` or an external publisher's host identifier). Additional fields are permitted under reverse-DNS sub-namespacing.
 4. **Notebook present.** The `extensions["org.civicaitools.notebook"]` object MUST be present, MUST conform to a notebook format admitted by §9.1.2, and MUST satisfy the determinism property in §9.1.3. Where the notebook is too large to inline, it MAY be supplied as a BlobRef.
 5. **Rendered answer present.** `output` MUST be present (inline or BlobRef) and MUST be the rendered output of executing the notebook against the documented runtime at publish time.
 6. **Summary present.** `summary` (§4.1) MUST be present, MUST be non-empty, and SHOULD be short enough to surface in citation contexts (recommended ≤ 280 characters; not enforced numerically).
@@ -345,7 +345,7 @@ The protocol-level property the standard locks is **deterministic reproducibilit
 
 A `datHere`-captured package's section E (the notebook) is **deterministic against a documented runtime environment plus stable upstream data**. The standard articulates this property explicitly because conflating "verifiable" with "the same answer forever" is the predictable failure mode.
 
-1. The notebook MUST record its runtime requirements (language version, library versions, MCP server URLs) either in its first cell or in a sidecar `requirements` field on the `extensions["org.civicaitools.dathere.environment"]` object.
+1. The notebook MUST record its runtime requirements (language version, library versions, MCP server URLs) either in its first cell or in a sidecar `requirements` field on the `extensions["org.civicaitools.environment"]` object.
 2. Re-execution of the notebook against the documented runtime, with the same MCP server endpoints reachable and the same upstream data unchanged since publication, SHOULD reproduce section F (the rendered answer) byte-for-byte modulo non-deterministic formatting (timestamps in tool-call results, floating-point representations that depend on platform libc, etc.).
 3. The determinism property is **best-effort**, not absolute. Civic data is live; an upstream dataset updated since publication will produce different tool-call results on re-execution, which will produce a different rendered answer. This is expected behavior, not a verification failure.
 4. Verifiers and surfaces SHOULD render the determinism property as *"reproducible against the documented runtime AND the upstream-data state at publish time,"* not as *"the same answer forever."*
@@ -570,7 +570,7 @@ A formal conformance test suite, a reference test corpus, and a conformance-clai
 
 Revisions to this document will be logged here as the open questions resolve and stakeholder review is incorporated.
 
-- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.dathere.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile), §9.2 (cross-host frontmatter schema), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
+- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile), §9.2 (cross-host frontmatter schema), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
 
 ---
 
