@@ -51,7 +51,7 @@ The other three values (`chat-flow-stream`, `claude-code-jsonl-readback`, `claud
 |---|---|---|
 | A | Initial prompt — the user's question, verbatim | `prompt.text` (with `prompt.visibility == "full_text"`) |
 | B | System prompt(s) active for the model | `skillMetadata.skillText` |
-| C | Model card + environment metadata: model ID/version, temperature, sampling parameters, MCP server URLs, tool definitions, publishing-host identifier | `cost.model` + `skillMetadata.mcpServerUrl` + `extensions["org.civicaitools.dathere.environment"]` (new) |
+| C | Model card + environment metadata: model ID/version, temperature, sampling parameters, MCP server URLs, tool definitions, publishing-host identifier | `cost.model` + `skillMetadata.mcpServerUrl` + `extensions["org.civicaitools.environment"]` (new) |
 | D | Deliberative trace: thinking, tool calls, and tool results in order | `trace` (OTel-shaped, or BlobRef) + `queries[]` |
 | E | Answer notebook — a notebook that, when executed against the documented runtime, produces F | `extensions["org.civicaitools.notebook"]` (promoted from informative content-format marker to normatively required for `datHere`) |
 | F | The rendered answer | `output` (string or BlobRef) |
@@ -60,7 +60,7 @@ The other three values (`chat-flow-stream`, `claude-code-jsonl-readback`, `claud
 Two of these sections are gaps relative to the current canonical JSON shape: section C's environment metadata and section G's summary. Both land as additive, backwards-compatible changes:
 
 - **`summary` becomes an optional top-level field on the package.** When present, it is part of canonical JSON and covered by the package hash and signature. Packages produced before this ADR carry no `summary` field and continue to hash/verify as before. `datHere`-captured packages MUST carry a non-empty `summary`.
-- **`extensions["org.civicaitools.dathere.environment"]` is a new reverse-DNS-keyed extension** for the environment metadata that section C requires beyond what `cost.model` and `skillMetadata.mcpServerUrl` already provide. Its shape is documented in the Open Evidence Standard amendment that accompanies this ADR. The reverse-DNS namespace pattern matches the existing `extensions["org.civicaitools.notebook"]` precedent.
+- **`extensions["org.civicaitools.environment"]` is a new reverse-DNS-keyed extension** for the environment metadata that section C requires beyond what `cost.model` and `skillMetadata.mcpServerUrl` already provide. Its shape is documented in the Open Evidence Standard amendment that accompanies this ADR. The reverse-DNS namespace pattern matches the existing `extensions["org.civicaitools.notebook"]` precedent.
 
 The A-G mapping does not change the meaning of any existing OES field. It also does not preclude other capture methods from emitting `summary` or `environment` content — both fields are optional for non-`datHere` packages.
 
@@ -82,7 +82,7 @@ The protocol-level property the standard locks is **deterministic reproducibilit
 
 A `datHere`-captured package's section E (the notebook) is **deterministic against a documented runtime environment plus stable upstream data**. Specifically:
 
-1. The notebook records the runtime requirements (Python version, package versions, MCP server URLs) in its first cell or in a sidecar `requirements` metadata field on the `extensions["org.civicaitools.dathere.environment"]` object.
+1. The notebook records the runtime requirements (Python version, package versions, MCP server URLs) in its first cell or in a sidecar `requirements` metadata field on the `extensions["org.civicaitools.environment"]` object.
 2. Re-execution of the notebook against the documented runtime, with the same MCP server endpoints reachable and the same upstream data unchanged since publication, SHOULD reproduce section F (the rendered answer) byte-for-byte modulo non-deterministic formatting (timestamps in tool-call results, floating-point representations that depend on platform libc, etc.).
 3. The determinism property is **best-effort**, not absolute. Civic data is live; an upstream dataset that has been updated since the package was published will produce different tool-call results on re-execution, which will produce a different rendered answer. This is the expected behavior, not a verification failure. Verifiers and surfaces SHOULD render the determinism property as "reproducible against the documented runtime AND the upstream-data state at publish time," not as "the same answer forever."
 
@@ -128,7 +128,7 @@ Implementations SHOULD prefer reference form for routine attestations (corrobora
 
 ### 7. Schema version and backwards compatibility
 
-Adding `datHere` to the `captureMethod` enum and adding two optional fields (`summary` at the top level, `extensions["org.civicaitools.dathere.environment"]` in the extensions namespace) does not bump the OES schema version. Per ADR-0003, an enum extension is a vocabulary change, not a key change. Adding optional fields preserves backwards compatibility for verifiers: a verifier reading a pre-`datHere` package finds no `summary` and no `dathere.environment` extension and rejects nothing on that basis; a verifier reading a `datHere` package that lacks either field rejects the package as malformed per the `datHere`-specific requirements above. The schema version stays at `0.1.0`.
+Adding `datHere` to the `captureMethod` enum and adding two optional fields (`summary` at the top level, `extensions["org.civicaitools.environment"]` in the extensions namespace) does not bump the OES schema version. Per ADR-0003, an enum extension is a vocabulary change, not a key change. Adding optional fields preserves backwards compatibility for verifiers: a verifier reading a pre-`datHere` package finds no `summary` and no `org.civicaitools.environment` extension and rejects nothing on that basis; a verifier reading a `datHere` package that lacks either field rejects the package as malformed per the `datHere`-specific requirements above. The schema version stays at `0.1.0`.
 
 The `extensions["org.civicaitools.notebook"]` extension was previously described in OES §4.6 as an informative content-format marker emitted by the canonical reference implementation. This ADR promotes its presence to normatively required for `datHere`-captured packages. Other capture methods may continue to omit or include it as before — the promotion is `datHere`-scoped, not OES-wide.
 
@@ -152,12 +152,12 @@ The `extensions["org.civicaitools.notebook"]` extension was previously described
 
 ## Consequences
 
-- **OES amendment.** The Open Evidence Standard's §9 (`captureMethod`) gains the `datHere` value in its vocabulary list, plus three new sub-sections: §9.1 (the A-G content profile and the new `summary` field + `extensions["org.civicaitools.dathere.environment"]`), §9.2 (the cross-host GitHub-frontmatter schema), and §9.3 (the embed-vs-reference policy). The amendment ships in the same Phase 1 PR as this ADR.
+- **OES amendment.** The Open Evidence Standard's §9 (`captureMethod`) gains the `datHere` value in its vocabulary list, plus three new sub-sections: §9.1 (the A-G content profile and the new `summary` field + `extensions["org.civicaitools.environment"]`), §9.2 (the cross-host GitHub-frontmatter schema), and §9.3 (the embed-vs-reference policy). The amendment ships in the same Phase 1 PR as this ADR.
 
 - **Open-questions registry.** Q21 (canonical notebook format) and Q24 (embed-vs-reference policy) move from `Promoted to issue #69` to the Resolution log with a link to this ADR. The OES sections §9.1-§9.3 are referenced as the resolution locations.
 
 - **Phase 2 implementation surface (scoped, not done here).**
-  - `civic-ai-tools-website/src/lib/evidence/packager.ts` — `CaptureMethod` type extended to include `'datHere'`; `EvidencePackage` interface gains optional `summary: string` field; `PackageInput` accepts a new optional `environment` object that the packager writes into `extensions["org.civicaitools.dathere.environment"]`.
+  - `civic-ai-tools-website/src/lib/evidence/packager.ts` — `CaptureMethod` type extended to include `'datHere'`; `EvidencePackage` interface gains optional `summary: string` field; `PackageInput` accepts a new optional `environment` object that the packager writes into `extensions["org.civicaitools.environment"]`.
   - `civic-ai-tools-website/src/app/api/evidence/route.ts` — `VALID_CAPTURE_METHODS` extended; `summary` continues to be read from the request body but now also flows into canonical JSON for `datHere`-captured packages.
   - New endpoint `GET /api/evidence/:slug/bundle` returns the multi-file bundle (frontmatter + notebook + rendered answer + summary) for cross-host publishing. Contract details land with the Phase 2 PR.
   - Evidence detail page (`src/app/evidence/[slug]/page.tsx`) renders the A-G structure with collapse/expand controls when `captureMethod == datHere`. The existing `NOTEBOOK_EXTENSION_KEY = 'org.civicaitools.notebook'` constant carries over unchanged.
@@ -165,7 +165,7 @@ The `extensions["org.civicaitools.notebook"]` extension was previously described
 
 - **Bundle export contract.** A `datHere`-captured package can be exported as a Data-Concierge-compatible bundle via `GET /api/evidence/:slug/bundle`. The bundle's outer shape is the frontmatter-plus-content described in §5 above. The endpoint contract is captured in the Phase 2 implementation work in `civic-ai-tools-website`.
 
-- **Backwards compatibility.** Existing packages signed with any of the three prior captureMethod values remain verifiable. Pre-`datHere` packages do not gain a `summary` field or an `org.civicaitools.dathere.environment` extension and hash exactly as they did before. The schema version stays at `0.1.0`.
+- **Backwards compatibility.** Existing packages signed with any of the three prior captureMethod values remain verifiable. Pre-`datHere` packages do not gain a `summary` field or an `org.civicaitools.environment` extension and hash exactly as they did before. The schema version stays at `0.1.0`.
 
 - **API documentation.** `civic-ai-tools-website/docs/api/evidence-publish.md` will need a new entry under the `captureMethod` field documenting the `datHere` value plus a pointer to the OES section that describes the A-G profile. This amendment lands with the Phase 2 PR alongside the route-layer validation change.
 
@@ -176,7 +176,7 @@ The `extensions["org.civicaitools.notebook"]` extension was previously described
 ## References
 
 - [ADR-0003](0003-evidence-capture-method.md) — establishes the `captureMethod` field, the vocabulary-extension pattern, and the tamper-evident labeling principle this ADR extends.
-- `civic-ai-tools/docs/architecture/open-evidence-standard.md` — §9 (captureMethod) is amended in the same PR; §4.1 gains the optional `summary` field; §4.6 (extensions) gains the `org.civicaitools.dathere.environment` reverse-DNS namespace example.
+- `civic-ai-tools/docs/architecture/open-evidence-standard.md` — §9 (captureMethod) is amended in the same PR; §4.1 gains the optional `summary` field; §4.6 (extensions) gains the `org.civicaitools.environment` reverse-DNS namespace example.
 - `civic-ai-tools/docs/architecture/open-questions.md` — Q21 and Q24 move to the Resolution log with a link to this ADR.
 - `civic-ai-tools/docs/architecture/xanadu-doctrine.md` — gate satisfied; named adopter is the Pittsburgh / WPRDC pilot.
 - `civic-ai-tools/docs/architecture/working-method.md` — promotion path from registry to ADR followed (Q21 + Q24 were promoted to issue #69 before this ADR drafted).

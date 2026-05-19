@@ -127,15 +127,15 @@ Related proposed-issues (not yet promoted; will be once their dependencies land)
 
 ## Open questions in the registry
 
-The integration work surfaces seven open architectural questions, now tracked in `open-questions.md`:
+The integration work surfaces seven architectural questions tracked in `open-questions.md` (canonical for current status):
 
 | Q | Title | Status |
 |---|-------|--------|
 | Q20 | Visibility lifecycle and attest/publish semantics | Promoted to #71 |
-| Q21 | Canonical notebook format for datHere captureMethod | Promoted to #69 |
+| Q21 | Canonical notebook format for datHere captureMethod | Resolved 2026-05-18 (ADR-0004) |
 | Q22 | Host as typeable subject + host self-attestation shape | Open; proposed-issue 008 drafted |
 | Q23 | Provenance graph rendering with meta-attestation layer | Promoted to #70 |
-| Q24 | Embed-vs-reference policy for attestations in published artifacts | Promoted to #69 |
+| Q24 | Embed-vs-reference policy for attestations in published artifacts | Resolved 2026-05-18 (ADR-0004) |
 | Q25 | Adversarial-evaluation requirement strength on publication-records | Promoted to #72 |
 | Q26 | Valid evaluator definition | Promoted to #72 |
 
@@ -145,7 +145,7 @@ The four issues + three proposed-issues produce, collectively:
 
 - **Open Evidence Standard amendments**: unified-primitive opening; visibility lifecycle + publication-record semantics; meta-attestation ontology; captureMethod variant for `datHere`; Host as typeable subject; staleness honesty; cryptographic-primitives section. The harms section work proceeds under #63 in coordination.
 - **Civic Claim Vocabulary amendments**: typed meta-attestation classes (including adversarial-evaluation under Q11/Q26).
-- **ADRs**: ADR-0004 (datHere captureMethod), ADR-0005 (attest/publish lifecycle), ADR-0006 (unified primitive), ADR-0007 (adversarial-eval requirement model).
+- **ADRs**: [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) (datHere captureMethod, landed 2026-05-18 as Phase 1 of civic#69); ADR-0005 (attest/publish lifecycle, anticipated); ADR-0006 (unified primitive, anticipated); ADR-0007 (adversarial-eval requirement model, anticipated).
 - **Trust-and-evidence doc**: attest/publish lifecycle's effect on integrity claims; capture-method UI guidance.
 
 ## Coordination with parallel tracks
