@@ -69,6 +69,7 @@ Full authentication contract: [`civic-ai-tools-website/docs/api/evidence-publish
    The skill auto-triggers on phrases like "publish this as evidence", "publish to civicaitools.org", "sign this analysis", or "make this a verifiable package."
 4. Claude will:
    - Read the session JSONL at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl` to capture prose content (`prompt`, `output`, `turns[].content`), tool args, and per-invocation token usage verbatim. (See "Verbatim capture from JSONL" below for what this means and why.)
+   - Read the composed skill text (`docs/skills/base.md` + `local.md` + `data-commons.md`) and include it in the payload as `skillText` so the published package records the guidance that shaped the analysis. This happens by default; see "Skill guidance capture" below for the opt-out conditions.
    - Summarize what it's about to publish (title, summary, token usage, source list, capture mode, capture method).
    - Write the payload to a temp file and run the publish script with `--dry-run` — which validates schema, runs the negative pattern scan, and prints a redacted preview.
    - Ask for your go-ahead.
@@ -92,6 +93,12 @@ Two safeguards keep the skill on the verbatim path:
 2. **Negative pattern scan in `publish.py --dry-run`.** The script scans `prompt`, `output`, and every `turns[].content` for substrings that only appear when prose was paraphrased — `<thinking>` tags, the literal text `tool_use`, `toolu_*` IDs, and `signature:` fields. Any match exits non-zero with the field name and a snippet, so you can re-read that field from the JSONL rather than ship a paraphrased package.
 
 If the dry-run scan flags a field, the fix is to re-read it from the JSONL — not to scrub the markers out of paraphrased prose.
+
+## Skill guidance capture
+
+Published packages by default include the civic-ai-tools repo's composed skill text — the three files in `docs/skills/` (`base.md`, `local.md`, `data-commons.md`) concatenated and shipped in the payload as `skillText`, with `skillMcpServerUrl` set to `"local-stdio (civic-ai-tools/.mcp.json)"`. This records the guidance that shaped the analysis alongside the analysis itself, so a reader of the evidence page can see not just what Claude said but the framing it was operating under. The website chat flow does the equivalent capture by fetching the same guidance from the MCP server's prompt endpoint, so packages from both publish paths carry comparable provenance.
+
+The skill resolves the three files relative to the current cwd: directly when cwd is the civic-ai-tools repo, and via the `civic-ai-tools/` symlink when cwd is the workspace root. If the files aren't on disk (cwd is a different repo or a workspace that doesn't carry civic-ai-tools), or you say something like "publish without skill text" / "skip skill capture", the skill omits both fields and surfaces a one-line note in the dry-run summary (e.g., "no skillText — files not on disk") so you can either correct the cwd or reconfirm the opt-out before the live publish.
 
 ## Capture modes: single turn vs. full conversation
 

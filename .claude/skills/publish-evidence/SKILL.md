@@ -144,6 +144,28 @@ Walk every assistant `tool_use` content block in the captured window. For each o
 
 The script synthesizes a minimal OpenTelemetry trace with `mcp_tool_call` spans carrying `mcp.source`, `tool.name`, and `tool.operation_type` — that drives the server's PROV-O graph and `dataSources[]` builder, so **every MCP tool call must be represented here** for attribution to be correct.
 
+## Skill guidance capture (default pre-publish step)
+
+Before posting, capture the civic-ai-tools repo's composed skill text and include it in the payload. This is the **default** behavior — perform it on every publish unless one of the opt-out conditions below applies. Capturing the guidance that shaped the analysis is what makes the published `skill_fetch` OTel span meaningful for downstream adversarial / consistency review (civic#41 depends on this loop being closed). The website chat-flow path does the equivalent capture by fetching the same guidance from the MCP server's prompt endpoint (default-on per website#56), so this step gives the Claude Code path parity.
+
+**What to capture.** Concatenate three files in this order, joined with `\n\n---\n\n` separators, and set the result as `skillText`:
+
+1. `civic-ai-tools/docs/skills/base.md`
+2. `civic-ai-tools/docs/skills/local.md`
+3. `civic-ai-tools/docs/skills/data-commons.md`
+
+In the same payload, set `skillMcpServerUrl` to `"local-stdio (civic-ai-tools/.mcp.json)"` to record that the MCP servers were loaded locally by Claude Code, not fetched over HTTP. Always populate both fields together — they describe the same capture.
+
+**Path resolution.** When cwd is the civic-ai-tools repo root, the three relative paths resolve directly. When cwd is the `civic-ai-tools-project/` workspace root (typical), they resolve through the `civic-ai-tools/` symlink. From any other cwd (a different repo, or a workspace where civic-ai-tools is not present), the paths won't resolve — proceed under the opt-out path below.
+
+**Opt-out conditions (any one is sufficient).** Omit both `skillText` and `skillMcpServerUrl`:
+
+- The cwd is not inside a tree where the civic-ai-tools skill files resolve.
+- One or more of the three skill files is missing or unreadable.
+- The user explicitly asks to publish without skill text ("publish without skill text", "skip skill capture", "don't include the guidance").
+
+When skipping, surface a one-line note in the dry-run summary you show the user (e.g., "no skillText — files not on disk" or "no skillText — user opt-out") so they can correct the path or reconfirm the opt-out before the live publish.
+
 ## Negative pattern scan (dry-run gate)
 
 `publish.py --dry-run` (and the live publish path) runs a negative pattern scan over `prompt`, `output`, and every `turns[].content` looking for markers that only appear when prose was paraphrased from memory rather than read from JSONL:
@@ -154,10 +176,6 @@ The script synthesizes a minimal OpenTelemetry trace with `mcp_tool_call` spans 
 - `signature:` — leaked thinking-block signature field.
 
 If any pattern matches, the script exits with a clear error pointing to the field and the offending substring. Re-run the JSONL readback for that field — don't try to scrub the markers out of paraphrased prose. The scan is conservative on purpose; false positives are recoverable, false negatives compound the disclosure failure ADR-0003 documents.
-
-### Optional: skill guidance capture
-
-If the civic-ai-tools repo's skill files are present on disk, you may read them and include the composed text as `skillText` so the published package captures the guidance that shaped the analysis. Use the local copies at `civic-ai-tools/docs/skills/base.md` + `civic-ai-tools/docs/skills/local.md` + `civic-ai-tools/docs/skills/data-commons.md` (concatenate in that order with `\n\n---\n\n` separators). Also set `skillMcpServerUrl` to `"local-stdio (civic-ai-tools/.mcp.json)"` to record that the MCP servers were loaded locally by Claude Code, not fetched over HTTP. This step is optional — omit both fields to publish without a skill-fetch span.
 
 ## Large-content handling (blob references)
 
