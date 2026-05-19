@@ -78,7 +78,8 @@ Terms below are used with the meanings given. **Normative** terms have specific 
 - **Trust registry** *(normative)*: The JSON document at `${baseUrl}/.well-known/evidence-public-keys.json` that lists authorized signing keys with lifecycle metadata. See §6.3.
 - **`kid` (key identifier)** *(normative)*: A stable string identifying a signing key (e.g. `platform:evidence-2026-04`), present in both the signed envelope and the trust registry. The `kid` is part of the canonical package JSON via `metadata.signingKeyId`, so it is covered by the package hash.
 - **BlobRef** *(normative)*: A four-field JSON object `{ ref, url, contentType, size }` that names a content-addressable Vercel Blob in place of inline content for selected fields. See §4.5.
-- **`captureMethod`** *(normative)*: The label identifying how the package's content was captured. One of `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`, `datHere`. Specified by [ADR-0003](../adr/0003-evidence-capture-method.md) (original three values) and [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) (`datHere` variant). See §9.
+- **`captureMethod`** *(normative)*: The label identifying *how* the package's content was captured — the integrity-of-pipeline property. One of `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`. Specified by [ADR-0003](../adr/0003-evidence-capture-method.md). See §9.
+- **`contentProfile`** *(normative)*: The label identifying *what shape* the package's content is in — the content-shape property. Orthogonal to `captureMethod`. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §9.1). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). See §4.1 and §9.1-§9.3.
 - **Trace** *(informative)*: An OpenTelemetry-shaped JSON object (or BlobRef) describing the spans of the analysis. See §7.
 - **PROV-O graph** *(informative)*: A W3C PROV-O JSON-LD graph derived from the trace at publish time. See §4.4.
 - **Withdrawal / reinstatement** *(normative)*: Signed, public, append-only lifecycle events on a published package. See §10.
@@ -108,7 +109,8 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 | `skillMetadata` | object | yes | Skill-guidance hash, MCP server URL, and skill text or BlobRef. |
 | `output` | string \| BlobRef | yes | The assistant's final response text, or a BlobRef. See §4.5. |
 | `trace` | object \| BlobRef | yes | OpenTelemetry-shaped trace, or a BlobRef to the same. |
-| `summary` | string | optional | Short, indexable, citation-ready summary of the analysis. Required when `metadata.captureMethod == "datHere"` (see §9.1). When present, part of canonical JSON and therefore covered by the package hash and signature. |
+| `summary` | string | optional | Short, indexable, citation-ready summary of the analysis. Required when `metadata.contentProfile == "datHere"` (see §9.1). When present, part of canonical JSON and therefore covered by the package hash and signature. |
+| `contentProfile` | string | optional | The content profile the package conforms to. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §9.1). Orthogonal to `captureMethod`. Extensible — future profiles add ADRs. When present, part of canonical JSON. Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). |
 | `provenance` | object | optional | W3C PROV-O JSON-LD graph derived from `trace` at publish time. Present when the trace was inspectable inline; omitted when `trace` is a BlobRef and no override is supplied. |
 | `extensions` | object | optional | Reverse-DNS-keyed implementation-specific artifacts (e.g. `org.civicaitools.notebook`, `org.civicaitools.environment`). Included in the canonical JSON and therefore covered by the package hash. |
 
@@ -120,7 +122,7 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 | `packageId` | string (UUID) | yes | A UUID generated at publish time. Distinct from the package hash. |
 | `createdAt` | string (ISO 8601) | yes | UTC timestamp set at packager time. |
 | `signingKeyId` | string | yes | The `kid` of the signing key. Present in the canonical JSON; therefore covered by the package hash. |
-| `captureMethod` | string | yes (post-ADR-0003) | One of the vocabulary values in §9 (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`, `datHere`). Required at the publish route since 2026-04-29. Pre-ADR-0003 packages persist with a `null` capture method on the database row and render with a "Unknown (pre-ADR-0003)" label. |
+| `captureMethod` | string | yes (post-ADR-0003) | One of the vocabulary values in §9 (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`). Required at the publish route since 2026-04-29. Pre-ADR-0003 packages persist with a `null` capture method on the database row and render with a "Unknown (pre-ADR-0003)" label. |
 
 ### 4.3 `prompt` object
 
@@ -163,9 +165,9 @@ A BlobRef whose fetch fails, whose hash mismatches, or whose size mismatches MUS
 
 Implementations MAY add fields under `extensions` keyed by reverse-DNS identifiers (`org.civicaitools.notebook`, `org.civicaitools.environment`, `org.<your-domain>.<your-extension>`). All extension content is part of the canonical JSON and is therefore covered by the package hash and the platform signature. Extensions are advisory — they MUST NOT change the meaning of fields defined in this standard, and a verifier MAY ignore unknown extensions without breaking conformance.
 
-The `org.civicaitools.notebook` extension is a content-format marker (a Jupyter-style cell list) emitted by the canonical reference implementation. External implementations are not required to emit it. Under `captureMethod: datHere`, this extension is promoted from informative to normatively required and carries the deterministic notebook of section E (see §9.1).
+The `org.civicaitools.notebook` extension is a content-format marker (a Jupyter-style cell list) emitted by the canonical reference implementation. External implementations are not required to emit it. Under `contentProfile: datHere`, this extension is promoted from informative to normatively required and carries the deterministic notebook of section E (see §9.1).
 
-The `org.civicaitools.environment` extension carries environment metadata (model version, temperature, sampling parameters, tool definitions, publishing-host identifier) required by the `datHere` captureMethod variant. See §9.1 for its required shape. Other implementations MAY define their own reverse-DNS-keyed extensions for content not otherwise covered by the standard.
+The `org.civicaitools.environment` extension carries environment metadata (model version, temperature, sampling parameters, tool definitions, publishing-host identifier) required by the `datHere` content profile. See §9.1 for its required shape. Other implementations MAY define their own reverse-DNS-keyed extensions for content not otherwise covered by the standard.
 
 ### 4.7 `cost` object framing
 
@@ -181,7 +183,7 @@ The package hash is the SHA-256 hex digest of the JSON serialization of the evid
 
 - The reference implementation uses Node.js `JSON.stringify(pkg)` with no key-sorting transform; the packager and verify-route produce keys in matching insertion order, which is what makes recompute-and-compare work today.
 - All field values defined in this standard — including `metadata.captureMethod`, `metadata.signingKeyId`, every `extensions` entry, and BlobRef objects — are part of the serialized JSON and therefore part of the hash.
-- Fields that live on the database row but not in the canonical package object (such as `title`, `verificationStatus`, `creatorId`) are NOT part of the serialized JSON and are NOT covered by the package hash. The `summary` field is optionally part of the canonical JSON per §4.1 (required for `datHere`-captured packages, optional for others); when present in the package, it IS covered by the hash. Packages produced before ADR-0004, or non-`datHere` packages whose publishers keep `summary` only on the database row, hash exactly as they did before.
+- Fields that live on the database row but not in the canonical package object (such as `title`, `verificationStatus`, `creatorId`) are NOT part of the serialized JSON and are NOT covered by the package hash. The `summary` field is optionally part of the canonical JSON per §4.1 (required for packages with `contentProfile === "datHere"`, optional for others); when present in the package, it IS covered by the hash. Packages produced before ADR-0004, or non-datHere-content-profile packages whose publishers keep `summary` only on the database row, hash exactly as they did before.
 
 A change to any in-package field — including a single character in `output`, a different `kid`, or a different `captureMethod` — produces a different hash, which produces a different content-addressable URL and a different signature.
 
@@ -283,7 +285,6 @@ A conformant evidence package published after 2026-04-29 MUST carry exactly one 
 - **`chat-flow-stream`** — the publishing platform captured the bytes as the model streamed to the calling client. Verbatim by construction at the wire layer.
 - **`claude-code-jsonl-readback`** — the publishing client (typically a Claude Code skill) read each turn's content and per-invocation usage from the session JSONL on disk, filtering to text-typed content blocks only. Verbatim by construction at the JSONL layer.
 - **`claude-code-self-report`** — legacy. The publishing model paraphrased the original session from in-context memory. Deprecated as of 2026-04-28; retained as a vocabulary value so packages predating ADR-0003 can be re-rendered with their actual capture method labeled rather than silently re-described as something they were not.
-- **`datHere`** — the Civic AI Tools answer pipeline captured the analysis as a content-addressable bundle organized as the A-G envelope content profile (§9.1) and consumable as a notebook-plus-rendered-answer commit on a git host (§9.2). The cryptographic envelope is bound to the package hash; the rendered answer is recomputable from the package's notebook section against the documented runtime. Reproducible-by-construction against a documented runtime layer. Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).
 
 The reference publish route enforces the field at request validation; a missing or invalid value returns `400`. The field is part of `metadata.captureMethod` in the canonical JSON and is therefore covered by the package hash and the platform signature: the capture method itself is tamper-evident.
 
@@ -293,13 +294,17 @@ Pre-ADR-0003 packages persist with a `null` capture-method column on the databas
 
 Future capture methods (for example, a hook-based path that records bytes at message-emission time, or a third-party signed self-attestation) extend this enum. Per ADR-0003, an enum extension is a vocabulary change, not a key change — the platform continues to sign all capture methods under the same trust-registry keys; the label is the differentiation.
 
-> ⚠ **Subject to forward-extensibility.** The four values above anchor on the publishing surfaces that exist today: a website chat flow (`chat-flow-stream`), a Claude Code skill (`claude-code-jsonl-readback`), an earlier paraphrasing pattern retained for label honesty (`claude-code-self-report`), and the Civic AI Tools answer pipeline producing cross-host bundles (`datHere`). Other CLIs (Codex CLI, Cursor's MCP runtime, Gemini CLI), other IDEs (VS Code with GitHub Copilot, Zed), other execution environments (sandboxed runners, hosted notebooks), and speculative future surfaces (a sandbox-environment capture, an MCP-host-agnostic capture protocol) will need new vocabulary values. The current values stay normative for v0.1; ADR-0003 governs the original three values, [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) governs the `datHere` value, and future extensions will require their own ADRs that preserve the structural property each value carries (verbatim-by-construction at *some* layer, or reproducibility-by-construction against a documented runtime, with the layer or property named).
+> ⚠ **Subject to forward-extensibility — the current vocabulary is Claude-Code-specific.** The three values above (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`) anchor on the publishing surfaces that exist today: a website chat flow and a Claude Code skill. Other CLIs (Codex CLI, Cursor's MCP runtime, Gemini CLI), other IDEs (VS Code with GitHub Copilot, Zed), other execution environments (sandboxed runners, hosted notebooks), and speculative future surfaces (a sandbox-environment capture, an MCP-host-agnostic capture protocol) will need new vocabulary values. The current values stay normative for v0.1; ADR-0003 governs the existing vocabulary, and future extensions will require their own ADRs that preserve the structural property each value carries (verbatim-by-construction at *some* layer, with the layer named).
 
-### 9.1 `datHere` captureMethod content profile
+---
 
-> ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for datHere captureMethod). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
+> ⚠ **§9.1-§9.3 below describe the `datHere` content profile, a content-shape variant** orthogonal to `captureMethod`. The content profile is selected via the `contentProfile` field (§4.1). These sub-sections appear under §9 for historical document-layout reasons (they originally landed as a captureMethod variant in Phase 1 of [civic-ai-tools#69](https://github.com/npstorey/civic-ai-tools/issues/69) and were reframed in the 2026-05-19 amendment per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md)); future revisions may relocate them under a top-level "Content Profile" section. A package with `contentProfile === "datHere"` MUST satisfy §9.1.1's requirements regardless of which `captureMethod` value it carries — the two axes are independent.
 
-A `datHere`-captured package organizes its content as the **A-G envelope**, a profile over the existing top-level fields specified in §4. The envelope is a content profile, not a new container: the package remains the single canonical JSON object whose SHA-256 is the package hash. A-G is the way a `datHere`-captured package's content is *organized for readers and cross-host publishing*; the OES top-level fields are still what gets hashed and signed.
+### 9.1 `datHere` content profile
+
+> ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for the datHere content profile; the registry anchor's "capturemethod" slug is historical and stays for stability). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
+
+A `datHere`-content-profile package organizes its content as the **A-G envelope**, a profile over the existing top-level fields specified in §4. The envelope is a content profile, not a new container: the package remains the single canonical JSON object whose SHA-256 is the package hash. A-G is the way a `datHere`-content-profile package's content is *organized for readers and cross-host publishing*; the OES top-level fields are still what gets hashed and signed.
 
 The A-G section-to-field mapping:
 
@@ -317,7 +322,7 @@ The remainder of this section specifies the normative requirements `datHere` add
 
 #### 9.1.1 Normative requirements
 
-A conformant `datHere`-captured package MUST satisfy *every* requirement below, in addition to the standard's existing requirements for conformant packages (§4, §5, §6, §9).
+A conformant `datHere`-content-profile package MUST satisfy *every* requirement below, in addition to the standard's existing requirements for conformant packages (§4, §5, §6, §9).
 
 1. **Prompt visibility.** `prompt.visibility` MUST be `"full_text"`. The hash-only mode is incompatible with the A-G envelope, which requires section A to be readable.
 2. **System prompt(s) present.** `skillMetadata.skillText` MUST be non-empty (inline string or BlobRef) and MUST reflect the composed system prompt set the model was operating under at the time of the analysis.
@@ -325,25 +330,25 @@ A conformant `datHere`-captured package MUST satisfy *every* requirement below, 
 4. **Notebook present.** The `extensions["org.civicaitools.notebook"]` object MUST be present, MUST conform to a notebook format admitted by §9.1.2, and MUST satisfy the determinism property in §9.1.3. Where the notebook is too large to inline, it MAY be supplied as a BlobRef.
 5. **Rendered answer present.** `output` MUST be present (inline or BlobRef) and MUST be the rendered output of executing the notebook against the documented runtime at publish time.
 6. **Summary present.** `summary` (§4.1) MUST be present, MUST be non-empty, and SHOULD be short enough to surface in citation contexts (recommended ≤ 280 characters; not enforced numerically).
-7. **Capture-method label.** `metadata.captureMethod` MUST be `"datHere"`. The label is itself covered by the canonical-JSON hash and the platform signature per §9.
+7. **Content-profile label.** `metadata.contentProfile` MUST be `"datHere"`. The label is itself covered by the canonical-JSON hash and the platform signature per §5. `captureMethod` (the ADR-0003 field) continues to carry one of its three values — `chat-flow-stream`, `claude-code-jsonl-readback`, or `claude-code-self-report` — describing how the content was captured; `contentProfile` is an independent axis describing what shape the content takes.
 
-A verifier encountering a `datHere`-labeled package that fails any of the requirements above MUST report the package as malformed-for-`datHere` while still being able to perform the standard envelope-integrity checks (§13.1). Non-`datHere` capture methods continue to use their existing requirements; the requirements above apply only when `metadata.captureMethod == "datHere"`.
+A verifier encountering a `datHere`-content-profile-labeled package that fails any of the requirements above MUST report the package as malformed-for-`datHere` while still being able to perform the standard envelope-integrity checks (§13.1). Non-datHere content profiles continue to use their existing requirements; the requirements above apply only when `metadata.contentProfile == "datHere"`.
 
 #### 9.1.2 Notebook format
 
-A conformant `datHere`-captured package's section E (the notebook) MUST conform to **Jupyter Notebook Format v4.5 or later** (nbformat 4), expressed as the JSON cell structure with a top-level `cells` array, per the public nbformat specification. Jupyter is the v1 default because it matches the pattern in use at the pilot integration partner and has the broadest ecosystem support (rendering, diffing, archival, citation tooling).
+A conformant `datHere`-content-profile package's section E (the notebook) MUST conform to **Jupyter Notebook Format v4.5 or later** (nbformat 4), expressed as the JSON cell structure with a top-level `cells` array, per the public nbformat specification. Jupyter is the v1 default because it matches the pattern in use at the pilot integration partner and has the broadest ecosystem support (rendering, diffing, archival, citation tooling).
 
-This standard admits alternative notebook formats — most notably Marimo, which has stronger determinism properties via reactive evaluation and no hidden state — as conforming notebook formats for `datHere`-captured packages, provided they:
+This standard admits alternative notebook formats — most notably Marimo, which has stronger determinism properties via reactive evaluation and no hidden state — as conforming notebook formats for `datHere`-content-profile packages, provided they:
 
 1. Produce a self-contained executable representation whose execution against the documented runtime is reproducible (no hidden inputs, no cell-order-dependent state that is not re-evaluable);
 2. Carry an explicit content-type marker on the `extensions["org.civicaitools.notebook"]` entry indicating which format is in use (e.g., a `"format"` sub-field with values like `"jupyter-v4.5"` or `"marimo-v0.x"`);
 3. Are accompanied by a renderer that produces section F (the rendered answer) from section E.
 
-The protocol-level property the standard locks is **deterministic reproducibility**, not the choice of notebook engine. A future ADR may promote Marimo (or another format) to a second normative default without superseding this one if a real adopter requires it. Until then, `datHere`-captured packages SHOULD default to Jupyter v4.5+.
+The protocol-level property the standard locks is **deterministic reproducibility**, not the choice of notebook engine. A future ADR may promote Marimo (or another format) to a second normative default without superseding this one if a real adopter requires it. Until then, `datHere`-content-profile packages SHOULD default to Jupyter v4.5+.
 
 #### 9.1.3 Determinism property
 
-A `datHere`-captured package's section E (the notebook) is **deterministic against a documented runtime environment plus stable upstream data**. The standard articulates this property explicitly because conflating "verifiable" with "the same answer forever" is the predictable failure mode.
+A `datHere`-content-profile package's section E (the notebook) is **deterministic against a documented runtime environment plus stable upstream data**. The standard articulates this property explicitly because conflating "verifiable" with "the same answer forever" is the predictable failure mode.
 
 1. The notebook MUST record its runtime requirements (language version, library versions, MCP server URLs) either in its first cell or in a sidecar `requirements` field on the `extensions["org.civicaitools.environment"]` object.
 2. Re-execution of the notebook against the documented runtime, with the same MCP server endpoints reachable and the same upstream data unchanged since publication, SHOULD reproduce section F (the rendered answer) byte-for-byte modulo non-deterministic formatting (timestamps in tool-call results, floating-point representations that depend on platform libc, etc.).
@@ -356,7 +361,7 @@ The signature attests that the notebook in section E has not been altered since 
 
 > ⚠ **Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
 
-A `datHere`-captured package MAY be published cross-host as a Jupyter notebook on a git host, as a multi-file commit with a sibling metadata file, or as future analogous content-addressable surfaces. In every case the published artifact carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
+A `datHere`-content-profile package MAY be published cross-host as a Jupyter notebook on a git host, as a multi-file commit with a sibling metadata file, or as future analogous content-addressable surfaces. In every case the published artifact carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
 
 This section defines the commitment view as a **logical schema** (§9.2.1 — field definitions) and specifies two **concrete serializations** of that schema: notebook-embedded (§9.2.2, for `.ipynb` outputs) and sibling YAML file (§9.2.3, for non-notebook outputs and as a sidecar option). §9.2.4 describes a reader-affordance rendering convention for notebook outputs. Both serializations carry the same field set with the same semantics; they are byte-different but semantically identical for verification. A conformant publisher MAY emit either serialization; a conformant verifier MUST accept either.
 
@@ -373,7 +378,8 @@ A conformant commitment view carries the following fields. The field set is the 
 | `evidenceProtocolVersion` | string | yes | The OES schema version this commitment view was published against (currently `0.1.0`). |
 | `packageHash` | string (hex SHA-256) | yes | The SHA-256 hex digest of the canonical-JSON package object. The package's content-addressable identifier. |
 | `packageUrl` | string (URL) | yes | The content-addressable URL where the canonical-JSON package is fetchable. Reference implementation: Vercel Blob URL. Other hosts MAY serve from their own content-addressable storage. |
-| `captureMethod` | string | yes | `datHere` for artifacts produced under this section. Future capture-method variants MAY define their own cross-host publication patterns or reuse this one. |
+| `captureMethod` | string | yes | One of the three ADR-0003 values describing how the content was captured (`chat-flow-stream`, `claude-code-jsonl-readback`, or `claude-code-self-report`). Mirrors `metadata.captureMethod` from the canonical-JSON package. |
+| `contentProfile` | string | yes | `"datHere"` for artifacts produced under this section. Future content profiles MAY define their own cross-host publication patterns or reuse this one. |
 | `signature` | object | yes | Signed-envelope object. Shape: `{ signature, publicKey, algorithm, kid }` matching §6.1. |
 | `signerIdentity` | object | yes | Identity binding for the package's author. Shape matches the OES identity-binding model (§8); GitHub-bound today, future identity providers extend the field shape per Q3. |
 | `rfc3161Timestamp` | string (base64) | optional | RFC 3161 trusted timestamp token. Present when the publisher's pipeline obtains one. |
@@ -386,7 +392,7 @@ A conformant commitment view carries the following fields. The field set is the 
 
 #### 9.2.2 Notebook-embedded serialization (`.ipynb` outputs)
 
-A `datHere`-captured package published as a Jupyter notebook (§9.1.2) MUST carry the commitment view in the notebook's root `metadata` object under the reverse-DNS namespace `org.civicaitools.evidence`:
+A `datHere`-content-profile package published as a Jupyter notebook (§9.1.2) MUST carry the commitment view in the notebook's root `metadata` object under the reverse-DNS namespace `org.civicaitools.evidence`:
 
 ```json
 {
@@ -396,7 +402,8 @@ A `datHere`-captured package published as a Jupyter notebook (§9.1.2) MUST carr
       "evidenceProtocolVersion": "0.1.0",
       "packageHash": "<hex SHA-256>",
       "packageUrl": "<URL>",
-      "captureMethod": "datHere",
+      "captureMethod": "chat-flow-stream",
+      "contentProfile": "datHere",
       "signature": { "signature": "...", "publicKey": "...", "algorithm": "Ed25519ph", "kid": "..." },
       "signerIdentity": { ... },
       "trustRegistryUrl": "<URL>",
@@ -422,13 +429,14 @@ Notebook-embedded is the recommended default serialization for `.ipynb` outputs.
 
 #### 9.2.3 Sibling YAML file serialization (non-notebook outputs and sidecar)
 
-A `datHere`-captured package published as a non-notebook artifact, or as a notebook alongside an explicit sidecar, MAY carry the commitment view as a sibling YAML file with the conventional filename `<artifact-basename>.evidence.yaml`. The file's content is the §9.2.1 field set serialized as YAML at the top level:
+A `datHere`-content-profile package published as a non-notebook artifact, or as a notebook alongside an explicit sidecar, MAY carry the commitment view as a sibling YAML file with the conventional filename `<artifact-basename>.evidence.yaml`. The file's content is the §9.2.1 field set serialized as YAML at the top level:
 
 ```yaml
 evidenceProtocolVersion: "0.1.0"
 packageHash: "<hex SHA-256>"
 packageUrl: "<URL>"
-captureMethod: "datHere"
+captureMethod: "chat-flow-stream"
+contentProfile: "datHere"
 signature:
   signature: "<base64>"
   publicKey: "<base64 DER SPKI>"
@@ -453,13 +461,13 @@ This serialization is the primary path for non-notebook outputs and a valid choi
 
 #### 9.2.4 Cell 0 rendering convention (notebook outputs, SHOULD)
 
-A `datHere`-captured package published as a Jupyter notebook SHOULD render a human-readable metadata table in the notebook's first markdown cell. The cell is a reader affordance — verification does NOT depend on its presence — but it materially improves the experience of opening the notebook in any renderer (Jupyter, Colab, VS Code, GitHub's `.ipynb` viewer, nbviewer).
+A `datHere`-content-profile package published as a Jupyter notebook SHOULD render a human-readable metadata table in the notebook's first markdown cell. The cell is a reader affordance — verification does NOT depend on its presence — but it materially improves the experience of opening the notebook in any renderer (Jupyter, Colab, VS Code, GitHub's `.ipynb` viewer, nbviewer).
 
 Recommended fields to surface in the table:
 
 - **Signer identity + binding tier.** Who signed the package, at what identity-binding strength (pseudonymous / GitHub / ORCID / institutional / strong per §8).
 - **Package hash (truncated).** First 8-12 hex characters of the canonical SHA-256, sufficient for at-a-glance identification.
-- **Trust seal / captureMethod.** The captureMethod label (here, `datHere`) and a short verification status indicator suitable for static rendering. The table itself does not perform verification; the indicator reflects the publisher's pre-publication check or is omitted.
+- **Trust seal / captureMethod + contentProfile.** The captureMethod label (one of the three ADR-0003 values describing how the content was captured) and the contentProfile label (here, `datHere`) and a short verification status indicator suitable for static rendering. The table itself does not perform verification; the indicator reflects the publisher's pre-publication check or is omitted.
 - **Attestation summary count.** Number of attestations carried in §9.2.1's `attestations` field, optionally broken out by kind (corroborations, contradictions, evaluations).
 - **Publishing host + timestamp.** `host` and publish-time information from the environment metadata (§9.1).
 
@@ -655,7 +663,8 @@ A formal conformance test suite, a reference test corpus, and a conformance-clai
 
 Revisions to this document will be logged here as the open questions resolve and stakeholder review is incorporated.
 
-- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile, with §9.1.1 normative requirements, §9.1.2 notebook format, §9.1.3 determinism property), §9.2 (cross-host commitment-view schema, with §9.2.1 field definitions, §9.2.2 notebook-embedded serialization under the `org.civicaitools.evidence` namespace, §9.2.3 sibling YAML file serialization, and §9.2.4 cell-0 rendering convention), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
+- **2026-05-19** — `datHere` reframed from a captureMethod variant to a `contentProfile` value (the 2026-05-18 entry below describes the original framing). Phase 2 smoke testing surfaced that `captureMethod` (integrity-of-capture per ADR-0003) and content shape are orthogonal: chat-flow-stream captures can have either the legacy content shape or the A-G envelope. Changes from the 2026-05-18 state: §3 (definitions) gains a `contentProfile` entry; §4.1 gains a `contentProfile` row and reframes the `summary` row's required-when clause to reference `contentProfile === "datHere"`; §4.2 reverts the `captureMethod` row to three values; §4.6 reframes the `org.civicaitools.environment` extension paragraph as `contentProfile`-gated; §5 hash-coverage paragraph reframes accordingly; §9 main reverts to three captureMethod values and the original forward-extensibility callout; a transition paragraph is added before §9.1 explaining the §9.1-§9.3 framing change; §9.1 heading drops "captureMethod"; §9.1.1 requirement 7 changes from `metadata.captureMethod === "datHere"` to `metadata.contentProfile === "datHere"`; §9.2.1 commitment-view table gains a `contentProfile` row and revises the `captureMethod` row; §9.2.2 and §9.2.3 examples carry `captureMethod: "chat-flow-stream"` + `contentProfile: "datHere"`; §9.2.4 cell-0 recommended fields call out both. Per the [ADR-0004 2026-05-19 status note](../adr/0004-dathere-captureMethod-variant.md), all substantive decisions (A-G envelope, notebook format, determinism property, commitment-view schema, embed-vs-reference policy) stand — only the field the new vocabulary attaches to changes.
+- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). *(Original framing; superseded by the 2026-05-19 reframe above. Retained for historical record.)* Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile, with §9.1.1 normative requirements, §9.1.2 notebook format, §9.1.3 determinism property), §9.2 (cross-host commitment-view schema, with §9.2.1 field definitions, §9.2.2 notebook-embedded serialization under the `org.civicaitools.evidence` namespace, §9.2.3 sibling YAML file serialization, and §9.2.4 cell-0 rendering convention), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
 
 ---
 
@@ -667,7 +676,7 @@ Revisions to this document will be logged here as the open questions resolve and
 - `civic-ai-tools/docs/adr/0001-roadmap-governance.md` — public-roadmap governance and quarterly cadence.
 - `civic-ai-tools/docs/adr/0002-commitments-vs-targets.md` — distinction between absolute commitments and operational targets in `ROADMAP.md` §3.
 - `civic-ai-tools/docs/adr/0003-evidence-capture-method.md` — the `captureMethod` field, vocabulary, and tamper-evident labeling. Authoritative for §9 (original three vocabulary values).
-- `civic-ai-tools/docs/adr/0004-dathere-captureMethod-variant.md` — the `datHere` captureMethod variant, the A-G envelope content profile, the notebook-format requirement, and the cross-host commitment-view publication schema (notebook-embedded + sibling-YAML serializations). Authoritative for §9.1, §9.2, and §9.3; resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) and [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts).
+- `civic-ai-tools/docs/adr/0004-dathere-captureMethod-variant.md` — the `datHere` content profile (originally framed as a captureMethod variant; reframed 2026-05-19 per the ADR's status note), the A-G envelope shape, the notebook-format requirement, and the cross-host commitment-view publication schema (notebook-embedded + sibling-YAML serializations). Authoritative for §9.1, §9.2, and §9.3; resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) and [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts). The filename retains the historical "captureMethod-variant" slug for stability of external references.
 - `civic-ai-tools/docs/proposals/data-concierge-integration.md` — the integration-arc proposal that scopes the four-issue cluster (civic#69-#72) ADR-0004 is the first of.
 - `civic-ai-tools/ROADMAP.md` — public roadmap, trust commitments, out-of-scope items, and the evidence-protocol-fork resolution deadline of 2026-12-31.
 - `civic-ai-tools/docs/research/landscape-analysis.md` — relationship to existing standards (PROV-O, RO-Crate, Croissant, DCAT, FAIR, DPI, CKAN ecosystem).
