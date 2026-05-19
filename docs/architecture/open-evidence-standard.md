@@ -352,20 +352,28 @@ A `datHere`-captured package's section E (the notebook) is **deterministic again
 
 The signature attests that the notebook in section E has not been altered since publication. It does NOT attest that re-executing it tomorrow produces the same answer as today; the upstream data may have changed. This is the `datHere` analog of the chat-flow-stream / JSONL-readback "verbatim-by-construction at *some* layer, with the layer named" property: the layer named is *the documented runtime against the upstream-data state at publish time*, and the property promised is *reproducibility against that layer*, not invariance.
 
-### 9.2 Cross-host publication: GitHub-frontmatter schema
+### 9.2 Cross-host publication: commitment-view schema
 
 > ⚠ **Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
 
-A `datHere`-captured package MAY be published cross-host as a multi-file commit on a git host. The frontmatter at the top of the published commit's primary markdown file carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
+A `datHere`-captured package MAY be published cross-host as a Jupyter notebook on a git host, as a multi-file commit with a sibling metadata file, or as future analogous content-addressable surfaces. In every case the published artifact carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
 
-The frontmatter schema is YAML-shaped. A conformant cross-host publication carries the following fields:
+This section defines the commitment view as a **logical schema** (§9.2.1 — field definitions) and specifies two **concrete serializations** of that schema: notebook-embedded (§9.2.2, for `.ipynb` outputs) and sibling YAML file (§9.2.3, for non-notebook outputs and as a sidecar option). §9.2.4 describes a reader-affordance rendering convention for notebook outputs. Both serializations carry the same field set with the same semantics; they are byte-different but semantically identical for verification. A conformant publisher MAY emit either serialization; a conformant verifier MUST accept either.
+
+A reader holding only the published artifact + the publisher's trust registry + FreeTSA + Sigstore Rekor can verify the package's cryptographic envelope. The `civicaitools.org`-dependency property described in §13 is unchanged by this section (offline verifiability is still gated on [Q1](open-questions.md#q1--package-format) resolution), but the cross-host publication pattern *makes the package's content* independent of the originating host as long as the trust registry remains independently reachable.
+
+Bundle-export endpoints on conformant publishers produce the published artifact (the notebook with its embedded metadata, or the multi-file set including any sibling YAML) as a single response; the reference implementation's contract is in `civic-ai-tools-website/docs/api/evidence-publish.md`. Bundle endpoints are advisory — a publisher MAY support cross-host publication by manual artifact construction without offering a bundle endpoint.
+
+#### 9.2.1 Field definitions
+
+A conformant commitment view carries the following fields. The field set is the same regardless of serialization; §9.2.2 and §9.2.3 specify how the fields are arranged in their respective serializations.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `evidenceProtocolVersion` | string | yes | The OES schema version this commit was published against (currently `0.1.0`). |
+| `evidenceProtocolVersion` | string | yes | The OES schema version this commitment view was published against (currently `0.1.0`). |
 | `packageHash` | string (hex SHA-256) | yes | The SHA-256 hex digest of the canonical-JSON package object. The package's content-addressable identifier. |
 | `packageUrl` | string (URL) | yes | The content-addressable URL where the canonical-JSON package is fetchable. Reference implementation: Vercel Blob URL. Other hosts MAY serve from their own content-addressable storage. |
-| `captureMethod` | string | yes | `datHere` for commits produced under this section. Future capture-method variants MAY define their own cross-host publication patterns or reuse this one. |
+| `captureMethod` | string | yes | `datHere` for artifacts produced under this section. Future capture-method variants MAY define their own cross-host publication patterns or reuse this one. |
 | `signature` | object | yes | Signed-envelope object. Shape: `{ signature, publicKey, algorithm, kid }` matching §6.1. |
 | `signerIdentity` | object | yes | Identity binding for the package's author. Shape matches the OES identity-binding model (§8); GitHub-bound today, future identity providers extend the field shape per Q3. |
 | `rfc3161Timestamp` | string (base64) | optional | RFC 3161 trusted timestamp token. Present when the publisher's pipeline obtains one. |
@@ -376,17 +384,94 @@ The frontmatter schema is YAML-shaped. A conformant cross-host publication carri
 | `subjectTitle` | string | yes | Human-readable title of the analysis. Matches the publisher's database `title` field. |
 | `subjectSummary` | string | yes | The G-section summary. Matches the canonical-JSON `summary` field (§9.1.1 requirement 6). |
 
-The commit body (everything after the frontmatter) is the rendered content of A through G with one section per markdown heading. The notebook section (E) is included as either an inline fenced code block (small notebooks) or as a sibling file in the same commit (large notebooks) with a relative-path reference in the markdown. The rendered answer (F) is similarly inline or a sibling file.
+#### 9.2.2 Notebook-embedded serialization (`.ipynb` outputs)
 
-A reader holding only the published commit + the publisher's trust registry + FreeTSA + Sigstore Rekor can verify the package's cryptographic envelope. The `civicaitools.org`-dependency property described in §13 is unchanged by this section (offline verifiability is still gated on [Q1](open-questions.md#q1--package-format) resolution), but the cross-host publication pattern *makes the package's content* independent of the originating host as long as the trust registry remains independently reachable.
+A `datHere`-captured package published as a Jupyter notebook (§9.1.2) MUST carry the commitment view in the notebook's root `metadata` object under the reverse-DNS namespace `org.civicaitools.evidence`:
 
-Bundle-export endpoints on conformant publishers produce the entire multi-file set as a single response (frontmatter + sibling files); the reference implementation's contract is in `civic-ai-tools-website/docs/api/evidence-publish.md`. Bundle endpoints are advisory — a publisher MAY support cross-host publication by manual commit construction without offering a bundle endpoint.
+```json
+{
+  "cells": [ ... ],
+  "metadata": {
+    "org.civicaitools.evidence": {
+      "evidenceProtocolVersion": "0.1.0",
+      "packageHash": "<hex SHA-256>",
+      "packageUrl": "<URL>",
+      "captureMethod": "datHere",
+      "signature": { "signature": "...", "publicKey": "...", "algorithm": "Ed25519ph", "kid": "..." },
+      "signerIdentity": { ... },
+      "trustRegistryUrl": "<URL>",
+      "subjectTitle": "...",
+      "subjectSummary": "...",
+      "attestations": [ ... ]
+    },
+    "kernelspec": { ... },
+    "language_info": { ... }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
+```
+
+The `org.civicaitools.evidence` namespace lives at the notebook's root `metadata` level — the location the Jupyter notebook format reserves for opaque metadata that conformant tooling MUST preserve on round-trip. Sibling namespaces (publisher-specific identifiers, `kernelspec`, `language_info`, future namespaces) coexist with the evidence namespace and are unaffected by it; a conformant verifier MUST ignore unknown sibling namespaces.
+
+All field names and semantics from §9.2.1 map directly. Nested objects (`signature`, `signerIdentity`) flatten naturally into the JSON shape Jupyter expects. Optional fields (`rfc3161Timestamp`, `rekorEntryId`, `rekorInclusionProof`, `attestations`) MAY be omitted; when present they carry the §9.2.1-defined shape.
+
+A conformant publisher MUST ensure the `org.civicaitools.evidence` metadata block survives notebook tooling round-trip (executing the notebook in Jupyter, Colab, VS Code, or analogous environments MUST NOT clobber the namespace). The Jupyter notebook format spec is explicit that root-level metadata under unrecognized keys is preserved by conformant tooling, which makes this serialization durable in practice.
+
+Notebook-embedded is the recommended default serialization for `.ipynb` outputs.
+
+#### 9.2.3 Sibling YAML file serialization (non-notebook outputs and sidecar)
+
+A `datHere`-captured package published as a non-notebook artifact, or as a notebook alongside an explicit sidecar, MAY carry the commitment view as a sibling YAML file with the conventional filename `<artifact-basename>.evidence.yaml`. The file's content is the §9.2.1 field set serialized as YAML at the top level:
+
+```yaml
+evidenceProtocolVersion: "0.1.0"
+packageHash: "<hex SHA-256>"
+packageUrl: "<URL>"
+captureMethod: "datHere"
+signature:
+  signature: "<base64>"
+  publicKey: "<base64 DER SPKI>"
+  algorithm: "Ed25519ph"
+  kid: "<key identifier>"
+signerIdentity:
+  # ... identity-binding-specific fields per §8
+trustRegistryUrl: "<URL>"
+subjectTitle: "..."
+subjectSummary: "..."
+attestations:
+  # ... per §9.3
+```
+
+A conformant verifier MUST accept either YAML or JSON shapes at this filename (YAML is a superset of JSON; either form is valid). Where the published artifact is itself a markdown document, publishers MAY ALTERNATIVELY embed the commitment view as YAML frontmatter at the top of the markdown file between `---` delimiters (the Jekyll / GitHub Pages frontmatter convention); the field set is identical.
+
+For non-notebook artifacts that are markdown documents, the document body (everything after the YAML frontmatter or alongside the sibling YAML file) SHOULD render A-G content as markdown sections — A (the prompt), B (system prompts), C (model card + environment), D (deliberative trace), E (the notebook reference or inline), F (the rendered answer), G (summary). Section E references the notebook by relative path when the notebook is a sibling file; section F may be inline or a sibling file based on size. The exact layout is at the publisher's discretion as long as A through G are unambiguously identifiable.
+
+When a sibling YAML file accompanies a notebook, the notebook-embedded serialization (§9.2.2) and the sibling YAML serialization MUST carry the same field values for any field they both express. A verifier encountering a mismatch SHOULD prefer the serialization whose signature recomputes correctly against the package hash and SHOULD report the mismatch.
+
+This serialization is the primary path for non-notebook outputs and a valid choice for notebook outputs that prefer separation of concerns over embedded metadata.
+
+#### 9.2.4 Cell 0 rendering convention (notebook outputs, SHOULD)
+
+A `datHere`-captured package published as a Jupyter notebook SHOULD render a human-readable metadata table in the notebook's first markdown cell. The cell is a reader affordance — verification does NOT depend on its presence — but it materially improves the experience of opening the notebook in any renderer (Jupyter, Colab, VS Code, GitHub's `.ipynb` viewer, nbviewer).
+
+Recommended fields to surface in the table:
+
+- **Signer identity + binding tier.** Who signed the package, at what identity-binding strength (pseudonymous / GitHub / ORCID / institutional / strong per §8).
+- **Package hash (truncated).** First 8-12 hex characters of the canonical SHA-256, sufficient for at-a-glance identification.
+- **Trust seal / captureMethod.** The captureMethod label (here, `datHere`) and a short verification status indicator suitable for static rendering. The table itself does not perform verification; the indicator reflects the publisher's pre-publication check or is omitted.
+- **Attestation summary count.** Number of attestations carried in §9.2.1's `attestations` field, optionally broken out by kind (corroborations, contradictions, evaluations).
+- **Publishing host + timestamp.** `host` and publish-time information from the environment metadata (§9.1).
+
+Publishers MAY include additional fields. Existing publisher conventions of rendering analysis metadata (data source, query, generation timestamp, etc.) as a human-readable table are appropriate alongside the evidence-specific fields.
+
+The rendered cell is purely a reader affordance. A reader who needs to verify the package MUST work from the `org.civicaitools.evidence` namespace metadata (§9.2.2) or the sibling YAML (§9.2.3); the rendered table is not authoritative and SHOULD NOT be trusted on its own.
 
 ### 9.3 Embed-vs-reference policy for cross-host publication
 
 > ⚠ **Resolves [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts) (embed-vs-reference policy for attestations in published artifacts). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
 
-The `attestations` array in the frontmatter (§9.2) MAY contain entries in either of two forms.
+The `attestations` array in the commitment view (§9.2) MAY contain entries in either of two forms. The same rules apply to both serializations defined in §9.2 (notebook-embedded and sibling YAML).
 
 **Reference form** is the default. A reference entry is a JSON object with the following fields:
 
@@ -397,7 +482,7 @@ The `attestations` array in the frontmatter (§9.2) MAY contain entries in eithe
   attestationUrl: <URL where the canonical-JSON attestation is fetchable>
 ```
 
-A reader processing a reference entry fetches the attestation from `attestationUrl`, recomputes its SHA-256 against `attestationHash`, and verifies its signature against the publisher's trust registry (the same `trustRegistryUrl` from the frontmatter, or a different registry URL carried inside the attestation itself).
+A reader processing a reference entry fetches the attestation from `attestationUrl`, recomputes its SHA-256 against `attestationHash`, and verifies its signature against the publisher's trust registry (the same `trustRegistryUrl` from the commitment view, or a different registry URL carried inside the attestation itself).
 
 **Embed form** is an optimization for attestations that are stable and load-bearing for trust evaluation. An embed entry is the complete signed attestation envelope, inline:
 
@@ -409,11 +494,11 @@ A reader processing a reference entry fetches the attestation from `attestationU
   signature: <signed-envelope object matching §6.1>
 ```
 
-A reader processing an embed entry verifies the embedded envelope's signature directly without fetching anything. Both forms preserve independent verifiability: an embedded attestation carries its own signature, so a reader can verify it even if the surrounding frontmatter has been altered (the alteration would break the package-hash check anyway, but the embed-vs-reference distinction is orthogonal to the package signature).
+A reader processing an embed entry verifies the embedded envelope's signature directly without fetching anything. Both forms preserve independent verifiability: an embedded attestation carries its own signature, so a reader can verify it even if the surrounding commitment view has been altered (the alteration would break the package-hash check anyway, but the embed-vs-reference distinction is orthogonal to the package signature).
 
 **Default-to-reference rule.** Implementations SHOULD prefer reference form for routine attestations (corroborations from other authors, contradictions, citations) and SHOULD use embed form only when an attestation is structurally tied to the published claim's trust state — for example, an admin-approve attestation that establishes a corroboration relationship between an original committed claim and a publication-record, or a host-policy attestation that gates publication on adversarial-evaluation presence.
 
-A reader encountering an embedded attestation MUST verify its signature against the publisher's trust registry just like any other attestation; the embed/reference distinction is a fetch-time vs. frontmatter-size trade, not a trust trade.
+A reader encountering an embedded attestation MUST verify its signature against the publisher's trust registry just like any other attestation; the embed/reference distinction is a fetch-time vs. commitment-view-size trade, not a trust trade.
 
 The attestation-kind vocabulary itself (`corroboration`, `contradiction`, `correction`, `withdrawal`, `evaluation`, `expert_attestation`, `consistency`, etc.) is governed by §15 and is not normatively closed by this section. The cross-host publication schema accepts any attestation kind the publisher emits; readers and downstream consumers apply their own filters.
 
@@ -570,7 +655,7 @@ A formal conformance test suite, a reference test corpus, and a conformance-clai
 
 Revisions to this document will be logged here as the open questions resolve and stakeholder review is incorporated.
 
-- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile), §9.2 (cross-host frontmatter schema), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
+- **2026-05-18** — `datHere` captureMethod variant added per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). Changes: §4.1 gains optional `summary` field (required when `captureMethod == "datHere"`); §4.6 extension example list extended with `org.civicaitools.environment` and the existing `org.civicaitools.notebook` extension is promoted to normatively required under `datHere`; §9 vocabulary list extended with the `datHere` value; §9 forward-extensibility callout updated to reflect the fourth value; §9.1 (datHere content profile, with §9.1.1 normative requirements, §9.1.2 notebook format, §9.1.3 determinism property), §9.2 (cross-host commitment-view schema, with §9.2.1 field definitions, §9.2.2 notebook-embedded serialization under the `org.civicaitools.evidence` namespace, §9.2.3 sibling YAML file serialization, and §9.2.4 cell-0 rendering convention), and §9.3 (embed-vs-reference policy) added as new sub-sections. Schema version unchanged (`0.1.0`) — enum extension is a vocabulary change and added fields are backwards-compatible. Resolves Q21 and Q24 in the open-questions registry.
 
 ---
 
@@ -582,7 +667,7 @@ Revisions to this document will be logged here as the open questions resolve and
 - `civic-ai-tools/docs/adr/0001-roadmap-governance.md` — public-roadmap governance and quarterly cadence.
 - `civic-ai-tools/docs/adr/0002-commitments-vs-targets.md` — distinction between absolute commitments and operational targets in `ROADMAP.md` §3.
 - `civic-ai-tools/docs/adr/0003-evidence-capture-method.md` — the `captureMethod` field, vocabulary, and tamper-evident labeling. Authoritative for §9 (original three vocabulary values).
-- `civic-ai-tools/docs/adr/0004-dathere-captureMethod-variant.md` — the `datHere` captureMethod variant, the A-G envelope content profile, the notebook-format requirement, and the cross-host frontmatter publication schema. Authoritative for §9.1, §9.2, and §9.3; resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) and [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts).
+- `civic-ai-tools/docs/adr/0004-dathere-captureMethod-variant.md` — the `datHere` captureMethod variant, the A-G envelope content profile, the notebook-format requirement, and the cross-host commitment-view publication schema (notebook-embedded + sibling-YAML serializations). Authoritative for §9.1, §9.2, and §9.3; resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) and [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts).
 - `civic-ai-tools/docs/proposals/data-concierge-integration.md` — the integration-arc proposal that scopes the four-issue cluster (civic#69-#72) ADR-0004 is the first of.
 - `civic-ai-tools/ROADMAP.md` — public roadmap, trust commitments, out-of-scope items, and the evidence-protocol-fork resolution deadline of 2026-12-31.
 - `civic-ai-tools/docs/research/landscape-analysis.md` — relationship to existing standards (PROV-O, RO-Crate, Croissant, DCAT, FAIR, DPI, CKAN ecosystem).
