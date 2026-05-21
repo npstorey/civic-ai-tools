@@ -1945,5 +1945,104 @@
     "dataPlatform": [
       "custom-api"
     ]
+  },
+  {
+    "id": "nyc-council-mcp",
+    "name": "nyc-council-mcp",
+    "description": "NYC Council legislative data via the Legistar API (bills, hearings, votes, members, committees)",
+    "repoUrl": "https://github.com/BetaNYC/nyc-council-mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "legislation-legal"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-05-21",
+    "dataSources": [
+      "NYC Council Legistar API"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 8,
+    "notes": "Launched 2026-05-21 by BetaNYC. Requires a free LEGISTAR_TOKEN per user. Credits @jehiah / intro.nyc as predecessor work on the Legistar API. Published on npm as @betanyc/nyc-council-mcp.",
+    "npmPackage": "@betanyc/nyc-council-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": true,
+    "verificationStatus": "community",
+    "dateModified": "2026-05-21",
+    "version": "1.0.0"
+  },
+  {
+    "id": "nyc-record-mcp",
+    "name": "nyc-record-mcp",
+    "description": "NYC City Record notices: procurement solicitations, contract awards, public hearings, and agency notices via NYC Open Data",
+    "repoUrl": "https://github.com/BetaNYC/nyc-record-mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "open-data-portals",
+      "government-contracting"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-05-21",
+    "dataSources": [
+      "NYC Open Data — City Record Online (dataset dg92-zbpx)"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 7,
+    "notes": "Launched 2026-05-21 by BetaNYC. No required API key (optional SOCRATA_APP_TOKEN for higher rate limits). README credits socrata-mcp-server as inspiration for its SODA API pattern. Published on npm as @betanyc/nyc-record-mcp.",
+    "npmPackage": "@betanyc/nyc-record-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": false,
+    "verificationStatus": "community",
+    "dateModified": "2026-05-21",
+    "version": "1.0.0",
+    "dataPlatform": [
+      "socrata"
+    ]
+  },
+  {
+    "id": "nyc-charter-laws-rules",
+    "name": "nyc-charter-laws-rules",
+    "description": "NYC Charter, Administrative Code, and Rules of the City of New York — 22,050 sections sourced from American Legal Publishing bulk XML",
+    "repoUrl": "https://github.com/BetaNYC/nyc-charter-laws-rules",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "legislation-legal"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-05-21",
+    "dataSources": [
+      "NYC Charter",
+      "NYC Administrative Code",
+      "Rules of the City of New York"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 5,
+    "notes": "Launched 2026-05-21 by BetaNYC. No API key required — JSON index bundled in the npm package (22,050 sections). Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. Published on npm as @betanyc/nyc-charter-laws-rules.",
+    "npmPackage": "@betanyc/nyc-charter-laws-rules",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": false,
+    "verificationStatus": "community",
+    "dateModified": "2026-05-21",
+    "version": "0.1.0"
   }
 ]
