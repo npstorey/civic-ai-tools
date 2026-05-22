@@ -327,7 +327,7 @@ A conformant `datHere`-content-profile package MUST satisfy *every* requirement 
 1. **Prompt visibility.** `prompt.visibility` MUST be `"full_text"`. The hash-only mode is incompatible with the A-G envelope, which requires section A to be readable.
 2. **System prompt(s) present.** `skillMetadata.skillText` MUST be non-empty (inline string or BlobRef) and MUST reflect the composed system prompt set the model was operating under at the time of the analysis.
 3. **Environment metadata present.** The `extensions["org.civicaitools.environment"]` object MUST be present and MUST contain at least: `modelVersion` (string), `temperature` (number), `mcpServers` (array of objects with `url` and optional `name`), `toolDefinitions` (array of tool-schema objects, OR a BlobRef when large), `host` (string identifying the publishing host, e.g. `"civicaitools.org"` or an external publisher's host identifier). Additional fields are permitted under reverse-DNS sub-namespacing.
-4. **Notebook present.** The `extensions["org.civicaitools.notebook"]` object MUST be present, MUST conform to a notebook format admitted by §9.1.2, and MUST satisfy the determinism property in §9.1.3. Where the notebook is too large to inline, it MAY be supplied as a BlobRef.
+4. **Notebook present.** The `extensions["org.civicaitools.notebook"]` object MUST be present, MUST conform to a notebook format admitted by §9.1.2, and MUST satisfy the determinism property in §9.1.3. Where the notebook is too large to inline, it MAY be supplied as a BlobRef. The notebook MAY be either skeleton or executed at protocol level; §9.1.4 specifies the discriminator and the corresponding reproducibility-property strength for each. Both forms are conformant `datHere` notebooks.
 5. **Rendered answer present.** `output` MUST be present (inline or BlobRef) and MUST be the rendered output of executing the notebook against the documented runtime at publish time.
 6. **Summary present.** `summary` (§4.1) MUST be present, MUST be non-empty, and SHOULD be short enough to surface in citation contexts (recommended ≤ 280 characters; not enforced numerically).
 7. **Content-profile label.** `metadata.contentProfile` MUST be `"datHere"`. The label is itself covered by the canonical-JSON hash and the platform signature per §5. `captureMethod` (the ADR-0003 field) continues to carry one of its three values — `chat-flow-stream`, `claude-code-jsonl-readback`, or `claude-code-self-report` — describing how the content was captured; `contentProfile` is an independent axis describing what shape the content takes.
@@ -356,6 +356,74 @@ A `datHere`-content-profile package's section E (the notebook) is **deterministi
 4. Verifiers and surfaces SHOULD render the determinism property as *"reproducible against the documented runtime AND the upstream-data state at publish time,"* not as *"the same answer forever."*
 
 The signature attests that the notebook in section E has not been altered since publication. It does NOT attest that re-executing it tomorrow produces the same answer as today; the upstream data may have changed. This is the `datHere` analog of the chat-flow-stream / JSONL-readback "verbatim-by-construction at *some* layer, with the layer named" property: the layer named is *the documented runtime against the upstream-data state at publish time*, and the property promised is *reproducibility against that layer*, not invariance.
+
+Skeleton and executed notebooks (§9.1.4) deliver the reproducibility property with different strengths: skeleton notebooks re-execute the data-fetch cells reproducibly but the answer-synthesis cell carries a hardcoded markdown answer that is not re-derived from cell outputs; executed notebooks deliver the property materially because every cell's output (including the synthesis cell) is computed at publish time, and the comparison-cell convention (§9.1.4) makes original-vs-current values legible to verifiers. Surfaces SHOULD render the property strength honestly per §9.1.4's labeling convention.
+
+#### 9.1.4 Notebook execution provenance and metadata
+
+> ⚠ **Specified by [ADR-0005](../adr/0005-executed-notebook-architecture.md).**
+
+This section adds two protocol-level fields that discriminate how the notebook in section E was produced and, when the notebook was executed by the publisher's pipeline, what runtime environment produced its outputs. The two fields are independent of `captureMethod` (§9) and `contentProfile` (§4.1, §9.1) — they describe the *notebook authoring path*, a third orthogonal axis. The fields apply only when `metadata.contentProfile == "datHere"`; non-datHere content profiles ignore them.
+
+##### `extensions["org.civicaitools.notebook"].provenance`
+
+A new sub-field on the existing notebook extension distinguishing how the notebook in section E was authored:
+
+| Value | Meaning |
+|---|---|
+| `"skeleton"` | The notebook structure wraps an answer authored elsewhere (typically the chat-flow LLM output). Data-fetch cells are re-executable and reproducible; the answer-synthesis cell carries a hardcoded markdown answer that is NOT re-derived from cell outputs above. The reproducibility property in §9.1.3 is satisfied partially: data-fetch reproducibility holds; answer-synthesis reproducibility does not. |
+| `"executed"` | The notebook was executed end-to-end by the publisher's pipeline before signing; every cell's output (including the synthesis cell) is computed from real cell execution against the documented runtime and live upstream data at publish time. The reproducibility property in §9.1.3 is satisfied materially; the comparison-cell convention below makes original-vs-current values legible to re-executors. |
+
+When absent, verifiers SHOULD treat the field as `"skeleton"` (the pre-ADR-0005 default). The field is auto-emitted by conformant packagers from ADR-0005 forward; pre-ADR-0005 `datHere`-profile packages omit it and remain conformant.
+
+##### `extensions["org.civicaitools.execution"]`
+
+A new reverse-DNS-keyed extension recording the execution telemetry needed for verifiers to reason about the determinism property. The extension MUST be present when `provenance == "executed"` and MUST be absent when `provenance == "skeleton"` (or absent). Field set:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `executedAt` | string (ISO-8601 UTC) | yes | Timestamp at which the notebook execution completed. |
+| `environment` | object | yes | Runtime the notebook actually executed against. MUST contain at least: `python` (string version, e.g., `"3.13.1"`) and `libraries` (object mapping library name to pinned version string, e.g., `{"pandas": "2.2.0", "requests": "2.31.0"}`). Additional sub-fields permitted under reverse-DNS sub-namespacing. |
+| `executionDuration_ms` | integer | yes | Wall-clock duration of the sandbox execution, milliseconds. Informational; not part of the trust property. |
+| `sandboxId` | string | optional | Opaque identifier for the execution substrate run. Informational; not part of the trust property. The OES does NOT specify the sandbox provider; this field carries provider-specific telemetry without naming a provider in mandatory shape (see [Q28](open-questions.md#q28--sandbox-provider-lock-in-vs-portability-for-the-executed-notebook-path) on the portability question). |
+| `comparisonCellPresent` | boolean | optional | Defaults to `true` for new executions. When `true`, the executed notebook includes the appended "Comparison: original vs. current" cell described below. When `false`, the cell is absent (publishers MAY opt out in cases where extracting prominent metrics is infeasible). |
+
+The `extensions["org.civicaitools.environment"]` extension from §9.1.1 describes the runtime the package was *authored under*; `extensions["org.civicaitools.execution"]` describes the runtime an execution *actually ran in*. They coexist; an executed-path package carries both. A re-executor matches both blocks against their own environment to reason about whether re-execution outputs should match.
+
+##### Comparison-cell convention (executed notebooks, SHOULD)
+
+When `provenance == "executed"` and `comparisonCellPresent != false`, the executed notebook SHOULD include a final cell appended by the publisher's pipeline after sandbox execution and before signing. The cell embeds the prominent numeric/dataframe values from the original execution as Python literals and re-computes the same values on re-execution against live data. The intent is that a re-executor of the notebook tomorrow sees both the original values (as constants in source code) and the current values (computed at re-execution time) and a printed delta, without any introspection of the notebook's own .ipynb file structure. The canonical shape is:
+
+```python
+# ORIGINAL VALUES (captured at executedAt = <ISO-8601 timestamp>)
+original = {
+    "<metric-name>": <literal value>,
+    ...
+}
+
+# CURRENT VALUES (re-computed against live data using the same helpers + queries above)
+current = recompute_key_metrics()
+
+# DELTAS
+for k in original:
+    delta = (current[k] - original[k]) if isinstance(original[k], (int, float)) else (original[k], current[k])
+    print(f"{k}: original={original[k]}, current={current[k]}, delta={delta}")
+```
+
+The "prominent metrics to capture" selection is at the publisher's discretion. Conformant publishers SHOULD use a deterministic heuristic (e.g., top-N values from the dataframes referenced by name in the synthesis cell) or an LLM-selected metric set, documented in their reference implementation. The cell is part of the signed notebook artifact and is covered by the package hash and signature.
+
+##### Reproducibility-property labeling convention (rendering surfaces, SHOULD)
+
+Rendering surfaces (the publisher's detail page, third-party renderers of the cross-host publication artifact, archive views) SHOULD frame the reproducibility property a package actually delivers using labels that name the property, not the internal versioning. Recommended labels:
+
+- `provenance == "executed"` → *"Executed notebook — answer derived from computed data; full re-execution reproducible against the documented runtime + upstream-data state at publish time."*
+- `provenance == "skeleton"` (or absent) → *"Skeleton notebook — answer authored in chat; data fetch reproducible but answer synthesis is not."*
+
+Labels are not normative wording; they SHOULD convey the property honestly without internal jargon ("v0", "pre-execution-architecture", etc.).
+
+##### Backwards compatibility
+
+Pre-ADR-0005 `datHere`-content-profile packages remain conformant. They omit both new fields; verifiers treat the omission as `provenance == "skeleton"` and recognize the absence of `extensions["org.civicaitools.execution"]` as consistent with that. The schema version stays at `0.1.0`. Surfaces rendering pre-ADR-0005 packages SHOULD use the skeleton label.
 
 ### 9.2 Cross-host publication: commitment-view schema
 
