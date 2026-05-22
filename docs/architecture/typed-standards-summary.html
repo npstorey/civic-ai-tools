@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typed Standards — summary</title>
+<style>
+:root {
+  --bg: #fafafa;
+  --bg-elev: #ffffff;
+  --bg-code: #f3f4f6;
+  --text: #1f2937;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #1e40af;
+  --accent-soft: #dbeafe;
+  --preamble-bg: #fef3c7;
+  --preamble-border: #d97706;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  max-width: 740px;
+  margin: 1.5rem auto 3rem;
+  padding: 0 1.5rem;
+}
+
+h1 {
+  font-size: 1.7rem;
+  margin: 0 0 0.25rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.lede strong { color: var(--accent); }
+
+.draft-note {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+h2 {
+  font-size: 0.78rem;
+  margin: 1rem 0 0.4rem;
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+p { margin: 0 0 0.6rem; line-height: 1.5; }
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82em;
+  background: var(--bg-code);
+  padding: 0.08em 0.35em;
+  border-radius: 3px;
+}
+
+ul, ol { margin: 0 0 0.6rem; padding-left: 1.3rem; }
+li { margin-bottom: 0.3rem; }
+li strong:first-child { color: var(--accent); }
+
+/* Two-column "What it is" */
+.dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+.dual h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+.dual ul { margin: 0; padding-left: 1.05rem; }
+.dual li { margin-bottom: 0.4rem; font-size: 0.86rem; line-height: 1.42; }
+
+/* Normative preamble callout */
+.preamble {
+  background: var(--preamble-bg);
+  border-left: 5px solid var(--preamble-border);
+  padding: 0.7rem 1rem 0.75rem;
+  margin: 0.9rem 0 1rem;
+  border-radius: 0 6px 6px 0;
+}
+.preamble-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--preamble-border);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.preamble ul { list-style: none; padding: 0; margin: 0; }
+.preamble li {
+  margin: 0.18rem 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.preamble li strong { color: var(--preamble-border); }
+
+/* Build-state dots (legend + status bullets) */
+.dot {
+  display: inline-block;
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
+  margin-right: 0.4em;
+  vertical-align: 0.05em;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.dot-built { background: #86efac; border-color: #166534; }
+.dot-partial { background: #fde68a; border-color: #92400e; }
+.dot-reserved { background: #fdba74; border-color: #9a3412; }
+
+/* Architecture diagram */
+figure.diagram {
+  margin: 0.4rem auto 0.5rem;
+  padding: 0.4rem 0.6rem 0.4rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  page-break-inside: avoid;
+  text-align: center;
+}
+figure.diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+figure.diagram figcaption {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+figure.diagram-trust {
+  max-width: 5.6in;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Adjacent-standards table */
+table.adjacent {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin: 0 0 0.5rem;
+}
+table.adjacent td {
+  text-align: left;
+  padding: 0.32rem 0.55rem 0.32rem 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.4;
+}
+table.adjacent td:first-child {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  width: 28%;
+  padding-right: 0.75rem;
+}
+
+/* Status + engagement two-column */
+.status-engage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+.status-engage h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+.status-engage ul { margin: 0; padding-left: 1.05rem; }
+.status-engage li {
+  margin-bottom: 0.32rem;
+  font-size: 0.83rem;
+  line-height: 1.42;
+}
+
+footer {
+  margin-top: 1.25rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ===== Print ===== */
+@media print {
+  @page { margin: 0.55in; }
+  body {
+    background: white;
+    color: #000;
+    font-size: 10pt;
+    line-height: 1.4;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  h1 { color: #000; font-size: 17pt; margin-bottom: 0.15rem; }
+  h2 {
+    color: #000;
+    font-size: 8.5pt;
+    page-break-after: avoid;
+    margin: 0.6rem 0 0.25rem;
+  }
+  figure.diagram { margin: 0.2rem auto 0.3rem; padding: 0.25rem 0.4rem 0.2rem; }
+  figure.diagram-trust { max-width: 4.2in; }
+  p { margin: 0 0 0.45rem; }
+  .preamble { margin: 0.5rem 0 0.65rem; padding: 0.55rem 0.9rem 0.6rem; }
+  .lede { font-size: 10pt; }
+  .lede strong, li strong:first-child { color: #000; }
+  .draft-note { color: #555; font-size: 8.5pt; }
+  .dual h3, .status-engage h3 { color: #444; }
+  figure.diagram { border-color: #ccc; }
+  figure.diagram figcaption { color: #555; }
+  .preamble {
+    background: #fef3c7;
+    border-left-color: #d97706;
+    page-break-inside: avoid;
+  }
+  .preamble-title { color: #b45309; }
+  table.adjacent { page-break-inside: avoid; font-size: 9pt; }
+  table.adjacent td { border-bottom-color: #ddd; }
+  code { background: #f0f0f0; }
+  .status-engage li, .dual li { font-size: 9pt; line-height: 1.35; }
+  .status-engage li, .dual li { margin-bottom: 0.22rem; }
+  footer { color: #555; }
+}
+
+/* Narrow viewport */
+@media (max-width: 640px) {
+  .dual, .status-engage { grid-template-columns: 1fr; gap: 0.5rem; }
+  body { padding: 0 1rem; }
+}
+</style>
+</head>
+<body>
+
+<h1>Typed Standards</h1>
+<p class="lede">An open standard for <strong>production-process attestation</strong> of analytical artifacts: a cryptographically signed, content-addressed, capture-method-labeled record of <em>how</em> an artifact was produced, verifiable by a third party who does not trust the publisher.</p>
+<p class="draft-note">Internal working draft (pre-v0.1) — not a stable spec; sections marked <em>reserved</em> are proposed, not implemented.</p>
+
+<h2>The problem</h2>
+<p>Trust in analytical claims today is mediated by brand — investigative journalism, academic publishing, civic-data analysis, audit work product. AI-assisted analysis breaks the implicit-labor-attestation assumption: a chart that used to take an analyst a week can now be produced in minutes by anyone, and brand-mediated trust becomes increasingly orthogonal to whether the analysis is sound. Typed Standards' response is to make the production process itself the unit of attestation — not <em>is this true</em>, but <em>here, in cryptographic detail, is how this was produced; judge for yourself</em>.</p>
+
+<h2>What it is</h2>
+<div class="dual">
+<div>
+<h3>Opinionated about</h3>
+<ul>
+<li><strong>Envelope.</strong> Ed25519ph signature over SHA-256-addressed canonical JSON, RFC 3161 timestamp from a public TSA, Sigstore Rekor inclusion proof, trust registry under the publisher's own well-known path.</li>
+<li><strong>Capture-method discipline.</strong> Every package declares <em>how</em> its content was captured in a signature-covered field — verbatim wire vs. JSONL readback vs. paraphrased self-report. Future methods extend the vocabulary; the discipline holds.</li>
+<li><strong>Typed-node ontology</strong> <em>(partly reserved).</em> Content (<code>claim</code> / <code>question</code> / <code>evidence</code> / <code>untyped</code>), hosts, tools/methods, and attestations are all typed nodes; each gets the envelope and its own sub-typing rules. QEC content is the most developed sub-ontology today; host, tool, and attestation typing are reserved. Signatures from different parties — individuals, hosts, certifications, other attesting nodes — layer on these nodes rather than collapsing into a single authority.</li>
+</ul>
+</div>
+<div>
+<h3>Deliberately silent about</h3>
+<ul>
+<li><strong>Truth.</strong> The signature attests publication, not correctness. Editorial review, fact-checking, replication, and adversarial evaluation ride alongside as separately-signed attestations.</li>
+<li><strong>Editorial policy.</strong> Publishers set their own filters, audiences, sign-off processes. The standard does not gate publication on topic or viewpoint.</li>
+<li><strong>Topology.</strong> Publishers publish at their own domains. The standard is indifferent to any central host, federation substrate, or coordination protocol beyond an optional indexing registry that does not host or gatekeep.</li>
+</ul>
+</div>
+</div>
+
+<div class="preamble" role="note" aria-label="Normative preamble">
+<div class="preamble-title">The normative preamble — every implementation MUST carry this</div>
+<ul>
+<li><strong>Corroboration ≠ truth.</strong> Consensus can be wrong.</li>
+<li><strong>Contradiction ≠ falsity.</strong> The heretic is sometimes right.</li>
+<li><strong>Identity strength ≠ topic authority.</strong> A credentialed outsider can be wrong; a pseudonymous insider can be right.</li>
+<li><strong>The system surfaces signals; the consumer applies judgment.</strong></li>
+</ul>
+</div>
+
+<h2>Architecture</h2>
+<figure class="diagram">
+<svg id="tsdiag-summary-arch" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 1361.55px; background-color: transparent;" viewBox="0 0 1361.546875 270" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#tsdiag-summary-arch{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#tsdiag-summary-arch .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#tsdiag-summary-arch .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#tsdiag-summary-arch .error-icon{fill:#552222;}#tsdiag-summary-arch .error-text{fill:#552222;stroke:#552222;}#tsdiag-summary-arch .edge-thickness-normal{stroke-width:1px;}#tsdiag-summary-arch .edge-thickness-thick{stroke-width:3.5px;}#tsdiag-summary-arch .edge-pattern-solid{stroke-dasharray:0;}#tsdiag-summary-arch .edge-thickness-invisible{stroke-width:0;fill:none;}#tsdiag-summary-arch .edge-pattern-dashed{stroke-dasharray:3;}#tsdiag-summary-arch .edge-pattern-dotted{stroke-dasharray:2;}#tsdiag-summary-arch .marker{fill:#333333;stroke:#333333;}#tsdiag-summary-arch .marker.cross{stroke:#333333;}#tsdiag-summary-arch svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#tsdiag-summary-arch p{margin:0;}#tsdiag-summary-arch .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#tsdiag-summary-arch .cluster-label text{fill:#333;}#tsdiag-summary-arch .cluster-label span{color:#333;}#tsdiag-summary-arch .cluster-label span p{background-color:transparent;}#tsdiag-summary-arch .label text,#tsdiag-summary-arch span{fill:#333;color:#333;}#tsdiag-summary-arch .node rect,#tsdiag-summary-arch .node circle,#tsdiag-summary-arch .node ellipse,#tsdiag-summary-arch .node polygon,#tsdiag-summary-arch .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#tsdiag-summary-arch .rough-node .label text,#tsdiag-summary-arch .node .label text,#tsdiag-summary-arch .image-shape .label,#tsdiag-summary-arch .icon-shape .label{text-anchor:middle;}#tsdiag-summary-arch .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#tsdiag-summary-arch .rough-node .label,#tsdiag-summary-arch .node .label,#tsdiag-summary-arch .image-shape .label,#tsdiag-summary-arch .icon-shape .label{text-align:center;}#tsdiag-summary-arch .node.clickable{cursor:pointer;}#tsdiag-summary-arch .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#tsdiag-summary-arch .arrowheadPath{fill:#333333;}#tsdiag-summary-arch .edgePath .path{stroke:#333333;stroke-width:1px;}#tsdiag-summary-arch .flowchart-link{stroke:#333333;fill:none;}#tsdiag-summary-arch .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#tsdiag-summary-arch .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#tsdiag-summary-arch .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#tsdiag-summary-arch .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#tsdiag-summary-arch .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#tsdiag-summary-arch .cluster text{fill:#333;}#tsdiag-summary-arch .cluster span{color:#333;}#tsdiag-summary-arch div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#tsdiag-summary-arch .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#tsdiag-summary-arch rect.text{fill:none;stroke-width:0;}#tsdiag-summary-arch .icon-shape,#tsdiag-summary-arch .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#tsdiag-summary-arch .icon-shape p,#tsdiag-summary-arch .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#tsdiag-summary-arch .icon-shape .label rect,#tsdiag-summary-arch .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#tsdiag-summary-arch .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#tsdiag-summary-arch .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#tsdiag-summary-arch .node .neo-node{stroke:#9370DB;}#tsdiag-summary-arch [data-look="neo"].node rect,#tsdiag-summary-arch [data-look="neo"].cluster rect,#tsdiag-summary-arch [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#tsdiag-summary-arch [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#tsdiag-summary-arch [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#tsdiag-summary-arch [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#tsdiag-summary-arch [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#tsdiag-summary-arch [data-look="neo"].node circle .state-start{fill:#000000;}#tsdiag-summary-arch [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#tsdiag-summary-arch [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#tsdiag-summary-arch :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}#tsdiag-summary-arch .built&gt;*{fill:rgb(134, 239, 172)!important;stroke:rgb(22, 101, 52)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .built span{fill:rgb(134, 239, 172)!important;stroke:rgb(22, 101, 52)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .built tspan{fill:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .partial&gt;*{fill:rgb(253, 230, 138)!important;stroke:rgb(146, 64, 14)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .partial span{fill:rgb(253, 230, 138)!important;stroke:rgb(146, 64, 14)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .partial tspan{fill:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .reserved&gt;*{fill:rgb(253, 186, 116)!important;stroke:rgb(154, 52, 18)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .reserved span{fill:rgb(253, 186, 116)!important;stroke:rgb(154, 52, 18)!important;color:rgb(0, 0, 0)!important;}#tsdiag-summary-arch .reserved tspan{fill:rgb(0, 0, 0)!important;}</style><g><marker id="tsdiag-summary-arch_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"/></marker><marker id="tsdiag-summary-arch_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"/></marker><g class="root"><g class="clusters"/><g class="edgePaths"><path d="M245.047,83L249.214,83C253.38,83,261.714,83,269.38,83C277.047,83,284.047,83,287.547,83L291.047,83" id="tsdiag-summary-arch-L_ENV_META_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_ENV_META_0" data-points="W3sieCI6MjQ1LjA0Njg3NSwieSI6ODN9LHsieCI6MjcwLjA0Njg3NSwieSI6ODN9LHsieCI6Mjk1LjA0Njg3NSwieSI6ODN9XQ==" data-look="classic" marker-end="url(#tsdiag-summary-arch_flowchart-v2-pointEnd)"/><path d="M493.281,83L501.962,83C510.643,83,528.005,83,544.717,84.823C561.429,86.647,577.491,90.293,585.522,92.116L593.552,93.94" id="tsdiag-summary-arch-L_META_PROF_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_META_PROF_0" data-points="W3sieCI6NDkzLjI4MTI1LCJ5Ijo4M30seyJ4Ijo1NDUuMzY3MTg3NSwieSI6ODN9LHsieCI6NTk3LjQ1MzEyNSwieSI6OTQuODI1MTE1Mjg5MTA5NjJ9XQ==" data-look="classic" marker-end="url(#tsdiag-summary-arch_flowchart-v2-pointEnd)"/><path d="M1109.938,153L1114.104,153C1118.271,153,1126.604,153,1134.271,153C1141.938,153,1148.938,153,1152.438,153L1155.938,153" id="tsdiag-summary-arch-L_PROF_DX_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_PROF_DX_0" data-points="W3sieCI6MTEwOS45Mzc1LCJ5IjoxNTN9LHsieCI6MTEzNC45Mzc1LCJ5IjoxNTN9LHsieCI6MTE1OS45Mzc1LCJ5IjoxNTN9XQ==" data-look="classic" marker-end="url(#tsdiag-summary-arch_flowchart-v2-pointEnd)"/><path d="M486.82,223L496.578,223C506.336,223,525.852,223,543.64,221.177C561.429,219.353,577.491,215.707,585.522,213.884L593.552,212.06" id="tsdiag-summary-arch-L_REG_PROF_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_REG_PROF_0" data-points="W3sieCI6NDg2LjgyMDMxMjUsInkiOjIyM30seyJ4Ijo1NDUuMzY3MTg3NSwieSI6MjIzfSx7IngiOjU5Ny40NTMxMjUsInkiOjIxMS4xNzQ4ODQ3MTA4OTAzOH1d" data-look="classic" marker-end="url(#tsdiag-summary-arch_flowchart-v2-pointEnd)"/></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_ENV_META_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_META_PROF_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_PROF_DX_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(545.3671875, 223)"><g class="label" data-id="L_REG_PROF_0" transform="translate(-27.0859375, -12)"><foreignObject width="54.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>indexes</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="root" transform="translate(589.453125, 56.5)"><g class="clusters"><g class="cluster" id="tsdiag-summary-arch-PROF" data-look="classic"><rect style="" x="8" y="8" width="512.484375" height="177"/><g class="cluster-label" transform="translate(237.5546875, 8)"><foreignObject width="53.375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>Profiles</p></span></div></foreignObject></g></g></g><g class="edgePaths"/><g class="edgeLabels"/><g class="nodes"><g class="node default partial" id="tsdiag-summary-arch-flowchart-CP-2" data-look="classic" transform="translate(148.0234375, 96.5)"><rect class="basic label-container" style="fill:#fde68a !important;stroke:#92400e !important" x="-105.0234375" y="-51" width="210.046875" height="102"/><g class="label" style="color:#000 !important" transform="translate(-75.0234375, -36)"><rect/><foreignObject width="150.046875" height="72"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Content profiles<br />(Typed Claims,<br />Evidence, Questions)</p></span></div></foreignObject></g></g><g class="node default reserved" id="tsdiag-summary-arch-flowchart-PP-3" data-look="classic" transform="translate(394.265625, 96.5)"><rect class="basic label-container" style="fill:#fdba74 !important;stroke:#9a3412 !important" x="-91.21875" y="-51" width="182.4375" height="102"/><g class="label" style="color:#000 !important" transform="translate(-61.21875, -36)"><rect/><foreignObject width="122.4375" height="72"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Producer profiles<br />(e.g. AI-Assisted<br />Analysis)</p></span></div></foreignObject></g></g></g></g><g class="node default built" id="tsdiag-summary-arch-flowchart-ENV-0" data-look="classic" transform="translate(126.5234375, 83)"><rect class="basic label-container" style="fill:#86efac !important;stroke:#166534 !important" x="-118.5234375" y="-75" width="237.046875" height="150"/><g class="label" style="color:#000 !important" transform="translate(-88.5234375, -60)"><rect/><foreignObject width="177.046875" height="120"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Envelope spec<br />(crypto core:<br />sig + hash + timestamp +<br />Rekor + registry +<br />captureMethod)</p></span></div></foreignObject></g></g><g class="node default reserved" id="tsdiag-summary-arch-flowchart-META-1" data-look="classic" transform="translate(394.1640625, 83)"><rect class="basic label-container" style="fill:#fdba74 !important;stroke:#9a3412 !important" x="-99.1171875" y="-51" width="198.234375" height="102"/><g class="label" style="color:#000 !important" transform="translate(-69.1171875, -36)"><rect/><foreignObject width="138.234375" height="72"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Meta-ontology<br />(QEC content types<br />+ relations)</p></span></div></foreignObject></g></g><g class="node default reserved" id="tsdiag-summary-arch-flowchart-DX-4" data-look="classic" transform="translate(1256.7421875, 153)"><rect class="basic label-container" style="fill:#fdba74 !important;stroke:#9a3412 !important" x="-96.8046875" y="-39" width="193.609375" height="78"/><g class="label" style="color:#000 !important" transform="translate(-66.8046875, -24)"><rect/><foreignObject width="133.609375" height="48"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Domain extensions<br />(civic data = first)</p></span></div></foreignObject></g></g><g class="node default reserved" id="tsdiag-summary-arch-flowchart-REG-5" data-look="classic" transform="translate(394.1640625, 223)"><rect class="basic label-container" style="fill:#fdba74 !important;stroke:#9a3412 !important" x="-92.65625" y="-39" width="185.3125" height="78"/><g class="label" style="color:#000 !important" transform="translate(-62.65625, -24)"><rect/><foreignObject width="125.3125" height="48"><div style="color: rgb(0, 0, 0) !important; display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span style="color:#000 !important" class="nodeLabel"><p>Publisher registry<br />(index, not host)</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="tsdiag-summary-arch-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="tsdiag-summary-arch-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs></svg>
+<figcaption><span class="dot dot-built"></span>built · <span class="dot dot-partial"></span>partial · <span class="dot dot-reserved"></span>reserved (designed or proposed; not implemented)</figcaption>
+</figure>
+
+<h2>Relationship to adjacent standards</h2>
+<table class="adjacent">
+<tbody>
+<tr><td>Discourse Graphs</td><td>Source of the QEC pattern (claim-question-evidence), attributed to <strong>Joel Chan</strong> and the Discourse Graphs community; Typed Standards adopts it.</td></tr>
+<tr><td>Nanopublications</td><td>Closest semantic match for atomic signed claims with provenance; consuming Typed Standards content as nanopubs is a plausible bridge.</td></tr>
+<tr><td>W3C PROV-O</td><td>Used directly. Every package's provenance graph is PROV-O JSON-LD.</td></tr>
+<tr><td>W3C Verifiable Credentials</td><td>Adjacent. VC-over-MCP-tool-call receipts are a candidate trace-capture layer for the envelope's trace slot.</td></tr>
+<tr><td>Schema.org Claim / ClaimReview</td><td>Different problem (fact-check tagging vs. production-process attestation); ClaimReview-style attestations can coexist alongside packages.</td></tr>
+<tr><td>C2PA</td><td>Same idea applied to a different domain — cryptographic provenance for image and video capture and editing history.</td></tr>
+<tr><td>RO-Crate / WRROC</td><td>Candidate package container for the intended multi-file end-state; envelope mechanics are independent of the container choice.</td></tr>
+<tr><td>DCAT / open-data catalogs</td><td>A package's data-source references can cite DCAT-described distributions; an early engagement hook for catalog-portal interop (Croissant outbound metadata is the complementary direction).</td></tr>
+</tbody>
+</table>
+
+<h2>Status &amp; where to engage</h2>
+<div class="status-engage">
+<div>
+<h3>Status (high level)</h3>
+<ul>
+<li><span class="dot dot-built"></span><strong>Built:</strong> envelope (sig + hash + timestamp + Rekor), trust registry, captureMethod discipline, the <code>datHere</code> content profile, withdrawal lifecycle, PROV-O graphs, one OAuth-bound identity tier.</li>
+<li><span class="dot dot-partial"></span><strong>Specified, not built:</strong> Typed Claims Profile (formerly CCV) — claim shapes, confidence-method discipline, AnalyticalDerivation, the first domain extension (civic data).</li>
+<li><span class="dot dot-reserved"></span><strong>Reserved:</strong> typed-node ontology (QEC content + <code>untyped</code>; host / tool / attestation node families), producer profiles, publisher registry, full graded identity ladder. Offline verification is the intended end-state, not yet a property.</li>
+</ul>
+</div>
+<div>
+<h3>Where to engage</h3>
+<ul>
+<li><strong>Open-data catalog interop.</strong> DCAT-described data-source references; outbound Croissant metadata for discoverability via dataset crawlers.</li>
+<li><strong>Domain vocabularies.</strong> Typed-claim extensions beyond civic data — health, transit, public finance, environmental monitoring.</li>
+<li><strong>Implementer tooling.</strong> Reference verifiers, conformance test corpus, alternative producer profiles, non-OAuth identity bindings.</li>
+<li><strong>Federation substrate.</strong> Selection among candidate transports (atproto, KOI, nanopub).</li>
+</ul>
+</div>
+</div>
+
+<footer>
+Full proposal, diagrams, and architecture notes: <a href="typed-standards-proposal.html">typed-standards-proposal.html</a> &middot; Contact: [TK]
+</footer>
+
+</body>
+</html>
