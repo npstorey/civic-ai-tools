@@ -339,6 +339,82 @@ Each entry uses the following fields:
 - **Resolution criteria.** A real adopter (the Pittsburgh-arc integration partner is the most likely candidate) wanting to consume or produce a single artifact independent of its containing notebook; or an attestation-flow requirement that specifically needs to point at a chart-node by hash.
 - **Notes.** Deferred for now. Future ADR (placeholder ADR-0007 or later, numbering deferred to creation order) when motivation crystallizes. Connected to Q1 (package format) — a multi-file package form is the natural container for multi-node sets. Connected to Q11 / Q12 (attestations and typed claims as separate vs. unified) — a multi-node package interacts with how attestations are scoped (per-node vs. per-package).
 
+### Q34 — Adopt RFC 8785 JCS for unsigned-envelope canonical serialization?
+
+- **Status.** Open. Direction in place (yes, JCS); folds into the envelope-shape ADR cohort.
+- **Origin.** 2026-05-25 strategic memo (architecture-incorporation, output of the CAT ART strategic chat). Today's OES §5 implementation gap is well-known: canonicalization is "Node `JSON.stringify` insertion order, hope two implementations agree, no RFC 8785 JCS commitment." The strategic memo's contribution: canonicalization comes in two kinds — envelope-level (must be fixed in the spec; candidate: RFC 8785 JCS) and content-bundle-level (legitimately varies per content shape; lives in `contentCanonicalization` per Q36 and the future envelope-shape ADR).
+- **Stakes.** OES §5 (canonical JSON) directly; OES §6.1 (signature) indirectly (the signature commits to the canonical bytes); interop with any third-party verifier or alternative implementation.
+- **Current direction.** Yes, JCS. Question's role in the registry is to anchor the spec callout until the envelope-shape ADR ships.
+- **Resolution criteria.** Folded into the envelope-shape ADR (ADR-0007 candidate per the strategic memo's §5 sequencing) that lands `contentCanonicalization` + multihash `contentHash` as a paired cohort.
+
+### Q35 — Public-key location in the envelope (`sig` vs. `signer`) and verifier cross-check rule
+
+- **Status.** Open. Direction in place (key in `sig`, identity binding in `signer`, verifier MUST cross-check); folds into the unified typed-attestation primitive ADR.
+- **Origin.** 2026-05-25 strategic memo. The chat surfaced a missing one-sentence spec commitment: where exactly does the public key live in the envelope, and how does a verifier confirm it matches the identity binding? Without explicit text, an interop fork is plausible.
+- **Stakes.** OES §6.1 (signature mechanics); identity binding model (§8); verifier conformance.
+- **Current direction.** Public key lives in `sig` (the signature object, alongside `algorithm` and `kid`); identity binding lives in `signer` (the signer-identity object); verifier MUST cross-check that the `sig`-embedded `kid` resolves to the same identity that `signer` claims (via the trust registry). Prevents an attacker from attaching a valid-by-key signature with a mismatched identity claim.
+- **Resolution criteria.** Folded into the unified typed-attestation primitive ADR (anticipated alongside civic-ai-tools#70 work; per the strategic memo's §5 sequencing item 3).
+
+### Q36 — `attestation/*` sub-type collapse: regular family or structured hierarchy?
+
+- **Status.** **Resolution candidate in place** (flat regular family, with one finding — see candidate table below). Confirmed via the orchestrator chat's 2026-05-25 collapse table. Will land formally when the unified-primitive ADR drafts.
+- **Origin.** 2026-05-25 strategic memo §7 side-note: *"the side-by-side authorization-rule / content-shape table the chat suggested is the artifact that confirms the sub-relations are complete and minimal."* The memo flags this as a small exploration task that gates the unified-primitive ADR's framing.
+- **Stakes.** The unified typed-attestation primitive ADR (anticipated alongside civic-ai-tools#70). If sub-types factor as one regular family, the ADR lands `attestation/*` as a flat namespace of registered sub-types. If sub-types break the pattern, the ADR requires either a separate node family for the outliers or refinement of "what makes something an attestation."
+- **Current direction (candidate, ready for ratification by the unified-primitive ADR).** All candidate `attestation/*` sub-types factor as `(relation, authorization, content-shape)` over the same structural envelope — with **one important finding**: putative "host attestations" (`hostsSelfPolicy`, `hostsTermsOfUse`) actually want to be `content/*` nodes (`content/host/v1`, `content/hostPolicy/v1`), not `attestation/*` nodes, because a host declaring its own policy has no target node — there's nothing to assert *about* except itself. The two-family taxonomy's distinguishing rule (`content/*` = standalone assertion, `attestation/*` = assertion *about another node*) correctly forces this distinction.
+
+Candidate sub-type table (for the unified-primitive ADR to ratify or refine):
+
+| Sub-type | Relation kind | Authorization rule | Content shape (beyond standard envelope) |
+|---|---|---|---|
+| `attestation/withdraws/v1` | lifecycle (publisher → status: withdrawn) | publisher-only — signer must match target's publisher identity | `targetNodeId`, `reason` (optional), `effectiveAt` (defaults to envelope timestamp) |
+| `attestation/reinstates/v1` | lifecycle (publisher → status: active after withdrawn) | publisher-only | `targetNodeId`, `reason` (optional) |
+| `attestation/supersedes/v1` | lifecycle + claim-to-claim (old → new) | publisher-only (typically same publisher) | `targetNodeId` (old), `successorNodeId` (new) |
+| `attestation/publishes/v1` | lifecycle (committed → published; transitions visibility) | publisher-only OR delegated-publisher per Q20 | `targetNodeId`, `publicationHost`, `releasedAt` |
+| `attestation/locatedAt/v1` | location pointer (content available at URI) | anyone with identity binding | `targetNodeId`, `uri`, `contentHash`, optional `contentLength`, optional `availability` |
+| `attestation/corroborates/v1` | claim-to-claim agreement | anyone with identity binding | `targetNodeId`, `scope`, `reasoning` (optional) |
+| `attestation/contradicts/v1` | claim-to-claim disagreement | anyone with identity binding | `targetNodeId`, `scope`, `reasoning` (optional) |
+| `attestation/endorses/v1` | claim acceptance by authority-bearing party | host or other authority-bearing party | `targetNodeId`, `scope` |
+| `attestation/wasDerivedFrom/v1` | derivation pointer (PROV-O semantics) | the deriver | `targetNodeId` (source), `derivationMethod` |
+| `attestation/answersQuestion/v1` | claim → question pointer | the answerer | `targetNodeId` (question) |
+| `attestation/supportedBy/v1` | claim → evidence pointer | the asserting publisher | `targetNodeId` (evidence) |
+| `attestation/opposedBy/v1` | claim → evidence pointer | the asserting publisher | `targetNodeId` (evidence) |
+| `attestation/extractsTo/v1` | extraction pointer (untyped → typed) | the extractor | `targetNodeId` (source untyped), `extractionMethod` (model + prompt + scope) |
+| `attestation/certifies/v1` | tool/method authority-bearing | certifying body (specific role) | `targetNodeId` (tool/method), `certificationScheme`, `validityWindow` |
+| `attestation/evaluates/v1` | claim evaluation | evaluator with declared methodology + binding tier | `targetNodeId`, `methodology`, `scoringRubric`, `results` |
+| `attestation/conforms/v1` | claim conformance pointer | self-attestation OR third-party | `targetNodeId`, `standardId` |
+
+Corresponding **`content/*`** nodes that emerged from the collapse (NOT `attestation/*`):
+- `content/host/v1` — host identity declaration (the host's own identity claim)
+- `content/hostPolicy/v1` — host's general policy declaration
+- `content/hostTermsOfUse/v1` — host's general ToU declaration
+- `content/tool/v1` — a tool/method declaration by its author
+- `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — typed-content nodes per typed-standards-proposal §6
+- `content/analysis/v1` — untyped analysis (the current chat-flow output)
+
+- **Resolution criteria.** The unified-primitive ADR (anticipated alongside civic-ai-tools#70) ratifies the candidate table, refines any sub-types that warrant adjustment, and locks the namespace convention. Possible refinements not yet decided:
+  - Whether `extractsTo` and `wasDerivedFrom` are distinct sub-types or one with `extractionMethod` as a sub-shape variant
+  - Whether `endorses` and `corroborates` are distinct sub-types or one with authorization-rule variants
+  - Whether `replicates` (Q38 candidate) adds anything over `locatedAt` (memo + table both lean toward `locatedAt` suffices)
+- **Notes.** A future type-registry mechanism (Q37) governs how new sub-types get registered; Q37 stays Xanadu-gated until a second sector needs to register a new sub-type. The flat-namespace direction means new sub-types don't reorganize the hierarchy; they just add an entry.
+
+### Q37 — Type-registry mechanism and governance for the `content/*` and `attestation/*` namespaces
+
+- **Status.** Open. Xanadu-gated: don't promote until a second sector needs to register a new sub-type.
+- **Origin.** 2026-05-25 strategic memo §4: *"the chat's own Xanadu-gating recommendation — 'specifying the registry mechanism prematurely is the foundational-layer version of the over-design the doctrine exists to prevent.' Specify that types have URIs; don't specify how registration works until a second sector needs it."*
+- **Stakes.** typed-standards-proposal §6 / §3 (the typed-node architecture); the future cross-sector adoption story; long-term governance posture for the standard.
+- **Current direction.** Sub-type URIs are open enums extensible by ADRs naming the motivating adopter. The mechanism for "registering" a new sub-type (URL convention, repository of record, content-hash, governance body) is unspecified at v0.1.
+- **Resolution criteria.** A second sector needs to register a sub-type AND the implementation path requires the mechanism. Most likely trigger: an external adopter's pipeline needs a sub-type that doesn't exist in the current vocabulary, AND a coherent SDK/verifier ecosystem requires consistent registration across implementations.
+- **Notes.** Strictly Xanadu-gated. Specifying the registry mechanism is "the foundational-layer version of the over-design the doctrine exists to prevent."
+
+### Q38 — Dedicated `copyOf` relation vs. multiple `locatedAt` attestations
+
+- **Status.** Resolved-on-arrival (direction in place: `locatedAt` suffices; "durable independent copy" is implied by `(signer, URI-authority)`); registered so the question doesn't re-surface as a feature request without the reasoning being visible.
+- **Origin.** 2026-05-25 strategic memo §3 / §4.
+- **Stakes.** The location-as-attestation pattern in the future visibility/lifecycle/location ADR (anticipated alongside civic-ai-tools#71); the attestation namespace's regularity (per Q36 collapse table).
+- **Current direction.** Multiple `attestation/locatedAt/v1` attestations from different signers (or from different URI-authorities for the same signer) sufficiently express "the content has independent durable copies." A dedicated `copyOf` relation adds nothing structural — the (signer, URI-authority) pair already differentiates copies, and the location-as-attestation pattern naturally accommodates backup hosts emitting their own location-attestations.
+- **Resolution criteria.** Confirmed by the visibility/lifecycle/location ADR's adoption of the location-as-attestation pattern. Marked resolved at that point.
+- **Notes.** Registered for visibility per the strategic memo's recommendation: "Worth registering so the question doesn't re-surface as a feature request without the reasoning being visible."
+
 ---
 
 ## Resolution log
