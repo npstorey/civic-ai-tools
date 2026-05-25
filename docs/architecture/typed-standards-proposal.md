@@ -76,13 +76,15 @@ flowchart TB
 
 ## 4. What's in the envelope
 
-The envelope mechanics are content-agnostic; the content slot is swappable per content profile.
+The envelope mechanics are content-agnostic; the content slot is swappable per content profile. Canonicalization comes in two kinds (per the 2026-05-25 strategic memo §3 finding #1, formalized by [ADR-0007](../adr/0007-content-canonicalization.md) + [ADR-0008](../adr/0008-multihash-content-hash.md)): **envelope-level** canonicalization is a single fixed rule (RFC 8785 JCS) committed to by the spec; **content-level** canonicalization legitimately varies per content shape and is named by the envelope's `contentCanonicalization` URI field. The envelope-hash (SHA-256 over JCS-canonicalized unsigned envelope) is what the signature covers; the multihash `contentHash` field fingerprints the off-log content per the named rule and is itself embedded in (and therefore covered by) the envelope.
 
 ```mermaid
 flowchart TB
     subgraph ENV["Envelope (content-agnostic)"]
-        HASH["SHA-256 content hash<br/>over canonical JSON"]:::built
-        SIG["Ed25519ph signature<br/>over package hash"]:::built
+        ENVH["Envelope hash<br/>(SHA-256 of JCS-canonicalized<br/>unsigned envelope)"]:::partial
+        HASH["Multihash contentHash<br/>(sha256 required + sha3-256 / blake3 alts;<br/>over canonical content per<br/>contentCanonicalization rule)"]:::partial
+        CANON["contentCanonicalization URI<br/>(names content-level<br/>canonicalization rule)"]:::reserved
+        SIG["Ed25519ph signature<br/>over envelope-hash hex string"]:::built
         TS["RFC 3161 trusted timestamp<br/>from public TSA"]:::built
         REK["Sigstore Rekor entry<br/>+ inclusion proof"]:::built
         CM["captureMethod label<br/>(in canonical JSON, signed)"]:::built
@@ -99,12 +101,15 @@ flowchart TB
         OTHER["Host · Tool/method · Attestation<br/>(reserved node families)"]:::reserved
     end
 
+    CONT -.canonicalized per.-> CANON
     CONT --> HASH
-    SIG -.covers.-> HASH
-    TS -.covers.-> HASH
-    REK -.indexes.-> HASH
-    CM -.signed by.-> SIG
-    CTL -.signed by.-> SIG
+    HASH -.embedded in.-> ENVH
+    CANON -.embedded in.-> ENVH
+    CM -.embedded in.-> ENVH
+    CTL -.embedded in.-> ENVH
+    SIG -.covers.-> ENVH
+    TS -.covers.-> ENVH
+    REK -.indexes.-> ENVH
     PROV -.about.-> CONT
     TR -.captures.-> CONT
 
@@ -113,7 +118,7 @@ flowchart TB
     classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
 ```
 
-Today the content slot carries an AI-assisted civic-data analysis (prompt, queries, outputs, costs, skill metadata, optional notebook under the `datHere` content profile). The proposed restructure treats that content as **a set of typed content blocks**, with a new `metadata.contentType` field carrying the set of QEC values present — drawn from `claim`, `question`, `evidence`, or `untyped`. The most common shape is `["claim"]`; a claim that explicitly carries the question it answers is `["claim", "question"]`; raw assistant output not yet processed against any content profile is `["untyped"]`. `untyped` is mutually exclusive with the typed values. Per-block requirements (provenance, confidence, scope, AnalyticalDerivation for claims) do not relax when the set has more than one member — a multi-type package is several conformant typed blocks side-by-side, not a looser format. The envelope's hash, signature, timestamp, transparency-log entry, capture-method label, contentType label, provenance graph, and trace bind whatever typed node is inside; the envelope mechanics do not change when the node type or content shape changes (host, tool/method, and attestation node families are reserved alongside the content family — see §6).
+Today the content slot carries an AI-assisted civic-data analysis (prompt, queries, outputs, costs, skill metadata, optional notebook under the `datHere` content profile). The proposed restructure treats that content as **a set of typed content blocks**, with a new `metadata.contentType` field carrying the set of QEC values present — drawn from `claim`, `question`, `evidence`, or `untyped`. The most common shape is `["claim"]`; a claim that explicitly carries the question it answers is `["claim", "question"]`; raw assistant output not yet processed against any content profile is `["untyped"]`. `untyped` is mutually exclusive with the typed values. Per-block requirements (provenance, confidence, scope, AnalyticalDerivation for claims) do not relax when the set has more than one member — a multi-type package is several conformant typed blocks side-by-side, not a looser format. The envelope's hash, signature, timestamp, transparency-log entry, capture-method label, contentType label, contentCanonicalization URI, multihash content hash, provenance graph, and trace bind whatever typed node is inside; the envelope mechanics do not change when the node type or content shape changes (host, tool/method, and attestation node families are reserved alongside the content family — see §6). Different content shapes vary the `contentCanonicalization` URI; the envelope-level JCS commitment is invariant.
 
 ---
 
