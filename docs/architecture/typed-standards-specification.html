@@ -300,7 +300,7 @@
 <li>8.4 Trace capture</li>
 <li>8.5 Identity binding</li>
 <li>8.6 captureMethod</li>
-<li>8.7 datHere content profile</li>
+<li>8.7 Content profile: datHere</li>
 <li>8.8 Cross-host publication: commitment-view schema</li>
 <li>8.9 Embed-vs-reference policy</li>
 <li>8.10 Lifecycle and location attestations</li>
@@ -972,7 +972,8 @@
 <p>A package’s signature attests that the package was published and has not been altered since. It does NOT attest that the package’s content matches what was actually generated in the original session — that property is structural and follows from the capture method. Surfaces SHOULD render the <code>captureMethod</code> label near the signature-verification verdict so readers do not conflate “signed” with “verbatim.”</p>
 <p>Pre-<a href="../adr/0003-evidence-capture-method.md">ADR-0003</a> packages persist with a <code>null</code> capture-method column on the database row. Surfaces SHOULD render these as <code>Unknown (pre-ADR-0003)</code> rather than defaulting to one of the listed values.</p>
 <p>Future AI-publishing surfaces (a hook-based path that records bytes at message-emission time, a third-party signed self-attestation, an MCP-host-agnostic capture protocol) extend the <code>ai-assisted-analysis</code> Producer Profile’s vocabulary by amending <strong>that profile’s guidance bundle</strong>, not by amending the specification’s core. The bundle’s amendment surface — versioning, distribution, content-addressing — is governed by <a href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q32</a>. Non-AI Producer Profiles (Human, Hybrid, Sandbox-only, future adopter profiles) declare their own captureMethod vocabularies in their respective guidance bundles when promoted from reserved to built per <a href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §1.</p>
-<h3 id="dathere-content-profile">8.7 datHere content profile</h3>
+<h3 id="content-profile-dathere">8.7 Content profile: datHere</h3>
+<p>Content profiles specify the normative requirements for packages produced under a particular Producer Profile subtype (per <a href="../adr/0006-producer-profile-architecture.md">ADR-0006</a>). They sit below the captureMethod layer (§8.6) — captureMethod names <em>how</em> content was captured; a content profile names <em>what additional fields the package must carry and how its content is structured</em>. The cross-host publication mechanism (§8.8) is the bridge that lets a content profile’s packages travel to hosts other than the producing host. v0.1 specifies one content profile — <code>datHere</code> — as the first realized subtype of the AI-Assisted Analysis Producer Profile. Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved per <a href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §1; their content profiles will be specified when promoted from reserved to built. The remainder of this section specifies the <code>datHere</code> content profile.</p>
 <blockquote>
 <p>⚠ <strong>Resolves <a href="open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod">Q21</a> (canonical notebook format for the datHere content profile). Specified by <a href="../adr/0004-dathere-captureMethod-variant.md">ADR-0004</a>.</strong></p>
 </blockquote>

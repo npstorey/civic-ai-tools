@@ -72,7 +72,7 @@ Citation conventions for this specification appear in Appendix A.
    - 8.4 Trace capture
    - 8.5 Identity binding
    - 8.6 captureMethod
-   - 8.7 datHere content profile
+   - 8.7 Content profile: datHere
    - 8.8 Cross-host publication: commitment-view schema
    - 8.9 Embed-vs-reference policy
    - 8.10 Lifecycle and location attestations
@@ -647,7 +647,9 @@ Pre-[ADR-0003](../adr/0003-evidence-capture-method.md) packages persist with a `
 
 Future AI-publishing surfaces (a hook-based path that records bytes at message-emission time, a third-party signed self-attestation, an MCP-host-agnostic capture protocol) extend the `ai-assisted-analysis` Producer Profile's vocabulary by amending **that profile's guidance bundle**, not by amending the specification's core. The bundle's amendment surface — versioning, distribution, content-addressing — is governed by [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention). Non-AI Producer Profiles (Human, Hybrid, Sandbox-only, future adopter profiles) declare their own captureMethod vocabularies in their respective guidance bundles when promoted from reserved to built per [ADR-0006](../adr/0006-producer-profile-architecture.md) §1.
 
-### 8.7 datHere content profile
+### 8.7 Content profile: datHere
+
+Content profiles specify the normative requirements for packages produced under a particular Producer Profile subtype (per [ADR-0006](../adr/0006-producer-profile-architecture.md)). They sit below the captureMethod layer (§8.6) — captureMethod names *how* content was captured; a content profile names *what additional fields the package must carry and how its content is structured*. The cross-host publication mechanism (§8.8) is the bridge that lets a content profile's packages travel to hosts other than the producing host. v0.1 specifies one content profile — `datHere` — as the first realized subtype of the AI-Assisted Analysis Producer Profile. Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved per [ADR-0006](../adr/0006-producer-profile-architecture.md) §1; their content profiles will be specified when promoted from reserved to built. The remainder of this section specifies the `datHere` content profile.
 
 > ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for the datHere content profile). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
 
