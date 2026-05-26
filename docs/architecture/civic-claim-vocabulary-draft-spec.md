@@ -1,8 +1,25 @@
 ---
-Status: Internal working draft (pre-v0.1)
+Status: Historical snapshot — frozen 2026-05-26
 Last updated: 2026-05-01
 Maintainer: [TK: leave as placeholder]
 ---
+
+> **Historical snapshot — frozen 2026-05-26.**
+>
+> Canonical text now lives at [`typed-standards-specification.md`](typed-standards-specification.md) §8.11 (Typed Claims) and Appendix B (worked example). The CCV claim shapes (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim), confidence-method discipline, scope taxonomy, AnalyticalDerivation, falsifiability requirement, anti-patterns, and extension mechanism are absorbed into the consolidated specification per [ADR-0012](../adr/0012-typed-standards-consolidation.md), with the `ccv:` prefix renamed to `ts:` and the namespace URI moved from `https://civicaitools.org/ns/civic-claim-vocabulary/v1#` to `https://typedstandards.org/ns/ts#`. The legacy namespace URI continues to resolve as an alias for backwards-compatibility; a future deprecation is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology). Specifically:
+>
+> - §1 Purpose and scope → typed-standards-specification.md §8.11.1
+> - §2 Design principles → §8.11.2
+> - §3 Package integration → §8.11.3 (substantively reframed around `content/claim/v1` signed nodes per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §8 Q11/Q12 closure — typed claims are first-class signed nodes, not companion files)
+> - §4 Civic Claim Vocabulary (namespace, reused vocabularies, core class, scope, confidence, AnalyticalDerivation) → §8.11.4 (with `ts:` prefix)
+> - §5 Core claim types → §8.11.5
+> - §6.1-§6.2 Extension mechanism → §8.11.6 (§6.3 governance dropped as pre-mature per Q10)
+> - §7 Worked example → Appendix B
+> - §8 Anti-patterns and prohibitions → §8.11.7
+>
+> §9 (Open questions for review) and §10 (Reactions invited) were draft-stage commentary that did not carry forward into the consolidated specification.
+>
+> Body preserved verbatim per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §4 for historical cross-reference accuracy. New implementations should reference §8.11 of the consolidated specification instead. The "Internal working draft" status callout and the 2026-05-25 ADR-0009 reframe status note below reflect the file's state at the times they were authored; they are not the file's current state.
 
 > **Status: Internal working draft, pre-v0.1. Not for external review.**
 >

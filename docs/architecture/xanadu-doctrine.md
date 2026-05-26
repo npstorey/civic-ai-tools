@@ -41,7 +41,7 @@ The following **do not** satisfy:
 - An external party expressing curiosity about whether the project supports the Civic Claim Vocabulary.
 - An ADR being drafted (drafting an ADR is *itself* downstream of the gate passing, not a substitute for it).
 
-While the gate has not fired, the `content/claim/v1` sub-type and the CCV draft stay in research-doc / draft-spec form only. The Civic Claim Vocabulary domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
+While the gate has not fired, the `content/claim/v1` sub-type stays reserved name-only per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 with its normative requirements absorbed into [typed-standards-specification.md](typed-standards-specification.md) §8.11 (the former CCV draft is preserved as a frozen historical snapshot per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §4). The Civic Claim Vocabulary domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
 
 ### Worked example: `attestation/*` sub-types for upstream-evidence relations (formerly drafted as `upstream-evidence.json`)
 
