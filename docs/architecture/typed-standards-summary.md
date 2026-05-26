@@ -1,6 +1,6 @@
 ---
-Status: Internal working draft (pre-v0.1) — leave-behind summary
-Last updated: 2026-05-22
+Status: v0.1 Working Draft — open for external review (leave-behind summary)
+Last updated: 2026-05-26
 Maintainer: [TK: leave as placeholder]
 Companion: typed-standards-specification.md (full version)
 ---
@@ -9,7 +9,7 @@ Companion: typed-standards-specification.md (full version)
 
 An open standard for **production-process attestation** of analytical artifacts: a cryptographically signed, content-addressed, capture-method-labeled record of *how* an artifact was produced, verifiable by a third party who does not trust the publisher.
 
-*Internal working draft (pre-v0.1) — not a stable spec; sections marked reserved are proposed, not implemented.*
+*v0.1 Working Draft — open for external review (review window to be scheduled). Sections marked reserved are specified-but-not-built; see Status & where to engage below for the current breakdown.*
 
 ---
 
@@ -89,7 +89,7 @@ Color: green = built · yellow = partial · orange = reserved (designed or propo
 ### Status (high level)
 
 - **Built:** envelope (sig + hash + timestamp + Rekor), trust registry, captureMethod discipline, the `datHere` content profile, withdrawal lifecycle, PROV-O graphs, one OAuth-bound identity tier.
-- **Specified, not built:** Typed Claims Profile (formerly CCV) — claim shapes, confidence-method discipline, AnalyticalDerivation, the first domain extension (civic data).
+- **Specified, not built:** Typed Claims layer (formerly the Civic Claim Vocabulary draft; absorbed into the consolidated specification §8.11 with `ts:` namespace prefix per [ADR-0012](../adr/0012-typed-standards-consolidation.md)) — claim shapes (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim), confidence-method discipline, AnalyticalDerivation, the first domain extension (civic data geographic-scope taxonomy).
 - **Reserved:** typed-node ontology (QEC content + `untyped`; host / tool / attestation node families), producer profiles, publisher registry, full graded identity ladder. Offline verification is the intended end-state, not yet a property.
 
 ### Where to engage

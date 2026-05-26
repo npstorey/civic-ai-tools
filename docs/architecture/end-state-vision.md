@@ -558,8 +558,8 @@ Open questions affecting the architecture and standards are tracked in [`civic-a
 - [Q32 — Producer Profile guidance-doc routing convention](open-questions.md#q32--producer-profile-guidance-doc-routing-convention). Bundle-routing mechanism for per-profile guidance; deferred to future ADR.
 - [Q33 — Visualizations as their own evidence nodes](open-questions.md#q33--visualizations-and-other-analytical-artifacts-as-their-own-evidence-nodes-multi-node-per-query). Worth exploring; not ready for ADR.
 - [Q37 — Type-registry mechanism](open-questions.md#q37--type-registry-mechanism-and-governance-for-the-content-and-attestation-namespaces). Xanadu-gated: don't specify until a second sector needs to register a new sub-type.
-- [Q39 — Consolidate OES + CCV into typed-standards-proposal](open-questions.md#q39--consolidate-oes--ccv-into-typed-standards-proposalmd-as-a-single-rfc-ready-spec). Future-planned ADR + spec restructure; gated on MVP cohort completion + RFC-public readiness.
-- [Q40 — Pre-adoption research for typedstandards.org rename + namespace prefix](open-questions.md#q40--pre-adoption-research-for-typedstandardsorg-rename--namespace-prefix-selection-ts-vs-tss-vs-alternatives). Research-required-before-trigger; gated on Q39's consolidation work.
+
+Resolved 2026-05-25 by [ADR-0012](../adr/0012-typed-standards-consolidation.md) (the OES + CCV consolidation cohort): [Q39](open-questions.md#q39--consolidate-oes--ccv-into-typed-standards-proposalmd-as-a-single-rfc-ready-spec) (OES + CCV consolidation into the single Typed Standards specification document) and [Q40](open-questions.md#q40--pre-adoption-research-for-typedstandardsorg-rename--namespace-prefix-selection-ts-vs-tss-vs-alternatives) (pre-adoption research for typedstandards.org domain + `ts:` namespace prefix selection + `/.well-known/typed-publisher.json` well-known path).
 
 For the full Q1-Q40 registry with stakes, current direction, and resolution criteria per question, see [`open-questions.md`](open-questions.md).
 

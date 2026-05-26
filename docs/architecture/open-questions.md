@@ -8,7 +8,7 @@ Maintainer: [TK: leave as placeholder]
 
 This is the canonical home for unresolved decisions affecting the project's architecture and standards. Questions land here first; some get worked on directly, some get promoted to GitHub issues, some get deferred. The registry is the durable record — issues come and go, this list persists until the underlying question is resolved.
 
-The registry exists to keep the architecture documents (`end-state-vision.md`, `open-evidence-standard.md`, `civic-claim-vocabulary-draft-spec.md`, the ADRs) honest. When a spec section asserts behavior that depends on an unresolved question, that section gets a callout pointing here, and the question carries the spec section's stake forward.
+The registry exists to keep the architecture documents (`end-state-vision.md`, `typed-standards-specification.md` (the consolidated canonical spec per [ADR-0012](../adr/0012-typed-standards-consolidation.md); the former `open-evidence-standard.md` + `civic-claim-vocabulary-draft-spec.md` drafts are preserved as frozen historical snapshots), the ADRs) honest. When a spec section asserts behavior that depends on an unresolved question, that section gets a callout pointing here, and the question carries the spec section's stake forward.
 
 ## Schema for entries
 

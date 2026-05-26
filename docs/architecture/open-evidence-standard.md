@@ -1,8 +1,31 @@
 ---
-Status: Internal working draft (pre-v0.1)
+Status: Historical snapshot — frozen 2026-05-26
 Last updated: 2026-05-01
 Maintainer: [TK: leave as placeholder]
 ---
+
+> **Historical snapshot — frozen 2026-05-26.**
+>
+> Canonical text now lives at [`typed-standards-specification.md`](typed-standards-specification.md). The OES envelope mechanics, definitions, package structure, cryptographic envelope, trace capture, identity binding, captureMethod, datHere content profile, commitment-view schema, lifecycle / location attestations, typed-claims pointer (now realized via absorbed Civic Claim Vocabulary body), verification properties, federation, `attestation/*` namespace, and conformance sections are absorbed into the consolidated specification per [ADR-0012](../adr/0012-typed-standards-consolidation.md). Specifically:
+>
+> - §3 Definitions → typed-standards-specification.md §6.2 (Glossary)
+> - §4 Evidence package structure → §8.1
+> - §5 Canonical JSON, envelope hash, content hash → §8.2
+> - §6 Cryptographic envelope → §8.3 (well-known path renamed `evidence-public-keys.json` → `typed-publisher.json`; legacy path served in parallel indefinitely)
+> - §7 Trace capture → §8.4
+> - §8 Identity binding → §8.5
+> - §9 captureMethod + §9.1 datHere + §9.2 commitment-view + §9.3 embed-vs-reference → §8.6, §8.7, §8.8, §8.9
+> - §10 Lifecycle and location attestations → §8.10
+> - §11 Typed claims (pointer) → §8.11 (with the absorbed Civic Claim Vocabulary body)
+> - §12 Upstream evidence references → §8.12.5 (the retired layer; obsoleted by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §8)
+> - §13 Verification properties → §9 (Conformance) + §10 (Security Considerations) + §11 (Privacy Considerations)
+> - §14 Federation and discoverability → §8.13
+> - §15 `attestation/*` namespace → §8.12
+> - §16 Conformance → §9
+> - §17 Revision history → Appendix G
+> - §18 Related documents → Appendix H
+>
+> Body preserved verbatim per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §4 for historical cross-reference accuracy: existing ADRs (0003-0011) cite OES sections at the numbers and content state they were written against. New implementations and new ADRs should reference the consolidated specification instead. The "Internal working draft" status callout below reflects the file's state at the time it was being authored; it is not the file's current state.
 
 > **Status: Internal working draft, pre-v0.1. Not for external review.**
 >
