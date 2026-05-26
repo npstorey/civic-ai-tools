@@ -24,28 +24,28 @@ The doctrine is a **gate**, not a vibe. Three things change when an item passes 
 
 If any of those three is missing, the gate has not been passed and the item stays where it was.
 
-### Worked example: `claims.jsonld`
+### Worked example: `content/claim/v1` typed-claim nodes (formerly drafted as `claims.jsonld`)
 
-Today, `claims.jsonld` (the optional file in evidence packages containing typed claims that conform to the Civic Claim Vocabulary + zero or more domain extensions) is **designed, not built**. A v0.1 draft spec exists at `civic-ai-tools/docs/architecture/civic-claim-vocabulary-draft-spec.md`. No code generates `claims.jsonld`. No published evidence package contains one.
+Today, the `content/claim/v1` sub-type — typed-claim signed nodes per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7, with claim shapes (TrendClaim, ComparisonClaim, ObservationClaim, etc.) per the Civic Claim Vocabulary draft spec at `civic-ai-tools/docs/architecture/civic-claim-vocabulary-draft-spec.md` — is **specified (taxonomy registered), not built**. The sub-type URI is reserved name-only; no code generates `content/claim/v1` nodes; no published evidence package contains one. (The earlier draft framing positioned the same artifact as a `claims.jsonld` companion file inside an evidence package; [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §8 retires that carrier shape and replaces it with first-class signed nodes — the CCV draft spec remains authoritative for the claim shapes themselves.)
 
-The next gate is **designed → built**. The criterion that would fire it: at minimum one real adopter package whose verification or claim queries are blocked without `claims.jsonld`. Concretely, any of the following would satisfy:
+The next gate is **specified → built**. The criterion that would fire it: at minimum one real adopter package whose verification or claim queries are blocked without typed-claim emission. Concretely, any of the following would satisfy:
 
-- A published evidence package whose author wants to assert structured trend or comparison claims that prose alone cannot make machine-comparable, and who is willing to author the file.
-- An external collaborator with a published civic-data infrastructure project committing to consume typed claims from civic-ai-tools packages as part of a named integration, where the integration cannot proceed without typed claims existing.
-- A `guidance-quality` issue surfacing a real failure mode that typed claims would resolve (e.g., a published package whose unstructured claims could not be corroborated against a competing package's claims, blocking a meta-analysis the project committed to).
+- A published evidence package whose author wants to assert structured trend or comparison claims that prose alone cannot make machine-comparable, and who is willing to emit the corresponding `content/claim/v1` nodes — together with the `attestation/wasDerivedFrom/v1` extraction-attestation carrying an `AnalyticalDerivation` payload (per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a) + [ADR-0006](../adr/0006-producer-profile-architecture.md) §4, the classification-laundering guard that ensures unstructured output silently typed loses no audit trail).
+- An external collaborator with a published civic-data infrastructure project committing to consume `content/claim/v1` nodes from civic-ai-tools packages as part of a named integration, where the integration cannot proceed without typed-content emission.
+- A `guidance-quality` issue surfacing a real failure mode that typed-content emission would resolve (e.g., a published package whose unstructured claims could not be corroborated against a competing package's claims, blocking a meta-analysis the project committed to).
 
 The following **do not** satisfy:
 
 - A funder conversation in which typed claims came up as interesting.
-- A self-imposed sense that the spec feels incomplete without `claims.jsonld` shipping.
+- A self-imposed sense that the spec feels incomplete without typed-content emission shipping.
 - An external party expressing curiosity about whether the project supports the Civic Claim Vocabulary.
 - An ADR being drafted (drafting an ADR is *itself* downstream of the gate passing, not a substitute for it).
 
-While the gate has not fired, `claims.jsonld` stays in research-doc / draft-spec form only. The Civic Claim Vocabulary domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
+While the gate has not fired, the `content/claim/v1` sub-type and the CCV draft stay in research-doc / draft-spec form only. The Civic Claim Vocabulary domain-extensions portfolio doc (proposed in `civic-ai-tools-website/docs/proposed-issues/003-civic-claim-vocabulary-domain-extensions-portfolio.md`) is permitted because it is itself a research-doc — it scopes what extensions would look like, but does not implement any. The extensions portfolio is also gated by this doctrine: each extension passes its own gate independently.
 
-### Worked example: `upstream-evidence.json`
+### Worked example: `attestation/*` sub-types for upstream-evidence relations (formerly drafted as `upstream-evidence.json`)
 
-Same shape as `claims.jsonld` — designed, not built, no real package needs it yet. The gate is the same: a real package must depend on declaring an `upstream-evidence` relationship (`derived_from`, `compares_to`, `extends`, `replicates`, `contradicts`, `evaluates`) for verification or downstream consumption. Re-test when an adopter or a `guidance-quality` issue surfaces a concrete need.
+Same shape as the typed-claim example. The upstream-evidence relation vocabulary (`derived_from`, `compares_to`, `extends`, `replicates`, `contradicts`, `evaluates`) maps to specific `attestation/*` sub-types per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 — e.g., `derived_from` → `attestation/wasDerivedFrom/v1`; `corroborates` / `contradicts` → `attestation/corroborates/v1` / `attestation/contradicts/v1`; `evaluates` → `attestation/evaluates/v1`. The sub-types are **specified (taxonomy registered)** at the taxonomy level; operationalization per sub-type lands in downstream ADRs (the lifecycle/location subset is operationalized per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md); the adversarial-eval subset lands in a future ADR per [open-questions.md](open-questions.md) Q25 + Q26). The gate to "built" for any given sub-type remains the same: at minimum one real package must depend on emitting a specific upstream-evidence relation as an `attestation/*` node for verification or downstream consumption. (The earlier draft framing positioned this work as an `upstream-evidence.json` companion file with embedded relations; [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §8 retires the companion-file shape — relations are separately-signed `attestation/*` nodes referencing targets by `nodeId`.) Re-test per sub-type when an adopter or a `guidance-quality` issue surfaces a concrete need.
 
 ---
 
