@@ -254,7 +254,11 @@ flowchart TB
  classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
 ```
 
-**How to read.** The structural primitive is the layer with most implementation today — it is the bulk of what the existing OES specifies plus the small additions the structural primitive introduces (`type` URI field, `signer` identity-binding object, formal articulation that `nodeId` ≡ envelope hash, verifier cross-check rules for `sig.kid` ↔ `signer.identifier`). The two-family taxonomy — `content/*` (standalone assertions) and `attestation/*` (assertions about another node identified by `nodeId`) — is specified over the same structural primitive, demoting the prior four-families-as-peers framing (content / hosts / tools / attestations) to two families plus the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) sub-type table; hosts, tools, and certifying bodies fold in as sub-types of one of the two families rather than peer families. `content/analysis/v1` is the first built `content/*` sub-type (the legacy and `datHere` shapes both map to it); the other `content/*` sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`, and the host / tool sub-types) are reserved. The `attestation/*` sub-type taxonomy is specified (the Q36 ratified table); operationalization per sub-type (the withdrawal-lifecycle implementation, the location-as-attestation implementation, the publication-record flow, the adversarial-eval requirement model) lands via downstream ADRs from the Pittsburgh-arc cohort. Content profiles (typed-content carriers — Typed Claims / Typed Evidence / Typed Questions) are partially built: the Typed Claims Profile is drafted (§8.11), the other two reserved name-only; under the two-family framing they are `content/*` sub-types. Producer profiles moved from reserved to **specified**: the AI-Assisted Analysis Producer Profile is the first one drafted, with a subtype/flavor model so different adopters' conventions are filterable (visualization stack, citation format, entity normalization, synthesis style, confidence-scoring methodology live in subtype-specific guidance bundles rather than in the envelope). The `ai-assisted-analysis/datHere` subtype is the first built realization. Future profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only; each lands in its own ADR with the motivating adopter named. Domain extensions specialize a content profile for a domain; civic data analysis (Neighborhood Tabulation Areas, community districts, the rest of the civic-scope taxonomy) is the first domain extension.
+**How to read.** The structural primitive at the bottom is the cryptographic core: every signed node carries the same envelope shape. The two-family taxonomy — `content/*` (standalone assertions) and `attestation/*` (assertions about another node) — sits over that primitive; sub-types within each family are an open enum extensible per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table.
+
+Producer profiles and content profiles are two independent axes describing *who/how produced the package* and *what shape the content takes*. v0.1 specifies the `ai-assisted-analysis/datHere` subtype; Human / Hybrid / Sandbox-only profile types are reserved pending real adopters.
+
+Domain extensions specialize a content profile for a subject domain; civic data analysis is the first.
 
 ### 7.2 Envelope
 
@@ -334,8 +338,6 @@ sequenceDiagram
 
 ### 7.4 Two-family taxonomy — one structural primitive, content/* and attestation/*
 
-> **.** This section reflects the unified typed-attestation primitive ratified 2026-05-25: one structural envelope underlies every signed node in the system; two top-level type families (`content/*` and `attestation/*`) sit over the primitive; sub-types are flat-namespace registered URIs per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table. The earlier framing (four families — content / hosts / tools-methods / attestations — as peers) is demoted: hosts, tools, and certifying bodies fold into sub-types of one of the two families, not as peer families. The QEC content sub-ontology (claim / question / evidence / untyped) is preserved as the most-developed `content/*` sub-area today; host, tool, and attestation sub-type operationalization is per-sub-type via downstream ADRs.
-
 **The structural primitive.** Every conformant signed node is a signed envelope over a typed payload, carrying the structural-primitive fields specified: a `type` URI (identifying the node's family + sub-type), a derived `nodeId` (the envelope hash by construction), a multihash `contentHash` (fingerprinting the off-log payload), a `contentCanonicalization` URI (naming the off-log content's canonicalization rule), a signature envelope (`sig` per §8.3.1 — public key + algorithm + kid), a `signer` object (identity binding), an RFC 3161 timestamp, a Sigstore Rekor inclusion proof, and the `metadata` object. Sub-type-specific payload fields live alongside the primitive at the canonical-JSON top level (for `content/analysis/v1`, that means `prompt` / `queries` / `output` / `trace` / etc.; for `attestation/*` sub-types, that means `targetNodeId` plus sub-type-specific fields).
 
 **Two top-level type families.** Every conformant signed node belongs to exactly one of two families, distinguished by the `type` URI's first path segment:
@@ -387,8 +389,6 @@ flowchart LR
 ```
 
 **Attribution.** The QEC pattern — claim, question, evidence as the three first-class content types of a discourse representation — is from **Joel Chan's Discourse Graphs work**. The Discourse Graphs community has developed and used QEC for several years as a structural representation of scholarly discourse. Typed Standards' adoption is structurally similar: QEC nodes are `content/*` sub-types; relations among them are separately-signed `attestation/*` nodes between content-addressed packages. The relations vocabulary is intentionally minimal — `wasDerivedFrom` is inherited from W3C PROV-O; `supportedBy` / `opposedBy` are the QEC primitives; `answersQuestion` ties a claim back to a question; `corroborates` / `contradicts` carry the existing claim-to-claim relations forward; `supersedes` carries claim versioning; all of them are `attestation/*` sub-types Domain extensions and producer profiles add domain-specific relations on top; the small core holds.
-
-**Untyped → typed is an attested extraction step.** Processing an `untyped` `content/analysis/v1` node into typed content (`content/claim/v1` / `content/question/v1` / `content/evidence/v1`) is itself a first-class analytical step that MUST be attested via a separately-signed `attestation/wasDerivedFrom/v1` node. The attestation's `targetNodeId` points at the source untyped node, and its `derivationMethod` MUST carry an `AnalyticalDerivation` describing the extraction (which model or process performed the classification, against what prompt, over which source span) per the refinement (a) MUST-carry rule. The rationale is the **classification-laundering guard**: unstructured output silently typed loses the audit trail, and the precision of the resulting types is then mistaken for the precision of the underlying analysis. `untyped` is the *input type to an attested extraction operation*, not a passive dumping ground.
 
 ---
 
@@ -516,7 +516,7 @@ Fields that live on the database row but not in the canonical package object (su
 
 A change to any in-package field — including a single character in `output`, a different `kid`, a different `captureMethod`, a different `contentCanonicalization` URI, or a different `contentHash` digest — produces a different envelope hash, which produces a different content-addressable URL and a different signature.
 
-> **Backwards-compatibility (normative).** pre-v0.1 packages were canonicalized via Node.js `JSON.stringify` with insertion-order key preservation, with no JCS commitment. The JCS commitment is a forward-looking spec requirement; pre-v0.1 packages remain verifiable under the legacy `JSON.stringify` rule. Verifiers MUST detect which rule applies: v0.1 packages emit `contentHash` as a multihash object in the canonical JSON and use JCS; pre-v0.1 packages have an external single-SHA-256 hex string (URL slug + DB row) and use `JSON.stringify`. The reference-implementation packager + verify-route's switch from `JSON.stringify` to JCS is a Phase 3 implementation item scheduled separately.
+> **Backwards-compatibility (normative).** Pre-v0.1 packages were canonicalized via Node.js `JSON.stringify` with insertion-order key preservation. They remain verifiable under that legacy rule; verifiers detect which rule applies by whether `contentHash` is embedded as a multihash object (v0.1 + JCS) or supplied as an external single-SHA-256 hex string (pre-v0.1 + `JSON.stringify`). The reference implementation's switch from `JSON.stringify` to JCS is a Phase 3 implementation item.
 
 ### 8.3 Cryptographic envelope
 
@@ -651,10 +651,6 @@ Future AI-publishing surfaces (a hook-based path that records bytes at message-e
 
 Content profiles specify the normative requirements for packages produced under a particular Producer Profile subtype. They sit below the captureMethod layer (§8.6) — captureMethod names *how* content was captured; a content profile names *what additional fields the package must carry and how its content is structured*. The cross-host publication mechanism (§8.8) is the bridge that lets a content profile's packages travel to hosts other than the producing host. v0.1 specifies one content profile — `datHere` — as the first realized subtype of the AI-Assisted Analysis Producer Profile. Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved; their content profiles will be specified when promoted from reserved to built. The remainder of this section specifies the `datHere` content profile.
 
-> ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for the datHere content profile).**
-
-> 📌 **Producer Profile reframe (2026-05-23).** This section's normative requirements stay verbatim; only the framing language is reframed. Under ADR-0006, the existing `datHere` content profile is the first realized subtype of the AI-Assisted Analysis Producer Profile — i.e., `producerProfile: "ai-assisted-analysis/datHere"`. The A-G envelope described below is a **production-process attestation shape**, not a content-shape variant; it lives inside the Producer Profile axis, not the Content Profiles axis (which is reserved for typed-content carriers — Typed Claims / Typed Evidence / Typed Questions). The `contentProfile` field is retained as a legacy alias for backwards-compatibility (consistency invariant per ADR-0006 §2).
-
 A `datHere`-content-profile package organizes its content as the **A-G envelope**, a profile over the existing top-level fields specified in §8.1. The envelope is a content profile, not a new container: the package remains the single canonical JSON object whose SHA-256-over-JCS-canonicalization is the envelope hash. A-G is the way a `datHere`-content-profile package's content is *organized for readers and cross-host publishing*; the top-level fields are still what gets hashed and signed.
 
 The A-G section-to-field mapping:
@@ -709,8 +705,6 @@ The signature attests that the notebook in section E has not been altered since 
 Skeleton and executed notebooks (§8.7.4) deliver the reproducibility property with different strengths: skeleton notebooks re-execute the data-fetch cells reproducibly but the answer-synthesis cell carries a hardcoded markdown answer that is not re-derived from cell outputs; executed notebooks deliver the property materially because every cell's output (including the synthesis cell) is computed at publish time, and the comparison-cell convention (§8.7.4) makes original-vs-current values legible to verifiers. Surfaces SHOULD render the property strength honestly per §8.7.4's labeling convention.
 
 #### 8.7.4 Notebook execution provenance and metadata
-
-> ⚠ **.**
 
 This section adds two protocol-level fields that discriminate how the notebook in section E was produced and, when the notebook was executed by the publisher's pipeline, what runtime environment produced its outputs. The two fields are independent of `captureMethod` (§8.6) and `contentProfile` (§8.1.1, §8.7) — they describe the *notebook authoring path*, a third orthogonal axis. The fields apply only when `metadata.contentProfile == "datHere"`; non-datHere content profiles ignore them.
 
@@ -768,13 +762,9 @@ Rendering surfaces (the publisher's detail page, third-party renderers of the cr
 - `provenance == "executed"` → *"Executed notebook — answer derived from computed data; full re-execution reproducible against the documented runtime + upstream-data state at publish time."*
 - `provenance == "skeleton"` (or absent) → *"Skeleton notebook — answer authored in chat; data fetch reproducible but answer synthesis is not."*
 
-**Backwards compatibility**
-
-pre-v0.1 `datHere`-content-profile packages remain conformant. They omit both new fields; verifiers treat the omission as `provenance == "skeleton"` and recognize the absence of `extensions["org.civicaitools.execution"]` as consistent with that. The schema version stays at `0.1.0`. Surfaces rendering pre-v0.1 packages SHOULD use the skeleton label.
+**Backwards compatibility.** Pre-v0.1 `datHere` packages without these notebook-extension fields remain conformant; verifiers treat the omission as `provenance == "skeleton"`.
 
 ### 8.8 Cross-host publication: commitment-view schema
-
-> ⚠ **.**
 
 A `datHere`-content-profile package MAY be published cross-host as a Jupyter notebook on a git host, as a multi-file commit with a sibling metadata file, or as future analogous content-addressable surfaces. In every case the published artifact carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
 
@@ -890,8 +880,6 @@ The rendered cell is purely a reader affordance. A reader who needs to verify th
 
 ### 8.9 Embed-vs-reference policy for cross-host publication
 
-> ⚠ **Resolves [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts).**
-
 The `attestations` array in the commitment view (§8.8) MAY contain entries in either of two forms. The same rules apply to both serializations defined in §8.8.
 
 **Reference form** is the default. A reference entry is a JSON object with the following fields:
@@ -925,7 +913,7 @@ The attestation-kind vocabulary itself is governed by §8.12 (the `attestation/*
 
 ### 8.10 Lifecycle and location attestations
 
-> **Reframed 2026-05-25.** This section is operationalized under the unified-primitive framing established: lifecycle events (withdrawals, reinstatements, supersessions, publications) are separately-signed `attestation/*` nodes referencing the target content node by `nodeId`, not DB-row columns on the target's storage. Location pointers (the publisher's URL where the content lives, plus any backup-host pointers) are separately-signed `attestation/locatedAt/v1` nodes. pre-v0.1 packages whose lifecycle state lives in the legacy DB columns remain verifiable; the reference implementation honors both representations for pre-v0.1 packages and emits attestation nodes for new packages.
+Lifecycle events (withdrawals, reinstatements, supersessions, publications) are separately-signed `attestation/*` nodes referencing the target content node by `nodeId`, not DB-row columns on the target's storage. Location pointers (the publisher's URL where the content lives, plus any backup-host pointers) are separately-signed `attestation/locatedAt/v1` nodes. Pre-v0.1 packages whose lifecycle state lives in the legacy DB columns remain verifiable; the reference implementation honors both representations for pre-v0.1 packages and emits attestation nodes for new packages.
 
 #### 8.10.1 Lifecycle as a chain of attestation nodes
 
@@ -968,13 +956,11 @@ A permanent record that a civic-data claim was made and later retracted is more 
 
 #### 8.10.4 Backwards compatibility for pre-v0.1 packages
 
-pre-v0.1 packages whose lifecycle state lives in the legacy DB columns (`withdrawnAt`, `withdrawnReason`, `withdrawalSignature`, `withdrawalTimestamp`, `reinstatedAt`, `reinstatedReason`, `reinstatementSignature`, `reinstatementTimestamp`) remain verifiable. Verifiers MUST honor the legacy columns as a deprecated-but-still-supported source of withdrawal/reinstatement state when no `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes are present for the target node.
-
-A one-time migration emitting equivalent attestation envelopes from the legacy columns is a Phase 3 implementation item Consequences; after migration, new packages do not write the legacy columns and the columns become read-only fallback for pre-migration state. The migration's spec target is "byte-identical lifecycle semantics expressed as attestation envelopes," not "schema-version bump"; the schema version stays at `0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec).
+Pre-v0.1 packages whose lifecycle state lives in legacy DB columns (`withdrawnAt` / `reinstatedAt` and related) remain verifiable; verifiers MUST honor the legacy columns when no `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes are present. A one-time migration to attestation envelopes is a Phase 3 implementation item; the schema version stays at `0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec).
 
 ### 8.11 Typed Claims
 
-> **Reframed 2026-05-25 (Q11 closure); absorbed into this specification from the prior Civic Claim Vocabulary draft.** Typed claims are `content/*` sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — under the two-family taxonomy ratified. The claim shapes specified in this section (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim) and their conformance requirements remain authoritative; the carrier is the signed node itself, not a `claims.jsonld` companion file. The historical CCV draft at [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) is preserved as a frozen snapshot.
+Typed claims are `content/*` sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — under the two-family taxonomy ratified. The claim shapes specified in this section (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim) and their conformance requirements remain authoritative; the carrier is the signed node itself, not a `claims.jsonld` companion file. The historical CCV draft at [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) is preserved as a frozen snapshot.
 
 > ⚠ **Subject to [Q5](open-questions.md#q5--claimsjsonld-and-upstream-evidencejson-implementation-timing) — typed-claim build-out timing.** Promotion of typed claims from "specified" to "built" is gated on a real adopter package whose verification or claim queries are blocked without the layer per the [Xanadu doctrine](xanadu-doctrine.md). The v0.1 `content/claim/v1` / `content/question/v1` / `content/evidence/v1` sub-types are reserved name-only until that adopter is identified; the spec text below is forward-compatible with the new framing.
 
@@ -984,19 +970,7 @@ The envelope (§8.1-§8.10) captures *how* an analysis was produced. The Typed C
 
 A **typed claim** is a structured assertion derived from analysis output and serialized as JSON-LD against the published Typed Standards vocabulary. Typed claims are intended to enable corpus-level operations — corroboration, contradiction detection, citation graphs, meta-analysis, drift surveillance — that are impractical against unstructured prose.
 
-This section defines:
-
-- The structure and required core fields of a typed claim
-- The Typed Standards Claim Vocabulary, a minimal set of claim shapes every claim conforms to
-- The extension mechanism for domain-specific vocabularies
-- The relationship between typed claims and the rest of a package (under the unified-primitive framing of §7.4-§7.5)
-- The translation provenance requirements for LLM-emitted claims
-
-This section does **not** define:
-
-- The full vocabulary of every civic domain (housing, transit, public health, etc.) — those live in extension vocabularies governed separately (see §8.11.6).
-- How the network layer ranks or surfaces claims — that is downstream of the specification.
-- Whether any specific claim is true — the specification surfaces structure, not truth, per the §5.1 preamble.
+This specification defines the structure of a typed claim, the Typed Standards Claim Vocabulary, the extension mechanism for domain-specific vocabularies, the relationship between typed claims and the rest of a package, and the translation provenance requirements for LLM-emitted claims. It does **not** define domain vocabularies (those live in extensions; see §8.11.6), network-layer ranking/surfacing of claims, or whether any specific claim is true — the specification surfaces structure, not truth, per the §5.1 preamble.
 
 #### 8.11.2 Design principles
 
@@ -1009,7 +983,7 @@ This section does **not** define:
 
 #### 8.11.3 Package integration
 
-Under the unified-primitive framing of §7.4, a typed claim is a **first-class signed node** — a `content/claim/v1` envelope with its own `nodeId`, signature, timestamp, transparency-log inclusion proof, and identity binding. It is not a companion file alongside a containing analysis. The earlier draft framing (a multi-file `claims.jsonld` inside an evidence-package directory) is retired; the carrier is the envelope itself.
+Under the unified-primitive framing of §7.4, a typed claim is a **first-class signed node** — a `content/claim/v1` envelope with its own `nodeId`, signature, timestamp, transparency-log inclusion proof, and identity binding. The carrier is the envelope itself, not a companion file alongside a containing analysis.
 
 A typical pattern for an AI-assisted analysis that emits typed claims:
 
@@ -1041,7 +1015,7 @@ The Typed Standards Claim Vocabulary is a controlled set of typed claim shapes e
 @prefix ts: <https://typedstandards.org/ns/ts#>
 ```
 
-This is the single normative prefix for the consolidated vocabulary It replaces the `ccv:` prefix used in the pre-consolidation Civic Claim Vocabulary draft (which bound to `https://civicaitools.org/ns/civic-claim-vocabulary/v1#`); the legacy URI continues to resolve as an alias for backwards-compatibility (vocabulary URIs are identifiers, not fetch targets; a future deprecation is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology)).
+This is the single normative prefix for the vocabulary. The legacy `ccv:` prefix from the pre-consolidation draft continues to resolve as an alias for backwards-compatibility; a future deprecation is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology).
 
 **Reused vocabularies.** The Typed Standards Claim Vocabulary does not redefine concepts that exist in widely-adopted vocabularies. It imports and references:
 
@@ -1182,59 +1156,16 @@ Under refinement (a), an `AnalyticalDerivation` payload is also a MUST-carry com
 
 #### 8.11.5 Core claim types
 
-The Typed Standards Claim Vocabulary ships with a small starter set of claim types. All extend `ts:Claim`. Each subclass adds typed properties beyond the core.
+The vocabulary ships with a small starter set of claim shapes. All extend `ts:Claim`; each adds typed properties beyond the core.
 
-**`ts:TrendClaim`.** A claim that some metric increased, decreased, or remained stable across two time periods within a scope.
-
-| Property | Type | Description |
+| Sub-type | Asserts | Additional required properties (beyond `ts:Claim`'s core) |
 |---|---|---|
-| `ts:metric` | URI | The measured quantity (ideally referencing an external vocabulary) |
-| `ts:baselinePeriod` | `time:Interval` | Earlier comparison period |
-| `ts:comparisonPeriod` | `time:Interval` | Later comparison period |
-| `ts:direction` | `ts:TrendDirection` | `Increase`, `Decrease`, or `NoSignificantChange` |
-| `ts:magnitude` | `ts:Magnitude` | Quantified change (absolute or percent) |
-
-**`ts:ComparisonClaim`.** A claim that two scopes differ on some metric within a single time period.
-
-| Property | Type | Description |
-|---|---|---|
-| `ts:metric` | URI | The compared quantity |
-| `ts:scopeA` / `ts:scopeB` | `ts:Scope` | The two scopes being compared |
-| `ts:relation` | `ts:ComparisonRelation` | `GreaterThan`, `LessThan`, `ApproximatelyEqual` |
-| `ts:magnitude` | `ts:Magnitude` | Quantified difference |
-
-**`ts:ObservationClaim`.** A claim that a metric had a specific value within a scope at a point in time. Maps directly onto `qb:Observation` from the W3C Data Cube vocabulary.
-
-| Property | Type | Description |
-|---|---|---|
-| `ts:metric` | URI | The observed quantity |
-| `ts:value` | numeric or `qb:Observation` | The observed value |
-| `ts:unit` | URI | Unit of measure (QUDT or UCUM reference) |
-
-**`ts:CompositionClaim`.** A claim about the breakdown of a population, budget, or count into components. Useful for budget analyses, demographic breakdowns, etc.
-
-| Property | Type | Description |
-|---|---|---|
-| `ts:whole` | `ts:Scope` | The aggregate being decomposed |
-| `ts:components` | `ts:Component`[] | Each component with its share |
-| `ts:totalsTo` | `xsd:decimal` | Sum of components (1.0 for proportions, total $ for budgets, etc.) |
-
-**`ts:RelationshipClaim`.** A claim about a statistical relationship (correlation, regression coefficient) between two metrics within a scope. Distinguished from causal claims, which the vocabulary does not include in v1.
-
-| Property | Type | Description |
-|---|---|---|
-| `ts:metricA` / `ts:metricB` | URI | The two metrics |
-| `ts:relationshipType` | URI | `Correlation`, `RegressionCoefficient`, `RankOrderAgreement`, etc. |
-| `ts:strength` | `xsd:decimal` | The estimated value (correlation coefficient, etc.) |
-
-**`ts:QualitativeClaim`.** A claim that does not reduce to a single numeric assertion — for example, characterizing a pattern, a procedural finding, or a typology. Permitted but flagged as qualitative; downstream processors may treat differently.
-
-| Property | Type | Description |
-|---|---|---|
-| `ts:assertion` | `xsd:string` | The qualitative claim in prose |
-| `ts:groundingMethod` | URI | How the claim was derived (`Pattern Recognition`, `Document Analysis`, `Comparative Synthesis`, etc.) |
-
-`ts:confidence` MAY be `ts:NotApplicable` for qualitative claims, with a required description.
+| `ts:TrendClaim` | a metric increased / decreased / remained stable across two time periods within a scope | `ts:metric` (URI; ideally referencing an external vocabulary); `ts:baselinePeriod` (`time:Interval`); `ts:comparisonPeriod` (`time:Interval`); `ts:direction` (`Increase` / `Decrease` / `NoSignificantChange`); `ts:magnitude` (`ts:Magnitude`; absolute or percent) |
+| `ts:ComparisonClaim` | two scopes differ on a metric within a single time period | `ts:metric` (URI); `ts:scopeA` + `ts:scopeB` (`ts:Scope`); `ts:relation` (`GreaterThan` / `LessThan` / `ApproximatelyEqual`); `ts:magnitude` (`ts:Magnitude`) |
+| `ts:ObservationClaim` | a metric had a specific value within a scope at a point in time; maps onto `qb:Observation` from the W3C Data Cube vocabulary | `ts:metric` (URI); `ts:value` (numeric or `qb:Observation`); `ts:unit` (URI; QUDT or UCUM reference) |
+| `ts:CompositionClaim` | a breakdown of a population, budget, or count into components (budget analyses, demographic breakdowns, etc.) | `ts:whole` (`ts:Scope`); `ts:components` (`ts:Component`[]); `ts:totalsTo` (`xsd:decimal`; 1.0 for proportions, total $ for budgets, etc.) |
+| `ts:RelationshipClaim` | a statistical relationship (correlation, regression coefficient) between two metrics within a scope; distinguished from causal claims (not in v1) | `ts:metricA` + `ts:metricB` (URI); `ts:relationshipType` (URI: `Correlation` / `RegressionCoefficient` / `RankOrderAgreement` / etc.); `ts:strength` (`xsd:decimal`) |
+| `ts:QualitativeClaim` | a claim that doesn't reduce to a single numeric assertion (pattern, procedural finding, typology) — permitted but flagged; downstream processors may treat differently | `ts:assertion` (`xsd:string`); `ts:groundingMethod` (URI: `Pattern Recognition` / `Document Analysis` / `Comparative Synthesis` / etc.). `ts:confidence` MAY be `ts:NotApplicable` with a required description. |
 
 #### 8.11.6 Extension mechanism
 
@@ -1261,7 +1192,7 @@ nyc-housing:RentStabilizationClaim
 
 **Extension registry.** A lightweight registry at the Typed Standards project's canonical URL lists known extension vocabularies, their maintainers, their version status, and their SHACL shape files. Inclusion is informational; it does not confer endorsement. The registry URL is reserved pending domain registration; consumers should consult the consolidated spec's canonical URL (§2) for the current registry location.
 
-Governance of the Typed Standards Claim Vocabulary itself — comment periods, versioning discipline, breaking-change protocol — is not in force at v0.1 and is deferred to [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology) (the full-ontology promotion path). Until that governance regime lands, vocabulary changes follow the working method's promotion path: registry → ADR → spec edit, with the motivating adopter named in the work that promotes the change.
+Governance of the vocabulary itself (versioning discipline, breaking-change protocol) is deferred to [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology) until the full-ontology promotion lands.
 
 #### 8.11.7 Anti-patterns and prohibitions
 
@@ -1334,21 +1265,6 @@ A verifier rendering a `content/*` node with referencing `attestation/*` nodes S
 - For lifecycle attestations (`withdraws`, `reinstates`, `publishes`, `supersedes`), surface the lifecycle state per §8.10.
 
 Operationalization of specific sub-types lands per-ADR on its own timeline. The withdrawal/reinstatement/supersession/publication lifecycle sub-types and the `attestation/locatedAt/v1` location sub-type are operationalized; the adversarial-eval requirement model lands in a future ADR anticipated from [civic-ai-tools#72](https://github.com/npstorey/civic-ai-tools/issues/72) per [Q25](open-questions.md#q25--adversarial-evaluation-requirement-strength-on-publication-records) + [Q26](open-questions.md#q26--valid-evaluator-definition-identity-binding--methodology-declaration); the host self-attestation pattern (host endorsements + host-policy-required gating) lands when a host-self-attestation adopter blocks per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape). The ratified Q36 sub-type table is the taxonomy backbone; individual sub-types operationalize on their own per-ADR timelines.
-
-#### 8.12.5 The retired upstream-evidence reference layer
-
-The pre-v0.1 reserved space for an `upstream-evidence.json` companion file is obsolete in the unified-primitive framing. Cross-package corroboration, citation graphs, and meta-analysis are expressed as separately-signed `attestation/*` nodes referencing targets by `nodeId`; no separate companion file is needed. The relation vocabulary maps directly to `attestation/*` sub-types:
-
-| Earlier upstream-evidence relation | `attestation/*` sub-type |
-|---|---|
-| `derived_from` | `attestation/wasDerivedFrom/v1` |
-| `compares_to` | `attestation/corroborates/v1` or `attestation/contradicts/v1` (per direction) |
-| `extends` | `attestation/wasDerivedFrom/v1` with `derivationMethod` indicating extension semantics |
-| `replicates` | `attestation/corroborates/v1` or `attestation/contradicts/v1` (a re-publication that ran the same analysis and got similar / different results) |
-| `contradicts` | `attestation/contradicts/v1` |
-| `evaluates` | `attestation/evaluates/v1` |
-
-Implementations needing cross-package corroboration emit separately-signed `attestation/*` nodes per the §8.12.1 sub-type table, not a separate `upstream-evidence.json` companion file. The companion-file design is retired without ever having been built.
 
 ### 8.13 Federation and discoverability
 
@@ -1707,45 +1623,11 @@ The mapping is provided for cross-spec readers' orientation. Implementations tha
 
 ### Appendix E. Implementation status snapshot (as of 2026-05-26)
 
-This appendix records which sections of the specification are built / specified / reserved in the reference implementation at `civic-ai-tools-website`. The snapshot is point-in-time; the specification's normative content is independent of any implementation's status.
+This appendix is a point-in-time snapshot of which spec sections are realized in the reference implementation at `civic-ai-tools-website`. The specification's normative content is independent of this status; the snapshot supports reviewer triage.
 
-**Built in the reference implementation:**
-
-- The cryptographic envelope (§8.3): Ed25519ph signature, SHA-256 canonical-JSON content-addressing, RFC 3161 timestamp from FreeTSA, Sigstore Rekor inclusion proof. Note: v0.1 JCS canonicalization + multihash `contentHash` are specified; the packager + verify-route switch from `JSON.stringify` to JCS is a Phase 3 implementation item.
-- Trust registry served at `/.well-known/evidence-public-keys.json` (the legacy path; the new path `/.well-known/typed-publisher.json` per §8.3.3 §3 is a Phase 3 implementation item; the JSON content is identical at both paths).
-- `captureMethod` discipline (§8.6): required-and-signed-at-publish, tamper-evident. The open-enum-at-core + per-profile vocabulary mechanism is specified; the publish-route's bundle-distribution-mechanism switch is a Phase 3 item gated on [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention).
-- `contentProfile` field (§8.1.1): `default` and `datHere` values; the A-G envelope per §8.7 with deterministic-reproducibility per §8.7.3 and cross-host commitment-view per §8.8.
-- The executed-notebook architecture per §8.7.4 (built via Vercel Sandbox + python3.13 + helper-function inlining).
-- Withdrawal and reinstatement lifecycle (§8.10) — currently as DB-row columns; the migration to `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes is a Phase 3 implementation item.
-- W3C PROV-O provenance graphs (§8.1.4) derived from trace at publish time.
-- Identity binding via GitHub OAuth (§8.5) — the weak tier of the graded ladder.
-
-**Specified but not built:**
-
-- The Typed Claims layer (§8.11) — `content/claim/v1` / `content/question/v1` / `content/evidence/v1` sub-types are reserved name-only; promotion is gated on a first typed-content producer per [Q5](open-questions.md#q5--claimsjsonld-and-upstream-evidencejson-implementation-timing).
-- The first domain extension — civic data analysis — drafted within §8.11.4 (geographic-scope subtypes). Not yet a separate document.
-- Producer Profile architecture: the `producerProfile` field, the subtype/flavor model, the legacy-alias relationship with `contentProfile`. Spec live; packager + route + bundle-endpoint plumbing that emits `producerProfile` is a Phase 3 implementation item.
-- AI-Assisted Analysis Producer Profile: the `datHere` subtype is the first realized subtype (built); `civicaitools-default` subtype is reserved name-only.
-- The unified typed-attestation primitive: one structural envelope, two top-level type families, `type` + `signer` + `nodeId` cross-check. Spec live; reference-implementation packager + verify-route emits the new fields as a Phase 3 implementation item.
-- Lifecycle and location attestations: attestation-envelope form. Spec live; reference-implementation migration from DB-row lifecycle columns is a Phase 3 item.
-- captureMethod-vocabulary distribution + [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention): the bundle-lookup mechanism. Spec lives at the verifier-disposition level (graceful degradation); bundle-distribution mechanism deferred.
-- The graded identity ladder beyond the weak tier (academic ID, DNS-bound institutional, notarized) — informative direction per §8.5; first non-GitHub tier gated on [Q3](open-questions.md#q3--first-non-github-identity-provider).
-
-**Specified (taxonomy registered; not yet built end-to-end):**
-
-- The `content/*` family: `content/analysis/v1` is **built** (the legacy and `datHere` content shapes both map to it via the implicit-type rule); typed-content sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`) are reserved name-only.
-- The `attestation/*` family: the v0.1 sub-type table per §8.12.1 is ratified; operationalization per sub-type lands in downstream ADRs ( for lifecycle/location; future ADRs for adversarial-eval and host-self-attestation).
-- The host node sub-family within `content/*` — `content/host/v1`, `content/hostPolicy/v1`, `content/hostTermsOfUse/v1` — reserved name-only per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape).
-- The tool / certifying-body node pattern: `content/tool/v1` (reserved); `attestation/certifies/v1` (URI registered).
-
-**Reserved (named, not specified):**
-
-- Typed Evidence Profile and Typed Questions Profile (the Typed Claims profile is the only one drafted).
-- Producer Profile types beyond AI-Assisted Analysis: **Human**, **Hybrid**, **Sandbox-only** (reserved name-only).
-- Producer Profile guidance-doc routing convention per [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention).
-- Visualizations and other analytical artifacts as their own evidence nodes (multi-node-per-query) per [Q33](open-questions.md#q33--visualizations-and-other-analytical-artifacts-as-their-own-evidence-nodes-multi-node-per-query).
-- Sandbox capture mechanism as a high-attestation entry in the `sandbox-only` Producer Profile's captureMethod vocabulary.
-- The publisher registry as an indexing-only coordination surface at `typedstandards.org`.
+- **Built:** the envelope (signing, timestamping, public transparency log, publisher-hosted trust registry); the capture-method discipline; the `datHere` content profile and its executed-notebook architecture; the withdrawal lifecycle (DB-column form today); provenance graphs; one identity tier (GitHub OAuth).
+- **Specified, not built:** the unified typed-attestation primitive + two-family taxonomy (`type` URI, `nodeId`, `signer` cross-check, the v0.1 `attestation/*` sub-type table); lifecycle/location attestation envelopes (reference-impl migration is a Phase 3 item); the Typed Claims layer at §8.11 — claim shapes, confidence-method discipline, AnalyticalDerivation, the civic-data geographic-scope taxonomy — gated on a first typed-content producer.
+- **Reserved:** other `content/*` sub-types (host / tool sub-shapes); other Producer Profile types (Human, Hybrid, Sandbox-only); the publisher registry as indexing-only coordination surface at typedstandards.org; richer identity tiers beyond GitHub (ORCID, did:web, notarized). Offline verification is the intended end-state, not yet a property.
 
 ### Appendix F. Open questions pointer
 
