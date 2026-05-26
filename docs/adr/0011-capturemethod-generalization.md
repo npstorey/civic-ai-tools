@@ -146,7 +146,7 @@ Each of these follows the **same pattern** ADR-0011 establishes here: the field 
 - [ADR-0009](0009-unified-typed-attestation-primitive.md) — the G2 unified-primitive cohort that established the principle that core is content-agnostic and structural. ADR-0011 is the same principle applied to captureMethod's value space.
 - [ADR-0010](0010-visibility-lifecycle-location-attestations.md) — the G3 visibility/lifecycle/location cohort, which operationalized the lifecycle/location subset of ADR-0009 §7. ADR-0011 is the smallest cohort in the same G1-G4 sequence per the 2026-05-25 strategic memo §5.
 - `civic-ai-tools/docs/architecture/open-evidence-standard.md` — §3 + §9 + §9.1.1 + §13.1 + §17 + §18 amended in the same commit that lands this ADR.
-- `civic-ai-tools/docs/architecture/typed-standards-proposal.md` — §8 (lines 242 + 272) amended in the same commit.
+- `civic-ai-tools/docs/architecture/typed-standards-specification.md` — §8 (lines 242 + 272) amended in the same commit.
 - `civic-ai-tools/docs/architecture/open-questions.md` — Q9 partial-resolution-for-captureMethod entry; Q7 clarifying note; Q32 one-line note about captureMethod-vocabulary-distribution as a sub-concern. All amended in the same commit.
 - `civic-ai-tools/docs/architecture/xanadu-doctrine.md` — gate satisfied; two named (neutrally) prospective adopters are blocked on the value-space generalization.
 - `civic-ai-tools/docs/architecture/working-method.md` — promotion path followed (Q9 / Q7 / Q32 registry updates in the same commit that drafts this ADR; the captureMethod field's value-space moves from "closed enum at core" to "open at core with per-profile vocabulary" per the working method's promotion conventions).

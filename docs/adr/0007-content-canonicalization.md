@@ -57,7 +57,7 @@ The legacy-default rule's normative content is the reference implementation's pr
 
 Two URIs are sufficient for v0.1: the existing reference-implementation behavior is captured under `legacy-json/v1`, and the existing datHere profile is captured under `dathere-ag-jupyter/v1`. Future content profiles, future revisions of either rule, and adopter-specific rules each mint their own URIs as ADRs land. The standard does not pre-allocate URIs; the registry mechanism for URI-namespace governance stays Xanadu-gated per [Q37](../architecture/open-questions.md#q37--type-registry-mechanism-and-governance-for-the-content-and-attestation-namespaces).
 
-The `typedstandards.org` host is the project's umbrella name from [`typed-standards-proposal.md`](../architecture/typed-standards-proposal.md) §3. The URIs identify rules; the typedstandards.org domain need not be operational as an HTTP host for the identifiers to function. If/when the domain becomes operational as a documentation surface (a separately-decided future spec promotion, currently reserved per typed-standards-proposal §3 / §8), the URIs naturally become resolvable; this ADR makes no commitment about that.
+The `typedstandards.org` host is the project's umbrella name from [`typed-standards-specification.md`](../architecture/typed-standards-specification.md) §3. The URIs identify rules; the typedstandards.org domain need not be operational as an HTTP host for the identifiers to function. If/when the domain becomes operational as a documentation surface (a separately-decided future spec promotion, currently reserved per typed-standards-proposal §3 / §8), the URIs naturally become resolvable; this ADR makes no commitment about that.
 
 ### 3. Verifier semantics — URI resolution to canonicalization rule
 
@@ -149,7 +149,7 @@ The split is durable through the project's evolution. As the package format evol
 - [ADR-0006](0006-producer-profile-architecture.md) — establishes the parallel-axis pattern (`contentProfile`, `producerProfile`) that this ADR's `contentCanonicalization` field follows in placement and signature-coverage convention.
 - [ADR-0008](0008-multihash-content-hash.md) — paired ADR. Specifies multihash `contentHash`, commits envelope-level canonicalization to RFC 8785 JCS, and updates signature mechanics. Lands in the same commit.
 - `civic-ai-tools/docs/architecture/open-evidence-standard.md` — §3, §4.1, §5, §13 amended in the same workflow.
-- `civic-ai-tools/docs/architecture/typed-standards-proposal.md` — §4 prose + mermaid amended in the same workflow.
+- `civic-ai-tools/docs/architecture/typed-standards-specification.md` — §4 prose + mermaid amended in the same workflow.
 - `civic-ai-tools/docs/architecture/open-questions.md` — Q34 → resolution log via ADR-0008; Q37 stays Xanadu-gated.
 - `civic-ai-tools/docs/architecture-incorporation-memo-2026-05-25.md` — strategic memo §3 finding #1 (two-kinds-of-canonicalization split); §5 sequencing item 1 specifies this G1 cohort.
 - `civic-ai-tools/docs/architecture/xanadu-doctrine.md` — gate satisfied: three named adopters blocked without the field.

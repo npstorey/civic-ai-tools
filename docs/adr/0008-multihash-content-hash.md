@@ -174,7 +174,7 @@ A verifier confirms the signature math by:
 - [ADR-0004](0004-dathere-captureMethod-variant.md) — defines the datHere content profile whose canonicalized bytes are fingerprinted by the new `contentHash`.
 - [ADR-0007](0007-content-canonicalization.md) — paired ADR. Names the off-log content's canonicalization rule URI; ADR-0008 fingerprints the result. Lands in the same commit.
 - `civic-ai-tools/docs/architecture/open-evidence-standard.md` — §3, §4.1, §5, §6.1, §13 amended in the same workflow.
-- `civic-ai-tools/docs/architecture/typed-standards-proposal.md` — §4 prose + mermaid amended in the same workflow.
+- `civic-ai-tools/docs/architecture/typed-standards-specification.md` — §4 prose + mermaid amended in the same workflow.
 - `civic-ai-tools/docs/architecture/open-questions.md` — Q34 resolved (link to §6 above); Q18 BLAKE3 candidate resolved (link to §2 above).
 - `civic-ai-tools/docs/architecture-incorporation-memo-2026-05-25.md` — strategic memo §3 finding #1 (JCS) + finding #2 (multihash); §5 sequencing item 1 specifies this G1 cohort.
 - [RFC 8785 — JSON Canonicalization Scheme (JCS)](https://www.rfc-editor.org/rfc/rfc8785).

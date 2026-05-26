@@ -2,7 +2,7 @@
 Status: Internal working draft (pre-v0.1) — leave-behind summary
 Last updated: 2026-05-22
 Maintainer: [TK: leave as placeholder]
-Companion: typed-standards-proposal.md (full version)
+Companion: typed-standards-specification.md (full version)
 ---
 
 # Typed Standards
@@ -101,4 +101,4 @@ Color: green = built · yellow = partial · orange = reserved (designed or propo
 
 ---
 
-Full proposal, diagrams, and architecture notes: [`typed-standards-proposal.md`](./typed-standards-proposal.md). Contact: [TK].
+Full specification, diagrams, and architecture notes: [`typed-standards-specification.md`](./typed-standards-specification.md). Contact: [TK].

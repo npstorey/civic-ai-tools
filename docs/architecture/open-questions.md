@@ -391,7 +391,7 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 
 - **Status.** Open. Xanadu-gated: don't promote until a second sector needs to register a new sub-type.
 - **Origin.** 2026-05-25 strategic memo §4: *"the chat's own Xanadu-gating recommendation — 'specifying the registry mechanism prematurely is the foundational-layer version of the over-design the doctrine exists to prevent.' Specify that types have URIs; don't specify how registration works until a second sector needs it."*
-- **Stakes.** typed-standards-proposal §6 / §3 (the typed-node architecture); the future cross-sector adoption story; long-term governance posture for the standard.
+- **Stakes.** typed-standards-specification §7.1 + §7.4 + §7.5 (the layered architecture + two-family taxonomy + QEC sub-ontology — the typed-node architecture); the future cross-sector adoption story; long-term governance posture for the standard.
 - **Current direction.** Sub-type URIs are open enums extensible by ADRs naming the motivating adopter. The mechanism for "registering" a new sub-type (URL convention, repository of record, content-hash, governance body) is unspecified at v0.1.
 - **Resolution criteria.** A second sector needs to register a sub-type AND the implementation path requires the mechanism. Most likely trigger: an external adopter's pipeline needs a sub-type that doesn't exist in the current vocabulary, AND a coherent SDK/verifier ecosystem requires consistent registration across implementations.
 - **Notes.** Strictly Xanadu-gated. Specifying the registry mechanism is "the foundational-layer version of the over-design the doctrine exists to prevent."
