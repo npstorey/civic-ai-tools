@@ -4,7 +4,7 @@ Spec name: Typed Standards Specification
 Version: v0.1
 License: CC BY 4.0
 Last updated: 2026-05-26
-Maintainer: [TK: leave as placeholder]
+Maintainer: Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 Canonical URL: [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 ---
 
@@ -22,7 +22,7 @@ This document consolidates the project's standards work — formerly the Open Ev
 **Spec name:** Typed Standards Specification
 **Version:** v0.1
 **License:** CC BY 4.0 (see §3; canonical citation form in Appendix A)
-**Maintainer:** [TK: leave as placeholder]
+**Maintainer:** Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 **Canonical URL:** [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 
 This document is an open-for-external-review working draft of the Typed Standards Specification. The substantive specification has stabilized through the G1-G4 MVP cohort ([ADR-0007](../adr/0007-content-canonicalization.md) through [ADR-0011](../adr/0011-capturemethod-generalization.md) in `civic-ai-tools/docs/adr/`); the OES + CCV consolidation into this single document is recorded in [ADR-0012](../adr/0012-typed-standards-consolidation.md). The v0.1 designation reflects that the specification is open for substantive external feedback; review-window dates and a comment-deadline are populated once initial conversations with reviewer organizations have set expectations. Until then, the specification lives at HEAD of `main`; reviewers cite against the consolidation-commit tag (`v0.2-typed-standards-rfc`) for stable reference.
