@@ -47,27 +47,21 @@ Every implementation MUST carry this:
 ## Architecture
 
 ```mermaid
-flowchart TB
+flowchart LR
     ENV["<b>Envelope</b><br/>signed · timestamped · transparency-logged<br/>(wraps the content)"]:::built
 
-    subgraph TYPED["Typed nodes (two-family taxonomy)"]
-        direction LR
-        CONTENT["content/*<br/>standalone assertions<br/>(analyses, claims,<br/>questions, evidence)"]:::partial
-        ATTEST["attestation/*<br/>assertions about another node<br/>(lifecycle, location,<br/>endorsement, evaluation)"]:::partial
-    end
+    CONTENT["<b>content/*</b><br/>standalone assertions<br/>(analyses, claims,<br/>questions, evidence)"]:::partial
+    ATTEST["<b>attestation/*</b><br/>assertions about another node<br/>(lifecycle, location,<br/>endorsement, evaluation)"]:::partial
 
-    subgraph DIMS["Three independent dimensions of typed content"]
-        direction LR
-        CP["Content profile<br/>(how the content is structured)<br/>datHere = v0.1"]:::partial
-        PP["Producer profile<br/>(who/how it was produced)<br/>AI-Assisted Analysis = v0.1"]:::partial
-        DX["Domain extension<br/>(which subject domain)<br/>civic data = first"]:::reserved
-    end
+    DIMS["<b>Three independent dimensions of typed content:</b><br/>· content profile — how the content is structured (datHere = v0.1)<br/>· producer profile — who/how it was produced (AI-Assisted Analysis = v0.1)<br/>· domain extension — which subject domain (civic data = first)"]:::partial
 
-    HOST["Hosts<br/>publish packages,<br/>set their own publishing policies"]:::reserved
-    REG["Registry<br/>indexes hosts and their policies<br/>(not a host; does not gatekeep)"]:::reserved
+    HOST["<b>Hosts</b><br/>publish packages,<br/>set their own publishing policies"]:::reserved
+    REG["<b>Registry</b><br/>indexes hosts and their policies<br/>(not a host; does not gatekeep)"]:::reserved
 
-    ENV --> TYPED
-    TYPED --> DIMS
+    ENV --> CONTENT
+    ENV --> ATTEST
+    CONTENT --> DIMS
+    ATTEST --> DIMS
     DIMS --> HOST
     REG -.indexes.-> HOST
 
@@ -77,6 +71,13 @@ flowchart TB
 ```
 
 Color: green = built · yellow = partial · orange = reserved (designed or proposed; not implemented).
+
+## What it enables
+
+Two deployment patterns that fall out of the envelope's structure:
+
+- **Commit now, publish later.** A publisher can sign a short commitment to a specific analysis — recording that the analysis exists and was determined by a particular time — without revealing the analysis content. Later, the publisher can release the analysis itself; verifiers can confirm the released content matches the earlier commitment. Useful for embargo workflows (release the data on a coordinated date), pre-publication peer review (share with reviewers under commitment before public release), and priority claims (prove the analysis existed by a certain date without revealing it).
+- **Share without hosting.** A signed envelope is self-contained and content-addressable: a publisher can produce a package and share it through any channel — email attachment, file transfer, a dataset bundle, decentralized storage — without operating a public web server. Verifiers need the publisher's domain to fetch the trust registry, but the package itself can travel independently.
 
 ## Relationship to adjacent standards
 
