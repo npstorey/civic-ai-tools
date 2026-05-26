@@ -12,7 +12,7 @@ Canonical URL: [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is re
 
 **Abstract.** Typed Standards is a content-agnostic open standard for **production-process attestation** of analytical artifacts: a cryptographically signed, content-addressed, capture-method-labeled record of *how* an artifact was produced, verifiable by a third party who does not trust the publisher. The standard specifies a cryptographic envelope (Ed25519ph signature over RFC 8785 JCS-canonicalized JSON; RFC 3161 trusted timestamp from a public TSA; Sigstore Rekor inclusion proof; trust registry under the publisher's own well-known path), a typed-node taxonomy of standalone assertions (`content/*`) and assertions about other nodes (`attestation/*`), a signature-covered capture-method discipline, and an extensible content-profile mechanism. The standard is deliberately silent about truth, editorial policy, and topology: corroboration is not truth; the system surfaces signals, the consumer applies judgment.
 
-This document consolidates the project's standards work — formerly the Open Evidence Standard (OES) at the envelope layer and the Civic Claim Vocabulary (CCV) at the typed-claims layer — under a single umbrella name and the `ts:` JSON-LD prefix, resolved to `https://typedstandards.org/ns/ts#`. The consolidation is recorded in [ADR-0012](../adr/0012-typed-standards-consolidation.md); the historical OES and CCV drafts remain in this directory as frozen snapshots for cross-reference accuracy.
+This document consolidates the project's standards work — formerly the Open Evidence Standard (OES) at the envelope layer and the Civic Claim Vocabulary (CCV) at the typed-claims layer — under a single umbrella name and the `ts:` JSON-LD prefix, resolved to `https://typedstandards.org/ns/ts#`. The consolidation is recorded; the historical OES and CCV drafts remain in this directory as frozen snapshots for cross-reference accuracy.
 
 ---
 
@@ -25,7 +25,7 @@ This document consolidates the project's standards work — formerly the Open Ev
 **Maintainer:** Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 **Canonical URL:** [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 
-This document is an open-for-external-review working draft of the Typed Standards Specification. The substantive specification has stabilized through the G1-G4 MVP cohort ([ADR-0007](../adr/0007-content-canonicalization.md) through [ADR-0011](../adr/0011-capturemethod-generalization.md) in `civic-ai-tools/docs/adr/`); the OES + CCV consolidation into this single document is recorded in [ADR-0012](../adr/0012-typed-standards-consolidation.md). The v0.1 designation reflects that the specification is open for substantive external feedback; review-window dates and a comment-deadline are populated once initial conversations with reviewer organizations have set expectations. Until then, the specification lives at HEAD of `main`; reviewers cite against the consolidation-commit tag (`v0.2-typed-standards-rfc`) for stable reference.
+This document is an open-for-external-review working draft of the Typed Standards Specification. The substantive specification has stabilized through the G1-G4 MVP cohort ; the OES + CCV consolidation into this single document is recorded. The v0.1 designation reflects that the specification is open for substantive external feedback; review-window dates and a comment-deadline are populated once initial conversations with reviewer organizations have set expectations. Until then, the specification lives at HEAD of `main`; reviewers cite against the consolidation-commit tag (`v0.2-typed-standards-rfc`) for stable reference.
 
 Conformance language follows [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) keywords (MUST, MUST NOT, SHOULD, MAY) when applied to normative requirements. Every normative requirement in this document corresponds either to a check enforced in the reference implementation at `civic-ai-tools-website` code today or to a settled Architectural Decision Record in `civic-ai-tools/docs/adr/`. Where neither holds, the section is labeled with a callout pointing at the relevant open question in [`open-questions.md`](open-questions.md).
 
@@ -50,53 +50,53 @@ Citation conventions for this specification appear in Appendix A.
 3. License
 4. Table of Contents
 5. Introduction
-   - 5.1 Normative preamble
-   - 5.2 The problem
-   - 5.3 What Typed Standards is
-   - 5.4 Project posture
-   - 5.5 Relationship to adjacent standards
+ - 5.1 Normative preamble
+ - 5.2 The problem
+ - 5.3 What Typed Standards is
+ - 5.4 Project posture
+ - 5.5 Relationship to adjacent standards
 6. Conventions and Terminology
-   - 6.1 Conformance keywords
-   - 6.2 Glossary
-   - 6.3 Disambiguated terms
+ - 6.1 Conformance keywords
+ - 6.2 Glossary
+ - 6.3 Disambiguated terms
 7. Architecture
-   - 7.1 Layered shape
-   - 7.2 Envelope
-   - 7.3 Verification flow
-   - 7.4 Two-family taxonomy — one structural primitive, content/* and attestation/*
-   - 7.5 The QEC sub-ontology within content/*
+ - 7.1 Layered shape
+ - 7.2 Envelope
+ - 7.3 Verification flow
+ - 7.4 Two-family taxonomy — one structural primitive, content/* and attestation/*
+ - 7.5 The QEC sub-ontology within content/*
 8. Normative specification
-   - 8.1 Evidence package structure
-   - 8.2 Canonical JSON, envelope hash, content hash
-   - 8.3 Cryptographic envelope
-   - 8.4 Trace capture
-   - 8.5 Identity binding
-   - 8.6 captureMethod
-   - 8.7 Content profile: datHere
-   - 8.8 Cross-host publication: commitment-view schema
-   - 8.9 Embed-vs-reference policy
-   - 8.10 Lifecycle and location attestations
-   - 8.11 Typed Claims
-   - 8.12 The attestation/* namespace
-   - 8.13 Federation and discoverability
+ - 8.1 Evidence package structure
+ - 8.2 Canonical JSON, envelope hash, content hash
+ - 8.3 Cryptographic envelope
+ - 8.4 Trace capture
+ - 8.5 Identity binding
+ - 8.6 captureMethod
+ - 8.7 Content profile: datHere
+ - 8.8 Cross-host publication: commitment-view schema
+ - 8.9 Embed-vs-reference policy
+ - 8.10 Lifecycle and location attestations
+ - 8.11 Typed Claims
+ - 8.12 The attestation/* namespace
+ - 8.13 Federation and discoverability
 9. Conformance
 10. Security Considerations
 11. Privacy Considerations
 12. IANA Considerations
 13. Internationalization Considerations
 14. References
-    - 14.1 Normative References
-    - 14.2 Informative References
+ - 14.1 Normative References
+ - 14.2 Informative References
 15. Appendices
-    - A. Citation conventions
-    - B. Worked example: typed claim
-    - C. Adjacent-standards comparison table
-    - D. C2PA-to-Typed-Standards term-translation table
-    - E. Implementation status snapshot (as of 2026-05-26)
-    - F. Open questions pointer
-    - G. Revision history
-    - H. Related documents
-    - I. Acknowledgments
+ - A. Citation conventions
+ - B. Worked example: typed claim
+ - C. Adjacent-standards comparison table
+ - D. C2PA-to-Typed-Standards term-translation table
+ - E. Implementation status snapshot (as of 2026-05-26)
+ - F. Open questions pointer
+ - G. Revision history
+ - H. Related documents
+ - I. Acknowledgments
 
 ---
 
@@ -134,7 +134,7 @@ Typed Standards is **opinionated about three things** and **deliberately silent 
 
 1. **The envelope.** Every conformant package carries an Ed25519ph signature over a SHA-256 content-addressed canonical JSON, an RFC 3161 trusted timestamp from a public TSA, and an inclusion proof on a public transparency log (Sigstore Rekor). The signing key is bound to a published trust registry under the publisher's own well-known path.
 2. **Capture-method discipline.** Every package declares, in a field covered by the canonical-JSON hash and therefore by the signature, *how* its content was captured. The label is structural and tamper-evident: a verifier can tell a verbatim wire-layer capture from a JSONL-layer readback from a paraphrased self-report. Future capture methods extend the vocabulary; the discipline holds.
-3. **The typed-node ontology** *(specified per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md); operationalization per sub-type via downstream ADRs).* Every conformant signed node is a signed envelope over a typed payload, drawn from **two top-level type families** that share a single structural primitive: **`content/*`** (standalone assertions; no `targetNodeId` on the payload — analyses, typed claims, questions, evidence records, host self-declarations, tool author declarations) and **`attestation/*`** (assertions about another node; `targetNodeId` required — lifecycle, reference, claim-to-claim, and authority-bearing relations). Hosts, tools, and certifying bodies fold in as sub-types of one of the two families per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table — not as peer families (the prior four-families framing is demoted per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7). Within `content/*`, the QEC sub-ontology — `metadata.contentType` set-valued across `claim` / `question` / `evidence` / `untyped` — is the most-developed sub-area today. Nodes can carry signatures from different parties — individuals, hosts, certifying bodies, third-party attesters — and these signatures layer rather than collapse into a single trust authority. A small relations vocabulary (`supportedBy`, `opposedBy`, `answersQuestion`, `corroborates`, `contradicts`, `supersedes`, `wasDerivedFrom`, etc.) is carried by `attestation/*` sub-types per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7.
+3. **The typed-node ontology** *(specified; operationalization per sub-type via downstream ADRs).* Every conformant signed node is a signed envelope over a typed payload, drawn from **two top-level type families** that share a single structural primitive: **`content/*`** (standalone assertions; no `targetNodeId` on the payload — analyses, typed claims, questions, evidence records, host self-declarations, tool author declarations) and **`attestation/*`** (assertions about another node; `targetNodeId` required — lifecycle, reference, claim-to-claim, and authority-bearing relations). Hosts, tools, and certifying bodies fold in as sub-types of one of the two families per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table — not as peer families (the prior four-families framing is demoted). Within `content/*`, the QEC sub-ontology — `metadata.contentType` set-valued across `claim` / `question` / `evidence` / `untyped` — is the most-developed sub-area today. Nodes can carry signatures from different parties — individuals, hosts, certifying bodies, third-party attesters — and these signatures layer rather than collapse into a single trust authority. A small relations vocabulary (`supportedBy`, `opposedBy`, `answersQuestion`, `corroborates`, `contradicts`, `supersedes`, `wasDerivedFrom`, etc.) is carried by `attestation/*` sub-types
 
 The **normative preamble** (§5.1) applies across all three commitments and across every implementation: corroboration ≠ truth, contradiction ≠ falsity, identity strength ≠ topic authority, the system surfaces signals and the consumer applies judgment. The preamble is the architectural guardrail against drift toward automated truth-scoring; every product surface, downstream consumer, and third-party implementation MUST carry it.
 
@@ -169,7 +169,7 @@ Typed Standards occupies cryptographic-provenance terrain alongside several adja
 | **W3C Verifiable Credentials** | Adjacent. See disambiguation paragraph above. VC-over-MCP-tool-call receipts are a candidate trace-capture layer for the envelope's trace slot. |
 | **Schema.org Claim / ClaimReview** | Different problem. Schema.org's fact-check vocabulary tags claims with human fact-check reviews. Typed Standards attests to *how the artifact was produced*, not whether a fact-checker endorsed it. The two can coexist. |
 | **C2PA** | Closest structural analogue in a different domain. See disambiguation paragraph above. |
-| **in-toto / DSSE** | Direct alignment at the structural level. Typed Standards adopts in-toto's multihash DigestSet convention per [ADR-0008](../adr/0008-multihash-content-hash.md) and a predicate-type-URI pattern modeled on in-toto's `predicateType` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md). Divergence: in-toto attestations are consumed by automated policy engines; Typed Standards envelopes are consumed by readers exercising judgment. |
+| **in-toto / DSSE** | Direct alignment at the structural level. Typed Standards adopts in-toto's multihash DigestSet convention and a predicate-type-URI pattern modeled on in-toto's `predicateType`. Divergence: in-toto attestations are consumed by automated policy engines; Typed Standards envelopes are consumed by readers exercising judgment. |
 | **SLSA** | Adjacent but disjoint. SLSA Provenance is a specific in-toto predicate type for software builds. Typed Standards covers production-process attestation for analytical artifacts (charts, syntheses, claims). Conceptual alignment, different artifact class. |
 | **Sigstore (Cosign, Fulcio, Rekor)** | Foundational infrastructure, not a competitor. Typed Standards uses Sigstore Rekor for transparency log inclusion per §8.3.2; Sigstore Fulcio keyless OIDC is a candidate identity tier per [Q3](open-questions.md#q3--first-non-github-identity-provider). |
 | **RO-Crate / WRROC** | Candidate package container. The end-state direction for the package format is a multi-file directory with an RO-Crate / WRROC compatibility profile per [Q1](open-questions.md#q1--package-format). The cryptographic mechanics are independent of the container choice. |
@@ -187,23 +187,23 @@ Conformance language follows [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) 
 
 Terms below are used with the meanings given. **Normative** terms have specific meaning when used in conformance language; **informative** terms are used descriptively.
 
-- **Evidence package** *(normative)*: A signed node in the system, carrying the structural-primitive fields per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §1 plus sub-type-specific payload fields. Today's reference implementation produces `content/analysis/v1` nodes (the default content sub-type — legacy and `datHere` shapes both map to it); the broader concept is "signed node." Identified by its envelope hash (see `nodeId`) and stored at a content-addressable URL. See §8.1 for structure.
-- **Signed node** *(normative)*: Any conformant signed object in the system — a `content/*` node (standalone assertion; no `targetNodeId`) or an `attestation/*` node (assertion about another node; `targetNodeId` required). Specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §2.
-- **`type`** *(normative)*: The URI declaring a signed node's family + sub-type. Required post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md); pre-ADR-0009 packages are interpreted as `content/analysis/v1` by construction per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §9. Form: `content/<noun>/v<N>` or `attestation/<verb>/v<N>` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §6.
-- **`content/*` namespace** *(normative)*: The top-level type family for **standalone assertions** — nodes whose payloads do NOT carry `targetNodeId`. Sub-types include `content/analysis/v1` (built; default for AI-Assisted Analysis Producer Profile output), `content/claim/v1`, `content/question/v1`, `content/evidence/v1`, `content/host/v1`, `content/hostPolicy/v1`, `content/hostTermsOfUse/v1`, `content/tool/v1` (reserved name-only per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7).
-- **`attestation/*` namespace** *(normative)*: The top-level type family for **assertions about another node** — nodes whose payloads carry at least one `targetNodeId`. The v0.1 sub-type table — `attestation/withdraws/v1`, `attestation/reinstates/v1`, `attestation/supersedes/v1`, `attestation/publishes/v1`, `attestation/locatedAt/v1`, `attestation/corroborates/v1`, `attestation/contradicts/v1`, `attestation/endorses/v1`, `attestation/wasDerivedFrom/v1`, `attestation/answersQuestion/v1`, `attestation/supportedBy/v1`, `attestation/opposedBy/v1`, `attestation/certifies/v1`, `attestation/evaluates/v1`, `attestation/conforms/v1` — is ratified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7. Operationalization per sub-type lands via downstream ADRs.
-- **`nodeId`** *(normative)*: A signed node's stable identity in the system — the envelope hash per [ADR-0008](../adr/0008-multihash-content-hash.md) §6, by construction. Derived (not a separately-stored field). `attestation/*` payloads carry `targetNodeId` referencing the target's `nodeId`. Verifier semantics: cross-check the recomputed envelope hash matches the URL slug, any stored envelope hash, and (for any referencing attestation) the `targetNodeId` field. Specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §3.
-- **`signer`** *(normative)*: An object on the canonical JSON top level carrying identity binding for the party that signed the node — `bindingTier` (one of `pseudonymous`, `oauth`, `orcid`, `did-web`, `notarized` per the §8.5 graded identity ladder; extensible), `identifier` (provider-prefixed string), `displayName`, optional `verifiedAt`. Recommended post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md); pre-ADR-0009 packages derive `signer` from the trust registry's `signerIdentity` entry for the envelope's `kid` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §9. Distinct from the `sig` (signature envelope) per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4; the verifier MUST cross-check `sig.kid → trust-registry signerIdentity` against `signer.identifier`. Specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4.
-- **Content hash** *(normative)*: The multihash digest set fingerprinting the package's off-log content, canonicalized per the rule named in `contentCanonicalization`. Serialized as a JSON object keyed by lowercase algorithm name (e.g., `{"sha256": "...", "blake3": "..."}`); v0.1 vocabulary is `sha256` (required default), `sha3-256` (registered alternate), `blake3` (registered alternate). Embedded in the canonical JSON as the top-level `contentHash` field. Pre-[ADR-0008](../adr/0008-multihash-content-hash.md) packages emit a single SHA-256 hex string externally (URL slug + DB row) instead of an embedded field; verifiers interpret the legacy form as `{"sha256": <value>}` per [ADR-0008](../adr/0008-multihash-content-hash.md) §4. Specified by [ADR-0008](../adr/0008-multihash-content-hash.md).
-- **Envelope hash** *(normative)*: The SHA-256 hex digest of the [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785) JSON Canonicalization Scheme (JCS) canonicalization of the unsigned envelope. The unsigned envelope is the canonical-JSON package object with the signature envelope removed. Pre-[ADR-0008](../adr/0008-multihash-content-hash.md) packages used Node.js `JSON.stringify` insertion-order serialization; verifiers handle them under that legacy rule. Specified by [ADR-0008](../adr/0008-multihash-content-hash.md) §6.
-- **Content canonicalization** *(normative)*: The URI naming the rule by which off-log content reduces to bytes that `contentHash` fingerprints. Carried as the top-level `contentCanonicalization` field on the canonical JSON; covered by the envelope hash and the platform signature. v0.1 reserved URIs: `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter content profile per [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) + [ADR-0005](../adr/0005-executed-notebook-architecture.md)) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default content profile). Specified by [ADR-0007](../adr/0007-content-canonicalization.md).
-- **Signed envelope** *(normative)*: The envelope-hash hex string, signed with Ed25519ph by a key in the trust registry. The envelope JSON object stored alongside the package also carries `publicKey`, `algorithm`, and `kid` fields for verifier convenience; signature math binds only the hash bytes. Per [ADR-0008](../adr/0008-multihash-content-hash.md) §7, the envelope hash is computed over the JCS canonicalization of the unsigned envelope; pre-ADR-0008 packages used `JSON.stringify` insertion-order canonicalization, and verifiers handle them under that legacy rule.
-- **Trust registry** *(normative)*: The JSON document at `${baseUrl}/.well-known/typed-publisher.json` that lists authorized signing keys with lifecycle metadata. Reference implementations SHOULD also serve the same JSON at the legacy path `${baseUrl}/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §3. See §8.3.3.
-- **`kid` (key identifier)** *(normative)*: A stable string identifying a signing key (e.g. `platform:evidence-2026-04`), present in both the signed envelope and the trust registry. The `kid` is part of the canonical package JSON via `metadata.signingKeyId`, so it is covered by the envelope hash (per [ADR-0008](../adr/0008-multihash-content-hash.md) §6) and therefore by the platform signature.
+- **Evidence package** *(normative)*: A signed node in the system, carrying the structural-primitive fields plus sub-type-specific payload fields. Today's reference implementation produces `content/analysis/v1` nodes (the default content sub-type — legacy and `datHere` shapes both map to it); the broader concept is "signed node." Identified by its envelope hash (see `nodeId`) and stored at a content-addressable URL. See §8.1 for structure.
+- **Signed node** *(normative)*: Any conformant signed object in the system — a `content/*` node (standalone assertion; no `targetNodeId`) or an `attestation/*` node (assertion about another node; `targetNodeId` required).
+- **`type`** *(normative)*: The URI declaring a signed node's family + sub-type. Required v0.1; pre-v0.1 packages are interpreted as `content/analysis/v1` by construction Form: `content/<noun>/v<N>` or `attestation/<verb>/v<N>`
+- **`content/*` namespace** *(normative)*: The top-level type family for **standalone assertions** — nodes whose payloads do NOT carry `targetNodeId`. Sub-types include `content/analysis/v1` (built; default for AI-Assisted Analysis Producer Profile output), `content/claim/v1`, `content/question/v1`, `content/evidence/v1`, `content/host/v1`, `content/hostPolicy/v1`, `content/hostTermsOfUse/v1`, `content/tool/v1` (reserved name-only).
+- **`attestation/*` namespace** *(normative)*: The top-level type family for **assertions about another node** — nodes whose payloads carry at least one `targetNodeId`. The v0.1 sub-type table — `attestation/withdraws/v1`, `attestation/reinstates/v1`, `attestation/supersedes/v1`, `attestation/publishes/v1`, `attestation/locatedAt/v1`, `attestation/corroborates/v1`, `attestation/contradicts/v1`, `attestation/endorses/v1`, `attestation/wasDerivedFrom/v1`, `attestation/answersQuestion/v1`, `attestation/supportedBy/v1`, `attestation/opposedBy/v1`, `attestation/certifies/v1`, `attestation/evaluates/v1`, `attestation/conforms/v1` — is ratified Operationalization per sub-type lands via downstream ADRs.
+- **`nodeId`** *(normative)*: A signed node's stable identity in the system — the envelope hash, by construction. Derived (not a separately-stored field). `attestation/*` payloads carry `targetNodeId` referencing the target's `nodeId`. Verifier semantics: cross-check the recomputed envelope hash matches the URL slug, any stored envelope hash, and (for any referencing attestation) the `targetNodeId` field.
+- **`signer`** *(normative)*: An object on the canonical JSON top level carrying identity binding for the party that signed the node — `bindingTier` (one of `pseudonymous`, `oauth`, `orcid`, `did-web`, `notarized` per the §8.5 graded identity ladder; extensible), `identifier` (provider-prefixed string), `displayName`, optional `verifiedAt`. Recommended v0.1; pre-v0.1 packages derive `signer` from the trust registry's `signerIdentity` entry for the envelope's `kid`. Distinct from the `sig` (signature envelope); the verifier MUST cross-check `sig.kid → trust-registry signerIdentity` against `signer.identifier`.
+- **Content hash** *(normative)*: The multihash digest set fingerprinting the package's off-log content, canonicalized per the rule named in `contentCanonicalization`. Serialized as a JSON object keyed by lowercase algorithm name (e.g., `{"sha256": "...", "blake3": "..."}`); v0.1 vocabulary is `sha256` (required default), `sha3-256` (registered alternate), `blake3` (registered alternate). Embedded in the canonical JSON as the top-level `contentHash` field. pre-v0.1 packages emit a single SHA-256 hex string externally (URL slug + DB row) instead of an embedded field; verifiers interpret the legacy form as `{"sha256": <value>}`.
+- **Envelope hash** *(normative)*: The SHA-256 hex digest of the [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785) JSON Canonicalization Scheme (JCS) canonicalization of the unsigned envelope. The unsigned envelope is the canonical-JSON package object with the signature envelope removed. pre-v0.1 packages used Node.js `JSON.stringify` insertion-order serialization; verifiers handle them under that legacy rule.
+- **Content canonicalization** *(normative)*: The URI naming the rule by which off-log content reduces to bytes that `contentHash` fingerprints. Carried as the top-level `contentCanonicalization` field on the canonical JSON; covered by the envelope hash and the platform signature. v0.1 reserved URIs: `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter content profile) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default content profile).
+- **Signed envelope** *(normative)*: The envelope-hash hex string, signed with Ed25519ph by a key in the trust registry. The envelope JSON object stored alongside the package also carries `publicKey`, `algorithm`, and `kid` fields for verifier convenience; signature math binds only the hash bytes. The envelope hash is computed over the JCS canonicalization of the unsigned envelope; pre-v0.1 packages used `JSON.stringify` insertion-order canonicalization, and verifiers handle them under that legacy rule.
+- **Trust registry** *(normative)*: The JSON document at `${baseUrl}/.well-known/typed-publisher.json` that lists authorized signing keys with lifecycle metadata. Reference implementations SHOULD also serve the same JSON at the legacy path `${baseUrl}/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers. See §8.3.3.
+- **`kid` (key identifier)** *(normative)*: A stable string identifying a signing key (e.g. `platform:evidence-2026-04`), present in both the signed envelope and the trust registry. The `kid` is part of the canonical package JSON via `metadata.signingKeyId`, so it is covered by the envelope hash and therefore by the platform signature.
 - **BlobRef** *(normative)*: A four-field JSON object `{ ref, url, contentType, size }` that names a content-addressable Vercel Blob (or equivalent content-addressable storage) in place of inline content for selected fields. See §8.1.5.
-- **`captureMethod`** *(normative)*: The label identifying *how* the package's content was captured — the integrity-of-pipeline property. The field is required, signed, and tamper-evident per [ADR-0003](../adr/0003-evidence-capture-method.md). Its **value space is open at the core level** per [ADR-0011](../adr/0011-capturemethod-generalization.md); the vocabulary of valid values is declared by the package's `producerProfile`'s guidance bundle (per [ADR-0006](../adr/0006-producer-profile-architecture.md) §5). For the `ai-assisted-analysis` Producer Profile, the v0.1 vocabulary is `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report` — the three values originally enumerated in core by ADR-0003 and relocated to this profile's guidance bundle by [ADR-0011](../adr/0011-capturemethod-generalization.md) §2. See §8.6.
-- **`contentProfile`** *(normative)*: The label identifying *what shape* the package's content is in — the content-shape property. Orthogonal to `captureMethod`. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §8.7). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). See §8.1 and §8.7.
-- **`producerProfile`** *(normative)*: The Producer Profile the package conforms to. Compound-string value of the form `<profile-type>/<profile-subtype>`. v0.1 vocabulary includes `"ai-assisted-analysis/datHere"` (first realized subtype; refactor of the [ADR-0004](../adr/0004-dathere-captureMethod-variant.md) `datHere` content profile). Other profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only per [ADR-0006](../adr/0006-producer-profile-architecture.md). Consistency invariant per [ADR-0006](../adr/0006-producer-profile-architecture.md) §2: `contentProfile === "datHere"` iff `producerProfile.startsWith("ai-assisted-analysis/datHere")`.
+- **`captureMethod`** *(normative)*: The label identifying *how* the package's content was captured — the integrity-of-pipeline property. The field is required, signed, and tamper-evident. Its **value space is open at the core level**; the vocabulary of valid values is declared by the package's `producerProfile`'s guidance bundle. For the `ai-assisted-analysis` Producer Profile, the v0.1 vocabulary is `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report` — the three values originally enumerated in core by ADR-0003 and relocated to this profile's guidance bundle. See §8.6.
+- **`contentProfile`** *(normative)*: The label identifying *what shape* the package's content is in — the content-shape property. Orthogonal to `captureMethod`. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §8.7). See §8.1 and §8.7.
+- **`producerProfile`** *(normative)*: The Producer Profile the package conforms to. Compound-string value of the form `<profile-type>/<profile-subtype>`. v0.1 vocabulary includes `"ai-assisted-analysis/datHere"` (first realized subtype; refactor of the `datHere` content profile). Other profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only. Consistency invariant: `contentProfile === "datHere"` iff `producerProfile.startsWith("ai-assisted-analysis/datHere")`.
 - **Trace** *(informative)*: An OpenTelemetry-shaped JSON object (or BlobRef) describing the spans of the analysis. See §8.4.
 - **PROV-O graph** *(informative)*: A W3C PROV-O JSON-LD graph derived from the trace at publish time. See §8.1.4.
 - **Withdrawal / reinstatement** *(normative)*: Signed, public, append-only lifecycle events on a published node, expressed as separately-signed `attestation/withdraws/v1` / `attestation/reinstates/v1` nodes referencing the target by `nodeId`. See §8.10.
@@ -215,7 +215,7 @@ A broader vocabulary covering the surrounding architectural standards (PROV-O, C
 
 **Project name.** "Typed Standards" is unrelated to TypeScript (the Microsoft-stewarded typed superset of JavaScript) or to the `.ts` / `.tsx` file extensions. The `ts:` JSON-LD prefix resolves to `https://typedstandards.org/ns/ts#`; it does not refer to TypeScript types, type-definition files, or the ECMA-262 / TC39 ecosystem. Separately, ISO/IEC and W3C use "TS" as a document-class abbreviation in publication identifiers (e.g., `ISO/IEC TS 22237`, `W3C TS-…`); a "Typed Standards specification" is a project name in this specification's sense, not an ISO/IEC or W3C document-class marker.
 
-**Prefix choice — relationship to RFC 3161 timestamping.** This specification uses RFC 3161 trusted timestamps as a cryptographic-envelope component (§8.3.2). The shorthand "TSS" is sometimes used in the timestamping literature for "Time-Stamping Server" or "Time-Stamping Service" — a different concept (an external service that issues `TimeStampToken`s) from "Typed Standards." This specification reserves "Typed Standards" and the `ts:` prefix for the project itself, and uses the spelled-out terms "Time-Stamping Authority (TSA)" and "TimeStampToken (TST)" per RFC 3161 §1 for the timestamping subsystem to keep the two concepts unambiguous. The `tss:` prefix was considered and rejected on these grounds (per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §2).
+**Prefix choice — relationship to RFC 3161 timestamping.** This specification uses RFC 3161 trusted timestamps as a cryptographic-envelope component (§8.3.2). The shorthand "TSS" is sometimes used in the timestamping literature for "Time-Stamping Server" or "Time-Stamping Service" — a different concept (an external service that issues `TimeStampToken`s) from "Typed Standards." This specification reserves "Typed Standards" and the `ts:` prefix for the project itself, and uses the spelled-out terms "Time-Stamping Authority (TSA)" and "TimeStampToken (TST)" per RFC 3161 §1 for the timestamping subsystem to keep the two concepts unambiguous. The `tss:` prefix was considered and rejected on these grounds.
 
 ---
 
@@ -227,77 +227,77 @@ The layered shape the umbrella sits over. Color encoding follows the convention 
 
 ```mermaid
 flowchart TB
-    REG["Publisher registry<br/>(coordination index — names publishers,<br/>does not host or gatekeep)"]:::reserved
-    DX["Domain extensions<br/>(specialize a content profile for a domain)<br/>civic data analysis = first domain extension"]:::reserved
+ REG["Publisher registry<br/>(coordination index — names publishers,<br/>does not host or gatekeep)"]:::reserved
+ DX["Domain extensions<br/>(specialize a content profile for a domain)<br/>civic data analysis = first domain extension"]:::reserved
 
-    subgraph PROF["Profiles — orthogonal axes"]
-        direction LR
-        CP["Content profiles<br/>(Typed Claims / Typed Evidence /<br/>Typed Questions)"]:::partial
-        PP["Producer profiles<br/>(AI-Assisted Analysis specified<br/>with subtype/flavor model per ADR-0006;<br/>'ai-assisted-analysis/datHere' subtype = built;<br/>'civicaitools-default' subtype = reserved;<br/>human / hybrid / sandbox-only types = reserved)"]:::partial
-    end
+ subgraph PROF["Profiles — orthogonal axes"]
+ direction LR
+ CP["Content profiles<br/>(Typed Claims / Typed Evidence /<br/>Typed Questions)"]:::partial
+ PP["Producer profiles<br/>(AI-Assisted Analysis specified<br/>with subtype/flavor model per ADR-0006;<br/>'ai-assisted-analysis/datHere' subtype = built;<br/>'civicaitools-default' subtype = reserved;<br/>human / hybrid / sandbox-only types = reserved)"]:::partial
+ end
 
-    subgraph TYPED["Two-family taxonomy — semantic distinction (per ADR-0009)"]
-        direction LR
-        CONTENT["content/* family<br/>(standalone assertions —<br/>no targetNodeId on payload;<br/>'content/analysis/v1' = built;<br/>typed-content sub-types — claim / question / evidence — reserved;<br/>host / hostPolicy / hostTermsOfUse / tool sub-types reserved per Q22)"]:::partial
-        ATTESTATION["attestation/* family<br/>(assertions about another node —<br/>targetNodeId required on payload;<br/>v0.1 Q36 sub-type table ratified by ADR-0009 §7;<br/>operationalization per sub-type via downstream ADRs)"]:::partial
-    end
+ subgraph TYPED["Two-family taxonomy — semantic distinction (per ADR-0009)"]
+ direction LR
+ CONTENT["content/* family<br/>(standalone assertions —<br/>no targetNodeId on payload;<br/>'content/analysis/v1' = built;<br/>typed-content sub-types — claim / question / evidence — reserved;<br/>host / hostPolicy / hostTermsOfUse / tool sub-types reserved per Q22)"]:::partial
+ ATTESTATION["attestation/* family<br/>(assertions about another node —<br/>targetNodeId required on payload;<br/>v0.1 Q36 sub-type table ratified by ADR-0009 §7;<br/>operationalization per sub-type via downstream ADRs)"]:::partial
+ end
 
-    ENV["Structural primitive<br/>(content-agnostic cryptographic core:<br/>type URI · nodeId (≡ envelope hash) · contentHash multihash · contentCanonicalization URI ·<br/>sig (publicKey + algorithm + kid) · signer (identity binding) · timestamp ·<br/>transparency log · trust registry · captureMethod · withdrawal lifecycle)"]:::built
+ ENV["Structural primitive<br/>(content-agnostic cryptographic core:<br/>type URI · nodeId (≡ envelope hash) · contentHash multihash · contentCanonicalization URI ·<br/>sig (publicKey + algorithm + kid) · signer (identity binding) · timestamp ·<br/>transparency log · trust registry · captureMethod · withdrawal lifecycle)"]:::built
 
-    REG -.indexes.-> PROF
-    DX -.specializes.-> CP
-    PROF --> TYPED
-    TYPED --> ENV
+ REG -.indexes.-> PROF
+ DX -.specializes.-> CP
+ PROF --> TYPED
+ TYPED --> ENV
 
-    classDef built fill:#86efac,stroke:#166534,color:#000
-    classDef partial fill:#fde68a,stroke:#92400e,color:#000
-    classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
+ classDef built fill:#86efac,stroke:#166534,color:#000
+ classDef partial fill:#fde68a,stroke:#92400e,color:#000
+ classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
 ```
 
-**How to read.** The structural primitive is the layer with most implementation today — it is the bulk of what the existing OES specifies plus the small additions [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) introduces (`type` URI field, `signer` identity-binding object, formal articulation that `nodeId` ≡ envelope hash, verifier cross-check rules for `sig.kid` ↔ `signer.identifier`). The two-family taxonomy — `content/*` (standalone assertions) and `attestation/*` (assertions about another node identified by `nodeId`) — is specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) over the same structural primitive, demoting the prior four-families-as-peers framing (content / hosts / tools / attestations) to two families plus the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) sub-type table; hosts, tools, and certifying bodies fold in as sub-types of one of the two families rather than peer families. `content/analysis/v1` is the first built `content/*` sub-type (the legacy and `datHere` shapes both map to it); the other `content/*` sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`, and the host / tool sub-types) are reserved. The `attestation/*` sub-type taxonomy is specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 (the Q36 ratified table); operationalization per sub-type (the withdrawal-lifecycle implementation per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md), the location-as-attestation implementation per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md), the publication-record flow, the adversarial-eval requirement model) lands via downstream ADRs from the Pittsburgh-arc cohort. Content profiles (typed-content carriers — Typed Claims / Typed Evidence / Typed Questions) are partially built: the Typed Claims Profile is drafted (§8.11), the other two reserved name-only; under the two-family framing they are `content/*` sub-types. Producer profiles moved from reserved to **specified** with [ADR-0006](../adr/0006-producer-profile-architecture.md): the AI-Assisted Analysis Producer Profile is the first one drafted, with a subtype/flavor model so different adopters' conventions are filterable (visualization stack, citation format, entity normalization, synthesis style, confidence-scoring methodology live in subtype-specific guidance bundles rather than in the envelope). The `ai-assisted-analysis/datHere` subtype is the first built realization. Future profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only; each lands in its own ADR with the motivating adopter named. Domain extensions specialize a content profile for a domain; civic data analysis (Neighborhood Tabulation Areas, community districts, the rest of the civic-scope taxonomy) is the first domain extension.
+**How to read.** The structural primitive is the layer with most implementation today — it is the bulk of what the existing OES specifies plus the small additions the structural primitive introduces (`type` URI field, `signer` identity-binding object, formal articulation that `nodeId` ≡ envelope hash, verifier cross-check rules for `sig.kid` ↔ `signer.identifier`). The two-family taxonomy — `content/*` (standalone assertions) and `attestation/*` (assertions about another node identified by `nodeId`) — is specified over the same structural primitive, demoting the prior four-families-as-peers framing (content / hosts / tools / attestations) to two families plus the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) sub-type table; hosts, tools, and certifying bodies fold in as sub-types of one of the two families rather than peer families. `content/analysis/v1` is the first built `content/*` sub-type (the legacy and `datHere` shapes both map to it); the other `content/*` sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`, and the host / tool sub-types) are reserved. The `attestation/*` sub-type taxonomy is specified (the Q36 ratified table); operationalization per sub-type (the withdrawal-lifecycle implementation, the location-as-attestation implementation, the publication-record flow, the adversarial-eval requirement model) lands via downstream ADRs from the Pittsburgh-arc cohort. Content profiles (typed-content carriers — Typed Claims / Typed Evidence / Typed Questions) are partially built: the Typed Claims Profile is drafted (§8.11), the other two reserved name-only; under the two-family framing they are `content/*` sub-types. Producer profiles moved from reserved to **specified**: the AI-Assisted Analysis Producer Profile is the first one drafted, with a subtype/flavor model so different adopters' conventions are filterable (visualization stack, citation format, entity normalization, synthesis style, confidence-scoring methodology live in subtype-specific guidance bundles rather than in the envelope). The `ai-assisted-analysis/datHere` subtype is the first built realization. Future profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only; each lands in its own ADR with the motivating adopter named. Domain extensions specialize a content profile for a domain; civic data analysis (Neighborhood Tabulation Areas, community districts, the rest of the civic-scope taxonomy) is the first domain extension.
 
 ### 7.2 Envelope
 
-The envelope mechanics are content-agnostic; the content slot is swappable per content profile. Canonicalization comes in two kinds (per [ADR-0007](../adr/0007-content-canonicalization.md) + [ADR-0008](../adr/0008-multihash-content-hash.md)): **envelope-level** canonicalization is a single fixed rule (RFC 8785 JCS) committed to by the spec; **content-level** canonicalization legitimately varies per content shape and is named by the envelope's `contentCanonicalization` URI field. The envelope-hash (SHA-256 over JCS-canonicalized unsigned envelope) is what the signature covers; the multihash `contentHash` field fingerprints the off-log content per the named rule and is itself embedded in (and therefore covered by) the envelope.
+The envelope mechanics are content-agnostic; the content slot is swappable per content profile. Canonicalization comes in two kinds: **envelope-level** canonicalization is a single fixed rule (RFC 8785 JCS) committed to by the spec; **content-level** canonicalization legitimately varies per content shape and is named by the envelope's `contentCanonicalization` URI field. The envelope-hash (SHA-256 over JCS-canonicalized unsigned envelope) is what the signature covers; the multihash `contentHash` field fingerprints the off-log content per the named rule and is itself embedded in (and therefore covered by) the envelope.
 
 ```mermaid
 flowchart TB
-    subgraph ENV["Envelope (content-agnostic)"]
-        ENVH["Envelope hash<br/>(SHA-256 of JCS-canonicalized<br/>unsigned envelope)"]:::partial
-        HASH["Multihash contentHash<br/>(sha256 required + sha3-256 / blake3 alts;<br/>over canonical content per<br/>contentCanonicalization rule)"]:::partial
-        CANON["contentCanonicalization URI<br/>(names content-level<br/>canonicalization rule)"]:::reserved
-        SIG["Ed25519ph signature<br/>over envelope-hash hex string"]:::built
-        TS["RFC 3161 trusted timestamp<br/>from public TSA"]:::built
-        REK["Sigstore Rekor entry<br/>+ inclusion proof"]:::built
-        CM["captureMethod label<br/>(in canonical JSON, signed)"]:::built
-        CTL["contentType label<br/>(set of QEC values,<br/>in canonical JSON, signed)"]:::reserved
-        PROV["W3C PROV-O graph<br/>(derived from trace at publish)"]:::built
-        TR["Execution trace<br/>(OTel-shaped, hand-rolled)"]:::partial
-    end
+ subgraph ENV["Envelope (content-agnostic)"]
+ ENVH["Envelope hash<br/>(SHA-256 of JCS-canonicalized<br/>unsigned envelope)"]:::partial
+ HASH["Multihash contentHash<br/>(sha256 required + sha3-256 / blake3 alts;<br/>over canonical content per<br/>contentCanonicalization rule)"]:::partial
+ CANON["contentCanonicalization URI<br/>(names content-level<br/>canonicalization rule)"]:::reserved
+ SIG["Ed25519ph signature<br/>over envelope-hash hex string"]:::built
+ TS["RFC 3161 trusted timestamp<br/>from public TSA"]:::built
+ REK["Sigstore Rekor entry<br/>+ inclusion proof"]:::built
+ CM["captureMethod label<br/>(in canonical JSON, signed)"]:::built
+ CTL["contentType label<br/>(set of QEC values,<br/>in canonical JSON, signed)"]:::reserved
+ PROV["W3C PROV-O graph<br/>(derived from trace at publish)"]:::built
+ TR["Execution trace<br/>(OTel-shaped, hand-rolled)"]:::partial
+ end
 
-    subgraph CONT["Typed nodes (content shown; host / tool / attestation reserved)"]
-        CL["Claim"]:::reserved
-        QU["Question"]:::reserved
-        EV["Evidence"]:::reserved
-        UN["Untyped<br/>(raw, mutually exclusive<br/>with the others)"]:::reserved
-        OTHER["Host · Tool/method · Attestation<br/>(reserved node families)"]:::reserved
-    end
+ subgraph CONT["Typed nodes (content shown; host / tool / attestation reserved)"]
+ CL["Claim"]:::reserved
+ QU["Question"]:::reserved
+ EV["Evidence"]:::reserved
+ UN["Untyped<br/>(raw, mutually exclusive<br/>with the others)"]:::reserved
+ OTHER["Host · Tool/method · Attestation<br/>(reserved node families)"]:::reserved
+ end
 
-    CONT -.canonicalized per.-> CANON
-    CONT --> HASH
-    HASH -.embedded in.-> ENVH
-    CANON -.embedded in.-> ENVH
-    CM -.embedded in.-> ENVH
-    CTL -.embedded in.-> ENVH
-    SIG -.covers.-> ENVH
-    TS -.covers.-> ENVH
-    REK -.indexes.-> ENVH
-    PROV -.about.-> CONT
-    TR -.captures.-> CONT
+ CONT -.canonicalized per.-> CANON
+ CONT --> HASH
+ HASH -.embedded in.-> ENVH
+ CANON -.embedded in.-> ENVH
+ CM -.embedded in.-> ENVH
+ CTL -.embedded in.-> ENVH
+ SIG -.covers.-> ENVH
+ TS -.covers.-> ENVH
+ REK -.indexes.-> ENVH
+ PROV -.about.-> CONT
+ TR -.captures.-> CONT
 
-    classDef built fill:#86efac,stroke:#166534,color:#000
-    classDef partial fill:#fde68a,stroke:#92400e,color:#000
-    classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
+ classDef built fill:#86efac,stroke:#166534,color:#000
+ classDef partial fill:#fde68a,stroke:#92400e,color:#000
+ classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
 ```
 
 Today the content slot carries an AI-assisted civic-data analysis (prompt, queries, outputs, costs, skill metadata, optional notebook under the `datHere` content profile). The proposed restructure treats that content as **a set of typed content blocks**, with a new `metadata.contentType` field carrying the set of QEC values present — drawn from `claim`, `question`, `evidence`, or `untyped`. The most common shape is `["claim"]`; a claim that explicitly carries the question it answers is `["claim", "question"]`; raw assistant output not yet processed against any content profile is `["untyped"]`. `untyped` is mutually exclusive with the typed values. Per-block requirements (provenance, confidence, scope, AnalyticalDerivation for claims) do not relax when the set has more than one member — a multi-type package is several conformant typed blocks side-by-side, not a looser format. The envelope's hash, signature, timestamp, transparency-log entry, capture-method label, contentType label, contentCanonicalization URI, multihash content hash, provenance graph, and trace bind whatever typed node is inside; the envelope mechanics do not change when the node type or content shape changes (host, tool/method, and attestation node families are reserved alongside the content family). Different content shapes vary the `contentCanonicalization` URI; the envelope-level JCS commitment is invariant.
@@ -308,35 +308,35 @@ A verifier can complete every check using only public infrastructure plus the pu
 
 ```mermaid
 sequenceDiagram
-    autonumber
-    participant V as Verifier
-    participant Pub as Publisher's domain<br/>(hosts package + registry)
-    participant TSA as Public TSA<br/>(e.g. FreeTSA)
-    participant Rkr as Sigstore Rekor
+ autonumber
+ participant V as Verifier
+ participant Pub as Publisher's domain<br/>(hosts package + registry)
+ participant TSA as Public TSA<br/>(e.g. FreeTSA)
+ participant Rkr as Sigstore Rekor
 
-    V->>Pub: GET package + envelope<br/>(at publisher's content-addressable URL)
-    Pub-->>V: package JSON + signature + timestamp + Rekor entry id
-    V->>V: recompute SHA-256 over canonical JSON<br/>compare with package URL slug
-    V->>Pub: GET /.well-known/typed-publisher.json<br/>(publisher's trust registry)
-    Pub-->>V: public keys + lifecycle status<br/>(active / deprecated / revoked)
-    V->>V: verify Ed25519ph signature against<br/>registry-listed public key
-    V->>TSA: verify RFC 3161 timestamp token<br/>against TSA's CA chain
-    V->>Rkr: verify Rekor inclusion proof
-    V-->>V: render verdict<br/>(signature ✓, timestamp ✓, log entry ✓,<br/>captureMethod label, identity tier)
+ V->>Pub: GET package + envelope<br/>(at publisher's content-addressable URL)
+ Pub-->>V: package JSON + signature + timestamp + Rekor entry id
+ V->>V: recompute SHA-256 over canonical JSON<br/>compare with package URL slug
+ V->>Pub: GET /.well-known/typed-publisher.json<br/>(publisher's trust registry)
+ Pub-->>V: public keys + lifecycle status<br/>(active / deprecated / revoked)
+ V->>V: verify Ed25519ph signature against<br/>registry-listed public key
+ V->>TSA: verify RFC 3161 timestamp token<br/>against TSA's CA chain
+ V->>Rkr: verify Rekor inclusion proof
+ V-->>V: render verdict<br/>(signature ✓, timestamp ✓, log entry ✓,<br/>captureMethod label, identity tier)
 
-    Note over V,Pub: Decentralized publishing.<br/>Publisher hosts its own packages and its own trust registry.
-    Note over V,Rkr: No central authority.<br/>The verifier never trusts the publishing platform<br/>and never trusts the Typed Standards body.
+ Note over V,Pub: Decentralized publishing.<br/>Publisher hosts its own packages and its own trust registry.
+ Note over V,Rkr: No central authority.<br/>The verifier never trusts the publishing platform<br/>and never trusts the Typed Standards body.
 ```
 
 **The decentralized-publishing / central-indexing split.** Each publisher hosts its own packages and serves its own trust registry at a well-known path on its own domain. The reserved publisher registry at `typedstandards.org` indexes declared publishers (a directory function) but is not in the verification path: a verifier never queries `typedstandards.org` to verify a package, and the index has no authority to vouch for or reject any publisher's content. This is the deliberate inversion of the brand-mediated-trust model: trust is in the cryptography and the publisher's identity binding, not in the standards body or any host.
 
-> **What's reserved vs. what's built in this flow.** The trust-registry well-known path shown above — `/.well-known/typed-publisher.json` — is the canonical post-[ADR-0012](../adr/0012-typed-standards-consolidation.md) path; reference implementations SHOULD also serve the same JSON at the legacy path `/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers (parallel-serve indefinitely; no forced cutover). Today's verification flow also depends on a server-composed verify endpoint to assemble the signature envelope, RFC 3161 token, and Rekor proof from a database row, because the current single-blob package shape does not embed those proofs ([Q1](open-questions.md#q1--package-format)). Offline verification — package alone plus the publisher's trust registry plus the TSA and Rekor — is the **target end-state**, not yet a property; honestly aspirational.
+> **What's reserved vs. what's built in this flow.** The trust-registry well-known path shown above — `/.well-known/typed-publisher.json` — is the canonical v0.1 path; reference implementations SHOULD also serve the same JSON at the legacy path `/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers (parallel-serve indefinitely; no forced cutover). Today's verification flow also depends on a server-composed verify endpoint to assemble the signature envelope, RFC 3161 token, and Rekor proof from a database row, because the current single-blob package shape does not embed those proofs ([Q1](open-questions.md#q1--package-format)). Offline verification — package alone plus the publisher's trust registry plus the TSA and Rekor — is the **target end-state**, not yet a property; honestly aspirational.
 
 ### 7.4 Two-family taxonomy — one structural primitive, content/* and attestation/*
 
-> **Specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md).** This section reflects the unified typed-attestation primitive ratified 2026-05-25: one structural envelope underlies every signed node in the system; two top-level type families (`content/*` and `attestation/*`) sit over the primitive; sub-types are flat-namespace registered URIs per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table. The earlier framing (four families — content / hosts / tools-methods / attestations — as peers) is demoted: hosts, tools, and certifying bodies fold into sub-types of one of the two families per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7, not as peer families. The QEC content sub-ontology (claim / question / evidence / untyped) is preserved as the most-developed `content/*` sub-area today; host, tool, and attestation sub-type operationalization is per-sub-type via downstream ADRs.
+> **.** This section reflects the unified typed-attestation primitive ratified 2026-05-25: one structural envelope underlies every signed node in the system; two top-level type families (`content/*` and `attestation/*`) sit over the primitive; sub-types are flat-namespace registered URIs per the [Q36](open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) ratified table. The earlier framing (four families — content / hosts / tools-methods / attestations — as peers) is demoted: hosts, tools, and certifying bodies fold into sub-types of one of the two families, not as peer families. The QEC content sub-ontology (claim / question / evidence / untyped) is preserved as the most-developed `content/*` sub-area today; host, tool, and attestation sub-type operationalization is per-sub-type via downstream ADRs.
 
-**The structural primitive.** Every conformant signed node is a signed envelope over a typed payload, carrying the structural-primitive fields specified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §1: a `type` URI (identifying the node's family + sub-type), a derived `nodeId` (the envelope hash by construction), a multihash `contentHash` (fingerprinting the off-log payload per [ADR-0008](../adr/0008-multihash-content-hash.md)), a `contentCanonicalization` URI (naming the off-log content's canonicalization rule per [ADR-0007](../adr/0007-content-canonicalization.md)), a signature envelope (`sig` per §8.3.1 — public key + algorithm + kid), a `signer` object (identity binding per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4), an RFC 3161 timestamp, a Sigstore Rekor inclusion proof, and the `metadata` object. Sub-type-specific payload fields live alongside the primitive at the canonical-JSON top level (for `content/analysis/v1`, that means `prompt` / `queries` / `output` / `trace` / etc.; for `attestation/*` sub-types, that means `targetNodeId` plus sub-type-specific fields per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7).
+**The structural primitive.** Every conformant signed node is a signed envelope over a typed payload, carrying the structural-primitive fields specified: a `type` URI (identifying the node's family + sub-type), a derived `nodeId` (the envelope hash by construction), a multihash `contentHash` (fingerprinting the off-log payload), a `contentCanonicalization` URI (naming the off-log content's canonicalization rule), a signature envelope (`sig` per §8.3.1 — public key + algorithm + kid), a `signer` object (identity binding), an RFC 3161 timestamp, a Sigstore Rekor inclusion proof, and the `metadata` object. Sub-type-specific payload fields live alongside the primitive at the canonical-JSON top level (for `content/analysis/v1`, that means `prompt` / `queries` / `output` / `trace` / etc.; for `attestation/*` sub-types, that means `targetNodeId` plus sub-type-specific fields).
 
 **Two top-level type families.** Every conformant signed node belongs to exactly one of two families, distinguished by the `type` URI's first path segment:
 
@@ -346,49 +346,49 @@ sequenceDiagram
 
 The presence (or absence) of `targetNodeId` on the payload is the structural rule that decides which family a node belongs to. Hosts are not a separate family — host self-declarations are `content/host/v1` or `content/hostPolicy/v1` (the host is asserting something about itself, no other node referenced); host endorsements of others' content are `attestation/endorses/v1`. Tools / certifying bodies are not a separate family — a tool author's declaration is `content/tool/v1`; a certifying body's attestation about that tool is `attestation/certifies/v1`.
 
-**Sub-type URI format.** Sub-type URIs use the form `content/<noun>/v<N>` for `content/*` sub-types and `attestation/<verb>/v<N>` for `attestation/*` sub-types (per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §6). Sub-types are an open enum; new sub-types arrive via subsequent ADRs that name the motivating adopter per the Xanadu doctrine. The registry mechanism (how sub-type URIs are documented, versioned, mirrored, deprecated, governed across implementations) stays Xanadu-gated per [Q37](open-questions.md#q37--type-registry-mechanism-and-governance-for-the-content-and-attestation-namespaces) — specifying the registry mechanism prematurely is the foundational-layer version of the over-design the Xanadu doctrine exists to prevent.
+**Sub-type URI format.** Sub-type URIs use the form `content/<noun>/v<N>` for `content/*` sub-types and `attestation/<verb>/v<N>` for `attestation/*` sub-types. Sub-types are an open enum; new sub-types arrive via subsequent ADRs that name the motivating adopter per the Xanadu doctrine. The registry mechanism (how sub-type URIs are documented, versioned, mirrored, deprecated, governed across implementations) stays Xanadu-gated per [Q37](open-questions.md#q37--type-registry-mechanism-and-governance-for-the-content-and-attestation-namespaces) — specifying the registry mechanism prematurely is the foundational-layer version of the over-design the Xanadu doctrine exists to prevent.
 
-**Q36 ratified sub-type table.** The v0.1 attestation sub-type table — `attestation/withdraws/v1`, `attestation/reinstates/v1`, `attestation/supersedes/v1`, `attestation/publishes/v1`, `attestation/locatedAt/v1`, `attestation/corroborates/v1`, `attestation/contradicts/v1`, `attestation/endorses/v1`, `attestation/wasDerivedFrom/v1`, `attestation/answersQuestion/v1`, `attestation/supportedBy/v1`, `attestation/opposedBy/v1`, `attestation/certifies/v1`, `attestation/evaluates/v1`, `attestation/conforms/v1` — is ratified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 with three explicit refinements: `extractsTo` merges into `wasDerivedFrom` (with `AnalyticalDerivation` as the content-shape variant when source is untyped and target is typed); `endorses` and `corroborates` stay distinct sub-types (peer attestation vs. institutional endorsement carries meaningfully different signal); and Q38 resolves with `locatedAt` suffices, no `copyOf` sub-type. Each sub-type declares its authorization rule (`publisher-only`, `any-with-binding`, or `specific-role-required`) and its payload shape; the full table lives in [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 and §8.12 of this specification. Corresponding ratified `content/*` sub-types are `content/analysis/v1` (built — the legacy and datHere content shapes both map to it), `content/claim/v1` / `content/question/v1` / `content/evidence/v1` (reserved name-only — promotion gated on first typed-content producer), `content/host/v1` / `content/hostPolicy/v1` / `content/hostTermsOfUse/v1` (reserved name-only per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape)), and `content/tool/v1` (reserved name-only).
+**Q36 ratified sub-type table.** The v0.1 attestation sub-type table — `attestation/withdraws/v1`, `attestation/reinstates/v1`, `attestation/supersedes/v1`, `attestation/publishes/v1`, `attestation/locatedAt/v1`, `attestation/corroborates/v1`, `attestation/contradicts/v1`, `attestation/endorses/v1`, `attestation/wasDerivedFrom/v1`, `attestation/answersQuestion/v1`, `attestation/supportedBy/v1`, `attestation/opposedBy/v1`, `attestation/certifies/v1`, `attestation/evaluates/v1`, `attestation/conforms/v1` — is ratified with three explicit refinements: `extractsTo` merges into `wasDerivedFrom` (with `AnalyticalDerivation` as the content-shape variant when source is untyped and target is typed); `endorses` and `corroborates` stay distinct sub-types (peer attestation vs. institutional endorsement carries meaningfully different signal); and Q38 resolves with `locatedAt` suffices, no `copyOf` sub-type. Each sub-type declares its authorization rule (`publisher-only`, `any-with-binding`, or `specific-role-required`) and its payload shape; the full table lives and §8.12 of this specification. Corresponding ratified `content/*` sub-types are `content/analysis/v1` (built — the legacy and datHere content shapes both map to it), `content/claim/v1` / `content/question/v1` / `content/evidence/v1` (reserved name-only — promotion gated on first typed-content producer), `content/host/v1` / `content/hostPolicy/v1` / `content/hostTermsOfUse/v1` (reserved name-only per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape)), and `content/tool/v1` (reserved name-only).
 
-**Layered signatures across typed nodes.** A package's nodes may carry signatures from different parties at different scopes — the producer who created the `content/*` node, a host that endorses it via `attestation/endorses/v1`, a certifying body that attests to a tool's conformance via `attestation/certifies/v1`, third parties that corroborate or contradict via `attestation/corroborates/v1` / `attestation/contradicts/v1`. These signatures **layer** rather than collapse: a verifier sees who signed what and at what scope, never a single composite verdict. The specification specifies how multiple signers and node types compose verifiably without forcing a single trust authority — and the `signer.identifier` ↔ `sig.kid → trust-registry signerIdentity` cross-check per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4 makes the layering tamper-evident at the verifier level.
+**Layered signatures across typed nodes.** A package's nodes may carry signatures from different parties at different scopes — the producer who created the `content/*` node, a host that endorses it via `attestation/endorses/v1`, a certifying body that attests to a tool's conformance via `attestation/certifies/v1`, third parties that corroborate or contradict via `attestation/corroborates/v1` / `attestation/contradicts/v1`. These signatures **layer** rather than collapse: a verifier sees who signed what and at what scope, never a single composite verdict. The specification specifies how multiple signers and node types compose verifiably without forcing a single trust authority — and the `signer.identifier` ↔ `sig.kid → trust-registry signerIdentity` cross-check makes the layering tamper-evident at the verifier level.
 
 ### 7.5 The QEC sub-ontology within content/*
 
-Within the `content/*` family, the QEC sub-ontology specifies the typed-content sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — alongside `content/analysis/v1` (the default for AI-Assisted Analysis Producer Profile output, per [ADR-0006](../adr/0006-producer-profile-architecture.md) §4). A `content/analysis/v1` node's `metadata.contentType` is a set drawn from four values:
+Within the `content/*` family, the QEC sub-ontology specifies the typed-content sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — alongside `content/analysis/v1` (the default for AI-Assisted Analysis Producer Profile output,). A `content/analysis/v1` node's `metadata.contentType` is a set drawn from four values:
 
 - `claim` — one or more conformant claims (assertions the producer is making)
 - `question` — one or more conformant questions (asked but not-yet-answered queries)
 - `evidence` — one or more conformant evidence records (captured observations or analytical artifacts)
 - `untyped` — the envelope is valid, but the content has not been processed against any content profile yet (raw output pending extraction)
 
-`untyped` is **mutually exclusive** with the typed values. There is no `mixed` value; multiplicity is expressed by the set having more than one member. When `contentType` has more than one member, the `content` field carries an array of individually-typed blocks, each conformant to its profile and each retaining its own provenance, confidence, scope, and AnalyticalDerivation (for claims). The AI-Assisted Analysis Producer Profile output (per [ADR-0006](../adr/0006-producer-profile-architecture.md) §4) is `content/analysis/v1` with `metadata.contentType: ["untyped"]`; subsequent typed-content extraction produces separately-signed `content/claim/v1` / `content/question/v1` / `content/evidence/v1` nodes referencing the source `content/analysis/v1` via `attestation/wasDerivedFrom/v1` (see below).
+`untyped` is **mutually exclusive** with the typed values. There is no `mixed` value; multiplicity is expressed by the set having more than one member. When `contentType` has more than one member, the `content` field carries an array of individually-typed blocks, each conformant to its profile and each retaining its own provenance, confidence, scope, and AnalyticalDerivation (for claims). The AI-Assisted Analysis Producer Profile output is `content/analysis/v1` with `metadata.contentType: ["untyped"]`; subsequent typed-content extraction produces separately-signed `content/claim/v1` / `content/question/v1` / `content/evidence/v1` nodes referencing the source `content/analysis/v1` via `attestation/wasDerivedFrom/v1` (see below).
 
 Relations among typed-content sub-types and the untyped source draw from the small set the `attestation/*` family already provides, plus the structural-primitive references inside `content/*` nodes.
 
 ```mermaid
 flowchart LR
-    U["content/analysis/v1<br/>(untyped — raw output)"]:::partial
+ U["content/analysis/v1<br/>(untyped — raw output)"]:::partial
 
-    subgraph T["Typed content/* sub-types (reserved name-only)"]
-        Q["content/question/v1"]:::reserved
-        C["content/claim/v1"]:::reserved
-        E["content/evidence/v1"]:::reserved
-    end
+ subgraph T["Typed content/* sub-types (reserved name-only)"]
+ Q["content/question/v1"]:::reserved
+ C["content/claim/v1"]:::reserved
+ E["content/evidence/v1"]:::reserved
+ end
 
-    U -.->|"attestation/wasDerivedFrom/v1<br/>+ AnalyticalDerivation derivationMethod<br/>(classification-laundering guard)"| T
+ U -.->|"attestation/wasDerivedFrom/v1<br/>+ AnalyticalDerivation derivationMethod<br/>(classification-laundering guard)"| T
 
-    C -->|"attestation/answersQuestion/v1"| Q
-    C -->|"attestation/supportedBy/v1 / opposedBy/v1"| E
-    C -.->|"attestation/corroborates/v1 / contradicts/v1 / supersedes/v1<br/>(separately-signed claim → claim)"| C
-    E -.->|"attestation/wasDerivedFrom/v1<br/>(separately-signed evidence → evidence)"| E
+ C -->|"attestation/answersQuestion/v1"| Q
+ C -->|"attestation/supportedBy/v1 / opposedBy/v1"| E
+ C -.->|"attestation/corroborates/v1 / contradicts/v1 / supersedes/v1<br/>(separately-signed claim → claim)"| C
+ E -.->|"attestation/wasDerivedFrom/v1<br/>(separately-signed evidence → evidence)"| E
 
-    classDef partial fill:#fde68a,stroke:#92400e,color:#000
-    classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
+ classDef partial fill:#fde68a,stroke:#92400e,color:#000
+ classDef reserved fill:#fdba74,stroke:#9a3412,color:#000
 ```
 
-**Attribution.** The QEC pattern — claim, question, evidence as the three first-class content types of a discourse representation — is from **Joel Chan's Discourse Graphs work**. The Discourse Graphs community has developed and used QEC for several years as a structural representation of scholarly discourse. Typed Standards' adoption is structurally similar: QEC nodes are `content/*` sub-types; relations among them are separately-signed `attestation/*` nodes between content-addressed packages. The relations vocabulary is intentionally minimal — `wasDerivedFrom` is inherited from W3C PROV-O; `supportedBy` / `opposedBy` are the QEC primitives; `answersQuestion` ties a claim back to a question; `corroborates` / `contradicts` carry the existing claim-to-claim relations forward; `supersedes` carries claim versioning; all of them are `attestation/*` sub-types per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7. Domain extensions and producer profiles add domain-specific relations on top; the small core holds.
+**Attribution.** The QEC pattern — claim, question, evidence as the three first-class content types of a discourse representation — is from **Joel Chan's Discourse Graphs work**. The Discourse Graphs community has developed and used QEC for several years as a structural representation of scholarly discourse. Typed Standards' adoption is structurally similar: QEC nodes are `content/*` sub-types; relations among them are separately-signed `attestation/*` nodes between content-addressed packages. The relations vocabulary is intentionally minimal — `wasDerivedFrom` is inherited from W3C PROV-O; `supportedBy` / `opposedBy` are the QEC primitives; `answersQuestion` ties a claim back to a question; `corroborates` / `contradicts` carry the existing claim-to-claim relations forward; `supersedes` carries claim versioning; all of them are `attestation/*` sub-types Domain extensions and producer profiles add domain-specific relations on top; the small core holds.
 
-**Untyped → typed is an attested extraction step.** Processing an `untyped` `content/analysis/v1` node into typed content (`content/claim/v1` / `content/question/v1` / `content/evidence/v1`) is itself a first-class analytical step that MUST be attested via a separately-signed `attestation/wasDerivedFrom/v1` node. The attestation's `targetNodeId` points at the source untyped node, and its `derivationMethod` MUST carry an `AnalyticalDerivation` describing the extraction (which model or process performed the classification, against what prompt, over which source span) per the [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a) MUST-carry rule. The rationale is the **classification-laundering guard**: unstructured output silently typed loses the audit trail, and the precision of the resulting types is then mistaken for the precision of the underlying analysis. `untyped` is the *input type to an attested extraction operation*, not a passive dumping ground.
+**Untyped → typed is an attested extraction step.** Processing an `untyped` `content/analysis/v1` node into typed content (`content/claim/v1` / `content/question/v1` / `content/evidence/v1`) is itself a first-class analytical step that MUST be attested via a separately-signed `attestation/wasDerivedFrom/v1` node. The attestation's `targetNodeId` points at the source untyped node, and its `derivationMethod` MUST carry an `AnalyticalDerivation` describing the extraction (which model or process performed the classification, against what prompt, over which source span) per the refinement (a) MUST-carry rule. The rationale is the **classification-laundering guard**: unstructured output silently typed loses the audit trail, and the precision of the resulting types is then mistaken for the precision of the underlying analysis. `untyped` is the *input type to an attested extraction operation*, not a passive dumping ground.
 
 ---
 
@@ -415,13 +415,13 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 | `output` | string \| BlobRef | yes | The assistant's final response text, or a BlobRef. See §8.1.5. |
 | `trace` | object \| BlobRef | yes | OpenTelemetry-shaped trace, or a BlobRef to the same. |
 | `summary` | string | optional | Short, indexable, citation-ready summary of the analysis. Required when `metadata.contentProfile == "datHere"` (see §8.7). When present, part of canonical JSON and therefore covered by the envelope hash and signature. |
-| `contentProfile` | string | optional | The content profile the package conforms to. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §8.7). Orthogonal to `captureMethod`. Extensible — future profiles add ADRs. Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md). **Retained as legacy alias post-[ADR-0006](../adr/0006-producer-profile-architecture.md)**: post-ADR-0006 packages emit both `contentProfile` and `producerProfile`; verifiers SHOULD prefer `producerProfile` when present; the two MUST be consistent (see `producerProfile` row below). |
-| `producerProfile` | string | optional | The Producer Profile the package conforms to. Compound-string value of the form `<profile-type>/<profile-subtype>`. v0.1 vocabulary includes `"ai-assisted-analysis/datHere"`. Other profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only per [ADR-0006](../adr/0006-producer-profile-architecture.md). Consistency invariant: `contentProfile === "datHere"` iff `producerProfile.startsWith("ai-assisted-analysis/datHere")`. |
-| `contentHash` | object | yes (post-[ADR-0008](../adr/0008-multihash-content-hash.md)) | Multihash digest set fingerprinting the package's off-log content, canonicalized per the rule named in `contentCanonicalization`. Object keyed by lowercase algorithm name (`sha256`, `sha3-256`, `blake3`) with hex digest values; at least one entry required, `sha256` required by default. Verifier semantics: at-least-one-match per [ADR-0008](../adr/0008-multihash-content-hash.md) §3. Pre-ADR-0008 packages omit the field; the legacy single-SHA-256 hash lives externally (URL slug + DB row) and is interpreted as `contentHash: {"sha256": <legacy hex>}` at verify time. |
-| `contentCanonicalization` | string (URI) | recommended (post-[ADR-0007](../adr/0007-content-canonicalization.md)) | URI naming the canonicalization rule by which off-log content reduces to bytes that `contentHash` fingerprints. v0.1 reserved values: `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` and `https://typedstandards.org/canonicalization/legacy-json/v1`. Resolution semantics out of scope (URI is an identifier, not a fetch target); verifiers resolve via a local rule registry per [ADR-0007](../adr/0007-content-canonicalization.md) §3. Pre-ADR-0007 packages omit the field; verifiers infer the rule from `contentProfile` / `producerProfile` per [ADR-0007](../adr/0007-content-canonicalization.md) §4. |
-| `type` | string (URI) | yes (post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md)) | The node's family + sub-type identifier per the two-family taxonomy. Form: `content/<noun>/v<N>` or `attestation/<verb>/v<N>` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §6. Pre-ADR-0009 packages omit the field and are interpreted as `content/analysis/v1` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §9. |
-| `signer` | object | recommended (post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md)) | Identity binding for the party that signed the node. Fields: `bindingTier` (required), `identifier` (required; provider-prefixed string), `displayName` (required), `verifiedAt` (optional; ISO-8601). Distinct from the `sig` envelope (publicKey + algorithm + kid per §8.3.1); verifier MUST cross-check that `sig.kid` resolves via the trust registry's `signerIdentity` to the same identity `signer.identifier` claims, per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4. |
-| `targetNodeId` | string | conditional | Required for `attestation/*` nodes (the node referenced by the attestation); MUST NOT appear on `content/*` nodes. Some `attestation/*` sub-types carry multiple target references — see [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 for per-sub-type payload shape. |
+| `contentProfile` | string | optional | The content profile the package conforms to. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §8.7). Orthogonal to `captureMethod`. Extensible — future profiles add ADRs. **Retained as legacy alias v0.1**: v0.1 packages emit both `contentProfile` and `producerProfile`; verifiers SHOULD prefer `producerProfile` when present; the two MUST be consistent (see `producerProfile` row below). |
+| `producerProfile` | string | optional | The Producer Profile the package conforms to. Compound-string value of the form `<profile-type>/<profile-subtype>`. v0.1 vocabulary includes `"ai-assisted-analysis/datHere"`. Other profile types (`human`, `hybrid`, `sandbox-only`) and subtypes are reserved name-only. Consistency invariant: `contentProfile === "datHere"` iff `producerProfile.startsWith("ai-assisted-analysis/datHere")`. |
+| `contentHash` | object | yes (v0.1) | Multihash digest set fingerprinting the package's off-log content, canonicalized per the rule named in `contentCanonicalization`. Object keyed by lowercase algorithm name (`sha256`, `sha3-256`, `blake3`) with hex digest values; at least one entry required, `sha256` required by default. Verifier semantics: at-least-one-match pre-v0.1 packages omit the field; the legacy single-SHA-256 hash lives externally (URL slug + DB row) and is interpreted as `contentHash: {"sha256": <legacy hex>}` at verify time. |
+| `contentCanonicalization` | string (URI) | recommended (v0.1) | URI naming the canonicalization rule by which off-log content reduces to bytes that `contentHash` fingerprints. v0.1 reserved values: `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` and `https://typedstandards.org/canonicalization/legacy-json/v1`. Resolution semantics out of scope (URI is an identifier, not a fetch target); verifiers resolve via a local rule registry pre-v0.1 packages omit the field; verifiers infer the rule from `contentProfile` / `producerProfile` |
+| `type` | string (URI) | yes (v0.1) | The node's family + sub-type identifier per the two-family taxonomy. Form: `content/<noun>/v<N>` or `attestation/<verb>/v<N>` pre-v0.1 packages omit the field and are interpreted as `content/analysis/v1` |
+| `signer` | object | recommended (v0.1) | Identity binding for the party that signed the node. Fields: `bindingTier` (required), `identifier` (required; provider-prefixed string), `displayName` (required), `verifiedAt` (optional; ISO-8601). Distinct from the `sig` envelope (publicKey + algorithm + kid per §8.3.1); verifier MUST cross-check that `sig.kid` resolves via the trust registry's `signerIdentity` to the same identity `signer.identifier` claims, |
+| `targetNodeId` | string | conditional | Required for `attestation/*` nodes (the node referenced by the attestation); MUST NOT appear on `content/*` nodes. Some `attestation/*` sub-types carry multiple target references — see for per-sub-type payload shape. |
 | `provenance` | object | optional | W3C PROV-O JSON-LD graph derived from `trace` at publish time. Present when the trace was inspectable inline; omitted when `trace` is a BlobRef and no override is supplied. |
 | `extensions` | object | optional | Reverse-DNS-keyed implementation-specific artifacts (e.g. `org.civicaitools.notebook`, `org.civicaitools.environment`). Included in the canonical JSON and therefore covered by the envelope hash. |
 
@@ -433,7 +433,7 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 | `packageId` | string (UUID) | yes | A UUID generated at publish time. Distinct from the envelope hash. |
 | `createdAt` | string (ISO 8601) | yes | UTC timestamp set at packager time. |
 | `signingKeyId` | string | yes | The `kid` of the signing key. Present in the canonical JSON; therefore covered by the envelope hash. |
-| `captureMethod` | string | yes (post-[ADR-0003](../adr/0003-evidence-capture-method.md)) | A value in the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle (per [ADR-0011](../adr/0011-capturemethod-generalization.md)). For the `ai-assisted-analysis` Producer Profile (the v0.1 default), the vocabulary is `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`. Required at the publish route since 2026-04-29. Pre-ADR-0003 packages persist with a `null` capture method on the database row and render with an "Unknown (pre-ADR-0003)" label. |
+| `captureMethod` | string | yes (v0.1) | A value in the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle. For the `ai-assisted-analysis` Producer Profile (the v0.1 default), the vocabulary is `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`. Required at the publish route since 2026-04-29. pre-v0.1 packages persist with a `null` capture method on the database row and render with an "Unknown (pre-v0.1)" label. |
 
 #### 8.1.3 `prompt` object
 
@@ -457,10 +457,10 @@ The fields `output`, `trace`, and `skillMetadata.skillText` MAY be supplied as a
 
 ```json
 {
-  "ref": "blob:sha256:<64-hex-char SHA-256 of the content bytes>",
-  "url": "https://<store>.public.blob.vercel-storage.com/evidence-refs/<hash>.<ext>",
-  "contentType": "text/markdown",
-  "size": 4194304
+ "ref": "blob:sha256:<64-hex-char SHA-256 of the content bytes>",
+ "url": "https://<store>.public.blob.vercel-storage.com/evidence-refs/<hash>.<ext>",
+ "contentType": "text/markdown",
+ "size": 4194304
 }
 ```
 
@@ -472,14 +472,14 @@ A verifier encountering a BlobRef MUST:
 
 A BlobRef whose fetch fails, whose hash mismatches, or whose size mismatches MUST cause the verifier to report `ok: false` for that reference. A package MAY remain otherwise verifiable when one of its BlobRefs fails, but downstream consumers SHOULD treat a package with a failed BlobRef as missing the corresponding content.
 
-**Relationship to `attestation/locatedAt/v1` (post-[ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md)).** BlobRef is the **single-signer implicit case** of [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md)'s location-as-attestation framing. The verification mechanics are structurally identical: a verifier fetches a URI, recomputes a content hash over the fetched bytes, compares against the signed fingerprint, and confirms size. The differences are placement and signing surface:
+**Relationship to `attestation/locatedAt/v1` (v0.1).** BlobRef is the **single-signer implicit case** of location-as-attestation framing. The verification mechanics are structurally identical: a verifier fetches a URI, recomputes a content hash over the fetched bytes, compares against the signed fingerprint, and confirms size. The differences are placement and signing surface:
 
 - **BlobRef** is an in-envelope four-field shape on a `content/*` node's sub-content fields. The parent node's signature covers the BlobRef object as part of its canonical JSON, so the publisher *implicitly* asserts "this sub-content lives at this URL with this fingerprint and this size" as part of their own signed package. The assertion piggybacks on the parent node's signature.
-- **`attestation/locatedAt/v1`** is a separately-signed envelope with its own `nodeId`, signer, timestamp, and (optionally) Rekor inclusion proof. It can be emitted later than the target content node, by parties other than the target's publisher, and references the target by `nodeId` rather than living inside it. Multiple `locatedAt` attestations from different `(signer.identifier, uri-authority)` pairs express durable independent copies per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) §2.
+- **`attestation/locatedAt/v1`** is a separately-signed envelope with its own `nodeId`, signer, timestamp, and (optionally) Rekor inclusion proof. It can be emitted later than the target content node, by parties other than the target's publisher, and references the target by `nodeId` rather than living inside it. Multiple `locatedAt` attestations from different `(signer.identifier, uri-authority)` pairs express durable independent copies
 
 BlobRef-shaped sub-content references remain conformant under v0.1 for in-envelope use. New cross-host location declarations made by parties other than the parent node's signer SHOULD use `attestation/locatedAt/v1` instead of BlobRef.
 
-> ⚠ **Subject to [Q2](open-questions.md#q2--federation-substrate) — federation substrate.** BlobRef URLs in the reference implementation point at the deployment's Vercel Blob storage. Generalizing to multi-host or multi-registry blob storage — including content-addressable storage that does not require an HTTPS-fetchable URL at all (e.g. IPFS-style addressing) — depends on which federation substrate Q2 selects. The `attestation/locatedAt/v1` framing per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) is the natural carrier for cross-host or federation-substrate-native location declarations once Q2 resolves.
+> ⚠ **Subject to [Q2](open-questions.md#q2--federation-substrate) — federation substrate.** BlobRef URLs in the reference implementation point at the deployment's Vercel Blob storage. Generalizing to multi-host or multi-registry blob storage — including content-addressable storage that does not require an HTTPS-fetchable URL at all (e.g. IPFS-style addressing) — depends on which federation substrate Q2 selects. The `attestation/locatedAt/v1` framing is the natural carrier for cross-host or federation-substrate-native location declarations once Q2 resolves.
 
 #### 8.1.6 `extensions` (optional)
 
@@ -493,14 +493,14 @@ The `org.civicaitools.environment` extension carries environment metadata (model
 
 The `cost` object's current schema (`promptTokens`, `completionTokens`, `totalTokens`, `model`, `durationMs`) is AI-LLM-specific. It presupposes that the analysis was produced by a token-billed language model.
 
-> ⚠ **Subject to [Q7](open-questions.md#q7--producer-type-scope) — producer-type scope** and [Q9](open-questions.md#q9--ai-specific-commitments-and-producer-type-generalization) (AI-specific commitments inventory). The `cost` object's schema is currently AI-specific. If Q7 resolves toward generalization to human-authored or hybrid-authored packages, this object will need a producer-type-aware shape (human time, compute time, third-party API costs, etc.) per the [ADR-0011](../adr/0011-capturemethod-generalization.md) pattern. The current shape stays normative for AI-produced packages in v0.1; downstream generalization will land as its own ADR when an adopter blocks.
+> ⚠ **Subject to [Q7](open-questions.md#q7--producer-type-scope) — producer-type scope** and [Q9](open-questions.md#q9--ai-specific-commitments-and-producer-type-generalization) (AI-specific commitments inventory). The `cost` object's schema is currently AI-specific. If Q7 resolves toward generalization to human-authored or hybrid-authored packages, this object will need a producer-type-aware shape (human time, compute time, third-party API costs, etc.) per the pattern. The current shape stays normative for AI-produced packages in v0.1; downstream generalization will land as its own ADR when an adopter blocks.
 
 ### 8.2 Canonical JSON, the envelope hash, and the content hash
 
-Canonicalization comes in two kinds, per [ADR-0007](../adr/0007-content-canonicalization.md) + [ADR-0008](../adr/0008-multihash-content-hash.md):
+Canonicalization comes in two kinds,:
 
 - **Envelope-level canonicalization** is a single fixed rule committed to by the spec. Every package's unsigned envelope (the canonical-JSON evidence package object with the signature envelope removed) is canonicalized via [RFC 8785 JSON Canonicalization Scheme (JCS)](https://www.rfc-editor.org/rfc/rfc8785) to produce envelope bytes. The **envelope hash** is the SHA-256 hex digest of those JCS bytes. This rule applies to every envelope shape; there is no envelope-level URI.
-- **Content-level canonicalization** varies per content shape. Off-log content (whatever the package's `contentHash` fingerprints) is canonicalized per the rule named by the package's `contentCanonicalization` field (§8.1.1). The **content hash** is the multihash digest set fingerprinting those canonicalized bytes — an object keyed by lowercase algorithm name (`sha256` required default, `sha3-256` + `blake3` registered alternates per [ADR-0008](../adr/0008-multihash-content-hash.md) §2). v0.1 reserved canonicalization-rule URIs are `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default).
+- **Content-level canonicalization** varies per content shape. Off-log content (whatever the package's `contentHash` fingerprints) is canonicalized per the rule named by the package's `contentCanonicalization` field (§8.1.1). The **content hash** is the multihash digest set fingerprinting those canonicalized bytes — an object keyed by lowercase algorithm name (`sha256` required default, `sha3-256` + `blake3` registered alternates). v0.1 reserved canonicalization-rule URIs are `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default).
 
 The two rules are nested:
 
@@ -516,7 +516,7 @@ Fields that live on the database row but not in the canonical package object (su
 
 A change to any in-package field — including a single character in `output`, a different `kid`, a different `captureMethod`, a different `contentCanonicalization` URI, or a different `contentHash` digest — produces a different envelope hash, which produces a different content-addressable URL and a different signature.
 
-> **Backwards-compatibility (normative).** Pre-[ADR-0008](../adr/0008-multihash-content-hash.md) packages were canonicalized via Node.js `JSON.stringify` with insertion-order key preservation, with no JCS commitment. The JCS commitment is a forward-looking spec requirement; pre-ADR-0008 packages remain verifiable under the legacy `JSON.stringify` rule. Verifiers MUST detect which rule applies per the rule of [ADR-0008](../adr/0008-multihash-content-hash.md) §4: post-ADR-0008 packages emit `contentHash` as a multihash object in the canonical JSON and use JCS; pre-ADR-0008 packages have an external single-SHA-256 hex string (URL slug + DB row) and use `JSON.stringify`. The reference-implementation packager + verify-route's switch from `JSON.stringify` to JCS is a Phase 3 implementation item scheduled separately.
+> **Backwards-compatibility (normative).** pre-v0.1 packages were canonicalized via Node.js `JSON.stringify` with insertion-order key preservation, with no JCS commitment. The JCS commitment is a forward-looking spec requirement; pre-v0.1 packages remain verifiable under the legacy `JSON.stringify` rule. Verifiers MUST detect which rule applies: v0.1 packages emit `contentHash` as a multihash object in the canonical JSON and use JCS; pre-v0.1 packages have an external single-SHA-256 hex string (URL slug + DB row) and use `JSON.stringify`. The reference-implementation packager + verify-route's switch from `JSON.stringify` to JCS is a Phase 3 implementation item scheduled separately.
 
 ### 8.3 Cryptographic envelope
 
@@ -526,29 +526,29 @@ This section describes the signing, timestamping, and transparency-log mechanism
 
 A conformant evidence package MUST be signed with **Ed25519ph** (the pre-hashed Ed25519 variant, RFC 8032 §5.1.2). The signature is computed over the UTF-8 bytes of the **envelope-hash** hex string, NOT over the raw 32-byte hash bytes. The envelope hash is the SHA-256 hex digest of the RFC 8785 JCS canonicalization of the unsigned envelope (§8.2; [ADR-0008](../adr/0008-multihash-content-hash.md) §6-§7). Implementations using `@noble/curves/ed25519` apply Ed25519ph's internal SHA-512 prehash automatically; implementations using primitives that expose only Ed25519 MUST NOT pre-hash on the application side.
 
-The full signing chain post-[ADR-0008](../adr/0008-multihash-content-hash.md):
+The full signing chain v0.1:
 
 1. Unsigned envelope (the canonical JSON with the signature envelope removed) → RFC 8785 JCS → envelope bytes.
 2. Envelope bytes → SHA-256 → 32-byte envelope hash.
 3. Envelope hash → hex encode → envelope-hash hex string.
 4. Envelope-hash hex string → UTF-8 bytes → Ed25519ph → signature.
 
-The envelope JSON contains `contentHash` (multihash form per [ADR-0008](../adr/0008-multihash-content-hash.md) §1) and `contentCanonicalization` (URI naming the off-log content's canonicalization rule per [ADR-0007](../adr/0007-content-canonicalization.md)) as fields; both are therefore covered by the envelope hash and the signature. The off-log content's bytes are independently fingerprinted by `contentHash` per §8.2's two-kinds split.
+The envelope JSON contains `contentHash` (multihash form) and `contentCanonicalization` (URI naming the off-log content's canonicalization rule) as fields; both are therefore covered by the envelope hash and the signature. The off-log content's bytes are independently fingerprinted by `contentHash` per §8.2's two-kinds split.
 
 The signed envelope persisted alongside the package is the JSON object:
 
 ```json
 {
-  "signature": "<base64>",
-  "publicKey": "<base64 DER SPKI>",
-  "algorithm": "Ed25519ph",
-  "kid": "<key identifier>"
+ "signature": "<base64>",
+ "publicKey": "<base64 DER SPKI>",
+ "algorithm": "Ed25519ph",
+ "kid": "<key identifier>"
 }
 ```
 
 The `kid` and `publicKey` in the envelope MUST match the `kid` and `publicKey` of an entry in the trust registry. The `metadata.signingKeyId` field inside the package's canonical JSON MUST equal the envelope's `kid`. A `kid` swap on the envelope after publication therefore changes neither the envelope hash nor the package itself — the canonical JSON is unchanged — but is detectable as an envelope-vs-canonical mismatch by any verifier.
 
-Per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4, the signature envelope (`sig` — publicKey + algorithm + kid + signature bytes) is structurally distinct from the envelope-side identity claim (`signer` — bindingTier + identifier + displayName per §6.2 and §8.5). The signature envelope answers *what was signed and by what key*; the `signer` object answers *who claims to have signed it*. A verifier MUST cross-check that the envelope's `kid` resolves via the trust registry's `signerIdentity` (per §8.3.3) to the same identity the package's `signer.identifier` claims. A mismatch MUST cause the verifier to report `signer_identity_mismatch` and reject the node. Pre-ADR-0009 packages do not carry an envelope-side `signer` claim; verifiers derive an implicit `signer` from the trust-registry `signerIdentity` entry and apply no mismatch check (there is no envelope-side claim to cross-check against). This split prevents an attacker from attaching a valid-by-key signature with a mismatched identity claim.
+The signature envelope (`sig` — publicKey + algorithm + kid + signature bytes) is structurally distinct from the envelope-side identity claim (`signer` — bindingTier + identifier + displayName per §6.2 and §8.5). The signature envelope answers *what was signed and by what key*; the `signer` object answers *who claims to have signed it*. A verifier MUST cross-check that the envelope's `kid` resolves via the trust registry's `signerIdentity` (per §8.3.3) to the same identity the package's `signer.identifier` claims. A mismatch MUST cause the verifier to report `signer_identity_mismatch` and reject the node. pre-v0.1 packages do not carry an envelope-side `signer` claim; verifiers derive an implicit `signer` from the trust-registry `signerIdentity` entry and apply no mismatch check (there is no envelope-side claim to cross-check against). This split prevents an attacker from attaching a valid-by-key signature with a mismatched identity claim.
 
 Signing is best-effort at publish time. If the signing leg fails, the database row persists with a `null` signature column; the package and its envelope hash remain valid but it does not satisfy this specification's signed-package conformance.
 
@@ -558,31 +558,31 @@ A conformant evidence package SHOULD also carry an RFC 3161 trusted timestamp fr
 
 A verifier checks RFC 3161 against FreeTSA's published CA chain and Rekor inclusion against `rekor.sigstore.dev` once it has obtained the timestamp token and the Rekor entry id. The cryptographic *check* of these proofs requires only public infrastructure; the *retrieval* of the proofs themselves currently depends on the reference implementation's verify endpoint because the package JSON does not embed them. See §9 for the full verification surface and the [Q1](open-questions.md#q1--package-format) callout in §8.1 for the target end-state where these are embedded in the package itself.
 
-**Privacy-disclosure note.** Publishing a node's commitment to a transparency log is itself a public act: the envelope hash (`nodeId`), the envelope timestamp, and (via the trust registry's `signerIdentity` per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4) the signer's identity all become public records the moment the inclusion proof is obtained. This is the intended property for published analyses where transparency is a feature, and it is part of the trust contract this specification offers. It is not a neutral act for sensitive or pre-publication content. The architecture therefore PERMITS private transparency logs — an organizational-internal Rekor-equivalent log, a recipient-distributed inclusion-proof protocol, or a deferred-publication pattern where the public log entry is created only when the publication transition lands — for maximally-sensitive cases. No private-log substrate is built in v0.1; the design-permission is named per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) §4 and Xanadu-gated for implementation. Adopters reasoning about whether to publish should treat the public log entry as part of the disclosure surface, not as opaque cryptographic plumbing. See §11 for a fuller treatment of privacy implications.
+**Privacy-disclosure note.** Publishing a node's commitment to a transparency log is itself a public act: the envelope hash (`nodeId`), the envelope timestamp, and (via the trust registry's `signerIdentity`) the signer's identity all become public records the moment the inclusion proof is obtained. This is the intended property for published analyses where transparency is a feature, and it is part of the trust contract this specification offers. It is not a neutral act for sensitive or pre-publication content. The architecture therefore PERMITS private transparency logs — an organizational-internal Rekor-equivalent log, a recipient-distributed inclusion-proof protocol, or a deferred-publication pattern where the public log entry is created only when the publication transition lands — for maximally-sensitive cases. No private-log substrate is built in v0.1; the design-permission is named and Xanadu-gated for implementation. Adopters reasoning about whether to publish should treat the public log entry as part of the disclosure surface, not as opaque cryptographic plumbing. See §11 for a fuller treatment of privacy implications.
 
 #### 8.3.3 Trust registry
 
-The trust registry is published at `${baseUrl}/.well-known/typed-publisher.json` per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §3. Reference implementations SHOULD also serve the same JSON content at the legacy path `${baseUrl}/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers; both URLs return byte-identical content, and verifiers MAY fetch either. The new path is the **canonical** path going forward; new external clients SHOULD fetch the new path. The parallel-serve pattern is permanent (no forced cutover); a future ADR may deprecate the legacy path if no live consumer depends on it.
+The trust registry is published at `${baseUrl}/.well-known/typed-publisher.json` Reference implementations SHOULD also serve the same JSON content at the legacy path `${baseUrl}/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers; both URLs return byte-identical content, and verifiers MAY fetch either. The new path is the **canonical** path going forward; new external clients SHOULD fetch the new path. The parallel-serve pattern is permanent (no forced cutover); a future ADR may deprecate the legacy path if no live consumer depends on it.
 
 The trust registry is a JSON object with a `keys` array of entries:
 
 ```json
 {
-  "kid": "platform:evidence-2026-04",
-  "publicKey": "<base64 DER SPKI>",
-  "signerIdentity": {
-    "bindingTier": "platform",
-    "identifier": "platform:civic-ai-tools",
-    "displayName": "Civic AI Tools Platform"
-  },
-  "status": "active",
-  "activatedAt": "2026-04-15T00:00:00.000Z",
-  "deprecatedAt": null,
-  "revokedAt": null
+ "kid": "platform:evidence-2026-04",
+ "publicKey": "<base64 DER SPKI>",
+ "signerIdentity": {
+ "bindingTier": "platform",
+ "identifier": "platform:civic-ai-tools",
+ "displayName": "Civic AI Tools Platform"
+ },
+ "status": "active",
+ "activatedAt": "2026-04-15T00:00:00.000Z",
+ "deprecatedAt": null,
+ "revokedAt": null
 }
 ```
 
-Per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4, each entry MAY carry a `signerIdentity` object documenting which identity the `kid` is bound to. The verifier uses this to cross-check the envelope's `signer.identifier` claim against the registry-recorded identity for the envelope's `kid`. Pre-ADR-0009 registry entries omit `signerIdentity`; verifiers treat absence as `signerIdentity: { bindingTier: "legacy_embedded", identifier: "<kid>", displayName: "<kid>" }` and apply no mismatch check. Post-ADR-0009 registries SHOULD populate `signerIdentity` for every active key.
+Each entry MAY carry a `signerIdentity` object documenting which identity the `kid` is bound to. The verifier uses this to cross-check the envelope's `signer.identifier` claim against the registry-recorded identity for the envelope's `kid`. pre-v0.1 registry entries omit `signerIdentity`; verifiers treat absence as `signerIdentity: { bindingTier: "legacy_embedded", identifier: "<kid>", displayName: "<kid>" }` and apply no mismatch check. Post-ADR-0009 registries SHOULD populate `signerIdentity` for every active key.
 
 Status values:
 
@@ -617,43 +617,43 @@ The reference implementation binds package authorship to a GitHub OAuth account.
 
 The current direction is a graded identity ladder: pseudonymous → weak (GitHub OIDC / sigstore keyless) → moderate (ORCID) → institutional (DNS-bound `did:web`) → strong (notarized). The ladder is informative for now; only the GitHub tier is implemented. [Q3](open-questions.md#q3--first-non-github-identity-provider) will resolve which non-GitHub provider lands first.
 
-The `signer` object (§8.1.1, §6.2) carries the identity claim on the envelope side; the trust registry's `signerIdentity` entry (§8.3.3) carries the identity binding on the registry side; the verifier cross-checks the two per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §4. The fully-fleshed-out per-tier identity-binding schemas (what `signer.identifier` looks like for `orcid`, `did-web`, `notarized`) are out of scope for v0.1 and stay tied to Q3.
+The `signer` object (§8.1.1, §6.2) carries the identity claim on the envelope side; the trust registry's `signerIdentity` entry (§8.3.3) carries the identity binding on the registry side; the verifier cross-checks the two The fully-fleshed-out per-tier identity-binding schemas (what `signer.identifier` looks like for `orcid`, `did-web`, `notarized`) are out of scope for v0.1 and stay tied to Q3.
 
 This v0.1 draft documents the GitHub binding as the only currently-conformant identity binding; the standard will gain richer identity-binding shapes once Q3 lands.
 
 ### 8.6 captureMethod
 
-`captureMethod` is the label identifying how the package's content was captured. The **field itself** — its presence, its required-and-signed discipline, its tamper-evident framing, and its verbatim-by-construction labeling principle — is specified by [ADR-0003](../adr/0003-evidence-capture-method.md). The **value space** — open at the core level, with the vocabulary of valid values declared per Producer Profile — is specified by [ADR-0011](../adr/0011-capturemethod-generalization.md).
+`captureMethod` is the label identifying how the package's content was captured. The **field itself** — its presence, its required-and-signed discipline, its tamper-evident framing, and its verbatim-by-construction labeling principle — is specified. The **value space** — open at the core level, with the vocabulary of valid values declared per Producer Profile — is specified.
 
-A conformant evidence package published after 2026-04-29 MUST carry exactly one of the values declared by the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle (per [ADR-0011](../adr/0011-capturemethod-generalization.md) §1). The vocabulary lookup follows the rule in [ADR-0011](../adr/0011-capturemethod-generalization.md) §3:
+A conformant evidence package published after 2026-04-29 MUST carry exactly one of the values declared by the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle. The vocabulary lookup follows the rule:
 
-1. Read the package's `producerProfile`. When absent and `contentProfile === "datHere"`, treat producerProfile as `ai-assisted-analysis/datHere` per [ADR-0006](../adr/0006-producer-profile-architecture.md) §2 legacy alias. When both fields are absent (pre-ADR-0006 packages), treat producerProfile as `ai-assisted-analysis` — the implicit profile-type for pre-existing packages, all of which were AI-mediated by construction.
+1. Read the package's `producerProfile`. When absent and `contentProfile === "datHere"`, treat producerProfile as `ai-assisted-analysis/datHere` legacy alias. When both fields are absent (pre-v0.1 packages), treat producerProfile as `ai-assisted-analysis` — the implicit profile-type for pre-existing packages, all of which were AI-mediated by construction.
 2. Resolve the producerProfile's guidance bundle via the local rule registry mechanism [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention) anticipates. v0.1 verifiers resolve to a hardcoded fallback table; the bundle distribution mechanism is a follow-on per Q32.
 3. Confirm `metadata.captureMethod` is in the captureMethod vocabulary declared by that bundle.
 
-For the `ai-assisted-analysis` Producer Profile, the v0.1 vocabulary — relocated from core by [ADR-0011](../adr/0011-capturemethod-generalization.md) §2 — is:
+For the `ai-assisted-analysis` Producer Profile, the v0.1 vocabulary — relocated from core — is:
 
 - **`chat-flow-stream`** — the publishing platform captured the bytes as the model streamed to the calling client. Verbatim by construction at the wire layer.
 - **`claude-code-jsonl-readback`** — the publishing client (typically a Claude Code skill) read each turn's content and per-invocation usage from the session JSONL on disk, filtering to text-typed content blocks only. Verbatim by construction at the JSONL layer.
-- **`claude-code-self-report`** — legacy. The publishing model paraphrased the original session from in-context memory. Deprecated as of 2026-04-28; retained as a vocabulary value so packages predating [ADR-0003](../adr/0003-evidence-capture-method.md) can be re-rendered with their actual capture method labeled rather than silently re-described as something they were not.
+- **`claude-code-self-report`** — legacy. The publishing model paraphrased the original session from in-context memory. Deprecated as of 2026-04-28; retained as a vocabulary value so packages predating the capture-method discipline can be re-rendered with their actual capture method labeled rather than silently re-described as something they were not.
 
-The vocabulary applies to all subtypes of `ai-assisted-analysis` (the existing `datHere` subtype, the reserved `civicaitools-default` subtype, and any future subtypes) unless a subtype's guidance bundle explicitly constrains or extends the parent vocabulary; v0.1 has no subtype-level overrides per [ADR-0011](../adr/0011-capturemethod-generalization.md) §2.
+The vocabulary applies to all subtypes of `ai-assisted-analysis` (the existing `datHere` subtype, the reserved `civicaitools-default` subtype, and any future subtypes) unless a subtype's guidance bundle explicitly constrains or extends the parent vocabulary; v0.1 has no subtype-level overrides
 
 The reference publish route enforces the field at request validation; a missing or invalid value returns `400`. The field is part of `metadata.captureMethod` in the canonical JSON and is therefore covered by the envelope hash and the platform signature: the capture method itself is tamper-evident.
 
 A package's signature attests that the package was published and has not been altered since. It does NOT attest that the package's content matches what was actually generated in the original session — that property is structural and follows from the capture method. Surfaces SHOULD render the `captureMethod` label near the signature-verification verdict so readers do not conflate "signed" with "verbatim."
 
-Pre-[ADR-0003](../adr/0003-evidence-capture-method.md) packages persist with a `null` capture-method column on the database row. Surfaces SHOULD render these as `Unknown (pre-ADR-0003)` rather than defaulting to one of the listed values.
+pre-v0.1 packages persist with a `null` capture-method column on the database row. Surfaces SHOULD render these as `Unknown (pre-v0.1)` rather than defaulting to one of the listed values.
 
-Future AI-publishing surfaces (a hook-based path that records bytes at message-emission time, a third-party signed self-attestation, an MCP-host-agnostic capture protocol) extend the `ai-assisted-analysis` Producer Profile's vocabulary by amending **that profile's guidance bundle**, not by amending the specification's core. The bundle's amendment surface — versioning, distribution, content-addressing — is governed by [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention). Non-AI Producer Profiles (Human, Hybrid, Sandbox-only, future adopter profiles) declare their own captureMethod vocabularies in their respective guidance bundles when promoted from reserved to built per [ADR-0006](../adr/0006-producer-profile-architecture.md) §1.
+Future AI-publishing surfaces (a hook-based path that records bytes at message-emission time, a third-party signed self-attestation, an MCP-host-agnostic capture protocol) extend the `ai-assisted-analysis` Producer Profile's vocabulary by amending **that profile's guidance bundle**, not by amending the specification's core. The bundle's amendment surface — versioning, distribution, content-addressing — is governed by [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention). Non-AI Producer Profiles (Human, Hybrid, Sandbox-only, future adopter profiles) declare their own captureMethod vocabularies in their respective guidance bundles when promoted from reserved to built
 
 ### 8.7 Content profile: datHere
 
-Content profiles specify the normative requirements for packages produced under a particular Producer Profile subtype (per [ADR-0006](../adr/0006-producer-profile-architecture.md)). They sit below the captureMethod layer (§8.6) — captureMethod names *how* content was captured; a content profile names *what additional fields the package must carry and how its content is structured*. The cross-host publication mechanism (§8.8) is the bridge that lets a content profile's packages travel to hosts other than the producing host. v0.1 specifies one content profile — `datHere` — as the first realized subtype of the AI-Assisted Analysis Producer Profile. Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved per [ADR-0006](../adr/0006-producer-profile-architecture.md) §1; their content profiles will be specified when promoted from reserved to built. The remainder of this section specifies the `datHere` content profile.
+Content profiles specify the normative requirements for packages produced under a particular Producer Profile subtype. They sit below the captureMethod layer (§8.6) — captureMethod names *how* content was captured; a content profile names *what additional fields the package must carry and how its content is structured*. The cross-host publication mechanism (§8.8) is the bridge that lets a content profile's packages travel to hosts other than the producing host. v0.1 specifies one content profile — `datHere` — as the first realized subtype of the AI-Assisted Analysis Producer Profile. Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved; their content profiles will be specified when promoted from reserved to built. The remainder of this section specifies the `datHere` content profile.
 
-> ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for the datHere content profile). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
+> ⚠ **Resolves [Q21](open-questions.md#q21--canonical-notebook-format-for-dathere-capturemethod) (canonical notebook format for the datHere content profile).**
 
-> 📌 **Producer Profile reframe per [ADR-0006](../adr/0006-producer-profile-architecture.md) (2026-05-23).** This section's normative requirements stay verbatim; only the framing language is reframed. Under ADR-0006, the existing `datHere` content profile is the first realized subtype of the AI-Assisted Analysis Producer Profile — i.e., `producerProfile: "ai-assisted-analysis/datHere"`. The A-G envelope described below is a **production-process attestation shape**, not a content-shape variant; it lives inside the Producer Profile axis, not the Content Profiles axis (which is reserved for typed-content carriers — Typed Claims / Typed Evidence / Typed Questions). The `contentProfile` field is retained as a legacy alias for backwards-compatibility (consistency invariant per ADR-0006 §2).
+> 📌 **Producer Profile reframe (2026-05-23).** This section's normative requirements stay verbatim; only the framing language is reframed. Under ADR-0006, the existing `datHere` content profile is the first realized subtype of the AI-Assisted Analysis Producer Profile — i.e., `producerProfile: "ai-assisted-analysis/datHere"`. The A-G envelope described below is a **production-process attestation shape**, not a content-shape variant; it lives inside the Producer Profile axis, not the Content Profiles axis (which is reserved for typed-content carriers — Typed Claims / Typed Evidence / Typed Questions). The `contentProfile` field is retained as a legacy alias for backwards-compatibility (consistency invariant per ADR-0006 §2).
 
 A `datHere`-content-profile package organizes its content as the **A-G envelope**, a profile over the existing top-level fields specified in §8.1. The envelope is a content profile, not a new container: the package remains the single canonical JSON object whose SHA-256-over-JCS-canonicalization is the envelope hash. A-G is the way a `datHere`-content-profile package's content is *organized for readers and cross-host publishing*; the top-level fields are still what gets hashed and signed.
 
@@ -679,7 +679,7 @@ A conformant `datHere`-content-profile package MUST satisfy *every* requirement 
 4. **Notebook present.** The `extensions["org.civicaitools.notebook"]` object MUST be present, MUST conform to a notebook format admitted by §8.7.2, and MUST satisfy the determinism property in §8.7.3. Where the notebook is too large to inline, it MAY be supplied as a BlobRef. The notebook MAY be either skeleton or executed at protocol level; §8.7.4 specifies the discriminator and the corresponding reproducibility-property strength for each. Both forms are conformant `datHere` notebooks.
 5. **Rendered answer present.** `output` MUST be present (inline or BlobRef) and MUST be the rendered output of executing the notebook against the documented runtime at publish time.
 6. **Summary present.** `summary` (§8.1.1) MUST be present, MUST be non-empty, and SHOULD be short enough to surface in citation contexts (recommended ≤ 280 characters; not enforced numerically).
-7. **Content-profile label.** `metadata.contentProfile` MUST be `"datHere"`. The label is itself covered by the canonical-JSON hash and the platform signature per §8.2. `captureMethod` (per §8.6) continues to carry one of the values declared by the package's `producerProfile`'s guidance bundle; for a `datHere`-content-profile package — which post-[ADR-0006](../adr/0006-producer-profile-architecture.md) also carries `producerProfile: "ai-assisted-analysis/datHere"` — that resolves to the `ai-assisted-analysis` Producer Profile's v0.1 vocabulary (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`). `contentProfile` is an independent axis describing what shape the content takes.
+7. **Content-profile label.** `metadata.contentProfile` MUST be `"datHere"`. The label is itself covered by the canonical-JSON hash and the platform signature per §8.2. `captureMethod` (per §8.6) continues to carry one of the values declared by the package's `producerProfile`'s guidance bundle; for a `datHere`-content-profile package — which v0.1 also carries `producerProfile: "ai-assisted-analysis/datHere"` — that resolves to the `ai-assisted-analysis` Producer Profile's v0.1 vocabulary (`chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`). `contentProfile` is an independent axis describing what shape the content takes.
 
 A verifier encountering a `datHere`-content-profile-labeled package that fails any of the requirements above MUST report the package as malformed-for-`datHere` while still being able to perform the standard envelope-integrity checks (§9). Non-datHere content profiles continue to use their existing requirements; the requirements above apply only when `metadata.contentProfile == "datHere"`.
 
@@ -710,7 +710,7 @@ Skeleton and executed notebooks (§8.7.4) deliver the reproducibility property w
 
 #### 8.7.4 Notebook execution provenance and metadata
 
-> ⚠ **Specified by [ADR-0005](../adr/0005-executed-notebook-architecture.md).**
+> ⚠ **.**
 
 This section adds two protocol-level fields that discriminate how the notebook in section E was produced and, when the notebook was executed by the publisher's pipeline, what runtime environment produced its outputs. The two fields are independent of `captureMethod` (§8.6) and `contentProfile` (§8.1.1, §8.7) — they describe the *notebook authoring path*, a third orthogonal axis. The fields apply only when `metadata.contentProfile == "datHere"`; non-datHere content profiles ignore them.
 
@@ -723,7 +723,7 @@ A new sub-field on the existing notebook extension distinguishing how the notebo
 | `"skeleton"` | The notebook structure wraps an answer authored elsewhere (typically the chat-flow LLM output). Data-fetch cells are re-executable and reproducible; the answer-synthesis cell carries a hardcoded markdown answer that is NOT re-derived from cell outputs above. The reproducibility property in §8.7.3 is satisfied partially: data-fetch reproducibility holds; answer-synthesis reproducibility does not. |
 | `"executed"` | The notebook was executed end-to-end by the publisher's pipeline before signing; every cell's output (including the synthesis cell) is computed from real cell execution against the documented runtime and live upstream data at publish time. The reproducibility property in §8.7.3 is satisfied materially; the comparison-cell convention below makes original-vs-current values legible to re-executors. |
 
-When absent, verifiers SHOULD treat the field as `"skeleton"` (the pre-[ADR-0005](../adr/0005-executed-notebook-architecture.md) default). The field is auto-emitted by conformant packagers from ADR-0005 forward; pre-ADR-0005 `datHere`-profile packages omit it and remain conformant.
+When absent, verifiers SHOULD treat the field as `"skeleton"` (the pre-v0.1 default). The field is auto-emitted by conformant packagers from ADR-0005 forward; pre-v0.1 `datHere`-profile packages omit it and remain conformant.
 
 **`extensions["org.civicaitools.execution"]`**
 
@@ -746,8 +746,8 @@ When `provenance == "executed"` and `comparisonCellPresent != false`, the execut
 ```python
 # ORIGINAL VALUES (captured at executedAt = <ISO-8601 timestamp>)
 original = {
-    "<metric-name>": <literal value>,
-    ...
+ "<metric-name>": <literal value>,
+ ...
 }
 
 # CURRENT VALUES (re-computed against live data using the same helpers + queries above)
@@ -755,8 +755,8 @@ current = recompute_key_metrics()
 
 # DELTAS
 for k in original:
-    delta = (current[k] - original[k]) if isinstance(original[k], (int, float)) else (original[k], current[k])
-    print(f"{k}: original={original[k]}, current={current[k]}, delta={delta}")
+ delta = (current[k] - original[k]) if isinstance(original[k], (int, float)) else (original[k], current[k])
+ print(f"{k}: original={original[k]}, current={current[k]}, delta={delta}")
 ```
 
 The "prominent metrics to capture" selection is at the publisher's discretion. Conformant publishers SHOULD use a deterministic heuristic or an LLM-selected metric set, documented in their reference implementation. The cell is part of the signed notebook artifact and is covered by the envelope hash and signature.
@@ -770,11 +770,11 @@ Rendering surfaces (the publisher's detail page, third-party renderers of the cr
 
 **Backwards compatibility**
 
-Pre-[ADR-0005](../adr/0005-executed-notebook-architecture.md) `datHere`-content-profile packages remain conformant. They omit both new fields; verifiers treat the omission as `provenance == "skeleton"` and recognize the absence of `extensions["org.civicaitools.execution"]` as consistent with that. The schema version stays at `0.1.0`. Surfaces rendering pre-ADR-0005 packages SHOULD use the skeleton label.
+pre-v0.1 `datHere`-content-profile packages remain conformant. They omit both new fields; verifiers treat the omission as `provenance == "skeleton"` and recognize the absence of `extensions["org.civicaitools.execution"]` as consistent with that. The schema version stays at `0.1.0`. Surfaces rendering pre-v0.1 packages SHOULD use the skeleton label.
 
 ### 8.8 Cross-host publication: commitment-view schema
 
-> ⚠ **Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
+> ⚠ **.**
 
 A `datHere`-content-profile package MAY be published cross-host as a Jupyter notebook on a git host, as a multi-file commit with a sibling metadata file, or as future analogous content-addressable surfaces. In every case the published artifact carries the package's **commitment view** — enough fields for any reader to independently verify the package against the publisher's trust registry without fetching the canonical-JSON package object.
 
@@ -793,7 +793,7 @@ A conformant commitment view carries the following fields. The field set is the 
 | `evidenceProtocolVersion` | string | yes | The Typed Standards schema version this commitment view was published against (currently `0.1.0`). |
 | `packageHash` | string (hex SHA-256) | yes | The SHA-256 hex digest of the canonical-JSON package object. The package's content-addressable identifier. |
 | `packageUrl` | string (URL) | yes | The content-addressable URL where the canonical-JSON package is fetchable. Reference implementation: Vercel Blob URL. Other hosts MAY serve from their own content-addressable storage. |
-| `captureMethod` | string | yes | One of the [ADR-0003](../adr/0003-evidence-capture-method.md) values describing how the content was captured (the `ai-assisted-analysis` Producer Profile v0.1 vocabulary at minimum: `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`). Mirrors `metadata.captureMethod` from the canonical-JSON package. |
+| `captureMethod` | string | yes | One of the values describing how the content was captured (the `ai-assisted-analysis` Producer Profile v0.1 vocabulary at minimum: `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report`). Mirrors `metadata.captureMethod` from the canonical-JSON package. |
 | `contentProfile` | string | yes | `"datHere"` for artifacts produced under this section. Future content profiles MAY define their own cross-host publication patterns or reuse this one. |
 | `signature` | object | yes | Signed-envelope object. Shape: `{ signature, publicKey, algorithm, kid }` matching §8.3.1. |
 | `signerIdentity` | object | yes | Identity binding for the package's author. Shape matches the identity-binding model (§8.5). |
@@ -811,26 +811,26 @@ A `datHere`-content-profile package published as a Jupyter notebook (§8.7.2) MU
 
 ```json
 {
-  "cells": [ ... ],
-  "metadata": {
-    "org.civicaitools.evidence": {
-      "evidenceProtocolVersion": "0.1.0",
-      "packageHash": "<hex SHA-256>",
-      "packageUrl": "<URL>",
-      "captureMethod": "chat-flow-stream",
-      "contentProfile": "datHere",
-      "signature": { "signature": "...", "publicKey": "...", "algorithm": "Ed25519ph", "kid": "..." },
-      "signerIdentity": { ... },
-      "trustRegistryUrl": "<URL>",
-      "subjectTitle": "...",
-      "subjectSummary": "...",
-      "attestations": [ ... ]
-    },
-    "kernelspec": { ... },
-    "language_info": { ... }
-  },
-  "nbformat": 4,
-  "nbformat_minor": 5
+ "cells": [ ... ],
+ "metadata": {
+ "org.civicaitools.evidence": {
+ "evidenceProtocolVersion": "0.1.0",
+ "packageHash": "<hex SHA-256>",
+ "packageUrl": "<URL>",
+ "captureMethod": "chat-flow-stream",
+ "contentProfile": "datHere",
+ "signature": { "signature": "...", "publicKey": "...", "algorithm": "Ed25519ph", "kid": "..." },
+ "signerIdentity": { ... },
+ "trustRegistryUrl": "<URL>",
+ "subjectTitle": "...",
+ "subjectSummary": "...",
+ "attestations": [ ... ]
+ },
+ "kernelspec": { ... },
+ "language_info": { ... }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
 }
 ```
 
@@ -853,17 +853,17 @@ packageUrl: "<URL>"
 captureMethod: "chat-flow-stream"
 contentProfile: "datHere"
 signature:
-  signature: "<base64>"
-  publicKey: "<base64 DER SPKI>"
-  algorithm: "Ed25519ph"
-  kid: "<key identifier>"
+ signature: "<base64>"
+ publicKey: "<base64 DER SPKI>"
+ algorithm: "Ed25519ph"
+ kid: "<key identifier>"
 signerIdentity:
-  # ... identity-binding-specific fields per §8.5
+ # ... identity-binding-specific fields per §8.5
 trustRegistryUrl: "<URL>"
 subjectTitle: "..."
 subjectSummary: "..."
 attestations:
-  # ... per §8.9
+ # ... per §8.9
 ```
 
 A conformant verifier MUST accept either YAML or JSON shapes at this filename (YAML is a superset of JSON; either form is valid). Where the published artifact is itself a markdown document, publishers MAY ALTERNATIVELY embed the commitment view as YAML frontmatter at the top of the markdown file between `---` delimiters (the Jekyll / GitHub Pages frontmatter convention); the field set is identical.
@@ -890,7 +890,7 @@ The rendered cell is purely a reader affordance. A reader who needs to verify th
 
 ### 8.9 Embed-vs-reference policy for cross-host publication
 
-> ⚠ **Resolves [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts). Specified by [ADR-0004](../adr/0004-dathere-captureMethod-variant.md).**
+> ⚠ **Resolves [Q24](open-questions.md#q24--embed-vs-reference-policy-for-attestations-in-published-artifacts).**
 
 The `attestations` array in the commitment view (§8.8) MAY contain entries in either of two forms. The same rules apply to both serializations defined in §8.8.
 
@@ -898,9 +898,9 @@ The `attestations` array in the commitment view (§8.8) MAY contain entries in e
 
 ```yaml
 - kind: <attestation kind>
-  targetHash: <SHA-256 of the package this attestation is about>
-  attestationHash: <SHA-256 of the canonical-JSON attestation object>
-  attestationUrl: <URL where the canonical-JSON attestation is fetchable>
+ targetHash: <SHA-256 of the package this attestation is about>
+ attestationHash: <SHA-256 of the canonical-JSON attestation object>
+ attestationUrl: <URL where the canonical-JSON attestation is fetchable>
 ```
 
 A reader processing a reference entry fetches the attestation from `attestationUrl`, recomputes its SHA-256 against `attestationHash`, and verifies its signature against the publisher's trust registry (the same `trustRegistryUrl` from the commitment view, or a different registry URL carried inside the attestation itself).
@@ -909,10 +909,10 @@ A reader processing a reference entry fetches the attestation from `attestationU
 
 ```yaml
 - kind: <attestation kind>
-  targetHash: <SHA-256 of the package this attestation is about>
-  attestationHash: <SHA-256 of the embedded canonical-JSON>
-  attestation: <inline canonical-JSON attestation object>
-  signature: <signed-envelope object matching §8.3.1>
+ targetHash: <SHA-256 of the package this attestation is about>
+ attestationHash: <SHA-256 of the embedded canonical-JSON>
+ attestation: <inline canonical-JSON attestation object>
+ signature: <signed-envelope object matching §8.3.1>
 ```
 
 A reader processing an embed entry verifies the embedded envelope's signature directly without fetching anything. Both forms preserve independent verifiability: an embedded attestation carries its own signature, so a reader can verify it even if the surrounding commitment view has been altered (the alteration would break the package-hash check anyway, but the embed-vs-reference distinction is orthogonal to the package signature).
@@ -925,13 +925,13 @@ The attestation-kind vocabulary itself is governed by §8.12 (the `attestation/*
 
 ### 8.10 Lifecycle and location attestations
 
-> **Reframed 2026-05-25 by [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md).** This section is operationalized under the unified-primitive framing established by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md): lifecycle events (withdrawals, reinstatements, supersessions, publications) are separately-signed `attestation/*` nodes referencing the target content node by `nodeId`, not DB-row columns on the target's storage. Location pointers (the publisher's URL where the content lives, plus any backup-host pointers) are separately-signed `attestation/locatedAt/v1` nodes. Pre-ADR-0010 packages whose lifecycle state lives in the legacy DB columns remain verifiable; the reference implementation honors both representations for pre-ADR-0010 packages and emits attestation nodes for new packages.
+> **Reframed 2026-05-25.** This section is operationalized under the unified-primitive framing established: lifecycle events (withdrawals, reinstatements, supersessions, publications) are separately-signed `attestation/*` nodes referencing the target content node by `nodeId`, not DB-row columns on the target's storage. Location pointers (the publisher's URL where the content lives, plus any backup-host pointers) are separately-signed `attestation/locatedAt/v1` nodes. pre-v0.1 packages whose lifecycle state lives in the legacy DB columns remain verifiable; the reference implementation honors both representations for pre-v0.1 packages and emits attestation nodes for new packages.
 
 #### 8.10.1 Lifecycle as a chain of attestation nodes
 
 A package author MAY withdraw, reinstate, or supersede a previously-emitted content node at any time by emitting the corresponding `attestation/*` node, signed under the same trust-registry key as the target (or a delegated-publisher key per [Q20](open-questions.md#q20--visibility-lifecycle-and-attestpublish-semantics)). The lifecycle is a **chain of separately-signed attestation nodes**, each referencing the target (and, for reinstatements, the prior withdrawal) by `nodeId`.
 
-Sub-types operationalized under [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) per the [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 table:
+Sub-types per the v0.1 sub-type table:
 
 - **`attestation/withdraws/v1`** — references target by `nodeId`; carries `reason` (required, non-empty) and `effectiveAt` (defaults to envelope timestamp). Authorization rule: `publisher-only`.
 - **`attestation/reinstates/v1`** — references target by `nodeId` and the prior withdrawal by `priorWithdrawalNodeId`; optionally carries `reason`. Authorization rule: `publisher-only`.
@@ -946,9 +946,9 @@ A verifier processing a content node MUST surface the **chain of signer-matched 
 
 #### 8.10.2 Location as attestation
 
-The publisher's own URL where the content lives, plus any backup-host or mirror URL, are each expressed as a signed `attestation/locatedAt/v1` referencing the content node by `nodeId`. Payload fields per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7: `targetNodeId`, `uri`, `contentHash` (multihash; SHOULD match the target's `contentHash` — mismatch is informative, indicating content drift between the location and the target's signed fingerprint), optional `contentLength`, optional `availability`. Authorization rule: `any-with-binding`.
+The publisher's own URL where the content lives, plus any backup-host or mirror URL, are each expressed as a signed `attestation/locatedAt/v1` referencing the content node by `nodeId`. Payload fields: `targetNodeId`, `uri`, `contentHash` (multihash; SHOULD match the target's `contentHash` — mismatch is informative, indicating content drift between the location and the target's signed fingerprint), optional `contentLength`, optional `availability`. Authorization rule: `any-with-binding`.
 
-**Multiple `attestation/locatedAt/v1` attestations from different `(signer.identifier, uri-authority)` pairs express that the content has independent durable copies** per [Q38](open-questions.md#q38--dedicated-copyof-relation-vs-multiple-locatedat-attestations) (resolved on arrival in [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (c)). A dedicated `copyOf` sub-type is not minted; the multi-`locatedAt` pattern carries the durability signal sufficiently. Consumer-side weighting (publisher's own pointer vs. third-party mirror vs. recognized archive) lives in the verifier's surface logic, not in the attestation envelope.
+**Multiple `attestation/locatedAt/v1` attestations from different `(signer.identifier, uri-authority)` pairs express that the content has independent durable copies** per [Q38](open-questions.md#q38--dedicated-copyof-relation-vs-multiple-locatedat-attestations) (resolved by the v0.1 sub-type table in §8.12.1, refinement (c)). A dedicated `copyOf` sub-type is not minted; the multi-`locatedAt` pattern carries the durability signal sufficiently. Consumer-side weighting (publisher's own pointer vs. third-party mirror vs. recognized archive) lives in the verifier's surface logic, not in the attestation envelope.
 
 A content node with **zero `attestation/locatedAt/v1` attestations** is the valid private/draft/enterprise base case: the signer holds the bytes; no public location is asserted. See [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) §5 for the use cases (draft / pre-publication, enterprise-private, recipient-distributed).
 
@@ -966,17 +966,17 @@ This is the deliberate civic-accountability feature the prior OES §10 implied b
 
 A permanent record that a civic-data claim was made and later retracted is more honest than silent deletion. Implementations MUST NOT remove withdrawn content nodes from storage or registry-side listings except through explicit administrative action with an audit trail. The retention-asymmetry rule above scopes this MUST NOT to the publisher's own infrastructure; it does not extend to a publisher's authority over content others host.
 
-#### 8.10.4 Backwards compatibility for pre-ADR-0010 packages
+#### 8.10.4 Backwards compatibility for pre-v0.1 packages
 
-Pre-[ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) packages whose lifecycle state lives in the legacy DB columns (`withdrawnAt`, `withdrawnReason`, `withdrawalSignature`, `withdrawalTimestamp`, `reinstatedAt`, `reinstatedReason`, `reinstatementSignature`, `reinstatementTimestamp`) remain verifiable. Verifiers MUST honor the legacy columns as a deprecated-but-still-supported source of withdrawal/reinstatement state when no `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes are present for the target node.
+pre-v0.1 packages whose lifecycle state lives in the legacy DB columns (`withdrawnAt`, `withdrawnReason`, `withdrawalSignature`, `withdrawalTimestamp`, `reinstatedAt`, `reinstatedReason`, `reinstatementSignature`, `reinstatementTimestamp`) remain verifiable. Verifiers MUST honor the legacy columns as a deprecated-but-still-supported source of withdrawal/reinstatement state when no `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes are present for the target node.
 
-A one-time migration emitting equivalent attestation envelopes from the legacy columns is a Phase 3 implementation item per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) Consequences; after migration, new packages do not write the legacy columns and the columns become read-only fallback for pre-migration state. The migration's spec target is "byte-identical lifecycle semantics expressed as attestation envelopes," not "schema-version bump"; the schema version stays at `0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec).
+A one-time migration emitting equivalent attestation envelopes from the legacy columns is a Phase 3 implementation item Consequences; after migration, new packages do not write the legacy columns and the columns become read-only fallback for pre-migration state. The migration's spec target is "byte-identical lifecycle semantics expressed as attestation envelopes," not "schema-version bump"; the schema version stays at `0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec).
 
 ### 8.11 Typed Claims
 
-> **Reframed 2026-05-25 by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §8 (Q11 closure); absorbed into this specification by [ADR-0012](../adr/0012-typed-standards-consolidation.md) from the prior Civic Claim Vocabulary draft.** Typed claims are `content/*` sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — under the two-family taxonomy ratified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md). The claim shapes specified in this section (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim) and their conformance requirements remain authoritative; the carrier is the signed node itself, not a `claims.jsonld` companion file. The historical CCV draft at [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) is preserved as a frozen snapshot.
+> **Reframed 2026-05-25 (Q11 closure); absorbed into this specification from the prior Civic Claim Vocabulary draft.** Typed claims are `content/*` sub-types — `content/claim/v1`, `content/question/v1`, `content/evidence/v1` — under the two-family taxonomy ratified. The claim shapes specified in this section (TrendClaim, ComparisonClaim, ObservationClaim, CompositionClaim, RelationshipClaim, QualitativeClaim) and their conformance requirements remain authoritative; the carrier is the signed node itself, not a `claims.jsonld` companion file. The historical CCV draft at [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) is preserved as a frozen snapshot.
 
-> ⚠ **Subject to [Q5](open-questions.md#q5--claimsjsonld-and-upstream-evidencejson-implementation-timing) — typed-claim build-out timing.** Promotion of typed claims from "specified" to "built" is gated on a real adopter package whose verification or claim queries are blocked without the layer per the [Xanadu doctrine](xanadu-doctrine.md). The v0.1 `content/claim/v1` / `content/question/v1` / `content/evidence/v1` sub-types are reserved name-only per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 until that adopter is identified; the spec text below is forward-compatible with the new framing.
+> ⚠ **Subject to [Q5](open-questions.md#q5--claimsjsonld-and-upstream-evidencejson-implementation-timing) — typed-claim build-out timing.** Promotion of typed claims from "specified" to "built" is gated on a real adopter package whose verification or claim queries are blocked without the layer per the [Xanadu doctrine](xanadu-doctrine.md). The v0.1 `content/claim/v1` / `content/question/v1` / `content/evidence/v1` sub-types are reserved name-only until that adopter is identified; the spec text below is forward-compatible with the new framing.
 
 #### 8.11.1 Purpose and scope
 
@@ -989,7 +989,7 @@ This section defines:
 - The structure and required core fields of a typed claim
 - The Typed Standards Claim Vocabulary, a minimal set of claim shapes every claim conforms to
 - The extension mechanism for domain-specific vocabularies
-- The relationship between typed claims and the rest of a package (under the unified-primitive framing of §7.4-§7.5 + [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md))
+- The relationship between typed claims and the rest of a package (under the unified-primitive framing of §7.4-§7.5)
 - The translation provenance requirements for LLM-emitted claims
 
 This section does **not** define:
@@ -1003,20 +1003,20 @@ This section does **not** define:
 1. **Build on existing standards, do not replace them.** Where W3C, OGC, ISO, or domain-specific vocabularies and ontologies exist (PROV-O, SDMX, Data Cube, Schema.org, GeoSPARQL, FHIR, etc.), the Typed Claims layer references and reuses them rather than inventing parallel terms.
 2. **Common core, modular extensions.** A small mandatory core ensures every claim has provenance, geographic and temporal scope, and a quantified confidence statement. Domain extensions add typed claim shapes for crime, transit, housing, public health, budgets, procurement, and so on, without requiring the core to know about them.
 3. **Optional in v1, incentivized.** A typed-claim node is OPTIONAL alongside `content/analysis/v1`-shaped packages in v0.1 of this specification. Packages whose extracted typed claims are emitted as conformant `content/claim/v1` nodes SHOULD receive richer treatment in network-layer processors (citation graph inclusion, contradiction surfacing, meta-analysis discovery). Packages without typed claims remain fully valid.
-4. **Translation is itself an analytical step.** When a typed claim is generated by extracting structure from an LLM's prose output, that extraction MUST be captured as a separately-signed `attestation/wasDerivedFrom/v1` node carrying an `ts:AnalyticalDerivation` payload (per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a) + [ADR-0006](../adr/0006-producer-profile-architecture.md) §4 — the classification-laundering guard). The specification is explicit that structured form does not confer truth.
+4. **Translation is itself an analytical step.** When a typed claim is generated by extracting structure from an LLM's prose output, that extraction MUST be captured as a separately-signed `attestation/wasDerivedFrom/v1` node carrying an `ts:AnalyticalDerivation` payload (per refinement (a) §4 — the classification-laundering guard). The specification is explicit that structured form does not confer truth.
 5. **Falsifiable by construction.** Every claim type MUST be defined such that a counter-claim can be expressed in the same vocabulary. If a claim cannot be contradicted by another well-formed claim, it is not a claim — it is decoration.
 6. **Confidence MUST be derivable, not asserted.** Any confidence value attached to a claim MUST trace to a method (sample size, statistical test, model log probability, human review) recorded in the package. Free-form LLM confidence judgments are not permitted at the protocol level.
 
 #### 8.11.3 Package integration
 
-Under the unified-primitive framing of §7.4 and [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md), a typed claim is a **first-class signed node** — a `content/claim/v1` envelope with its own `nodeId`, signature, timestamp, transparency-log inclusion proof, and identity binding. It is not a companion file alongside a containing analysis. The earlier draft framing (a multi-file `claims.jsonld` inside an evidence-package directory) is retired; the carrier is the envelope itself.
+Under the unified-primitive framing of §7.4, a typed claim is a **first-class signed node** — a `content/claim/v1` envelope with its own `nodeId`, signature, timestamp, transparency-log inclusion proof, and identity binding. It is not a companion file alongside a containing analysis. The earlier draft framing (a multi-file `claims.jsonld` inside an evidence-package directory) is retired; the carrier is the envelope itself.
 
 A typical pattern for an AI-assisted analysis that emits typed claims:
 
 1. The publisher produces a `content/analysis/v1` node carrying the raw analysis output (the A-G envelope per §8.7 for `ai-assisted-analysis/datHere`; or another shape for other Producer Profiles). The node's `metadata.contentType` is `["untyped"]` — the rendered answer is unstructured prose.
 2. The publisher (or a downstream extractor) processes the untyped output to produce one or more typed claims. For each extracted claim, the publisher:
-   - Signs a separate `content/claim/v1` envelope carrying the claim payload (per §8.11.4).
-   - Signs a separate `attestation/wasDerivedFrom/v1` envelope referencing the source `content/analysis/v1` node by `nodeId` and the derived claim by a paired identifier; the attestation's `derivationMethod` MUST carry a `ts:AnalyticalDerivation` describing which model performed the extraction, against what prompt, over which source span (per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a) — the classification-laundering guard).
+ - Signs a separate `content/claim/v1` envelope carrying the claim payload (per §8.11.4).
+ - Signs a separate `attestation/wasDerivedFrom/v1` envelope referencing the source `content/analysis/v1` node by `nodeId` and the derived claim by a paired identifier; the attestation's `derivationMethod` MUST carry a `ts:AnalyticalDerivation` describing which model performed the extraction, against what prompt, over which source span (per refinement (a) — the classification-laundering guard).
 3. Each `content/claim/v1` node MUST cite its supporting evidence within its own envelope via `prov:wasDerivedFrom` references to entities derivable from the source `content/analysis/v1` node's provenance graph (§8.1.4).
 4. Typed claims MAY reference data sources from the source analysis's `dataSources[]` entries via the source's stable identifier.
 5. Cross-package corroboration, contradiction, citation, or supersession is expressed as separately-signed `attestation/*` nodes (`attestation/corroborates/v1`, `attestation/contradicts/v1`, `attestation/supersedes/v1`, `attestation/answersQuestion/v1`, `attestation/supportedBy/v1`, `attestation/opposedBy/v1`) referencing the target `content/claim/v1` node by `nodeId`. No separate companion file is needed.
@@ -1041,7 +1041,7 @@ The Typed Standards Claim Vocabulary is a controlled set of typed claim shapes e
 @prefix ts: <https://typedstandards.org/ns/ts#>
 ```
 
-This is the single normative prefix for the consolidated vocabulary per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §2. It replaces the `ccv:` prefix used in the pre-consolidation Civic Claim Vocabulary draft (which bound to `https://civicaitools.org/ns/civic-claim-vocabulary/v1#`); the legacy URI continues to resolve as an alias for backwards-compatibility (vocabulary URIs are identifiers, not fetch targets; a future deprecation is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology)).
+This is the single normative prefix for the consolidated vocabulary It replaces the `ccv:` prefix used in the pre-consolidation Civic Claim Vocabulary draft (which bound to `https://civicaitools.org/ns/civic-claim-vocabulary/v1#`); the legacy URI continues to resolve as an alias for backwards-compatibility (vocabulary URIs are identifiers, not fetch targets; a future deprecation is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology)).
 
 **Reused vocabularies.** The Typed Standards Claim Vocabulary does not redefine concepts that exist in widely-adopted vocabularies. It imports and references:
 
@@ -1085,18 +1085,18 @@ The Typed Standards Claim Vocabulary contributes only what these external vocabu
 
 ```json
 {
-  "@type": "ts:Scope",
-  "ts:geographicScope": {
-    "@type": "ts:NeighborhoodTabulationArea",
-    "dcterms:identifier": "BK0801",
-    "schema:name": "Bushwick North",
-    "geo:hasGeometry": { "@id": "..." }
-  },
-  "ts:temporalScope": {
-    "@type": "time:Interval",
-    "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
-    "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
-  }
+ "@type": "ts:Scope",
+ "ts:geographicScope": {
+ "@type": "ts:NeighborhoodTabulationArea",
+ "dcterms:identifier": "BK0801",
+ "schema:name": "Bushwick North",
+ "geo:hasGeometry": { "@id": "..." }
+ },
+ "ts:temporalScope": {
+ "@type": "time:Interval",
+ "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
+ "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
+ }
 }
 ```
 
@@ -1127,12 +1127,12 @@ Temporal scope uses W3C OWL-Time directly. No additions to the vocabulary are ne
 
 ```json
 {
-  "@type": "ts:ConfidenceStatement",
-  "ts:method": "ts:FrequentistInterval",
-  "ts:level": 0.95,
-  "ts:lowerBound": 18.4,
-  "ts:upperBound": 27.6,
-  "ts:methodReference": "trace.json#step-stat-test-3"
+ "@type": "ts:ConfidenceStatement",
+ "ts:method": "ts:FrequentistInterval",
+ "ts:level": 0.95,
+ "ts:lowerBound": 18.4,
+ "ts:upperBound": 27.6,
+ "ts:methodReference": "trace.json#step-stat-test-3"
 }
 ```
 
@@ -1155,20 +1155,20 @@ The Typed Standards Claim Vocabulary defines a starting set of confidence method
 
 ```json
 {
-  "@type": "ts:AnalyticalDerivation",
-  "ts:traceReference": "trace.json#step-claim-extraction-1",
-  "ts:translationModel": {
-    "@type": "schema:SoftwareApplication",
-    "schema:name": "claude-opus-4-7",
-    "schema:softwareVersion": "claude-opus-4-7"
-  },
-  "ts:translationPrompt": {
-    "@id": "prompt.json#claim-extraction"
-  },
-  "ts:sourceOutputSpan": {
-    "ts:outputFile": "output.md",
-    "ts:byteRange": [1240, 1487]
-  }
+ "@type": "ts:AnalyticalDerivation",
+ "ts:traceReference": "trace.json#step-claim-extraction-1",
+ "ts:translationModel": {
+ "@type": "schema:SoftwareApplication",
+ "schema:name": "claude-opus-4-7",
+ "schema:softwareVersion": "claude-opus-4-7"
+ },
+ "ts:translationPrompt": {
+ "@id": "prompt.json#claim-extraction"
+ },
+ "ts:sourceOutputSpan": {
+ "ts:outputFile": "output.md",
+ "ts:byteRange": [1240, 1487]
+ }
 }
 ```
 
@@ -1178,7 +1178,7 @@ This serves three purposes:
 2. Makes the translation prompt inspectable (and re-runnable for verification).
 3. Pins the claim to a specific span of source output for human review.
 
-Under [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a), an `AnalyticalDerivation` payload is also a MUST-carry component of the separately-signed `attestation/wasDerivedFrom/v1` node that documents the extraction step (per §8.11.3 step 2). The same data MAY appear in both places — on the claim's own `ts:derivedVia` property and on the attestation's `derivationMethod` payload — provided the two are consistent.
+Under refinement (a), an `AnalyticalDerivation` payload is also a MUST-carry component of the separately-signed `attestation/wasDerivedFrom/v1` node that documents the extraction step (per §8.11.3 step 2). The same data MAY appear in both places — on the claim's own `ts:derivedVia` property and on the attestation's `derivationMethod` payload — provided the two are consistent.
 
 #### 8.11.5 Core claim types
 
@@ -1250,16 +1250,16 @@ Domain extensions extend the Typed Standards Claim Vocabulary by:
 
 ```turtle
 nyc-housing:RentStabilizationClaim
-  rdfs:subClassOf ts:ObservationClaim ;
-  rdfs:label "Claim about rent-stabilized unit counts" ;
-  sh:property [
-    sh:path nyc-housing:buildingClassification ;
-    sh:class nyc-housing:BuildingClass ;
-    sh:minCount 1 ;
-  ] .
+ rdfs:subClassOf ts:ObservationClaim ;
+ rdfs:label "Claim about rent-stabilized unit counts" ;
+ sh:property [
+ sh:path nyc-housing:buildingClassification ;
+ sh:class nyc-housing:BuildingClass ;
+ sh:minCount 1 ;
+ ] .
 ```
 
-**Extension registry.** A lightweight registry at the Typed Standards project's canonical URL lists known extension vocabularies, their maintainers, their version status, and their SHACL shape files. Inclusion is informational; it does not confer endorsement. The registry URL is reserved pending domain registration per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §1; consumers should consult the consolidated spec's canonical URL (§2) for the current registry location.
+**Extension registry.** A lightweight registry at the Typed Standards project's canonical URL lists known extension vocabularies, their maintainers, their version status, and their SHACL shape files. Inclusion is informational; it does not confer endorsement. The registry URL is reserved pending domain registration; consumers should consult the consolidated spec's canonical URL (§2) for the current registry location.
 
 Governance of the Typed Standards Claim Vocabulary itself — comment periods, versioning discipline, breaking-change protocol — is not in force at v0.1 and is deferred to [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology) (the full-ontology promotion path). Until that governance regime lands, vocabulary changes follow the working method's promotion path: registry → ADR → spec edit, with the motivating adopter named in the work that promotes the change.
 
@@ -1274,7 +1274,7 @@ Governance of the Typed Standards Claim Vocabulary itself — comment periods, v
 **Translation laundering.** A common failure mode: an LLM produces vague prose, a translator extracts a precise-looking structured claim, and the precision of the claim is taken as the precision of the underlying analysis. The specification guards against this through:
 
 - The `ts:derivedVia` requirement, which exposes the translation prompt and source span (per §8.11.4).
-- The separately-signed `attestation/wasDerivedFrom/v1` extraction-attestation MUST-carry-`AnalyticalDerivation` rule per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a) + [ADR-0006](../adr/0006-producer-profile-architecture.md) §4 (per §8.11.3 step 2).
+- The separately-signed `attestation/wasDerivedFrom/v1` extraction-attestation MUST-carry-`AnalyticalDerivation` rule refinement (a) §4 (per §8.11.3 step 2).
 - The requirement that confidence be method-derived.
 - The expectation that downstream processors surface the source span alongside the structured claim.
 
@@ -1282,7 +1282,7 @@ Governance of the Typed Standards Claim Vocabulary itself — comment periods, v
 
 ### 8.12 The attestation/* namespace
 
-Per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §2, an **attestation** is one of two top-level type families: a signed node whose payload carries `targetNodeId` referencing the node it asserts about. Attestations cover lifecycle (withdraws / reinstates / supersedes / publishes — operationalized per §8.10), reference (locatedAt — operationalized per §8.10 — / wasDerivedFrom / answersQuestion / supportedBy / opposedBy), claim-to-claim (corroborates / contradicts / endorses), and authority-bearing (certifies / evaluates / conforms) relations. The v0.1 sub-type table is ratified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7; sub-types declare their authorization rule (`publisher-only`, `any-with-binding`, or `specific-role-required`) and payload shape per the table.
+An **attestation** is one of two top-level type families: a signed node whose payload carries `targetNodeId` referencing the node it asserts about. Attestations cover lifecycle (withdraws / reinstates / supersedes / publishes — operationalized per §8.10), reference (locatedAt — operationalized per §8.10 — / wasDerivedFrom / answersQuestion / supportedBy / opposedBy), claim-to-claim (corroborates / contradicts / endorses), and authority-bearing (certifies / evaluates / conforms) relations. The v0.1 sub-type table is ratified; sub-types declare their authorization rule (`publisher-only`, `any-with-binding`, or `specific-role-required`) and payload shape per the table.
 
 #### 8.12.1 Sub-type table (v0.1 ratified)
 
@@ -1296,7 +1296,7 @@ Per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §2, an **att
 | `attestation/corroborates/v1` | claim-to-claim agreement | any-with-binding | `targetNodeId`, `scope`, `reasoning` (optional) |
 | `attestation/contradicts/v1` | claim-to-claim disagreement | any-with-binding | `targetNodeId`, `scope`, `reasoning` (optional) |
 | `attestation/endorses/v1` | claim acceptance by authority-bearing party | specific-role-required (authority-bearing) | `targetNodeId`, `scope` |
-| `attestation/wasDerivedFrom/v1` | derivation pointer (PROV-O semantics) | any-with-binding (the deriver) | `targetNodeId` (source), `derivationMethod` (object; when source is `content/analysis/v1` with `untyped` content and target is a typed content sub-type, `derivationMethod` MUST carry a `ts:AnalyticalDerivation` per the classification-laundering guard, see [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 refinement (a)) |
+| `attestation/wasDerivedFrom/v1` | derivation pointer (PROV-O semantics) | any-with-binding (the deriver) | `targetNodeId` (source), `derivationMethod` (object; when source is `content/analysis/v1` with `untyped` content and target is a typed content sub-type, `derivationMethod` MUST carry a `ts:AnalyticalDerivation` per the classification-laundering guard, see refinement (a)) |
 | `attestation/answersQuestion/v1` | claim → question pointer | any-with-binding (the asserter) | `targetNodeId` (question) |
 | `attestation/supportedBy/v1` | claim → evidence pointer | any-with-binding (the asserting publisher) | `targetNodeId` (evidence) |
 | `attestation/opposedBy/v1` | claim → evidence pointer | any-with-binding (the asserting publisher) | `targetNodeId` (evidence) |
@@ -1306,22 +1306,22 @@ Per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §2, an **att
 
 #### 8.12.2 Existing attestation kinds map to sub-types
 
-The reference implementation has long supported a separate type of artifact — an attestation — that comments on a previously-published package without modifying it. The pre-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) attestation kinds map to specific sub-types in the ratified table:
+The reference implementation has long supported a separate type of artifact — an attestation — that comments on a previously-published package without modifying it. The pre-v0.1 attestation kinds map to specific sub-types in the ratified table:
 
 - **`consistency`** (repeat-publish runs of the same prompt to surface determinism / drift) → emitted as a separately-signed `content/analysis/v1` node (the variance test itself) plus an `attestation/corroborates/v1` or `attestation/contradicts/v1` (depending on whether the result agrees with the original); the variance methodology + result delta live in the attestation's `reasoning` payload.
 - **`evaluation`** (adversarial review by an LLM-as-judge against a rubric) → `attestation/evaluates/v1` with declared methodology per [Q26](open-questions.md#q26--valid-evaluator-definition-identity-binding--methodology-declaration). Authorization rule: `specific-role-required` (evaluator with declared methodology + bindingTier).
 - **`expert_attestation`** (review by a named human expert with stated relationship to the original package) → `attestation/evaluates/v1` when the expert is producing a critique, or `attestation/endorses/v1` when the expert is vouching. Authorization rule: `specific-role-required` (authority-bearing party).
 
-A future migration will rewrite existing pre-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) attestation records on `evidence_records` to emit conforming `attestation/*` nodes; the migration is scoped separately from this spec change. Until that migration ships, the existing attestation surface continues to work, and verifiers SHOULD treat existing records under the legacy attestation-kind vocabulary while emitting them under the new sub-type URIs for any new attestations.
+A future migration will rewrite existing pre-v0.1 attestation records on `evidence_records` to emit conforming `attestation/*` nodes; the migration is scoped separately from this spec change. Until that migration ships, the existing attestation surface continues to work, and verifiers SHOULD treat existing records under the legacy attestation-kind vocabulary while emitting them under the new sub-type URIs for any new attestations.
 
 #### 8.12.3 Conformance requirements for attestation/* nodes
 
 A conformant `attestation/*` node:
 
 - MUST satisfy the structural-primitive requirements per §8.1 (envelope hash, content hash, content canonicalization, signature, optional timestamp + Rekor proof, `type`, `signer`, `metadata`).
-- MUST carry `type` matching a registered `attestation/*` sub-type URI per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 (or a future sub-type minted by an ADR naming its motivating adopter).
+- MUST carry `type` matching a registered `attestation/*` sub-type URI (or a future sub-type minted by an ADR naming its motivating adopter).
 - MUST carry `targetNodeId` referencing at least one target node by `nodeId`. The target node need not be retrievable for the attestation to be verifiable — the attestation's signature is independent of the target's availability — but a verifier MAY report `unknown_target_node` per §9 when the target cannot be resolved.
-- MUST satisfy the sub-type's authorization rule per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §5. For `publisher-only` sub-types, the verifier MUST confirm that the attestation's `signer.identifier` matches the target node's `signer.identifier` (or that a delegated-publisher relationship is in effect per a future ADR). For `specific-role-required` sub-types, the role declaration lives in the sub-type's own normative section. For `any-with-binding` sub-types, the attestation's `signer.bindingTier` need only be at least `pseudonymous`.
+- MUST satisfy the sub-type's authorization rule For `publisher-only` sub-types, the verifier MUST confirm that the attestation's `signer.identifier` matches the target node's `signer.identifier` (or that a delegated-publisher relationship is in effect per a future ADR). For `specific-role-required` sub-types, the role declaration lives in the sub-type's own normative section. For `any-with-binding` sub-types, the attestation's `signer.bindingTier` need only be at least `pseudonymous`.
 - MUST carry the sub-type's required payload fields per the §8.12.1 table.
 
 #### 8.12.4 Verifier expectations when an original node has one or more attestations
@@ -1333,11 +1333,11 @@ A verifier rendering a `content/*` node with referencing `attestation/*` nodes S
 - Distinguish sub-types visually so consumers can apply judgment per the §5.1 normative preamble (`corroborates` vs. `endorses` carry different signals; high-bindingTier vs. pseudonymous signers carry different signals; etc.).
 - For lifecycle attestations (`withdraws`, `reinstates`, `publishes`, `supersedes`), surface the lifecycle state per §8.10.
 
-Operationalization of specific sub-types lands per-ADR on its own timeline. The withdrawal/reinstatement/supersession/publication lifecycle sub-types and the `attestation/locatedAt/v1` location sub-type are operationalized in [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md); the adversarial-eval requirement model lands in a future ADR anticipated from [civic-ai-tools#72](https://github.com/npstorey/civic-ai-tools/issues/72) per [Q25](open-questions.md#q25--adversarial-evaluation-requirement-strength-on-publication-records) + [Q26](open-questions.md#q26--valid-evaluator-definition-identity-binding--methodology-declaration); the host self-attestation pattern (host endorsements + host-policy-required gating) lands when a host-self-attestation adopter blocks per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape). The ratified Q36 sub-type table per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 is the taxonomy backbone; individual sub-types operationalize on their own per-ADR timelines.
+Operationalization of specific sub-types lands per-ADR on its own timeline. The withdrawal/reinstatement/supersession/publication lifecycle sub-types and the `attestation/locatedAt/v1` location sub-type are operationalized; the adversarial-eval requirement model lands in a future ADR anticipated from [civic-ai-tools#72](https://github.com/npstorey/civic-ai-tools/issues/72) per [Q25](open-questions.md#q25--adversarial-evaluation-requirement-strength-on-publication-records) + [Q26](open-questions.md#q26--valid-evaluator-definition-identity-binding--methodology-declaration); the host self-attestation pattern (host endorsements + host-policy-required gating) lands when a host-self-attestation adopter blocks per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape). The ratified Q36 sub-type table is the taxonomy backbone; individual sub-types operationalize on their own per-ADR timelines.
 
 #### 8.12.5 The retired upstream-evidence reference layer
 
-The pre-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) reserved space for an `upstream-evidence.json` companion file is obsolete in the unified-primitive framing. Cross-package corroboration, citation graphs, and meta-analysis are expressed as separately-signed `attestation/*` nodes referencing targets by `nodeId`; no separate companion file is needed. The relation vocabulary maps directly to `attestation/*` sub-types:
+The pre-v0.1 reserved space for an `upstream-evidence.json` companion file is obsolete in the unified-primitive framing. Cross-package corroboration, citation graphs, and meta-analysis are expressed as separately-signed `attestation/*` nodes referencing targets by `nodeId`; no separate companion file is needed. The relation vocabulary maps directly to `attestation/*` sub-types:
 
 | Earlier upstream-evidence relation | `attestation/*` sub-type |
 |---|---|
@@ -1375,7 +1375,7 @@ A **conformant package** is a JSON object satisfying §8.1 that, when canonicali
 A **conformant publisher implementation** is one that:
 
 1. Validates the publish-route required-field set (§8.1.1, §8.6).
-2. Builds canonical JSON with the [ADR-0008](../adr/0008-multihash-content-hash.md) §6 JCS rule and produces the envelope hash per §8.3.1.
+2. Builds canonical JSON with the JCS rule and produces the envelope hash per §8.3.1.
 3. Signs the envelope-hash hex string with Ed25519ph using a key listed in the publisher's published trust registry (§8.3.3).
 4. Persists the package at a content-addressable URL.
 5. Honors the withdrawal / reinstatement lifecycle as signed, public, append-only `attestation/*` events per §8.10.
@@ -1385,12 +1385,12 @@ A **conformant verifier implementation** is one that performs every check in §9
 
 ### 9.2 Verification check list
 
-Per [ADR-0008](../adr/0008-multihash-content-hash.md), [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md), [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md), and [ADR-0011](../adr/0011-capturemethod-generalization.md), a verifier processing a node performs the following checks. The numbering reflects the v0.1 reference-implementation check order; future revisions may extend the list.
+, ,, a verifier processing a node performs the following checks. The numbering reflects the v0.1 reference-implementation check order; future revisions may extend the list.
 
-1. **Envelope integrity.** Recompute the envelope hash over the canonical JSON of the fetched package per §8.2's chain (post-[ADR-0008](../adr/0008-multihash-content-hash.md): RFC 8785 JCS canonicalization of the unsigned envelope + SHA-256; pre-ADR-0008: `JSON.stringify` insertion-order + SHA-256). The result MUST equal the envelope-hash hex string the verify endpoint reports.
-2. **Signature mathematics.** Verify the Ed25519ph signature over the envelope-hash hex string against the embedded `publicKey`. Pre-[ADR-0008](../adr/0008-multihash-content-hash.md) packages were signed over the legacy `JSON.stringify`-derived hex string; verifiers handle them under that legacy chain per §8.3.1.
-3. **Content canonicalization rule resolution.** Read `contentCanonicalization` from the package (post-[ADR-0007](../adr/0007-content-canonicalization.md)). Resolve the URI via the verifier's local rule registry per [ADR-0007](../adr/0007-content-canonicalization.md) §3. An unknown URI reports `unknown_canonicalization_rule`; an absent field on a pre-ADR-0007 package implies the rule per the package's `contentProfile`.
-4. **Content hash verification.** Apply the resolved canonicalization rule to the off-log content; multi-hash the canonicalized bytes per the algorithms in `contentHash` (post-[ADR-0008](../adr/0008-multihash-content-hash.md) multihash form). Confirm at-least-one-match per [ADR-0008](../adr/0008-multihash-content-hash.md) §3.
+1. **Envelope integrity.** Recompute the envelope hash over the canonical JSON of the fetched package per §8.2's chain (v0.1: RFC 8785 JCS canonicalization of the unsigned envelope + SHA-256; pre-v0.1: `JSON.stringify` insertion-order + SHA-256). The result MUST equal the envelope-hash hex string the verify endpoint reports.
+2. **Signature mathematics.** Verify the Ed25519ph signature over the envelope-hash hex string against the embedded `publicKey`. pre-v0.1 packages were signed over the legacy `JSON.stringify`-derived hex string; verifiers handle them under that legacy chain per §8.3.1.
+3. **Content canonicalization rule resolution.** Read `contentCanonicalization` from the package (v0.1). Resolve the URI via the verifier's local rule registry An unknown URI reports `unknown_canonicalization_rule`; an absent field on a pre-v0.1 package implies the rule per the package's `contentProfile`.
+4. **Content hash verification.** Apply the resolved canonicalization rule to the off-log content; multi-hash the canonicalized bytes per the algorithms in `contentHash` (v0.1 multihash form). Confirm at-least-one-match
 5. **Trust-registry verdict.** Look up the envelope's `(kid, publicKey)` pair in the trust registry; apply the status semantics from §8.3.3.
 6. **`metadata.signingKeyId` consistency.** Confirm the `kid` from the signature envelope equals `metadata.signingKeyId` in the package. A mismatch indicates an envelope-vs-canonical drift.
 7. **Timestamp validity.** When the verify endpoint returns a non-null RFC 3161 token, verify the token against the TSA's CA chain.
@@ -1398,10 +1398,10 @@ Per [ADR-0008](../adr/0008-multihash-content-hash.md), [ADR-0009](../adr/0009-un
 9. **BlobRef integrity.** For every BlobRef in the package, fetch the URL over HTTPS, recompute SHA-256, and confirm size. See §8.1.5.
 10. **Lifecycle state.** Detect withdrawal, reinstatement, supersession, or publication via the chain of signer-matched `attestation/*` lifecycle nodes referencing the target by `nodeId` per §8.10; verify the corresponding lifecycle signatures and timestamps for each attestation independently. Apply the retention-asymmetry rule per §8.10.3.
 11. **`captureMethod` label.** Read `metadata.captureMethod`; render it alongside the signature verdict. The label is covered by the signature.
-12. **`type` resolution.** Read the `type` field (post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md)). Resolve to one of the v0.1 sub-types per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7 (or future ADRs minting new sub-types). Pre-ADR-0009 packages omit the field; verifiers interpret implicit `content/analysis/v1`. A `type` URI not in the verifier's local sub-type registry reports `unknown_type` rather than failing verification.
-13. **`nodeId` cross-check.** Recompute the envelope hash per §8.2 + §8.3.1. The result IS the `nodeId` by construction per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §3. For nodes referencing this one (an attestation whose `targetNodeId` points here), the `targetNodeId` MUST resolve to this envelope hash; a `targetNodeId` that does not resolve to any known envelope hash reports `unknown_target_node`.
-14. **`signer.identifier` ↔ `sig.kid → trust-registry signerIdentity` cross-check.** Read the package's `signer.identifier` (post-[ADR-0009](../adr/0009-unified-typed-attestation-primitive.md)). Look up the envelope's `kid` in the trust registry. Compare `signer.identifier` against the registry entry's `signerIdentity.identifier`. A mismatch MUST cause the verifier to report `signer_identity_mismatch` and reject the node. Pre-ADR-0009 packages have no envelope-side `signer.identifier`; verifiers derive `signer` from the registry entry and skip the cross-check.
-15. **`captureMethod` per-profile vocabulary conformance.** Per [ADR-0011](../adr/0011-capturemethod-generalization.md) §3, resolve the package's `producerProfile` (or its legacy-alias fallback per [ADR-0006](../adr/0006-producer-profile-architecture.md) §2; or the implicit `ai-assisted-analysis` profile-type for pre-ADR-0006 packages). Confirm `metadata.captureMethod` is in the declared vocabulary. A value not in the declared vocabulary reports `captureMethod_unknown` and rejects the node. A producerProfile whose bundle cannot be resolved reports `producerProfile_bundle_unresolved` and degrades gracefully — the value is preserved verbatim, the structural integrity check (#11) still passes, only the vocabulary-conformance assertion is unverified.
+12. **`type` resolution.** Read the `type` field (v0.1). Resolve to one of the v0.1 sub-types (or future ADRs minting new sub-types). pre-v0.1 packages omit the field; verifiers interpret implicit `content/analysis/v1`. A `type` URI not in the verifier's local sub-type registry reports `unknown_type` rather than failing verification.
+13. **`nodeId` cross-check.** Recompute the envelope hash per §8.2 + §8.3.1. The result IS the `nodeId` by construction For nodes referencing this one (an attestation whose `targetNodeId` points here), the `targetNodeId` MUST resolve to this envelope hash; a `targetNodeId` that does not resolve to any known envelope hash reports `unknown_target_node`.
+14. **`signer.identifier` ↔ `sig.kid → trust-registry signerIdentity` cross-check.** Read the package's `signer.identifier` (v0.1). Look up the envelope's `kid` in the trust registry. Compare `signer.identifier` against the registry entry's `signerIdentity.identifier`. A mismatch MUST cause the verifier to report `signer_identity_mismatch` and reject the node. pre-v0.1 packages have no envelope-side `signer.identifier`; verifiers derive `signer` from the registry entry and skip the cross-check.
+15. **`captureMethod` per-profile vocabulary conformance.** Resolve the package's `producerProfile` (or its legacy-alias fallback; or the implicit `ai-assisted-analysis` profile-type for pre-v0.1 packages). Confirm `metadata.captureMethod` is in the declared vocabulary. A value not in the declared vocabulary reports `captureMethod_unknown` and rejects the node. A producerProfile whose bundle cannot be resolved reports `producerProfile_bundle_unresolved` and degrades gracefully — the value is preserved verbatim, the structural integrity check (#11) still passes, only the vocabulary-conformance assertion is unverified.
 
 ### 9.3 What a verifier cannot check today
 
@@ -1475,14 +1475,14 @@ It is **not a neutral act** for sensitive or pre-publication content:
 
 ### 11.2 Visibility-lifecycle semantics
 
-The specification PERMITS truly-no-public-footprint content via the zero-`attestation/locatedAt/v1` base case per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) §5: a content node MAY be signed without any `attestation/publishes/v1` or `attestation/locatedAt/v1` references. In this base case, the signer holds the bytes; no public location is asserted; the package is verifiable by the signer (who has the bytes) but not retrievable by anyone else.
+The specification PERMITS truly-no-public-footprint content via the zero-`attestation/locatedAt/v1` base case: a content node MAY be signed without any `attestation/publishes/v1` or `attestation/locatedAt/v1` references. In this base case, the signer holds the bytes; no public location is asserted; the package is verifiable by the signer (who has the bytes) but not retrievable by anyone else.
 
 Even in this base case, **the Rekor inclusion proof (if obtained) reveals the publication's existence and the signer's identity**. Truly-no-public-footprint mode requires the publisher to either:
 
 1. Skip Rekor inclusion for sensitive content (and accept the loss of transparency-log timestamp credibility), or
 2. Use a **private transparency-log substrate** — an organizational-internal Rekor-equivalent log, a recipient-distributed inclusion-proof protocol, or a deferred-publication pattern where the public log entry is created only when an `attestation/publishes/v1` lifecycle event lands.
 
-Private-log substrates are design-permitted per §8.3.2 + [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) §4 but Xanadu-gated for implementation: no built private-log substrate exists in v0.1, and the specification does not normatively specify the substrate's shape. Adopters needing private-log support today should treat it as an open question and plan accordingly per [Q2](open-questions.md#q2--federation-substrate).
+Private-log substrates are design-permitted per §8.3.2 §4 but Xanadu-gated for implementation: no built private-log substrate exists in v0.1, and the specification does not normatively specify the substrate's shape. Adopters needing private-log support today should treat it as an open question and plan accordingly per [Q2](open-questions.md#q2--federation-substrate).
 
 ### 11.3 Identity-binding privacy
 
@@ -1508,17 +1508,17 @@ Adopters publishing material with privacy-sensitive content SHOULD treat publica
 
 This specification requests **provisional registration** of `/.well-known/typed-publisher.json` in the IANA Well-Known URI Registry per [RFC 8615](https://www.rfc-editor.org/rfc/rfc8615). The registration request is filed at <https://github.com/protocol-registries/well-known-uris>; the citing document is this specification at its canonical URL (§2). The registration procedure per RFC 8615 is Specification Required; the designated expert is Mark Nottingham.
 
-The legacy path `/.well-known/evidence-public-keys.json` is NOT IANA-registered (and never was); reference implementations serving the legacy path do so as a backwards-compatibility convenience per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §3, not as an IANA-recognized path.
+The legacy path `/.well-known/evidence-public-keys.json` is NOT IANA-registered (and never was); reference implementations serving the legacy path do so as a backwards-compatibility convenience, not as an IANA-recognized path.
 
 Promotion to a permanent registration is deferred until a stable v1.0 of this specification is published at a permanent URL and at least one external implementation has demonstrated conformance. Provisional status is appropriate for v0.1.
 
 ### 12.2 Vocabulary URI
 
-This specification reserves the JSON-LD / RDF prefix `ts:` resolved to `https://typedstandards.org/ns/ts#` (per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §2). The vocabulary URI is an identifier, not a fetch target; this specification does not request IANA action for the vocabulary URI. Registration on the prefix.cc de facto JSON-LD/RDF prefix registry is a coordination item (not IANA-administered).
+This specification reserves the JSON-LD / RDF prefix `ts:` resolved to `https://typedstandards.org/ns/ts#`. The vocabulary URI is an identifier, not a fetch target; this specification does not request IANA action for the vocabulary URI. Registration on the prefix.cc de facto JSON-LD/RDF prefix registry is a coordination item (not IANA-administered).
 
 ### 12.3 Canonicalization-rule URIs
 
-This specification reserves the following content-canonicalization rule URIs per [ADR-0007](../adr/0007-content-canonicalization.md) §3:
+This specification reserves the following content-canonicalization rule URIs:
 
 - `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` — the datHere A-G/Jupyter content profile (§8.7).
 - `https://typedstandards.org/canonicalization/legacy-json/v1` — the legacy default content profile.
@@ -1551,7 +1551,7 @@ Authors of typed claims in non-English jurisdictions MAY use domain extensions t
 - **W3C PROV-O** — *PROV-O: The PROV Ontology* (Lebo et al., W3C Recommendation 2013). Used by §8.1.4. <https://www.w3.org/TR/prov-o/>
 - **Multihash** — *Multihash format specification* (Multiformats community). Used by §8.2 + §8.1.1's `contentHash` field. <https://github.com/multiformats/multihash>
 - **Sigstore Rekor** — *Rekor: A transparency log for software artifacts* (Sigstore community). Used by §8.3.2. <https://docs.sigstore.dev/logging/overview/>
-- **in-toto Attestation Framework** — *in-toto Attestation Framework specification* (in-toto / SLSA community). Used as structural alignment for multihash + `predicateType`-style URIs per [ADR-0008](../adr/0008-multihash-content-hash.md) + [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md). <https://github.com/in-toto/attestation>
+- **in-toto Attestation Framework** — *in-toto Attestation Framework specification* (in-toto / SLSA community). Used as structural alignment for multihash + `predicateType`-style URIs. <https://github.com/in-toto/attestation>
 
 ### 14.2 Informative References
 
@@ -1569,7 +1569,7 @@ Authors of typed claims in non-English jurisdictions MAY use domain extensions t
 - **Nanopublications** — *Nanopublications: A novel format for the dissemination of scientific data*. Adjacent specification per §5.5. <https://nanopub.net/>
 - **RO-Crate / WRROC** — *Research Object Crate*. Candidate package-container per §5.5 and [Q1](open-questions.md#q1--package-format). <https://www.researchobject.org/ro-crate/>
 - **DCAT** — *Data Catalog Vocabulary*. Adjacent specification per §5.5. <https://www.w3.org/TR/vocab-dcat/>
-- **2026-05-26 deep-research memo** (`/temp/q39_40_memo`, workspace-local) — pre-consolidation research memo executing the [Q40](open-questions.md#q40--pre-adoption-research-for-typedstandardsorg-rename--namespace-prefix-selection-ts-vs-tss-vs-alternatives) seven-item research checklist; not committed under the workspace stakeholder/relationship-content boundary; cited by [ADR-0012](../adr/0012-typed-standards-consolidation.md) Context as the research basis for the consolidation's pre-decided items.
+- **2026-05-26 deep-research memo** (`/temp/q39_40_memo`, workspace-local) — pre-consolidation research memo executing the [Q40](open-questions.md#q40--pre-adoption-research-for-typedstandardsorg-rename--namespace-prefix-selection-ts-vs-tss-vs-alternatives) seven-item research checklist; not committed under the workspace stakeholder/relationship-content boundary; cited Context as the research basis for the consolidation's pre-decided items.
 - **2026-05-25 strategic memo** (`civic-ai-tools/docs/architecture-incorporation-memo-2026-05-25.md`, workspace-local) — the G1-G4 sequencing memo whose MVP-cohort gate the consolidation trigger fires after.
 
 ---
@@ -1594,78 +1594,78 @@ A worked example of a `content/claim/v1` node carrying a `ts:TrendClaim` for noi
 
 ```json
 {
-  "@context": [
-    "https://typedstandards.org/ns/ts#",
-    {
-      "ex": "https://example.gov/datasets/311/"
-    }
-  ],
-  "@graph": [
-    {
-      "@id": "claim-001",
-      "@type": "ts:TrendClaim",
-      "dcterms:identifier": "claim-001",
-      "dcterms:description": "Noise complaints rose materially in Bushwick North between 2024 and 2025.",
-      "ts:metric": {
-        "@id": "ex:complaint-count",
-        "schema:name": "311 noise complaint count"
-      },
-      "ts:scope": {
-        "@type": "ts:Scope",
-        "ts:geographicScope": {
-          "@type": "ts:NeighborhoodTabulationArea",
-          "dcterms:identifier": "BK0801",
-          "schema:name": "Bushwick North"
-        },
-        "ts:temporalScope": {
-          "@type": "time:Interval",
-          "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
-          "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
-        }
-      },
-      "ts:baselinePeriod": {
-        "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
-        "time:hasEnd": { "time:inXSDDate": "2024-12-31" }
-      },
-      "ts:comparisonPeriod": {
-        "time:hasBeginning": { "time:inXSDDate": "2025-01-01" },
-        "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
-      },
-      "ts:direction": "ts:Increase",
-      "ts:magnitude": {
-        "@type": "ts:Magnitude",
-        "ts:percentChange": 23.0,
-        "ts:absoluteChange": 1842
-      },
-      "ts:confidence": {
-        "@type": "ts:ConfidenceStatement",
-        "ts:method": "ts:FrequentistInterval",
-        "ts:level": 0.95,
-        "ts:lowerBound": 18.4,
-        "ts:upperBound": 27.6,
-        "ts:methodReference": "trace.json#step-stat-test-3"
-      },
-      "prov:wasDerivedFrom": [
-        { "@id": "source-analysis-nodeId#query-result-2" }
-      ],
-      "ts:derivedVia": {
-        "@type": "ts:AnalyticalDerivation",
-        "ts:traceReference": "trace.json#step-claim-extraction-1",
-        "ts:translationModel": {
-          "@type": "schema:SoftwareApplication",
-          "schema:name": "claude-opus-4-7"
-        },
-        "ts:translationPrompt": {
-          "@id": "prompt.json#claim-extraction"
-        },
-        "ts:sourceOutputSpan": {
-          "ts:outputFile": "output.md",
-          "ts:byteRange": [1240, 1487]
-        }
-      },
-      "ts:limitations": "Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records)."
-    }
-  ]
+ "@context": [
+ "https://typedstandards.org/ns/ts#",
+ {
+ "ex": "https://example.gov/datasets/311/"
+ }
+ ],
+ "@graph": [
+ {
+ "@id": "claim-001",
+ "@type": "ts:TrendClaim",
+ "dcterms:identifier": "claim-001",
+ "dcterms:description": "Noise complaints rose materially in Bushwick North between 2024 and 2025.",
+ "ts:metric": {
+ "@id": "ex:complaint-count",
+ "schema:name": "311 noise complaint count"
+ },
+ "ts:scope": {
+ "@type": "ts:Scope",
+ "ts:geographicScope": {
+ "@type": "ts:NeighborhoodTabulationArea",
+ "dcterms:identifier": "BK0801",
+ "schema:name": "Bushwick North"
+ },
+ "ts:temporalScope": {
+ "@type": "time:Interval",
+ "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
+ "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
+ }
+ },
+ "ts:baselinePeriod": {
+ "time:hasBeginning": { "time:inXSDDate": "2024-01-01" },
+ "time:hasEnd": { "time:inXSDDate": "2024-12-31" }
+ },
+ "ts:comparisonPeriod": {
+ "time:hasBeginning": { "time:inXSDDate": "2025-01-01" },
+ "time:hasEnd": { "time:inXSDDate": "2025-12-31" }
+ },
+ "ts:direction": "ts:Increase",
+ "ts:magnitude": {
+ "@type": "ts:Magnitude",
+ "ts:percentChange": 23.0,
+ "ts:absoluteChange": 1842
+ },
+ "ts:confidence": {
+ "@type": "ts:ConfidenceStatement",
+ "ts:method": "ts:FrequentistInterval",
+ "ts:level": 0.95,
+ "ts:lowerBound": 18.4,
+ "ts:upperBound": 27.6,
+ "ts:methodReference": "trace.json#step-stat-test-3"
+ },
+ "prov:wasDerivedFrom": [
+ { "@id": "source-analysis-nodeId#query-result-2" }
+ ],
+ "ts:derivedVia": {
+ "@type": "ts:AnalyticalDerivation",
+ "ts:traceReference": "trace.json#step-claim-extraction-1",
+ "ts:translationModel": {
+ "@type": "schema:SoftwareApplication",
+ "schema:name": "claude-opus-4-7"
+ },
+ "ts:translationPrompt": {
+ "@id": "prompt.json#claim-extraction"
+ },
+ "ts:sourceOutputSpan": {
+ "ts:outputFile": "output.md",
+ "ts:byteRange": [1240, 1487]
+ }
+ },
+ "ts:limitations": "Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records)."
+ }
+ ]
 }
 ```
 
@@ -1678,7 +1678,7 @@ Extended comparison with structural mapping notes (the short version is in §5.5
 | Standard / framework | Term overlap with Typed Standards | Structural compatibility | Alignment opportunities | Notes |
 |---|---|---|---|---|
 | **C2PA** | High — "claim," "assertion," "manifest" overlap with Typed Standards "content/claim/v1," "envelope," "attestation/*" | Structurally compatible; not byte-compatible. C2PA uses COSE/CBOR + JUMBF; Typed Standards uses Ed25519ph over JCS-canonical JSON | Term-translation table (Appendix D); C2PA-compatible terminology in cross-references; consumers reading both standards see qualified "C2PA claim" / "C2PA assertion" | Different artifact class (media vs. analytical); same role for production-process attestation |
-| **in-toto / DSSE** | Low overlap; aligned on `predicateType` URI pattern | High — Typed Standards adopts in-toto's multihash DigestSet ([ADR-0008](../adr/0008-multihash-content-hash.md)) and predicate-type-URI pattern ([ADR-0009](../adr/0009-unified-typed-attestation-primitive.md)) | DSSE as candidate envelope-serialization profile for in-toto-native consumers; multihash convention already adopted | Different consumer model (automated policy engines vs. readers exercising judgment) |
+| **in-toto / DSSE** | Low overlap; aligned on `predicateType` URI pattern | High — Typed Standards adopts in-toto's multihash DigestSet and predicate-type-URI pattern | DSSE as candidate envelope-serialization profile for in-toto-native consumers; multihash convention already adopted | Different consumer model (automated policy engines vs. readers exercising judgment) |
 | **W3C Verifiable Credentials** | High — "claim" overlap, different granularity | Compatible at the JSON-LD level; Typed Standards claim can be expressed as a VC whose subject is the analytical artifact | "VC claim" used explicitly for VC-internal claims; "claim" without qualifier means Typed Standards `content/claim/v1` | Three-party VC model (issuer / holder / verifier) does not map to two-party Typed Standards model |
 | **SLSA** | None — "Provenance" attestation type, "Build Type" | Adjacent; SLSA-Provenance is a specific in-toto predicate type for software builds | Typed Standards is to analytical artifacts what SLSA is to software builds — production-process attestation framework | Typed Standards does not define maturity levels; trust signals are graded identity-binding + captureMethod + transparency-log inclusion |
 | **Sigstore (Cosign / Fulcio / Rekor)** | None — Cosign / Fulcio / Rekor are tooling | Active dependency; Typed Standards uses Rekor for transparency-log inclusion (§8.3.2) | Continue using Rekor; consider Fulcio keyless OIDC as identity tier per [Q3](open-questions.md#q3--first-non-github-identity-provider); track Rekor v2 migration | Foundational infrastructure, not a competing standard |
@@ -1711,9 +1711,9 @@ This appendix records which sections of the specification are built / specified 
 
 **Built in the reference implementation:**
 
-- The cryptographic envelope (§8.3): Ed25519ph signature, SHA-256 canonical-JSON content-addressing, RFC 3161 timestamp from FreeTSA, Sigstore Rekor inclusion proof. Note: post-[ADR-0008](../adr/0008-multihash-content-hash.md) JCS canonicalization + multihash `contentHash` are specified; the packager + verify-route switch from `JSON.stringify` to JCS is a Phase 3 implementation item.
-- Trust registry served at `/.well-known/evidence-public-keys.json` (the legacy path; the new path `/.well-known/typed-publisher.json` per §8.3.3 + [ADR-0012](../adr/0012-typed-standards-consolidation.md) §3 is a Phase 3 implementation item; the JSON content is identical at both paths).
-- `captureMethod` discipline (§8.6): required-and-signed-at-publish, tamper-evident. The open-enum-at-core + per-profile vocabulary mechanism per [ADR-0011](../adr/0011-capturemethod-generalization.md) is specified; the publish-route's bundle-distribution-mechanism switch is a Phase 3 item gated on [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention).
+- The cryptographic envelope (§8.3): Ed25519ph signature, SHA-256 canonical-JSON content-addressing, RFC 3161 timestamp from FreeTSA, Sigstore Rekor inclusion proof. Note: v0.1 JCS canonicalization + multihash `contentHash` are specified; the packager + verify-route switch from `JSON.stringify` to JCS is a Phase 3 implementation item.
+- Trust registry served at `/.well-known/evidence-public-keys.json` (the legacy path; the new path `/.well-known/typed-publisher.json` per §8.3.3 §3 is a Phase 3 implementation item; the JSON content is identical at both paths).
+- `captureMethod` discipline (§8.6): required-and-signed-at-publish, tamper-evident. The open-enum-at-core + per-profile vocabulary mechanism is specified; the publish-route's bundle-distribution-mechanism switch is a Phase 3 item gated on [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention).
 - `contentProfile` field (§8.1.1): `default` and `datHere` values; the A-G envelope per §8.7 with deterministic-reproducibility per §8.7.3 and cross-host commitment-view per §8.8.
 - The executed-notebook architecture per §8.7.4 (built via Vercel Sandbox + python3.13 + helper-function inlining).
 - Withdrawal and reinstatement lifecycle (§8.10) — currently as DB-row columns; the migration to `attestation/withdraws/v1` / `attestation/reinstates/v1` envelopes is a Phase 3 implementation item.
@@ -1724,24 +1724,24 @@ This appendix records which sections of the specification are built / specified 
 
 - The Typed Claims layer (§8.11) — `content/claim/v1` / `content/question/v1` / `content/evidence/v1` sub-types are reserved name-only; promotion is gated on a first typed-content producer per [Q5](open-questions.md#q5--claimsjsonld-and-upstream-evidencejson-implementation-timing).
 - The first domain extension — civic data analysis — drafted within §8.11.4 (geographic-scope subtypes). Not yet a separate document.
-- Producer Profile architecture per [ADR-0006](../adr/0006-producer-profile-architecture.md): the `producerProfile` field, the subtype/flavor model, the legacy-alias relationship with `contentProfile`. Spec live; packager + route + bundle-endpoint plumbing that emits `producerProfile` is a Phase 3 implementation item.
+- Producer Profile architecture: the `producerProfile` field, the subtype/flavor model, the legacy-alias relationship with `contentProfile`. Spec live; packager + route + bundle-endpoint plumbing that emits `producerProfile` is a Phase 3 implementation item.
 - AI-Assisted Analysis Producer Profile: the `datHere` subtype is the first realized subtype (built); `civicaitools-default` subtype is reserved name-only.
-- The unified typed-attestation primitive per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md): one structural envelope, two top-level type families, `type` + `signer` + `nodeId` cross-check. Spec live; reference-implementation packager + verify-route emits the new fields as a Phase 3 implementation item.
-- Lifecycle and location attestations per [ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md): attestation-envelope form. Spec live; reference-implementation migration from DB-row lifecycle columns is a Phase 3 item.
-- captureMethod-vocabulary distribution per [ADR-0011](../adr/0011-capturemethod-generalization.md) §3 + [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention): the bundle-lookup mechanism. Spec lives at the verifier-disposition level (graceful degradation); bundle-distribution mechanism deferred.
+- The unified typed-attestation primitive: one structural envelope, two top-level type families, `type` + `signer` + `nodeId` cross-check. Spec live; reference-implementation packager + verify-route emits the new fields as a Phase 3 implementation item.
+- Lifecycle and location attestations: attestation-envelope form. Spec live; reference-implementation migration from DB-row lifecycle columns is a Phase 3 item.
+- captureMethod-vocabulary distribution + [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention): the bundle-lookup mechanism. Spec lives at the verifier-disposition level (graceful degradation); bundle-distribution mechanism deferred.
 - The graded identity ladder beyond the weak tier (academic ID, DNS-bound institutional, notarized) — informative direction per §8.5; first non-GitHub tier gated on [Q3](open-questions.md#q3--first-non-github-identity-provider).
 
 **Specified (taxonomy registered; not yet built end-to-end):**
 
-- The `content/*` family: `content/analysis/v1` is **built** (the legacy and `datHere` content shapes both map to it via the implicit-type rule per [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §9); typed-content sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`) are reserved name-only.
-- The `attestation/*` family: the v0.1 sub-type table per §8.12.1 is ratified by [ADR-0009](../adr/0009-unified-typed-attestation-primitive.md) §7; operationalization per sub-type lands in downstream ADRs ([ADR-0010](../adr/0010-visibility-lifecycle-location-attestations.md) for lifecycle/location; future ADRs for adversarial-eval and host-self-attestation).
+- The `content/*` family: `content/analysis/v1` is **built** (the legacy and `datHere` content shapes both map to it via the implicit-type rule); typed-content sub-types (`content/claim/v1`, `content/question/v1`, `content/evidence/v1`) are reserved name-only.
+- The `attestation/*` family: the v0.1 sub-type table per §8.12.1 is ratified; operationalization per sub-type lands in downstream ADRs ( for lifecycle/location; future ADRs for adversarial-eval and host-self-attestation).
 - The host node sub-family within `content/*` — `content/host/v1`, `content/hostPolicy/v1`, `content/hostTermsOfUse/v1` — reserved name-only per [Q22](open-questions.md#q22--host-as-typeable-subject--host-self-attestation-shape).
 - The tool / certifying-body node pattern: `content/tool/v1` (reserved); `attestation/certifies/v1` (URI registered).
 
 **Reserved (named, not specified):**
 
 - Typed Evidence Profile and Typed Questions Profile (the Typed Claims profile is the only one drafted).
-- Producer Profile types beyond AI-Assisted Analysis: **Human**, **Hybrid**, **Sandbox-only** (reserved name-only per [ADR-0006](../adr/0006-producer-profile-architecture.md) §1).
+- Producer Profile types beyond AI-Assisted Analysis: **Human**, **Hybrid**, **Sandbox-only** (reserved name-only).
 - Producer Profile guidance-doc routing convention per [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention).
 - Visualizations and other analytical artifacts as their own evidence nodes (multi-node-per-query) per [Q33](open-questions.md#q33--visualizations-and-other-analytical-artifacts-as-their-own-evidence-nodes-multi-node-per-query).
 - Sandbox capture mechanism as a high-attestation entry in the `sandbox-only` Producer Profile's captureMethod vocabulary.
@@ -1762,7 +1762,7 @@ The most load-bearing open questions for v0.1 readers and reviewers:
 
 ### Appendix G. Revision history
 
-- **2026-05-26** — Phase 2 of the Q39 consolidation chat per [ADR-0012](../adr/0012-typed-standards-consolidation.md). File renamed from `typed-standards-proposal.md` to `typed-standards-specification.md`. Document title changed from "Typed Standards — proposal" to "Typed Standards Specification". OES §3-§16 and CCV §1-§6 + §8 absorbed into the consolidated body following the 15-section RFC-conventional structure named in the 2026-05-26 deep-research memo §6.1. `ts:` namespace prefix replaces `ccv:` throughout the absorbed typed-claims body; `https://typedstandards.org/ns/ts#` replaces `https://civicaitools.org/ns/civic-claim-vocabulary/v1#` as the vocabulary URI. Well-known trust-registry path renamed from `/.well-known/evidence-public-keys.json` to `/.well-known/typed-publisher.json`; legacy path served in parallel indefinitely (no forced cutover) per [ADR-0012](../adr/0012-typed-standards-consolidation.md) §3. Status changed from "Internal working draft (pre-v0.1)" to "v0.1 Working Draft — open for external review (review window to be scheduled)". License: CC BY 4.0. New material: §5.5 C2PA + W3C VC disambiguation paragraphs; §6.3 project name + RFC 3161 prefix-choice disambiguation paragraphs; §10 Security Considerations; §11 Privacy Considerations; §12 IANA Considerations; §13 Internationalization Considerations; Appendix A Citation conventions; Appendix D C2PA-to-Typed-Standards term-translation table; Appendix I Acknowledgments. OES + CCV historical-snapshot status notes land in Phase 3 of the consolidation chat (separate commit on the same branch).
+- **2026-05-26** — Phase 2 of the Q39 consolidation chat. File renamed from `typed-standards-proposal.md` to `typed-standards-specification.md`. Document title changed from "Typed Standards — proposal" to "Typed Standards Specification". OES §3-§16 and CCV §1-§6 + §8 absorbed into the consolidated body following the 15-section RFC-conventional structure named in the 2026-05-26 deep-research memo §6.1. `ts:` namespace prefix replaces `ccv:` throughout the absorbed typed-claims body; `https://typedstandards.org/ns/ts#` replaces `https://civicaitools.org/ns/civic-claim-vocabulary/v1#` as the vocabulary URI. Well-known trust-registry path renamed from `/.well-known/evidence-public-keys.json` to `/.well-known/typed-publisher.json`; legacy path served in parallel indefinitely (no forced cutover). Status changed from "Internal working draft (pre-v0.1)" to "v0.1 Working Draft — open for external review (review window to be scheduled)". License: CC BY 4.0. New material: §5.5 C2PA + W3C VC disambiguation paragraphs; §6.3 project name + RFC 3161 prefix-choice disambiguation paragraphs; §10 Security Considerations; §11 Privacy Considerations; §12 IANA Considerations; §13 Internationalization Considerations; Appendix A Citation conventions; Appendix D C2PA-to-Typed-Standards term-translation table; Appendix I Acknowledgments. OES + CCV historical-snapshot status notes land in Phase 3 of the consolidation chat (separate commit on the same branch).
 - For earlier revision history of the absorbed OES envelope spec — through 2026-05-25 G4 captureMethod-generalization cohort, 2026-05-25 G3 lifecycle/location cohort, 2026-05-25 G2 unified-primitive cohort, 2026-05-25 G1 envelope-shape cohort, 2026-05-19 datHere reframe, 2026-05-18 datHere captureMethod variant — see [`open-evidence-standard.md`](open-evidence-standard.md) §17 (historical snapshot, frozen 2026-05-26).
 - For earlier revision history of the absorbed Civic Claim Vocabulary draft — see [`civic-claim-vocabulary-draft-spec.md`](civic-claim-vocabulary-draft-spec.md) (historical snapshot, frozen 2026-05-26).
 
