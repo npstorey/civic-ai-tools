@@ -437,6 +437,39 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
   7. [ ] Comparison table for the RFC's "Relationship to adjacent standards" section — extend `typed-standards-proposal.md` §7 with positioning vs. C2PA, in-toto (already aligned via multihash convention adopted in ADR-0008), W3C VC, SLSA, Sigstore.
 - **Notes.** Checklist items 1-4 are inexpensive one-shot lookups; items 5-7 are writing work that happens during the consolidation ADR drafting. Don't do this work prematurely — the trigger is Q39's "consolidation needed" moment. Until then, Q40 holds the durable research-task list so it doesn't drift. The Time-Stamping-Server collision is the most-load-bearing finding so far — leans toward `ts:` rather than `tss:` despite the singular/plural mismatch, but final decision waits for the full prefix-collision survey + reviewer feedback during RFC drafting.
 
+### Q41 — Ontology assembly strategy: core vs. natural-extension vs. institutional-adapter
+
+- **Status.** Open. The highest-leverage, hardest-to-reverse ontology decision. Resolution path is demo-driven exploration, not spec-edit-first.
+- **Origin.** 2026-05-27 v0.1 private-circulation review (M. Zargham).
+- **Stakes.** Determines what the protocol can *express* and which organizations can *understand* it. The §8.11 typed-claims vocabulary (`ts:TrendClaim` etc.) and the §7.5 QEC sub-ontology are the most-exposed candidates — each could be first-class TS vocabulary or a SKOS-mapped subset of more mature ontologies. Anchoring in mature standards (W3C / OMG / OASIS) vs. rolling-your-own bears directly on trust, interop, and institutional adoption.
+- **Current direction.** Two-phase optimization: global-explore via fast demo-driven implementation loops (no hard commits), then local-convergence once "in the neighborhood." Anchor core in the minimum established ontology per core purpose; express natural extensions + institutional interop as SKOS (`exactMatch`/`closeMatch`) adapters. Parsimony + non-reinvention as regularizing principles. Do not resolve via spec edits this round.
+- **Resolution criteria.** A validated ontology bill of materials (ROBOT-assembled) classifying core vs. adapter, exercised against demo test-fixtures (storyboards), feeding a later spec revision (v0.1.4 / v0.2).
+- **Notes.** Cites Zargham, *Formalizing Document Assurance: Verification, Validation and Human Accountability* (INCOSE International Symposium 2026, forthcoming). Joel Chan's view on the Discourse Graphs framing is the natural second reviewer signal before the §8.11 / QEC fork is decided. Related: Q42, Q43, Q44.
+
+### Q42 — Methodological-soundness layer (does the method support the kind of judgment?)
+
+- **Status.** Open. Gated on Q41's exploration.
+- **Origin.** 2026-05-27 v0.1 private-circulation review (M. Zargham).
+- **Stakes.** The spec attests to specific *results* (`attestation/evaluates/v1` targets a specific artifact) but has no primitive for attesting that an analytical *method* is sound for the *kind of judgment* it is meant to support. Without it, experts can attest to conclusions but not to method-fitness — and method-fitness is what makes data institutionally *actionable* ("here is the conclusion and why the method supports it," not just "look what we found"). Candidate vocabularies: EARL (W3C Evaluation and Report Language) + P-Plan (PROV-O plan extension).
+- **Current direction.** Explore via the demo fixtures (Q41 method). Likely shape: a `content/method/v1` sub-type carrying a P-Plan-shaped method description, plus an `attestation/methodSoundness/v1` sub-type (or extend `attestation/evaluates/v1` to target methods). Not resolved this round.
+- **Notes.** Echoes a concern raised independently in another adopter context — ensuring determinism of analytical methods + subject-matter-expert certification of a *process* rather than each individual analysis. Distinct from Q43: soundness asks whether the method fits the judgment; replay asks whether a third party can rerun it.
+
+### Q43 — Reproducibility / replay layer distinct from provenance
+
+- **Status.** Open. Gated on Q41.
+- **Origin.** 2026-05-27 v0.1 private-circulation review (M. Zargham).
+- **Stakes.** PROV-O captures *what happened* but does not carry the dereferenceable references a third party needs to actually *rerun* an analysis: pinned commit hash (or release tag) for code, pinned dataset URI (with version), Docker-image hash for the runtime environment. Replay is a capability distinct from provenance and from epistemic soundness. Candidate vocabularies: P-Plan + DCAT (reviewer uncertain of DCAT's fit) for the dereferenceable refs.
+- **Current direction.** Explore via demo fixtures. Likely shape: a replay-manifest extension (`extensions["org.typedstandards.replay"]`) or a content sub-type carrying pinned commit/dataset/image refs. The reserved Sandbox captureMethod is the existing partial hook (it can pin runtime + dataset). Not resolved this round.
+- **Notes.** Docker-image pinning flagged by reviewer as particularly effective for actual replayability. Connects to the audience-stratification in Q44 (replay needs dereference rights over code + infra, often gated). Distinct from Q42.
+
+### Q44 — Audience-stratified access: audit / epistemic / computational-replay
+
+- **Status.** Open. Strategic; defer; lowest near-term priority.
+- **Origin.** 2026-05-27 v0.1 private-circulation review (M. Zargham).
+- **Stakes.** Three audiences with different authority needs: **audit** (see the data supply chain / provenance), **epistemic** (see why the method fits the claim — Q42), and **computational-replay** (actually rerun — needs dereference rights over code + infra, often gated for proprietary code / private data — Q43). The spec currently treats verification as one-tier. Institutional adoption (government open-data, regulated industry, engineering requirements work) may eventually need this stratification.
+- **Current direction.** Defer. Not a v0.1 concern. Informed by demo + adopter needs. The publication-record / visibility-lifecycle work (§8.10) is the natural home when it matures.
+- **Notes.** Reviewer's engineering-domain framing (INCOSE / SysMLv2 / OpenMBEE) separates these explicitly, contrasting claims-as-requirements (judged satisfied/unsatisfied by varied techniques) with the spec's claims-as-hypotheses (default-unknown, tolerant of contradiction). The engineering-vs-science framing is useful context, not a required change.
+
 ---
 
 ## Resolution log
