@@ -3,7 +3,7 @@ Status: v0.1 Working Draft — open for external review (review window to be sch
 Spec name: Typed Standards Specification
 Version: v0.1
 License: CC BY 4.0
-Last updated: 2026-05-26
+Last updated: 2026-06-08
 Maintainer: Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 Canonical URL: [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 ---
