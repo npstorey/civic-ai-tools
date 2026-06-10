@@ -64,6 +64,7 @@ Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
 |------|---------|
 | [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | Demo website at [civicaitools.org](https://civicaitools.org) — Next.js app with side-by-side MCP comparison |
 | [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | The MCP server itself (Socrata open data portals) |
+| [typedstandards](https://github.com/npstorey/typedstandards) (private) | `@typedstandards/verify-core` on npm + the standalone client-side verifier at [typedstandards.org](https://typedstandards.org) — the neutral home the Typed Standards spec publishes to (ADR-0014) |
 
 Sprint-based work for the website lives in that repo's `/sprints/` folder. This repo holds MCP server configs, skill docs, and setup tooling.
 
@@ -71,9 +72,10 @@ Sprint-based work for the website lives in that repo's `/sprints/` folder. This 
 
 Canonical specifications and design decisions live in [`docs/architecture/`](docs/architecture/):
 
+- **[`typed-standards-specification.md`](docs/architecture/typed-standards-specification.md)** — the canonical consolidated Typed Standards Specification (v0.1.x; OES + CCV absorbed per [ADR-0012](docs/adr/0012-typed-standards-consolidation.md)). Covers evidence-package shape, signing, verification (§9.2 check sequence), captureMethod, lifecycle, and the typed-claims layer (§8.11). Sections subject to open questions cite the registry by Q-number. One-pager companion: [`typed-standards-summary.md`](docs/architecture/typed-standards-summary.md).
 - [`end-state-vision.md`](docs/architecture/end-state-vision.md) — layered architecture target with build-state coloring (built / partial / designed / speculative) and full glossary. Update when an open question resolves.
-- [`open-evidence-standard.md`](docs/architecture/open-evidence-standard.md) — Internal working draft of the Open Evidence Standard (pre-v0.1, not for external review). Spec for evidence-package shape, signing, verification, captureMethod, withdrawal lifecycle. Honors what the codebase actually enforces today; sections subject to open questions are marked inline.
-- [`civic-claim-vocabulary-draft-spec.md`](docs/architecture/civic-claim-vocabulary-draft-spec.md) — Internal working draft of the Civic Claim Vocabulary (pre-v0.1). The typed-claims layer that sits on top of the Open Evidence Standard. Reserved but not yet built; gated by the Xanadu doctrine.
+- [`open-evidence-standard.md`](docs/architecture/open-evidence-standard.md) — **frozen historical snapshot (2026-05-26)**. Envelope-layer content consolidated into `typed-standards-specification.md` per ADR-0012. Kept for cross-reference accuracy in pre-consolidation ADRs; not the source of truth.
+- [`civic-claim-vocabulary-draft-spec.md`](docs/architecture/civic-claim-vocabulary-draft-spec.md) — **frozen historical snapshot (2026-05-26)**. Typed-claims-layer content consolidated into `typed-standards-specification.md` §8.11 per ADR-0012. OWL-ontology promotion still tracked under registry Q10.
 - [`xanadu-doctrine.md`](docs/architecture/xanadu-doctrine.md) — project discipline gating spec growth: do not promote anything to a higher build state without a real package or adopter that needs it.
 - [`working-method.md`](docs/architecture/working-method.md) — project discipline governing how content moves between the project's six coordination surfaces: decision surfaces (registry / proposed-issues + GitHub issues / ADRs / specs), memory surfaces, and instruction surfaces. Covers the promotion path from question to issue to ADR, the explicit avoidance of issue-tracker-as-thinking-surface, and the inclusion conditions for memory and CLAUDE.md content. Companion doctrine to `xanadu-doctrine.md`.
 - [`working-method-flow.md`](docs/architecture/working-method-flow.md) — practical operational guide to the working method: surface map, ASCII flowchart from origination through promotion, worked classification examples ("I have a thing in my chat — where does it go?"). Read this when placing content; read `working-method.md` for rationale.
