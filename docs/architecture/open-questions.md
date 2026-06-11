@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-05-05
+Last updated: 2026-06-09
 Maintainer: [TK: leave as placeholder]
 ---
 
