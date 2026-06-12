@@ -3,6 +3,7 @@ Status: v0.1 Working Draft — open for external review (leave-behind summary)
 Last updated: 2026-05-26
 Maintainer: Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 Companion: typed-standards-specification.md (full version)
+License: CC BY 4.0 (same as the full specification)
 ---
 
 # Typed Standards

@@ -3,6 +3,7 @@
 High-value civic datasets across major Socrata open data portals. This is a hand-curated "greatest hits" list — use the MCP server's `search` tool for datasets not listed here.
 
 Last verified: 2026-03-08
+License: CC0 1.0 — this directory (the curation, descriptions, and field notes) is dedicated to the public domain; see [LICENSING.md](../LICENSING.md). The datasets it points to are governed by their source portals' terms.
 
 ---
 

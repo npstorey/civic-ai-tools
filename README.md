@@ -134,6 +134,10 @@ New to some of these terms? Here's a quick reference:
 | **API key** | A password-like string that identifies you when making API requests |
 | **Codespace** | A cloud development environment that runs in your browser — no local setup needed |
 
+## License
+
+Code in this repo is MIT (see [LICENSE](LICENSE)). The Typed Standards Specification text is CC BY 4.0 (declared in the document). Cross-repo license choices — including the fork attribution on socrata-mcp-server and the CC0 dedication on the project's directory data — are documented in [LICENSING.md](LICENSING.md).
+
 ## Disclaimer
 
 This is a personal project and is not affiliated with, endorsed by, or representative of any employer or organization.
