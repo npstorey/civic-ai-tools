@@ -80,6 +80,7 @@ DEV_COOKIE_NAME = "next-auth.session-token"
 ALLOWED_SOURCES = {"socrata", "data-commons"}
 ALLOWED_PROMPT_VISIBILITY = {"full_text", "hash_only"}
 ALLOWED_CAPTURE_MODES = {"single_final_turn", "full_conversation"}
+ALLOWED_VISIBILITY = {"published", "committed"}
 ALLOWED_TURN_ROLES = {"user", "assistant", "tool"}
 # Capture-method enum per ADR-0003. The skill always emits
 # ``claude-code-jsonl-readback``; the other values exist so the server's
@@ -572,6 +573,13 @@ def validate_payload(payload: dict[str, Any]) -> None:
             f"{sorted(ALLOWED_CAPTURE_METHODS)} (got {capture_method!r})"
         )
         sys.exit(2)
+    visibility = payload.get("visibility", "published")
+    if visibility not in ALLOWED_VISIBILITY:
+        eprint(
+            f"error: visibility must be one of "
+            f"{sorted(ALLOWED_VISIBILITY)} (got {visibility!r})"
+        )
+        sys.exit(2)
     if capture_mode == "full_conversation":
         turns = payload.get("turns")
         if not isinstance(turns, list) or len(turns) == 0:
@@ -905,6 +913,11 @@ def build_request_body(
         "title": payload["title"],
         "summary": payload["summary"],
         "captureMethod": payload.get("captureMethod", DEFAULT_CAPTURE_METHOD),
+        # Request-level visibility (civic-ai-tools#71): "published" (default —
+        # the skill is invoked as "publish this", so public is the expected
+        # outcome) or "committed" (signed + transparency-logged, content
+        # private; promote later from the civicaitools.org dashboard).
+        "visibility": payload.get("visibility", "published"),
     }
     if payload.get("duration_ms") is not None:
         body["duration_ms"] = payload["duration_ms"]
@@ -1294,6 +1307,15 @@ def main() -> None:
         "`single_final_turn` or `full_conversation`.",
     )
     parser.add_argument(
+        "--visibility",
+        choices=sorted(ALLOWED_VISIBILITY),
+        default=None,
+        help="Override the payload's `visibility` (civic-ai-tools#71): "
+        "`published` (default — content public + listed) or `committed` "
+        "(signed, timestamped, and registered on the transparency log, "
+        "but content stays private; publish later from the dashboard).",
+    )
+    parser.add_argument(
         "--max-inline-bytes",
         type=int,
         default=DEFAULT_MAX_INLINE_BYTES,
@@ -1364,6 +1386,8 @@ def main() -> None:
 
     if args.mode:
         payload["captureMode"] = args.mode
+    if args.visibility:
+        payload["visibility"] = args.visibility
 
     validate_payload(payload)
     negative_pattern_scan(payload)
@@ -1402,30 +1426,41 @@ def main() -> None:
     )
 
     slug = result.get("slug")
-    relative_url = result.get("url")
     package_hash = result.get("packageHash")
     if not slug or not package_hash:
         eprint("error: unexpected response shape from /api/evidence:")
         eprint(json.dumps(result, indent=2))
         sys.exit(4)
 
+    # Committed responses carry no public `url` (civic-ai-tools#71): the
+    # detail page is creator-only and the content blob lives at a random,
+    # non-derivable key — so neither evidenceUrl-as-public nor a hash-derived
+    # blobHint would be honest. The hint is omitted and the URL labeled.
+    visibility = result.get("visibility", "published")
+    relative_url = result.get("url") or f"/evidence/{slug}"
     full_url = f"{args.base_url.rstrip('/')}{relative_url}"
 
-    print(
-        json.dumps(
-            {
-                "slug": slug,
-                "evidenceUrl": full_url,
-                "packageHash": package_hash,
-                "packageId": payload.get("packageId") or str(uuid.uuid5(
-                    uuid.NAMESPACE_URL, full_url
-                )),
-                "readbackUrl": f"{args.base_url.rstrip('/')}/api/evidence/{slug}",
-                "blobHint": blob_url_for(package_hash),
-            },
-            indent=2,
+    output: dict[str, Any] = {
+        "slug": slug,
+        "visibility": visibility,
+        "evidenceUrl": full_url,
+        "packageHash": package_hash,
+        "packageId": payload.get("packageId") or str(uuid.uuid5(
+            uuid.NAMESPACE_URL, full_url
+        )),
+        "readbackUrl": f"{args.base_url.rstrip('/')}/api/evidence/{slug}",
+    }
+    if visibility == "committed":
+        output["note"] = (
+            "Committed (not published): the page and read-back URLs are "
+            "creator-only; the public commitment is at "
+            f"{args.base_url.rstrip('/')}/api/evidence/{slug}/commitment. "
+            "Publish from the civicaitools.org dashboard when ready."
         )
-    )
+    else:
+        output["blobHint"] = blob_url_for(package_hash)
+
+    print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":
