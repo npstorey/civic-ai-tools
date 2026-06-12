@@ -178,7 +178,11 @@ python3 civic-ai-tools/.claude/skills/publish-evidence/publish.py \
     --dry-run   # optional: preview without POSTing
 ```
 
-The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and optional `captureMode`, `captureMethod`, `turns[]`, `sessionBoundary`, `model`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`. `captureMethod` defaults to `"claude-code-jsonl-readback"` and is the only value the skill should set; the wider enum (`chat-flow-stream`, `claude-code-self-report`) is reachable for completeness only.
+The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and optional `captureMode`, `captureMethod`, `visibility`, `turns[]`, `sessionBoundary`, `model`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`. `captureMethod` defaults to `"claude-code-jsonl-readback"` and is the only value the skill should set; the wider enum (`chat-flow-stream`, `claude-code-self-report`) is reachable for completeness only.
+
+### Committed visibility (attest without publishing)
+
+By default the skill publishes — content public, listed in the registry. Pass `--visibility committed` (or set `"visibility": "committed"` in the payload) to **commit instead**: the package is signed, RFC 3161-timestamped, and registered on the Sigstore Rekor transparency log, but the content stays private to you, the record is unlisted, and the content blob lives at a non-derivable key. The script output then carries `"visibility": "committed"`, omits the blob hint, and points at the public commitment endpoint (`/api/evidence/<slug>/commitment`) — the proofs anyone can verify without the content. Publish later from your [dashboard](https://www.civicaitools.org/dashboard), where the promotion step runs an adversarial evaluation by default (toggleable). Per the lifecycle model (civic-ai-tools#71, spec §8.10): every claim is attested; publication is opt-in and irreversible.
 
 When publishing without a Claude conversation in the loop, you are responsible for the JSONL readback yourself — copying prose into `prompt` / `output` / `turns[].content` from a Python string literal you typed will trip the negative pattern scan as soon as the captured session contained any thinking blocks or tool-use IDs.
 
