@@ -10,6 +10,8 @@ Civic AI Tools connects AI assistants (GitHub Copilot, Cursor, Claude Code) to p
 
 Civic AI Tools sits at one layer of a broader landscape where open data meets AI: projects in this space address making data discoverable to AI, making AI mediation legible to humans, feeding signal back to data publishers, and orchestrating AI across civic-data domains. This project focuses on the second layer — evidence packages that make AI analyses inspectable, reproducible, and cryptographically verifiable. See [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) for the wider landscape.
 
+> **Integrating against the evidence registry?** The reference implementation and its integration contract live in [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) — start at [`docs/api/evidence-publish.md`](https://github.com/npstorey/civic-ai-tools-website/blob/main/docs/api/evidence-publish.md). This repo holds the protocol decisions (ADRs, the open-questions registry) and the Typed Standards Specification the contract cites.
+
 ## What can you do with this?
 
 - Ask questions about NYC 311 complaints, restaurant inspections, or housing violations in plain English
