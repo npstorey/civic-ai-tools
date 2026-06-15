@@ -6,6 +6,8 @@
 - **Supersedes:** —
 - **Superseded by:** —
 
+> **2026-06-15 status note ([ADR-0016](0016-vcs-native-lifecycle-mapping.md) §A).** The not-yet-published visibility state this ADR calls **`committed`** is renamed **`sealed`** per ADR-0016, to remove a head-on collision with "git commit" for a VCS-native adopter. Throughout this ADR, read "committed" as "sealed" (the state's meaning is unchanged: signed + timestamped + Rekor-logged, content private/unlisted, promotable to published). The *cryptographic* "commitment" noun is unaffected. ADR-0016 also evolves this ADR additively with an optional attested `vcsRef` envelope field and an `attestation/revises/v1` lineage sub-type; this ADR's body is left intact per the append-only ADR convention.
+
 ## Context
 
 The G2 unified-primitive cohort ([ADR-0009](0009-unified-typed-attestation-primitive.md)) ratified one structural envelope underlying both `content/*` and `attestation/*` families, named the [Q36](../architecture/open-questions.md#q36--attestation-sub-type-collapse-regular-family-or-structured-hierarchy) sub-type table, and formalized `nodeId` as the envelope-hash identifier that attestation references target. ADR-0009 §1 stops at structural framing + sub-type taxonomy registration; per its §3 (consequences) and the strategic memo §5 sequencing item 4, the operationalization of specific `attestation/*` sub-types — withdrawals, reinstatements, publications, locations — lands in this ADR.
