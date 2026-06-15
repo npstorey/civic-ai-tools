@@ -1,6 +1,6 @@
 # ADR-0016: Mapping the lifecycle/visibility model onto a VCS-native evidence-notebook workflow
 
-- **Status:** Proposed
+- **Status:** Accepted (reviewed and approved by the maintainer 2026-06-15)
 - **Date:** 2026-06-15
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
@@ -126,7 +126,7 @@ Authorization rule: **`publisher-only`** (the lineage owner), consistent with th
 - **Threat-model surface (routed to [civic-ai-tools#63](https://github.com/npstorey/civic-ai-tools/issues/63)).** The attested `vcsRef` introduces a "false binding to external VCS state" forgery surface — a signer asserting a `vcsRef` to a commit that does not exist / is unreachable / does not contain the claimed content. This is an instance of the pre-signing-fabrication class that #63 recognizes in principle but that spec §10.1 does not yet enumerate as a named adversary. #63 should gain a §10.1 row; its mitigation is the verify-on-fetch + mismatch-is-informative + `captureMethod`-weighting framing in Decision B (the signature attests the assertion, not the fact).
 - **ADR-0010 relationship.** ADR-0016 *evolves* [ADR-0010](0010-visibility-lifecycle-location-attestations.md); it does not supersede it. ADR-0010's body is left intact per the append-only ADR convention (working method §3); a dated status note on ADR-0010 records that its `committed` visibility state is renamed `sealed` per this ADR §A, and that references to "committed" there should be read as "sealed."
 - **Open-questions registry updates.**
-  - **[Q49](../architecture/open-questions.md#q49--lifecyclevisibility-model-vs-a-vcs-native-git-versioned-evidence-notebook-workflow)** moves to **In discussion**, with A/B/C recorded and linked to this ADR. It moves to **Resolved** (Resolution log) when this ADR is Accepted.
+  - **[Q49](../architecture/open-questions.md#q49--lifecyclevisibility-model-vs-a-vcs-native-git-versioned-evidence-notebook-workflow)** moves to **Resolved** (Resolution log) — A/B/C recorded and linked to this ADR (Accepted 2026-06-15).
   - **[Q14](../architecture/open-questions.md#q14--geographic-and-temporal-scope-nullability)** (residual naming) gains a note that the `committed` → `sealed` visibility-state rename is decided by this ADR (decision level; the implementation sweep is post-demo, owned by the Demo-UX chat).
   - **Residual sub-questions** (deferred per the Xanadu doctrine; registered as registry notes if/when an adopter blocks): multi-parent / merge-DAG `revises` lineage; the extended `vcsRef` shape (`provider` discriminator, signed-commit verification); and whether a signed, attributable diff is ever needed (a future `attestation/*` over two nodes).
 - **Reference-implementation surface (scoped, not done here; post-demo).**
