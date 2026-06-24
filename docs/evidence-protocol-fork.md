@@ -1,13 +1,15 @@
 # Evidence-protocol fork: long-form analysis
 
 **Audience.** Contributors, collaborators, and readers who want the context behind Section 6 of `ROADMAP.md`.
-**Status.** Living. Public-facing supersession of the maintainer's internal spin-out notes.
+**Status.** Resolved → Path B (domain-neutral), realized spec-first. This document is now the **analysis-of-record** that led to the resolution, retained for context; it is no longer an open decision.
+
+> **Resolution (2026-06-26).** The fork is resolved toward **Path B (domain-neutral spin-out), realized spec-first**, per [ADR-0014](adr/0014-evidence-system-fork-resolution-path-b.md) (building on [ADR-0012](adr/0012-typed-standards-consolidation.md)). The three observational criteria below were met across the first half of 2026. The neutral assets that constitute the spin-out are the Typed Standards Specification, `@typedstandards/verify-core` (npm), and typedstandards.org; civic-ai-tools / civicaitools.org is one *instance* and the reference implementation. The Path A / Path B analysis that follows is preserved as the reasoning of record. Deferred work — wholesale extraction of the packaging/signing library and a federated registry protocol — stays adopter-gated (ADR-0014 §4; federation is gated on Q2). The "evidence"-vs-precise-typed-node naming follow-on is tracked as Q50. See [`ROADMAP.md`](../ROADMAP.md) Section 6 for the public summary.
 
 ## Context
 
 The evidence system that shipped in v0.6.0 is the most reusable piece of infrastructure this project has produced. Its primitives — canonical-JSON signing, Ed25519 signatures, RFC 3161 timestamping via FreeTSA, Sigstore Rekor publishing, W3C PROV-O provenance graphs, content-addressable packages, a trust registry for key rotation, and an extensions architecture — are not civic-specific. Any AI-assisted analysis that needs tamper-evident provenance could use them: biomedical research, financial analysis, journalism, open science generally.
 
-Two futures are currently reachable. This document describes them at enough depth to support the three decision criteria and the 2026-12-31 resolution date from `ROADMAP.md` Section 6.
+Two futures were reachable when this analysis was written. This document describes them at enough depth to support the three decision criteria and the (then-)2026-12-31 resolution date from `ROADMAP.md` Section 6. The fork has since resolved toward Path B (see the resolution banner above); the analysis below is retained as the reasoning of record.
 
 ## Path A — Civic-branded
 
