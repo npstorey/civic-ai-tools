@@ -1,7 +1,7 @@
 # ADR-0014: Resolve the evidence-system fork toward Path B (domain-neutral), realized spec-first via Typed Standards
 
-- **Status:** Proposed
-- **Date:** 2026-06-07
+- **Status:** Accepted
+- **Date:** 2026-06-26 (accepted); 2026-06-07 (proposed)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
@@ -64,8 +64,8 @@ Path B is pursued in a solo-maintainer-sized way: a published spec + a shared co
 
 ## Consequences
 
-- **This ADR is Proposed and records an inferred decision for maintainer ratification.** The resolution is read off what was built; the maintainer should confirm it reflects intent before it moves to Accepted. Promoting to Accepted and **updating public `ROADMAP.md` §6** route through the [ADR-0001](0001-roadmap-governance.md) roadmap-change process and the scheduled 2026-07-15 quarterly refresh — a roadmap §6 rewrite (from "both futures reachable, resolution by end of 2026" to "Path B selected, realized spec-first") is the downstream edit, not part of this commit.
-- **Open-questions registry updates.** [Q13](../architecture/open-questions.md#q13--civic-vs-evidence-packager-naming-and-scope) moves toward the Resolution log (naming resolved neutral via ADR-0012 + this ADR). [Q2 (federation substrate)](../architecture/open-questions.md#q2--federation-substrate) stays open but is now explicitly the gate for the deferred registry-protocol work. [Q15 (external verification testing)](../architecture/open-questions.md#q15--external-verification-testing) remains the top verification gate and is made more reachable by the neutral verifier (its hardening tracked in [website#119](https://github.com/npstorey/civic-ai-tools-website/issues/119)).
+- **Ratified and landed in the public roadmap.** This ADR was raised Proposed (2026-06-07) recording an inferred decision read off what was built; the maintainer ratified it, and it moved Proposed → Accepted on 2026-06-26. The downstream public edit — rewriting `ROADMAP.md` §6 from "both futures reachable, resolution by end of 2026" to "Path B selected, realized spec-first" — landed the same day as a targeted roadmap-change ([civic-ai-tools#86](https://github.com/npstorey/civic-ai-tools/issues/86)) through the [ADR-0001](0001-roadmap-governance.md) governance process, ahead of the full v2026.Q3 quarterly refresh.
+- **Open-questions registry updates.** [Q13](../architecture/open-questions.md#q13--civic-vs-evidence-packager-naming-and-scope) moves toward the Resolution log (naming resolved neutral via ADR-0012 + this ADR). [Q2 (federation substrate)](../architecture/open-questions.md#q2--federation-substrate) stays open but is now explicitly the gate for the deferred registry-protocol work. [Q15 (external verification testing)](../architecture/open-questions.md#q15--external-verification-testing) remains the top verification gate and is made more reachable by the neutral verifier (its hardening tracked in [website#119](https://github.com/npstorey/civic-ai-tools-website/issues/119)). [Q50](../architecture/open-questions.md#q50--evidence-product-framing-vs-precise-typed-node-resource-naming) (surfaced 2026-06-15, after this ADR was first raised) carries the live naming follow-on — the product/resource "evidence" framing vs. the precise typed-node ("analysis"/"record"/"node") vocabulary — and stays Open, to be settled alongside the spec-launch naming pass rather than by this decision; the §6 roadmap rewrite references it without resolving it.
 - **`evidence-protocol-fork.md` and `evidence-spin-out-strategy.md` are reframed as superseded-by-this-ADR.** Their decision-deferral status closes; they remain as the analysis-of-record that led here. (Edits to those files are follow-on, not part of this ADR commit.)
 - **No code or schema change.** This ADR records a decision already enacted by ADR-0012, verify-core, and the typedstandards.org verifier. Every existing package remains valid; the envelope schema is unchanged.
 - **Positioning of civic-ai-tools surfaces.** Public copy and the roadmap will, going forward, describe civic-ai-tools as a civic instance of the domain-neutral Typed Standards protocol. This dovetails with the still-open positioning work ([website#61](https://github.com/npstorey/civic-ai-tools-website/issues/61)), which should be re-scoped to cover the two-surface (civicaitools.org + typedstandards.org) story.
@@ -73,7 +73,7 @@ Path B is pursued in a solo-maintainer-sized way: a published spec + a shared co
 
 ## References
 
-- [`ROADMAP.md`](../../ROADMAP.md) §6 — the published fork (to be updated post-ratification via [ADR-0001](0001-roadmap-governance.md) governance).
+- [`ROADMAP.md`](../../ROADMAP.md) §6 — updated 2026-06-26 to record the resolution (Path B, realized spec-first) via [ADR-0001](0001-roadmap-governance.md) governance ([civic-ai-tools#86](https://github.com/npstorey/civic-ai-tools/issues/86)).
 - [`docs/evidence-protocol-fork.md`](../evidence-protocol-fork.md) — long-form Path A/B analysis + the three observational criteria + the "what lands at resolution" template this ADR follows.
 - [`evidence-spin-out-strategy.md`](../../../evidence-spin-out-strategy.md) (workspace-local) — 2026-04-14 strategic notes; decision-deferral status closed by this ADR.
 - [ADR-0012](0012-typed-standards-consolidation.md) — Typed Standards consolidation: the neutral name, namespace, well-known path, and CC BY 4.0 license that constitute the naming/positioning half of this decision.

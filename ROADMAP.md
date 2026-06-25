@@ -1,8 +1,9 @@
 # civic-ai-tools — public roadmap
 
-**Version:** 2026.Q2
-**Last updated:** 2026-04-24
+**Version:** 2026.Q2.1
+**Last updated:** 2026-06-26
 **Next scheduled refresh:** 2026-07-15
+**Last change:** 2026-06-26 — Section 6 evidence-system fork resolved toward Path B (domain-neutral, realized spec-first) per ADR-0014; a targeted roadmap-change (civic#86) landing ahead of the full v2026.Q3 quarterly refresh.
 
 *This roadmap describes the maintainer's current plans and commitments. Items under Now and Next are committed; items under Later are scoped but not committed to a horizon. Scope, cadence, and priorities may shift in response to contributor interest, technical discovery, and maintenance capacity. The commitments in Section 3 are durable independent of feature changes.*
 
@@ -96,23 +97,23 @@ The last three cycles. Each item is a user-visible outcome, not a feature name.
 
 - **Formal project framing and outreach.** Branding, community pathways, and positioning the project's relationship to a research program. [civic#21, civic#22] — *Openly governed* — *all audiences.*
 
-## 6. The evidence-system fork
+## 6. The evidence-system fork — resolved
 
-The evidence system shipped in v0.6.0 is the most reusable piece of infrastructure this project has produced. Its primitives — canonical-JSON signing, hash-chained provenance, PROV-O graphs, RFC 3161 timestamps, Sigstore Rekor publishing — are not civic-specific. Two futures are currently reachable:
+The evidence system shipped in v0.6.0 is the most reusable piece of infrastructure this project has produced. Its primitives — canonical-JSON signing, hash-chained provenance, PROV-O graphs, RFC 3161 timestamps, Sigstore Rekor publishing — are not civic-specific. Earlier versions of this roadmap published that reusability as an open fork between two reachable futures: **Path A**, keep the evidence system civic-branded and grow it through civic extensions and partner consumers; and **Path B**, extract the reusable core under a neutral name so adjacent disciplines (open science, journalism, biomedical research) can run their own compatible registries, with civic-ai-tools as one *instance* of a more general protocol. The fork was published here, unresolved, as a governance-in-the-open move, with a commitment to resolve by the end of 2026 against three observational criteria.
 
-**Path A — Civic-branded.** The evidence system stays part of civic-ai-tools. The library continues to live in `civic-ai-tools-website/src/lib/evidence/`; growth happens through extensions and partner consumers — government instances of civicaitools.org, forks for adjacent cities, compatible tools that adopt the package format.
+**The fork is resolved toward Path B (domain-neutral), realized spec-first.** The decision and its full reasoning are recorded as an Architectural Decision Record, ADR-0014 (`docs/adr/0014-evidence-system-fork-resolution-path-b.md`). Across the first half of 2026 the three criteria came in for Path B — and, more to the point, the project *built* Path B rather than merely choosing it:
 
-**Path B — Domain-neutral spin-out.** The evidence library, registry protocol, and — depending on the Section 5 Next decision on skill-routing — the meta-orchestrator are extracted as standalone infrastructure under a neutral name, available to adjacent disciplines (open science, journalism, biomedical research) to run their own compatible registries. civic-ai-tools becomes one *instance* of a more general protocol.
+- **An external integration surface beyond civicaitools.org now exists.** The shared verification core `@typedstandards/verify-core` is published to npm and consumed by more than one codebase, and typedstandards.org runs a standalone, publisher-agnostic verifier that any host can delegate to. *(Criterion 1: an external integration surface emerged — and was built, not merely wished for.)*
+- **Audience signal skews general-purpose.** An external adopter, plus further prospective collaborators, need the standard positioned as cross-sector rather than civic-coded — which is why the neutral name, namespace, and license were chosen. *(Criterion 2.)*
+- **The neutral realization is solo-maintainable.** Path B is realized as a published *specification* plus a shared verification *core* plus a neutral *verifier* — not as a sprawling multi-registry platform — so the capacity question is answered honestly. *(Criterion 3.)*
 
-**Both futures are currently reachable. We are gathering signal. Resolution by end of 2026.** Decision criteria:
+**What the spin-out is.** The neutral assets are the **Typed Standards Specification**, the `@typedstandards/verify-core` npm package, and **typedstandards.org**. Going forward, **civic-ai-tools / civicaitools.org is one instance and the reference implementation** of that domain-neutral protocol — not the centerpiece of a civic-only evidence system. The civic-AI tooling keeps its civic identity; the neutral-named assets carry the cross-sector identity. (The naming split is recorded in ADR-0012 and ADR-0014 §3; it resolved the open naming question Q13.) Publishing the resolution here — what was decided, why, and where it is recorded — is the same governance-in-the-open discipline that published the fork unresolved.
 
-- Whether at least one external integration surface beyond civicaitools.org emerges naturally during 2026.
-- Whether audience feedback from government, academic, and journalism users skews toward civic-specific framing or general-purpose framing.
-- Whether maintenance capacity can honestly absorb the additional commitment of third-party adopters depending on extracted infrastructure.
+**What is deferred, and honestly so.** Path B is realized narrowly on purpose. The specification, shared core, and neutral verifier exist now; wholesale extraction of the packaging/signing library as a standalone published package, and a federated registry protocol other disciplines could run their own instances of, are *deferred and adopter-gated* — they advance only when a concrete adopter needs them. Registry federation specifically waits on a real adopter wanting to consume packages from a registry not under civicaitools.org. Until then, civicaitools.org remains the only registry, and the Section 3 sustainability commitment governs unchanged: capacity strain from any adopter relationship gets disclosed, not silently absorbed.
 
-Publishing the fork here, unresolved, is itself the governance-in-the-open move.
+**Open follow-on — naming.** One naming thread stays deliberately open: whether the user- and resource-facing "evidence" framing (the `publish-evidence` skill, the `/api/evidence` surface, the "evidence page") should migrate toward the more precise typed-node vocabulary ("analysis," "record," "node"), since the default published node is a `content/analysis/v1` rather than the reserved `content/evidence/v1` type. That is tracked as open question **Q50** in `docs/architecture/open-questions.md` — a brand/identity decision sized for the spec-launch naming pass, held open under the project's discipline of not promoting a change without an adopter or decision that forces it. It is referenced here, not resolved here.
 
-**Conditional Later items.** A shared skill registry (website#57) and the meta-orchestrator MCP direction (civic#44) accelerate under Path B and stay scoped to civic use under Path A. Croissant interop (website#68) and composite bundles (website#72) serve both paths. The identity-model Later item (website#67) is path-independent. Long-form analysis lives at `docs/evidence-protocol-fork.md`.
+**Later items, after the resolution.** With Path B selected, the previously *conditional* Later items resolve cleanly. The shared skill registry (website#57) and the meta-orchestrator MCP direction (civic#44) are now framed against the neutral protocol rather than as Path-B-only accelerants, and remain gated on the Section 5 Next skill-routing decision. Croissant interop (website#68) and composite bundles (website#72) serve the protocol regardless of which host emits a package. The evidence-identity Later item (website#67) is independent of the resolution and proceeds as scoped. Long-form analysis — now the analysis-of-record that led to the resolution, not an open decision — lives at `docs/evidence-protocol-fork.md`.
 
 ## 7. Out of scope
 
@@ -144,7 +145,7 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 
 ## 8. Governance
 
-**Cadence.** The roadmap refreshes once per quarter. Each refresh updates version and dates, migrates shipped Now items into "Recently shipped," and promotes Next items to Now as cycles start on them. v2026.Q2 is the first public version.
+**Cadence.** The roadmap refreshes once per quarter. Each refresh updates version and dates, migrates shipped Now items into "Recently shipped," and promotes Next items to Now as cycles start on them. v2026.Q2 is the first public version; v2026.Q2.1 is a targeted between-quarters change (the Section 6 fork resolution). The upcoming v2026.Q3 refresh will additionally restructure this document toward a living-roadmap baseline, with an accompanying amendment to ADR-0001 — that restructure is out of scope for this targeted change.
 
 **Change process.** Non-trivial changes — adding or removing a theme, changing a trust commitment, updating fork-decision criteria — go through a roadmap-change issue (template at `.github/ISSUE_TEMPLATE/roadmap-change.md`) and, where appropriate, an ADR in `docs/adr/`. Minor corrections can land as direct commits.
 
@@ -154,7 +155,7 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 
 - **This roadmap** — themes, horizons, trust commitments, out-of-scope lines.
 - **GitHub Issues** — concrete scope, discussion, acceptance criteria. The authoritative backlog.
-- **`docs/adr/`** — architectural decisions, including the eventual evidence-system fork resolution.
+- **`docs/adr/`** — architectural decisions, including the evidence-system fork resolution (ADR-0014, see Section 6).
 - **`docs/research/landscape-analysis.md`** — ecosystem survey of adjacent civic-AI, evidence, and gov-tech projects, and where this project sits among them.
 - **Per-release tags and their annotated messages** — the diff between one operational checkpoint and the next.
 
