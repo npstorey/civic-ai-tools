@@ -1947,6 +1947,44 @@
     ]
   },
   {
+    "id": "xquik-mcp",
+    "name": "Xquik MCP Server",
+    "description": "Public X data and automation workflows through Xquik REST and MCP",
+    "repoUrl": "https://github.com/Xquik-dev/x-twitter-scraper",
+    "transport": [
+      "http"
+    ],
+    "categories": [
+      "civic-adjacent"
+    ],
+    "governmentLevel": [
+      "global"
+    ],
+    "maintainer": "Xquik-dev",
+    "status": "active",
+    "dateAdded": "2026-07-01",
+    "dataSources": [
+      "Public X post, profile, media, and trend data"
+    ],
+    "toolCount": 2,
+    "notes": "Remote MCP endpoint for X search, extraction, monitors, drafts, and workflow setup. Requires bearer API key authentication. Docs at docs.xquik.com/mcp/overview.",
+    "docsUrl": "https://docs.xquik.com/mcp/overview",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": true,
+    "verificationStatus": "commercial",
+    "dateModified": "2026-07-01",
+    "endpointUrl": "https://xquik.com/mcp",
+    "accessLevel": "paid",
+    "spatialGranularity": "global",
+    "capabilities": {
+      "tools": true
+    },
+    "dataPlatform": [
+      "custom-api"
+    ]
+  },
+  {
     "id": "nyc-council-mcp",
     "name": "nyc-council-mcp",
     "description": "NYC Council legislative data via the Legistar API (bills, hearings, votes, members, committees)",

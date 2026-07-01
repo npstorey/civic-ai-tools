@@ -185,6 +185,7 @@ A directory of MCP servers for accessing civic and public data. Servers marked *
 | [mcp-wikidata](https://github.com/zzaebok/mcp-wikidata) | Wikidata | stdio | [@zzaebok](https://github.com/zzaebok) | Active | Entity search, property retrieval, SPARQL queries. Runs on Cloudflare Workers. |
 | [foiagras](https://foiagras.com/mcp/) | Government transparency / FOIA | stdio | FOIA Gras | Active | Public records, meeting minutes, local government documents. |
 | [civicnet-mcp-server](https://github.com/Publik-Works/civicnet-mcp-server) | Federated civic infrastructure | stdio | [@Publik-Works](https://github.com/Publik-Works) | Active | Federated civic infrastructure with equity principles. |
+| [Xquik MCP Server](https://github.com/Xquik-dev/x-twitter-scraper) | Public X post, profile, media, and trend data | http | [@Xquik-dev](https://github.com/Xquik-dev) | Active | Remote MCP endpoint for X search, extraction, monitors, drafts, and workflow setup. Requires bearer API key authentication. Docs at docs.xquik.com/mcp/overview. |
 
 ---
 
