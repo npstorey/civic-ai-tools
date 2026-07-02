@@ -144,6 +144,13 @@ The **normative preamble** (§5.1) applies across all three commitments and acro
 2. **Editorial policy.** Publishers set their own filters, audiences, and review processes. The standard does not gate publication on topic, viewpoint, or sign-off.
 3. **Topology.** Publishers publish at their own domains. The standard does not require — and is structurally indifferent to — any central host, federation substrate, or coordination protocol beyond an optional indexing registry that does not host or gatekeep.
 
+Four adjacent categories this specification is sometimes mistaken for, and is not:
+
+- **Not fact-checking.** Nothing here scores whether content is true; production-process attestation is orthogonal to fact-check tagging (Schema.org ClaimReview covers that; see §5.5).
+- **Not credentialing.** Identity binding surfaces *who signed, at what binding strength*; it does not accredit signers, certify expertise, or issue credentials.
+- **Not a knowledge-graph format.** Typed claims are JSON-LD and compose with RDF tooling, but the specification standardizes the signed envelope and capture-method discipline, not a graph data model.
+- **Not a CMS or a SaaS product.** Publishers host their own content at their own domains; the reference implementation is one instance, not a hosted service offering.
+
 ### 5.4 Project posture
 
 - **Permissionless publishing.** Publishers publish at their own domains. An institutional publisher's domain is its sovereignty boundary; an independent publisher's domain is theirs. The standard specifies the envelope; it does not host content.
@@ -398,6 +405,8 @@ flowchart LR
 
 A conformant evidence package is a single JSON object whose canonical-JSON serialization is the input to the SHA-256 envelope hash.
 
+The field table in §8.1.1 mixes two kinds of fields: the **structural-primitive fields** shared by every signed node per §7.4 (`type`, `contentHash`, `contentCanonicalization`, `signer`, plus the envelope-side `sig` object of §8.3.1 and the derived `nodeId`) and the **payload fields** specific to `content/analysis/v1` (`prompt`, `queries`, `dataSources`, `cost`, `skillMetadata`, `output`, `trace`, …). Sub-type-specific payload fields live alongside the primitive at the canonical-JSON top level; see §7.4 for the general rule.
+
 > ⚠ **Subject to [Q1](open-questions.md#q1--package-format) — package format.** The current implementation is a single canonical JSON object plus a database-resident envelope. The current direction is a multi-file directory with an RO-Crate / WRROC compatibility profile, in which the canonical JSON object would become one artifact in a larger package. This v0.1 normalizes the single-blob form because that is what the publish path produces today; this section will be revised when the format decision lands.
 
 #### 8.1.1 Top-level fields
@@ -514,6 +523,8 @@ The two rules are nested:
 3. The envelope hash hex string is what the platform Ed25519ph signature covers (§8.3.1).
 
 Because the signature covers the envelope JCS bytes, and the envelope contains `contentHash` and `contentCanonicalization`, both the off-log content's fingerprint AND the rule by which it was canonicalized are signature-covered. A bad actor cannot rewrite the canonicalization rule, the content hash, or any other in-envelope field after publication without invalidating the signature.
+
+> **Hash framing (informative).** The content-addressing claims in this section rest on **collision resistance under a named, upgradeable algorithm** — never on uniqueness. An envelope hash or content hash identifies its bytes only as strongly as the named digest algorithm resists collisions, and the multihash digest set exists precisely so the algorithm can be upgraded (registered alternates today; future algorithms via subsequent ADRs per [ADR-0008](../adr/0008-multihash-content-hash.md)). This specification deliberately avoids stronger framings such as "hashes never repeat."
 
 All field values defined in this specification — including `metadata.captureMethod`, `metadata.signingKeyId`, `contentProfile`, `producerProfile`, `contentCanonicalization`, `contentHash`, every `extensions` entry, and BlobRef objects — are part of the canonical JSON, part of the JCS-canonicalized envelope bytes, and therefore part of the envelope hash and signature.
 
@@ -1259,6 +1270,7 @@ A conformant `attestation/*` node:
 - MUST carry `targetNodeId` referencing at least one target node by `nodeId`. The target node need not be retrievable for the attestation to be verifiable — the attestation's signature is independent of the target's availability — but a verifier MAY report `unknown_target_node` per §9 when the target cannot be resolved.
 - MUST satisfy the sub-type's authorization rule. For `publisher-only` sub-types, the verifier MUST confirm that the attestation's `signer.identifier` matches the target node's `signer.identifier` (or that a delegated-publisher relationship is in effect per a future ADR). For `specific-role-required` sub-types, the role declaration lives in the sub-type's own normative section. For `any-with-binding` sub-types, the attestation's `signer.bindingTier` need only be at least `pseudonymous`.
 - MUST carry the sub-type's required payload fields per the §8.12.1 table.
+- SHOULD use the default content-canonicalization rule (`https://typedstandards.org/canonicalization/legacy-json/v1`; §8.2, §12.3). Attestation payloads are small structured JSON and rarely warrant a bespoke rule; a sub-type MAY name a different rule in its own normative section, and the envelope mechanics are unchanged either way.
 
 #### 8.12.4 Verifier expectations when an original node has one or more attestations
 
@@ -1659,6 +1671,7 @@ The most load-bearing open questions for v0.1 readers and reviewers:
 
 ### Appendix G. Revision history
 
+- **2026-07-01** — Editorial pass from the chat-history extraction evaluation. §5.3 gains the "what this specification is not" boundary list; §8.1 gains the structural-primitive-vs-payload bridge note; §8.2 gains the hash-framing (collision resistance, not uniqueness) note; §8.12.3 gains default content-canonicalization guidance for `attestation/*` nodes; Appendix I expanded (Discourse Graphs / architecture-review / OKFN attribution). No normative mechanics changed.
 - **2026-06-08** — Offline-verifiability graduation (the offline-crypto-hardening arc, [civic-ai-tools-website#119](https://github.com/npstorey/civic-ai-tools-website/issues/119)). §9.4 rewritten: offline verifiability moves from an aspirational target to a demonstrated property of the self-contained commitment bundle (§8.8 `?inline=1`), evidenced by the Q15 offline-bundle harness verifying real production packages at full §9.2 depth with zero network; [Q15](open-questions.md#q15--external-verification-testing) resolved on that basis. §9.2 checks #7 (RFC 3161 TSA signature + X.509 cert-chain to a pinned FreeTSA RSA-4096 root) and #8 (RFC 6962 Rekor Merkle inclusion against a pinned log key + signed checkpoint) marked ENFORCED in `@typedstandards/verify-core@0.6.0`. §10.3 documents the pinned trust anchors with provenance. §9.4 / §10.2 add the offline-snapshot revocation-staleness honest-status note. Scope held precise: [Q1](open-questions.md#q1--package-format) (whether the single-blob package itself embeds its proofs) and [Q16](open-questions.md#q16--formal-conformance-criteria) (formal conformance) stay open.
 - **2026-05-26** — Phase 2 of the Q39 consolidation chat. File renamed from `typed-standards-proposal.md` to `typed-standards-specification.md`. Document title changed from "Typed Standards — proposal" to "Typed Standards Specification". OES §3-§16 and CCV §1-§6 + §8 absorbed into the consolidated body following the 15-section RFC-conventional structure named in the 2026-05-26 deep-research memo §6.1. `ts:` namespace prefix replaces `ccv:` throughout the absorbed typed-claims body; `https://typedstandards.org/ns/ts#` replaces `https://civicaitools.org/ns/civic-claim-vocabulary/v1#` as the vocabulary URI. Well-known trust-registry path renamed from `/.well-known/evidence-public-keys.json` to `/.well-known/typed-publisher.json`; legacy path served in parallel indefinitely (no forced cutover). Status changed from "Internal working draft (pre-v0.1)" to "v0.1 Working Draft — open for external review (review window to be scheduled)". License: CC BY 4.0. New material: §5.5 C2PA + W3C VC disambiguation paragraphs; §6.3 project name + RFC 3161 prefix-choice disambiguation paragraphs; §10 Security Considerations; §11 Privacy Considerations; §12 IANA Considerations; §13 Internationalization Considerations; Appendix A Citation conventions; Appendix D C2PA-to-Typed-Standards term-translation table; Appendix I Acknowledgments. OES + CCV historical-snapshot status notes land in Phase 3 of the consolidation chat (separate commit on the same branch).
 - For earlier revision history of the absorbed OES envelope spec — through 2026-05-25 G4 captureMethod-generalization cohort, 2026-05-25 G3 lifecycle/location cohort, 2026-05-25 G2 unified-primitive cohort, 2026-05-25 G1 envelope-shape cohort, 2026-05-19 datHere reframe, 2026-05-18 datHere captureMethod variant — see [`open-evidence-standard.md`](open-evidence-standard.md) §17 (historical snapshot, frozen 2026-05-26).
@@ -1692,7 +1705,15 @@ The most load-bearing open questions for v0.1 readers and reviewers:
 
 ### Appendix I. Acknowledgments
 
-This specification was developed in collaboration with datHere (Pittsburgh / WPRDC pilot integration partner; the captureMethod profile in §8.7 takes its name from their reference implementation), whose technical input shaped the notebook-format commitment-view schema (§8.8) and the captureMethod content-profile design (§8.6). Additional adopters and contributors will be acknowledged as their participation moves from private to publicly-named status.
+This specification was developed in collaboration with **datHere** (Pittsburgh / WPRDC pilot integration partner; the captureMethod profile in §8.7 takes its name from their reference implementation, embedded with their consent), whose technical input shaped the notebook-format commitment-view schema (§8.8) and the captureMethod content-profile design (§8.6).
+
+The QEC content-type pattern (claim / question / evidence) and the `supportedBy` / `opposedBy` / `answersQuestion` relations are adopted from **Joel Chan's Discourse Graphs work** and the Discourse Graphs community, with attribution carried inline at §5.5 and §7.5.
+
+The layered artifact-layer / network-layer framing and several structural notes on the §7.1 stack were sharpened by an architecture-review conversation with **Michael Zargham** (BlockScience; see the Q41–Q45 origins in [`open-questions.md`](open-questions.md)). The influence is architectural; no endorsement of this specification by the reviewer or BlockScience is implied.
+
+The **Open Knowledge Foundation**'s open-data groundwork (Frictionless Data / the Data Package standard) informs the packaging and portability direction tracked under Q1 and Q18.
+
+Additional adopters and contributors will be acknowledged as their participation moves from private to publicly-named status.
 
 
 
