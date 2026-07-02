@@ -24,6 +24,10 @@ The single cross-repo record of license choices for the civic-ai-tools project (
 
 - **MCP server directory** (`data/mcp-servers.json`, rendered to `docs/mcp-servers.md`) and the **curated dataset directory** (`docs/datasets.md`) — **CC0 1.0**. These are small, factual, hand-curated registries; dedicating them to the public domain maximizes reuse and matches how the project wants directories treated (declared in this audit).
 
+## Patents
+
+Patent posture is recorded separately from copyright: [IPR.md](IPR.md) (DCO inbound + patent terms for specification contributions) and [PATENTS.md](PATENTS.md) (the maintainer's royalty-free non-assertion statement over Essential Claims for conformant implementations of the Typed Standards Specification). Adopted per [ADR-0017](docs/adr/0017-ipr-posture-dco-rf-statement.md).
+
 ## Upstream civic data
 
 Data reached through the MCP servers (Socrata portals, Google Data Commons, Boston OpenContext) is **not relicensed by this project**. Each source portal's own terms govern. Evidence packages that quote query results carry that upstream-sourced content under the source's terms; the project's roadmap §7 explicitly disclaims legal advisory on data-use terms.
