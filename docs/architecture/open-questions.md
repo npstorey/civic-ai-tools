@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-06-15
+Last updated: 2026-07-01
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -35,7 +35,7 @@ Each entry uses the following fields:
 - **Stakes.** §1 L3 of the standards stack; §2 packaging flow; §3 verification flow; §6 transport choice (network signals); the spec's §8.1 (evidence-package structure), §8.2 (canonical JSON), §9 (verification surface). **Narrowed 2026-06-08:** offline verification no longer hinges on Q1 — [Q15](#q15--external-verification-testing) demonstrated full-depth zero-network verification via the §8.8 self-contained **bundle** (`?inline=1`), which carries the signature, RFC 3161 token, and Rekor proof inline without changing the package format. Q1 now governs the narrower question of whether the single-blob *package itself* should embed those proofs (collapsing package + bundle into one artifact) rather than carrying them in an accompanying commitment view.
 - **Current direction.** Multi-file directory with an RO-Crate / WRROC compatibility profile. The single-blob form would become one artifact in a larger package; signature, timestamp, and Rekor proof would move into sibling artifacts inside the package.
 - **Resolution criteria.** A real adopter that needs the *package itself* to embed its proofs (not merely an accompanying bundle) — e.g. an archival or audit context that handles bare packages without their commitment views, or an external publisher whose pipeline can't emit the §8.8 bundle. Possibilities: an academic partner archiving packages independently, an external publisher (Boston OpenContext, datHere, or similar) running their own registry against the same standard.
-- **Notes.** No longer drives Q15 (resolved 2026-06-08 via the bundle path, decoupled from Q1). Still gates the §8.11 typed-claims layer's `claims.jsonld` companion and the §8.10/§12 upstream-evidence layer — both presuppose a multi-file form.
+- **Notes.** No longer drives Q15 (resolved 2026-06-08 via the bundle path, decoupled from Q1). Still gates the §8.11 typed-claims layer's `claims.jsonld` companion and the §8.10/§12 upstream-evidence layer — both presuppose a multi-file form. **Candidate realization (registered 2026-07-01, from the 2026-06 working sessions):** carry the envelope as an in-toto Statement (`predicateType`) inside the RO-Crate/WRROC directory, signed and transported as a Sigstore *bundle* — aligning the §5.5 in-toto/DSSE row and moving the DB-resident proofs into the package layer. Parts of that recommendation's original motivation have since landed independently (JCS commitment per ADR-0008; offline proofs via the §8.8 bundle), so this is a Q1 design candidate, not an urgency.
 
 ### Q2 — Federation substrate
 
@@ -44,7 +44,7 @@ Each entry uses the following fields:
 - **Stakes.** §1 L7 (network signals & coordination); §6 network signals; the Open Evidence Standard §14 (federation and discoverability). Also affects §4.5 BlobRef substitution: a federation substrate determines whether non-Vercel content-addressable storage (e.g. IPFS) is a first-class option.
 - **Current direction.** No commitment. Three candidate substrates named: atproto firehose / labelers, KOI net (RIDs + sensor nodes), nanopub network. Each is independent of the package format (Q1) and the cryptographic envelope.
 - **Resolution criteria.** Either (a) at least one external adopter wants to consume packages from a registry not under `civicaitools.org` (forces selecting some federation pattern), or (b) the project's spin-out direction (Path B in `evidence-protocol-fork.md`) advances enough that one substrate's properties become load-bearing for an extracted library.
-- **Notes.** Independent of Q1 (package format) and Q8 (Croissant outbound). All three could resolve in any order; they touch different parts of the stack.
+- **Notes.** Independent of Q1 (package format) and Q8 (Croissant outbound). All three could resolve in any order; they touch different parts of the stack. **Added 2026-07-01 (from the 2026-06 working sessions):** (a) hybrid compositions are candidates alongside the three single substrates — e.g. KOI for knowledge-organization semantics + atproto for the public-stream transport; (b) open sub-question for the KOI conversation: does KOI have a native external-public-stream primitive (firehose analog), or would a TS↔KOI bridge itself be a contribution back to KOI? (c) Smallest concrete probe when this question activates: one KOI sensor node watching `civicaitools.org/evidence/*` (weekend-scale). Deliberately not scheduled — no adopter needs it yet (Xanadu); recorded here so the idea isn't lost.
 
 ### Q3 — First non-GitHub identity provider
 
@@ -120,6 +120,7 @@ Each entry uses the following fields:
 - **Current direction.** Promote. Phasing and scope are TBD via issue 005.
 - **Resolution criteria.** Issue 005 ships an ADR and a v0.2 (or beyond) of the spec that uses OWL axioms, reasoner-compatible class definitions, and explicit alignment with adjacent ontologies.
 - **Notes.** This is partially a position-taking decision (the project wants to be a serious participant in the semantic-web / linked-data community) and partially a technical decision (full OWL semantics enable richer downstream tooling).
+- **Reopen flag (2026-07-01).** The extraction evaluation flagged this as the one recorded promotion motivated by positioning rather than adopter need — precisely what the Xanadu doctrine gates. The "promote via issue 005" decision stands only if issue-005 scoping names a concrete adopter- or reasoner-driven need for OWL semantics; absent that, re-class as Deferred. The "vocabulary, not ontology" naming discipline holds either way until OWL semantics actually exist.
 
 ### Q11 — Typed claims as a kind of attestation
 
@@ -272,6 +273,7 @@ Each entry uses the following fields:
 - **Current direction.** Stay at 0.1.0 through the Pittsburgh arc; revisit at arc completion. The G1 cohort (ADR-0007 + ADR-0008) stays at 0.1.0 per the same discipline — both ADRs add backwards-compatible optional fields + handle pre-cohort packages via at-verify-time interpretation rules without bumping schema. Triggers to consider for v0.2.0 and beyond: Pittsburgh arc completes; first external adopter pinning a version; first breaking change to the schema.
 - **Resolution criteria.** Either (a) the Pittsburgh arc completes and a version bump decision lands as an explicit changelog entry, or (b) a real adopter pinning a specific version forces the question.
 - **Notes.** Loosely related to Q15 (external verification testing) and Q16 (formal conformance criteria) — both involve external implementations that would benefit from stable version markers.
+- **Scope note (2026-07-01).** Q27 also carries the *migration semantics* question: when a bump eventually lands, what adopters must do to move between spec versions (the at-verify-time interpretation rules of §8.2 / §8.10.4 / §8.12.2 are the current pattern). The stake is sharpened by a named adopter's profile identifier (`ai-assisted-analysis/datHere`, §8.7) being embedded pre-freeze — version migration is adopter-facing from day one, not hypothetically.
 
 ### Q28 — Sandbox provider lock-in vs. portability for the executed-notebook path
 
@@ -525,6 +527,78 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Current direction.** **Hold the live/contract surface — do not rename reactively.** A clarity preference is not a Xanadu trigger; an active implementer is building against the ratified `evidence-publish.md` contract, and an endpoint/contract/brand rename is a far larger blast radius than the committed→sealed / published→public sweep ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md) §A). Two cheap moves now: (1) **stop digging** — prefer precise typed-ontology terms ("analysis node," `content/analysis/v1`, "record/node page") for *new* spec/code surface rather than minting more "evidence"-named things; (2) **for user-facing copy**, prefer "analysis page" over "evidence page" while keeping "record"/"node" as the structural term. If a rename is later decided, it follows the **parallel-serve / byte-identical-alias** precedent already used for the trust registry (`evidence-public-keys.json` → `typed-publisher.json`, [ADR-0012](../adr/0012-typed-standards-consolidation.md)).
 - **Resolution criteria.** Resolved when both senses are decided: (a) the product/brand "evidence" framing is settled — likely alongside the §6 ROADMAP rewrite ([ADR-0014](../adr/0014-evidence-system-fork-resolution-path-b.md) / [civic-ai-tools#86](https://github.com/npstorey/civic-ai-tools/issues/86)) and the spec-launch naming pass; and (b) a precise-resource-naming decision lands (keep "evidence" as the civic instance's resource word, or migrate to "analysis"/"record"/"node"), with a back-compat plan if migrating. Pull-forward triggers: an adopter actually blocked or confused by the "evidence" vs `content/evidence/v1` collision, or a decision to publish typed-content sub-types (`content/claim/v1`, etc.) through the same `/api/evidence` surface (which sharpens the under-specification). Xanadu-compliant: resolve when a real decision or adopter forces it, not on preference.
 - **Notes.** Adjacent to [Q14](#q14--geographic-and-temporal-scope-nullability) (residual naming / civic-isms) and [Q13](#q13--civic-vs-evidence-packager-naming-and-scope) (civic-vs-neutral naming, resolved by the two-identity split) but **distinct**: this is "product noun *evidence* vs. precise node-type *analysis* / *record*," an orthogonal axis to civic-vs-neutral. Deliberately **not** bundled into [ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md), which stays focused on the VCS-native lifecycle mapping; the [ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md) §A `committed`→`sealed` / `published`→`public` rename is the precedent for a *narrow, aliased, post-demo value* rename, and this question is the much larger endpoint/contract/brand-level analog.
+
+### Q51 — SCITT positioning
+
+- **Status.** Open. Time-sensitive relative to the public RFC window.
+- **Origin.** 2026-06 working sessions on the standards landscape, registered 2026-07-01 via the extraction evaluation. IETF SCITT (Supply Chain Integrity, Transparency and Trust) standardizes signed statements on transparency services — the closest IETF-track neighbor to §8.3's signed-envelope + Rekor mechanics — and is currently absent from spec §5.5 and Appendix C.
+- **Stakes.** The §5.5 comparison table and Appendix C (a SCITT row is missing); public launch positioning (an active IETF WG in adjacent territory is the first thing standards-literate reviewers will ask about); potential future alignment of the Rekor usage with SCITT transparency-service abstractions.
+- **Current direction.** Option (b) — **parallel and interoperable** — is the honest read: Typed Standards is artifact-class-specific with capture-method discipline; SCITT is a generic signed-statement/transparency architecture. The project should also be able to articulate option (a) (Typed Standards as a SCITT profile/instance) on request. A three-layer TS↔SCITT↔KOI layering story exists in workspace-local working notes.
+- **Resolution criteria.** A §5.5/Appendix C SCITT row plus a short positioning statement land before or with the public RFC window; pulled forward if a reviewer or adopter forces the comparison sooner.
+- **Notes.** Worklist row B8 (extraction evaluation, 2026-07-01).
+
+### Q52 — Trust-registry discovery mechanism: RFC 9728 / CIMD alternative
+
+- **Status.** Open.
+- **Origin.** A 2026-06 working-session recommendation (extraction row F4), registered 2026-07-01: express publisher trust-registry discovery via OAuth 2.0 Protected Resource Metadata (RFC 9728) and/or client-ID-metadata documents rather than (or alongside) the bespoke `/.well-known/typed-publisher.json`.
+- **Stakes.** §8.3.3 (trust registry), §12.1 (the IANA provisional registration of the well-known path — already filed), ADR-0012 (the path decision), verify-core's fetch logic, and the legacy-path parallel-serve pattern.
+- **Current direction.** Keep the settled well-known path: it is shipped, verifier-supported, IANA-filed, and ADR-recorded. The RFC 9728/CIMD idea is registered as a tension to reconcile **deliberately, one way** — silent coexistence of both ideas is the failure mode. The burden of proof sits on a concrete interop need (e.g., an adopter whose infrastructure already speaks RFC 9728).
+- **Resolution criteria.** Either an ADR reaffirming the well-known path with the alternative documented as considered-and-rejected, or an adopter-driven need for OAuth-metadata compatibility that forces a dual-serve design.
+- **Notes.** Direct tension with the settled publishing model (worklist B3/F4) — that tension being *recorded* is the point of this entry.
+
+### Q53 — `attestation/production` vs `attestation/observation`; retroactive-wrapping doctrine
+
+- **Status.** Open. **Correction of record:** 2026-06 working sessions treated this distinction as settled, but the ratified §8.12.1 sub-type table (ADR-0009 §7) contains neither sub-type — it never landed in the spec.
+- **Origin.** 2026-06 working sessions; registered 2026-07-01 via the extraction evaluation.
+- **Stakes.** Honest retroactive wrapping of pre-existing corpora (artifacts produced before/outside Typed Standards: Sigstore/SLSA-attested builds, C2PA-signed media, signed git commits, Socrata/CKAN portal datasets); the semantic line between a first-party production claim and a third-party observation record; the §8.12.1 sub-type table; captureMethod's relationship to wrapped content. ADR-0003's Bronx retroactive attestation is the one concrete precedent in the record.
+- **Current direction.** Doctrine sketch: wrapping an artifact you did not produce is honest only as an *observation* ("I observed this artifact at this hash/location at this time") — never as a production attestation. Whether that requires minting new sub-types (an `attestation/observes/v1`) or composes from `attestation/locatedAt/v1` + captureMethod labeling is the open design question. Xanadu-gated: new sub-types arrive via ADRs naming a motivating adopter (Q37 discipline).
+- **Resolution criteria.** The first real retroactive-wrapping use case (a corpus someone actually wants wrapped) forces the shape; lands as an ADR extending the Q36 table or documenting the composition pattern.
+- **Notes.** Demo-corpus caveat, kept visible on purpose: using NYC Open Data as the retroactive-wrapping demo corpus carries a conflicts-review caveat (NYC COIB rules, given the maintainer's disclosed city affiliation on civicaitools.org/about) — choose demo corpora with that in mind. Worklist rows C4 + H3.
+
+### Q54 — Erasure vs. the append-only log: legal posture
+
+- **Status.** Open.
+- **Origin.** 2026-06 working sessions (extraction row G3); registered 2026-07-01. The protocol's *mechanical* position is documented and deliberate (§11.4 withdrawal-does-not-erase; §8.10.3 retention asymmetry names silent erasure the worse failure mode); the *legal* analysis is not.
+- **Stakes.** GDPR / right-to-erasure exposure for publishers operating in EU contexts; doxxing and personal-data-in-content scenarios (adjacent: proposed-issue 009's subject-of-claim natural-person ontology); C2PA's handling of the same tension as precedent; a future §11 extension or informative appendix giving adopters a legal-posture map rather than only the mechanical truth.
+- **Current direction.** None recorded. Candidate mitigation patterns already named by the spec: private transparency logs (§8.3.2 design-permission), hash-only disclosure, payload redaction with retained envelope.
+- **Resolution criteria.** A legal-literate review pass producing a §11 addition or informative appendix; pulled forward if an EU-context adopter or a personal-data incident forces it.
+- **Notes.** Sibling of [Q55](#q55--long-horizon-verifiability-and-crypto-agility) — both are long-horizon-honesty questions. Worklist row G3.
+
+### Q55 — Long-horizon verifiability and crypto agility
+
+- **Status.** Open.
+- **Origin.** 2026-06 working sessions (extraction row G4); registered 2026-07-01.
+- **Stakes.** Content-hash agility exists (multihash digest set, ADR-0008), but the signature suite is single-algorithm (Ed25519ph, §8.3.1) with no registered alternates; the pinned trust anchors (§10.3: FreeTSA RSA-4096 root, Rekor P-256 log key) have institutional mortality (TSA shutdown, log turnover, CA expiry); `ROADMAP.md` §3 commits **five-year** verifiability — the ten-year question (who runs a verifier in 2036, against which anchors, at what cost) is unexamined.
+- **Current direction.** None. Candidate ingredients: signature-algorithm agility mirroring the multihash pattern; an anchor-succession documentation duty (§10.3 already requires adopters changing TSAs to document their root anchor); archival timestamp renewal (RFC 3161 re-stamping) expressible as a lifecycle attestation.
+- **Resolution criteria.** Xanadu-gated on an adopter with an archival horizon (courts, archives, academic reproducibility) — or the v1.0 security-review pass, whichever comes first.
+- **Notes.** Worklist row G4.
+
+### Q56 — Hub topology: thin vs. thick hub; registry location and key custody
+
+- **Status.** Open. Flagged as shaping "nearly everything downstream" in the 2026-06 working sessions.
+- **Origin.** 2026-06 working sessions (extraction row I7); registered 2026-07-01.
+- **Stakes.** The hub-and-spoke integration architecture: the hub (civicaitools.org + the spec + the neutral verifier) versus per-source MCP servers as spokes (Socrata today; OpenContext, Data Commons, future CKAN/ArcGIS). **Thin hub** = the hub only indexes and verifies; spokes own capture and publishing under their own keys. **Thick hub** = the hub owns the capture/publish/eval pipeline; spokes are data conduits. The choice shapes the future SDK shape (Q32/Q37's "future SDK shape" placeholders), the registry protocol, federation (Q2), and — pre-launch-sensitive — *who signs spoke-emitted packages* (key custody; see the succession artifact in `../sustainability.md`).
+- **Current direction.** Undecided. The reference implementation today is a thick hub de facto (platform-held key, server-side capture); nothing yet commits the architecture to that shape.
+- **Resolution criteria.** Resolves as an ADR when the first spoke-emitted package forces the custody/pipeline decision — most likely trigger: the Socrata MCP server emitting Typed Standards envelopes (tracked as a hub issue).
+- **Notes.** Worklist row I7.
+
+### Q57 — L3 semantic packaging as serializations of one content
+
+- **Status.** Open.
+- **Origin.** External architecture review, 2026-06 (see the Q41–Q45 origins), via extraction row E6 — the reviewer's strongest structural note; registered 2026-07-01.
+- **Stakes.** How spec §7.1 and `end-state-vision.md` L3 describe RO-Crate/WRROC, PROV-O, Croissant, DCAT-US, and nanopublications. Today each carries a distinct relationship (candidate container / used directly / discoverability / catalog layer / bridge). The proposed reframing: they are **alternative serializations of the same logical content, resolved by the envelope's `contentCanonicalization` URI** — one content, many renderings, one named fingerprint rule each. Adopting it would simplify the L3 story and make `contentCanonicalization` the explicit pivot of the packaging layer.
+- **Current direction.** Sympathetic but unadopted. ADR-0007 already treats content shapes as canonicalization-rule-varied, which is most of the claim; the strong form ("the *same* content") is not obviously true for all five (Croissant is metadata *about* datasets, not a serialization of the analysis). Needs a careful editing pass, not a global reframe.
+- **Resolution criteria.** A spec/end-state-vision editing pass that either adopts the framing with the honest exceptions named, or documents why the differentiated relationships stay.
+- **Notes.** Worklist row E6; detail in workspace-local review notes.
+
+### Q58 — RFC-preamble challenge taxonomy
+
+- **Status.** Open. Decide in the RFC-launch editing pass.
+- **Origin.** 2026-06-26 working session, via extraction row L1; registered 2026-07-01.
+- **Stakes.** Whether the public RFC preamble carries an explicit challenge taxonomy — five challenges named by the maintainer (**Ontological, Telemetric, Legible, Reproducible, Generalizable**) plus five proposed complements (**Adversarial, Adoptive/Incentive, Governance, Temporal, Epistemic**) — and if so, table vs. prose. A stated taxonomy pre-arms reviewers and frames the evaluative questions ("do the seams hold; is the generalization real").
+- **Current direction.** Undecided, including the table-vs-prose presentation question. The definitions currently live only in the 2026-06-26 working-session record, not in any repo — porting them is a precondition for deciding.
+- **Resolution criteria.** The RFC-launch editing pass either adopts the taxonomy into the preamble or drops it with a recorded reason.
+- **Notes.** Worklist row L1.
 
 ---
 

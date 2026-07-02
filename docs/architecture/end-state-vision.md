@@ -432,7 +432,7 @@ Forcing static structure into BPMN would obscure rather than clarify. Use the ri
 
 **Ed25519ph.** Pre-hashed variant of the Ed25519 signature scheme. Used for the project's package signatures. Faster verification than Ed25519 for large payloads since the hash is computed once.
 
-**KOI (Knowledge Organization Infrastructure).** Federated knowledge protocol publicly developed by BlockScience with MetaGov and RMIT. Uses RIDs (reference identifiers) that point to knowledge objects without handing them over — consent-aware federation. Currently at v3, research-grade, small-scale.
+**KOI (Knowledge Organization Infrastructure).** Federated knowledge protocol publicly developed by the Dynamical Systems Group (formerly BlockScience) with MetaGov and RMIT. Uses RIDs (reference identifiers) that point to knowledge objects without handing them over — consent-aware federation. Currently at v3, research-grade, small-scale.
 
 **MCP (Model Context Protocol).** Anthropic-originated open protocol for connecting LLMs to tools and data sources. The substrate that opengov-mcp-server, datHere's qsv MCP, and Boston's MCP work are all built on.
 
