@@ -1709,7 +1709,7 @@ This specification was developed in collaboration with **datHere** (Pittsburgh /
 
 The QEC content-type pattern (claim / question / evidence) and the `supportedBy` / `opposedBy` / `answersQuestion` relations are adopted from **Joel Chan's Discourse Graphs work** and the Discourse Graphs community, with attribution carried inline at §5.5 and §7.5.
 
-The layered artifact-layer / network-layer framing and several structural notes on the §7.1 stack were sharpened by an architecture-review conversation with **Michael Zargham** (BlockScience Dynamical Systems Group; see the Q41–Q45 origins in [`open-questions.md`](open-questions.md)). The influence is architectural; no endorsement of this specification by the reviewer or BlockScience is implied.
+The layered artifact-layer / network-layer framing and several structural notes on the §7.1 stack were sharpened by an architecture-review conversation with **Michael Zargham** (Dynamical Systems Group, formerly BlockScience; see the Q41–Q45 origins in [`open-questions.md`](open-questions.md)). The influence is architectural; no endorsement of this specification by the reviewer or the Dynamical Systems Group is implied.
 
 The **Open Knowledge Foundation**'s open-data groundwork (Frictionless Data / the Data Package standard) informs the packaging and portability direction tracked under Q1 and Q18.
 
