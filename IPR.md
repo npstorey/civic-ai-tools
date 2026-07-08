@@ -4,7 +4,7 @@ Intellectual-property hygiene for the Civic AI Tools / Typed Standards project: 
 
 ## Scope
 
-This policy applies to all four project repositories: **civic-ai-tools** (this repo), **socrata-mcp-server**, **civic-ai-tools-website**, and **typedstandards** (private pre-launch; public at spec launch).
+This policy applies to all four project repositories: **civic-ai-tools** (this repo), **socrata-mcp-server**, **civic-ai-tools-website**, and **typedstandards**.
 
 ## Inbound: Developer Certificate of Origin (DCO)
 
