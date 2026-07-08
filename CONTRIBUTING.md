@@ -31,15 +31,22 @@ Thank you for your interest in contributing! This project aims to make public da
 - Update documentation if your change affects setup or usage
 - Be respectful in issues and pull requests
 
+## Legal: sign-off and IPR
+
+- Every contribution needs a Developer Certificate of Origin sign-off: commit with `git commit -s`, which adds a `Signed-off-by: Your Name <email>` line. What that certifies, and the full policy: [IPR.md](IPR.md).
+- Contributions that add or change **normative Typed Standards Specification text** additionally carry the royalty-free patent terms in [PATENTS.md](PATENTS.md) § Contributions.
+- Copyright licenses are recorded in [LICENSING.md](LICENSING.md) (MIT code, CC BY 4.0 spec).
+
 ## This is a multi-repo project
 
-Civic AI Tools spans three repositories. If you're unsure where to file an issue or contribute, start here — this is the main entry point.
+Civic AI Tools spans four repositories. If you're unsure where to file an issue or contribute, start here — this is the main entry point.
 
 | Repo | What it covers | Issues |
 |------|---------------|--------|
-| **[civic-ai-tools](https://github.com/npstorey/civic-ai-tools)** (this repo) | Setup, MCP configs, skill docs, examples | [Issues](https://github.com/npstorey/civic-ai-tools/issues) |
+| **[civic-ai-tools](https://github.com/npstorey/civic-ai-tools)** (this repo) | Setup, MCP configs, skill docs, examples, the Typed Standards Specification | [Issues](https://github.com/npstorey/civic-ai-tools/issues) |
 | **[socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server)** | The Socrata MCP server itself | [Issues](https://github.com/npstorey/socrata-mcp-server/issues) |
 | **[civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website)** | Demo website at civicaitools.org | [Issues](https://github.com/npstorey/civic-ai-tools-website/issues) |
+| **typedstandards** | typedstandards.org site + `@typedstandards/verify-core` | file here and we'll route |
 
 Not sure which repo? Open an issue here and we'll route it.
 
