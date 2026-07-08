@@ -1,6 +1,6 @@
 # ADR-0017: IPR posture — DCO inbound + maintainer royalty-free patent statement, as a pre-RFC gate
 
-- **Status:** Proposed — flips to Accepted when the maintainer merges the PR introducing this ADR, `IPR.md`, and `PATENTS.md`; that merge is also the act that executes the PATENTS.md covenant
+- **Status:** Accepted (2026-07-07 — the maintainer merged [PR #103](https://github.com/npstorey/civic-ai-tools/pull/103) introducing this ADR, `IPR.md`, and `PATENTS.md`; per the original status terms, that merge constituted execution of the PATENTS.md covenant, which is now in force)
 - **Date:** 2026-07-01
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
