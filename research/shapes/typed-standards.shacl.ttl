@@ -1,0 +1,485 @@
+@base            <https://typedstandards.org/ns/envelope-type/> .
+
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix ts:      <https://typedstandards.org/ns/ts#> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix qb:      <http://purl.org/linked-data/cube#> .
+@prefix schema:  <https://schema.org/> .
+@prefix geo:     <http://www.opengis.net/ont/geosparql#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix tsh:     <https://typedstandards.org/shapes/> .
+@prefix tsx:     <https://typedstandards.org/ns/envelope#> .
+@prefix tst:     <https://typedstandards.org/ns/envelope-type/> .
+
+#################################################################
+# A. CRYPTOGRAPHIC ENVELOPE / STRUCTURAL PRIMITIVE (§8.1, §8.3)  [SHACL-Core]
+#    Field well-formedness ONLY. Hash/signature recomputation is OUT OF BAND (§6 checks 1,2,4).
+#################################################################
+
+tsh:SignatureEnvelopeShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:signature ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "sig.signature present (base64); validity = check #2, out of band." ] ;
+    sh:property [ sh:path tsx:publicKey ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:algorithm ; sh:hasValue "Ed25519ph" ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "sig.algorithm MUST be 'Ed25519ph'." ] ;
+    sh:property [ sh:path tsx:kid ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+tsh:ContentHashShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:sha256 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                  sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "contentHash.sha256 required by default; 64 lowercase hex chars." ] ;
+    sh:property [ sh:path tsx:sha3-256 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:blake3 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ; sh:maxCount 1 ] .
+
+tsh:SignerShape a sh:NodeShape ;
+    sh:closed false ;
+    # bindingTier: required string; NOT a closed enum (ladder informative + extensible, Q3-open).
+    sh:property [ sh:path tsx:bindingTier ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "bindingTier required string; §8.5 ladder informative + extensible (Q3-open)." ] ;
+    # advisory NON-VIOLATING ladder hint; includes spec-attested 'platform' + 'legacy_embedded' (§8.3.3).
+    sh:property [ sh:path tsx:bindingTier ; sh:severity sh:Info ;
+                  sh:in ( "pseudonymous" "oauth" "orcid" "did-web" "notarized" "platform" "legacy_embedded" ) ;
+                  sh:message "bindingTier outside spec-attested set; permitted (extensible), surfaced as Info." ] ;
+    sh:property [ sh:path tsx:identifier ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:displayName ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:verifiedAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] .
+
+tsh:PackageMetadataShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:schemaVersion ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:packageId ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:createdAt ; sh:datatype xsd:dateTime ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:signingKeyId ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:captureMethod ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( "chat-flow-stream" "claude-code-jsonl-readback" "claude-code-self-report" ) ;
+                  sh:message "captureMethod required; ai-assisted-analysis v0.1 vocabulary." ] ;
+    sh:property [ sh:path tsx:contentProfile ; sh:datatype xsd:string ; sh:maxCount 1 ;
+                  sh:in ( "default" "datHere" ) ] ;
+    sh:property [ sh:path tsx:producerProfile ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentType ; sh:minCount 1 ;
+                  sh:or ( [ sh:in ( "claim" "question" "evidence" ) ] [ sh:in ( "untyped" ) ] ) ] .
+
+tsh:SignedNodeShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:type ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:pattern "^https://typedstandards\\.org/ns/envelope-type/(content|attestation)/[A-Za-z]+/v[0-9]+$" ;
+                  sh:message "type MUST be a tst: IRI of form .../content/<noun>/v<N> or .../attestation/<verb>/v<N>." ] ;
+    sh:property [ sh:path tsx:nodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                  sh:minCount 0 ; sh:maxCount 1 ; sh:severity sh:Info ;
+                  sh:message "nodeId is derived (= envelope hash); derivation is out of band." ] ;
+    sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentCanonicalization ; sh:nodeKind sh:IRI ; sh:maxCount 1 ;
+                  sh:in ( <https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1>
+                          <https://typedstandards.org/canonicalization/legacy-json/v1> ) ] ;
+    sh:property [ sh:path tsx:sig ; sh:node tsh:SignatureEnvelopeShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:signer ; sh:node tsh:SignerShape ; sh:minCount 0 ; sh:maxCount 1 ;
+                  sh:severity sh:Warning ; sh:message "signer RECOMMENDED in v0.1." ] ;
+    sh:property [ sh:path tsx:metadata ; sh:node tsh:PackageMetadataShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:timestamp ; sh:minCount 0 ; sh:maxCount 1 ; sh:severity sh:Warning ;
+                  sh:message "RFC 3161 timestamp SHOULD be present; validity = check #7, out of band." ] ;
+    sh:property [ sh:path tsx:rekorInclusionProof ; sh:minCount 0 ; sh:maxCount 1 ; sh:severity sh:Warning ;
+                  sh:message "Rekor proof SHOULD be present; Merkle inclusion = check #8, out of band." ] .
+
+#################################################################
+# B. TWO-FAMILY TAXONOMY (§7.4) + QEC (§7.5) + PROFILE CONSISTENCY  [SHACL-Core]
+#################################################################
+
+tsh:FamilyDiscriminatorShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:xone (
+        [ sh:property [ sh:path tsx:type ; sh:pattern "^https://typedstandards\\.org/ns/envelope-type/content/" ] ;
+          sh:property [ sh:path tsx:targetNodeId ; sh:maxCount 0 ] ]
+        [ sh:property [ sh:path tsx:type ; sh:pattern "^https://typedstandards\\.org/ns/envelope-type/attestation/" ] ;
+          sh:property [ sh:path tsx:targetNodeId ; sh:minCount 1 ] ]
+    ) ;
+    sh:message "Exactly one family: content/* (no targetNodeId) xor attestation/* (>=1 targetNodeId)." .
+
+tsh:QecContentTypeShape a sh:NodeShape ;
+    sh:targetObjectsOf tsx:metadata ;
+    sh:property [ sh:path tsx:contentType ; sh:minCount 1 ;
+                  sh:or ( [ sh:in ( "claim" "question" "evidence" ) ] [ sh:in ( "untyped" ) ] ) ] ;
+    sh:not [ sh:and (
+        [ sh:property [ sh:path tsx:contentType ; sh:hasValue "untyped" ] ]
+        [ sh:property [ sh:path tsx:contentType ;
+                        sh:qualifiedValueShape [ sh:in ( "claim" "question" "evidence" ) ] ;
+                        sh:qualifiedMinCount 1 ] ] ) ] ;
+    sh:message "contentType non-empty; 'untyped' mutually exclusive with claim/question/evidence." .
+
+# contentProfile <=> producerProfile biconditional (C55). BOTH live on metadata (top-level, §8.1.1).
+tsh:ProfileConsistencyShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:and (
+        # metadata.contentProfile=datHere -> metadata.producerProfile starts ai-assisted-analysis/datHere
+        [ sh:or (
+            [ sh:not [ sh:property [ sh:path ( tsx:metadata tsx:contentProfile ) ; sh:hasValue "datHere" ] ] ]
+            [ sh:property [ sh:path ( tsx:metadata tsx:producerProfile ) ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ) ]
+        # metadata.producerProfile starts ai-assisted-analysis/datHere -> metadata.contentProfile=datHere
+        [ sh:or (
+            [ sh:not [ sh:property [ sh:path ( tsx:metadata tsx:producerProfile ) ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ]
+            [ sh:property [ sh:path ( tsx:metadata tsx:contentProfile ) ; sh:hasValue "datHere" ] ] ) ]
+    ) ;
+    sh:message "contentProfile=datHere IFF producerProfile starts ai-assisted-analysis/datHere (both top-level, §8.1.1)." .
+
+#################################################################
+# C. content/analysis/v1 PACKAGE (§8.1) + sub-objects  [SHACL-Core]
+#################################################################
+
+tsh:PromptShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:hash ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                  sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:visibility ; sh:in ( "full_text" "hash_only" ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:xone (
+        [ sh:property [ sh:path tsx:visibility ; sh:hasValue "full_text" ] ;
+          sh:property [ sh:path tsx:text ; sh:minCount 1 ; sh:datatype xsd:string ] ]
+        [ sh:property [ sh:path tsx:visibility ; sh:hasValue "hash_only" ] ;
+          sh:property [ sh:path tsx:text ; sh:maxCount 0 ] ]
+    ) ;
+    sh:message "prompt.text present iff full_text, absent iff hash_only." .
+
+tsh:CostShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:promptTokens ; sh:datatype xsd:integer ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:completionTokens ; sh:datatype xsd:integer ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:totalTokens ; sh:datatype xsd:integer ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:model ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:durationMs ; sh:datatype xsd:integer ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+# BlobRef: ref/url/size required (§8.1.5 MUST steps); contentType OPTIONAL (shown in example, no MUST).
+tsh:BlobRefShape a sh:NodeShape ;
+    sh:closed true ; sh:ignoredProperties ( rdf:type ) ;
+    sh:property [ sh:path tsx:ref ; sh:datatype xsd:string ; sh:pattern "^blob:sha256:[0-9a-f]{64}$" ;
+                  sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "BlobRef.ref form blob:sha256:<64hex>; hash MATCH is check #9, out of band." ] ;
+    sh:property [ sh:path tsx:url ; sh:nodeKind sh:IRI ; sh:pattern "^https://" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentType ; sh:datatype xsd:string ; sh:maxCount 1 ] ;   # optional (no MUST)
+    sh:property [ sh:path tsx:size ; sh:datatype xsd:integer ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+# content/analysis/v1: implicit-class target + sh:or type discriminator (portable; no sh:filterShape).
+tsh:ContentAnalysisV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or (
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/content/analysis/v1> ] ] ]   # skip if not analysis
+        [ sh:and ( tsh:SignedNodeShape ) ;
+          sh:property [ sh:path tsx:prompt ; sh:node tsh:PromptShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+          sh:property [ sh:path tsx:cost ; sh:node tsh:CostShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+          sh:property [ sh:path tsx:skillMetadata ; sh:minCount 1 ; sh:maxCount 1 ] ;
+          sh:property [ sh:path tsx:queries ; sh:minCount 1 ; sh:maxCount 1 ] ;
+          sh:property [ sh:path tsx:dataSources ; sh:minCount 1 ; sh:maxCount 1 ] ;
+          sh:property [ sh:path tsx:output ; sh:minCount 1 ; sh:maxCount 1 ;
+                        sh:or ( [ sh:datatype xsd:string ] [ sh:node tsh:BlobRefShape ] ) ] ;
+          sh:property [ sh:path tsx:trace ; sh:minCount 1 ; sh:maxCount 1 ;
+                        sh:or ( [ sh:nodeKind sh:BlankNodeOrIRI ] [ sh:node tsh:BlobRefShape ] ) ] ;
+          sh:property [ sh:path tsx:targetNodeId ; sh:maxCount 0 ] ]
+    ) ;
+    sh:message "content/analysis/v1 required-field conformance (§8.1.1)." .
+
+# datHere conditional presence (req 6 summary, req 4 notebook ext). metadata.contentProfile (top-level).
+tsh:DatHereConditionalShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or (
+        [ sh:not [ sh:property [ sh:path ( tsx:metadata tsx:contentProfile ) ; sh:hasValue "datHere" ] ] ]
+        [ sh:property [ sh:path tsx:summary ; sh:minCount 1 ; sh:datatype xsd:string ] ;
+          sh:property [ sh:path ( tsx:extensions tsx:org.civicaitools.notebook ) ; sh:minCount 1 ] ]
+    ) ;
+    sh:message "Under contentProfile=datHere: summary and org.civicaitools.notebook required (§8.7.1)." .
+
+#################################################################
+# D. attestation/* FAMILY (§8.12) — base + ALL sub-types, EACH ACTUALLY TARGETED  [SHACL-Core]
+#    Pattern: implicit-class target + sh:or type discriminator + sh:and ( base ). No dead shapes.
+#################################################################
+
+tsh:AttestationNodeShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or (
+        [ sh:not [ sh:property [ sh:path tsx:type ;
+                    sh:pattern "^https://typedstandards\\.org/ns/envelope-type/attestation/" ] ] ]
+        [ sh:and ( tsh:SignedNodeShape ) ;
+          sh:property [ sh:path tsx:targetNodeId ; sh:minCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                        sh:message "attestation/* MUST carry >=1 targetNodeId." ] ]
+    ) ;
+    sh:message "attestation/* base: envelope + >=1 targetNodeId (§8.12.3)." .
+
+tsh:AttestationWithdrawsV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/withdraws/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:reason ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ; sh:minLength 1 ;
+                            sh:message "withdraws.reason required, non-empty." ] ;
+              sh:property [ sh:path tsx:effectiveAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationReinstatesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/reinstates/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:priorWithdrawalNodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                            sh:minCount 1 ; sh:maxCount 1 ] ;
+              sh:property [ sh:path tsx:reason ; sh:datatype xsd:string ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationSupersedesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/supersedes/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:successorNodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                            sh:minCount 1 ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationPublishesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/publishes/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:publicationHost ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+              sh:property [ sh:path tsx:releasedAt ; sh:datatype xsd:dateTime ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationLocatedAtV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/locatedAt/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:uri ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
+              # contentHash presence is a REQUIRED field at default (Violation) severity — NOT demoted to Info.
+              sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                            sh:message "locatedAt.contentHash required; well-formed multihash (§8.12.1)." ] ;
+              sh:property [ sh:path tsx:contentLength ; sh:datatype xsd:integer ; sh:maxCount 1 ] ;
+              sh:property [ sh:path tsx:availability ; sh:maxCount 1 ] ] ) .
+    # The 'contentHash SHOULD match target's; mismatch = informative drift' semantics is a CROSS-NODE
+    # comparison → out of band (§6, target may be absent). NOT encoded as Info on the presence constraint.
+
+tsh:AttestationWasDerivedFromV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/wasDerivedFrom/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:derivationMethod ; sh:minCount 1 ; sh:maxCount 1 ;
+                            sh:message "wasDerivedFrom MUST carry derivationMethod." ] ] ) .
+    # CONDITIONAL classification-laundering guard (refinement (a)/TC-C9): when source is
+    # content/analysis/v1 untyped AND target typed, derivationMethod MUST carry ts:AnalyticalDerivation.
+    # Requires resolving BOTH referenced nodes -> SHACL-SPARQL tier, not Core. See §6 #10 / §8.2.
+
+tsh:AttestationCorroboratesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/corroborates/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ;     # datatype unspecified (§8.3)
+              sh:property [ sh:path tsx:reasoning ; sh:datatype xsd:string ; sh:maxCount 1 ] ] ) .   # optional
+
+tsh:AttestationContradictsV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/contradicts/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ;
+              sh:property [ sh:path tsx:reasoning ; sh:datatype xsd:string ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationEndorsesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/endorses/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .
+
+tsh:AttestationAnswersQuestionV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/answersQuestion/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (question) beyond base
+
+tsh:AttestationSupportedByV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/supportedBy/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (evidence) beyond base
+
+tsh:AttestationOpposedByV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/opposedBy/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (evidence) beyond base
+
+tsh:AttestationCertifiesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/certifies/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:certificationScheme ; sh:minCount 1 ; sh:maxCount 1 ] ;   # unspecified type
+              sh:property [ sh:path tsx:validityWindow ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .     # unspecified type
+
+tsh:AttestationEvaluatesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/evaluates/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:methodology ; sh:minCount 1 ; sh:maxCount 1 ] ;            # unspecified type
+              sh:property [ sh:path tsx:scoringRubric ; sh:minCount 1 ; sh:maxCount 1 ] ;          # unspecified type
+              sh:property [ sh:path tsx:results ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .            # unspecified type
+
+tsh:AttestationConformsV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue <https://typedstandards.org/ns/envelope-type/attestation/conforms/v1> ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:standardId ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .         # unspecified type
+
+#################################################################
+# E. TYPED-CLAIMS LAYER (§8.11) — the SHACL-PRESCRIBED surface  [SHACL-Core]
+#    Fractional numbers accept xsd:decimal OR xsd:double (JSON-LD 1.1 parses fractions as double).
+#################################################################
+
+tsh:SourceOutputSpanShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path ts:outputFile ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:byteRange ; sh:datatype xsd:integer ; sh:minCount 2 ; sh:maxCount 2 ;
+                  sh:message "ts:byteRange MUST be exactly two integers [start,end]." ] .
+    # CAVEAT: RDF multiset loses [start,end] ORDER; start<=end / which-is-start NOT enforceable in Core
+    # (would need rdf:List + sh:order, or SPARQL). Known limitation (§8.2).
+
+tsh:AnalyticalDerivationShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path ts:traceReference ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:translationModel ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:translationPrompt ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:sourceOutputSpan ; sh:node tsh:SourceOutputSpanShape ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+tsh:ConfidenceStatementShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path ts:method ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "ts:confidence MUST reference a method IRI; free-form is non-conforming." ] ;
+    sh:property [ sh:path ts:level ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] ;
+    sh:property [ sh:path ts:lowerBound ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] ;
+    sh:property [ sh:path ts:upperBound ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] ;
+    sh:property [ sh:path ts:methodReference ; sh:maxCount 1 ] .   # resolution to trace.json = out of band
+
+# Q14-contingent: both interval endpoints relaxed to Warning (OWL-Time requires neither; Q14 open).
+tsh:TemporalIntervalShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path time:hasBeginning ; sh:minCount 1 ; sh:maxCount 1 ; sh:severity sh:Warning ;
+                  sh:message "time:hasBeginning expected (Q14-contingent)." ] ;
+    sh:property [ sh:path time:hasEnd ; sh:minCount 1 ; sh:maxCount 1 ; sh:severity sh:Warning ;
+                  sh:message "time:hasEnd expected (Q14-contingent)." ] .
+
+tsh:GeographicScopeShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path dcterms:identifier ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path schema:name ; sh:maxCount 1 ] ;
+    sh:property [ sh:path geo:hasGeometry ; sh:maxCount 1 ] .
+
+# Q14-contingent: both scope components relaxed to Warning (per-component nullability is Q14-open).
+tsh:ScopeShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path ts:geographicScope ; sh:node tsh:GeographicScopeShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:severity sh:Warning ; sh:message "ts:geographicScope expected (Q14-contingent)." ] ;
+    sh:property [ sh:path ts:temporalScope ; sh:node tsh:TemporalIntervalShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:severity sh:Warning ; sh:message "ts:temporalScope expected (Q14-contingent)." ] .
+
+tsh:MagnitudeShape a sh:NodeShape ;
+    sh:closed false ;   # UNDER-SPECIFIED: no required fields per spec (§8); typed-if-present only.
+    sh:property [ sh:path ts:percentChange ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] ;
+    sh:property [ sh:path ts:absoluteChange ; sh:maxCount 1 ] .
+
+tsh:ClaimShape a sh:NodeShape ;
+    sh:targetClass ts:Claim ;
+    sh:closed false ;
+    sh:property [ sh:path dcterms:identifier ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "Every claim MUST carry dcterms:identifier (unique within package — uniqueness = SPARQL tier)." ] ;
+    sh:property [ sh:path ts:subject ; sh:nodeKind sh:BlankNodeOrIRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "ts:subject exactly one (NOTE: Appendix B ambiguity vs ts:metric — §8.3 #1)." ] ;
+    sh:property [ sh:path ts:scope ; sh:node tsh:ScopeShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "Explicit ts:Scope required (implicit scope non-conforming)." ] ;
+    sh:property [ sh:path ts:confidence ; sh:node tsh:ConfidenceStatementShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path prov:wasDerivedFrom ; sh:nodeKind sh:BlankNodeOrIRI ; sh:minCount 1 ;
+                  sh:message "Claim MUST cite >=1 prov:wasDerivedFrom entity." ] ;
+    sh:property [ sh:path ts:derivedVia ; sh:node tsh:AnalyticalDerivationShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:or (   # description required IFF confidence method is ts:NotApplicable (TC-C6)
+        [ sh:not [ sh:property [ sh:path ( ts:confidence ts:method ) ; sh:hasValue ts:NotApplicable ] ] ]
+        [ sh:property [ sh:path dcterms:description ; sh:minCount 1 ; sh:datatype xsd:string ] ]
+    ) ;
+    sh:property [ sh:path dcterms:description ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:contradicts ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path ts:corroborates ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path ts:supersedes ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:limitations ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+tsh:TrendClaimShape a sh:NodeShape ;
+    sh:targetClass ts:TrendClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:metric ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:BlankNodeOrIRI ] ;
+    sh:property [ sh:path ts:baselinePeriod ; sh:node tsh:TemporalIntervalShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:comparisonPeriod ; sh:node tsh:TemporalIntervalShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:direction ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( ts:Increase ts:Decrease ts:NoSignificantChange ) ;
+                  sh:message "ts:direction closed enum {Increase,Decrease,NoSignificantChange}." ] ;
+    sh:property [ sh:path ts:magnitude ; sh:node tsh:MagnitudeShape ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+tsh:ComparisonClaimShape a sh:NodeShape ;
+    sh:targetClass ts:ComparisonClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:metric ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:scopeA ; sh:node tsh:ScopeShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:scopeB ; sh:node tsh:ScopeShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:relation ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( ts:GreaterThan ts:LessThan ts:ApproximatelyEqual ) ;
+                  sh:message "ts:relation closed enum {GreaterThan,LessThan,ApproximatelyEqual}." ] ;
+    sh:property [ sh:path ts:magnitude ; sh:node tsh:MagnitudeShape ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+tsh:ObservationClaimShape a sh:NodeShape ;
+    sh:targetClass ts:ObservationClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:metric ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:value ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:unit ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+tsh:CompositionClaimShape a sh:NodeShape ;
+    sh:targetClass ts:CompositionClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:whole ; sh:node tsh:ScopeShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:components ; sh:minCount 1 ] ;
+    sh:property [ sh:path ts:totalsTo ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] .
+    # No 'components sum to totalsTo' constraint: spec does NOT mandate the sum (§8).
+
+tsh:RelationshipClaimShape a sh:NodeShape ;
+    sh:targetClass ts:RelationshipClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:metricA ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:metricB ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:relationshipType ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;  # OPEN enum
+    sh:property [ sh:path ts:strength ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ] .
+
+tsh:QualitativeClaimShape a sh:NodeShape ;
+    sh:targetClass ts:QualitativeClaim ; sh:and ( tsh:ClaimShape ) ;
+    sh:property [ sh:path ts:assertion ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ts:groundingMethod ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] .   # OPEN enum
+
+#################################################################
+# F. SHACL-SPARQL TIER (NOT SHACL-Core; requires a SHACL-SPARQL processor)
+#    Isolated here so Sections A-E remain loadable as pure Core.
+#################################################################
+
+# §9.2 check #6 — sig.kid == metadata.signingKeyId. sh:equals takes a PREDICATE, not a path, so the
+# sequence-path comparison is NOT Core. Expressed as a sh:sparql constraint.
+tsh:SigningKeyIdConsistencyShape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "metadata.signingKeyId MUST equal sig.kid." ;
+        sh:select """
+            PREFIX tsx: <https://typedstandards.org/ns/envelope#>
+            SELECT $this ?signingKeyId ?kid
+            WHERE {
+                $this tsx:metadata/tsx:signingKeyId ?signingKeyId .
+                $this tsx:sig/tsx:kid              ?kid .
+                FILTER (str(?signingKeyId) != str(?kid))
+            }
+        """ ;
+    ] .
+
+#################################################################
+# G. OUT-OF-BAND and further SHACL-SPARQL-tier checks (documented, NOT enforceable in Core):
+#   OUT OF BAND: §9.2 #1 envelope-hash recompute · #2 Ed25519ph signature · #4 content-hash recompute ·
+#     #5 trust-registry verdict · #7 RFC 3161 X.509 chain · #8 RFC 6962 Rekor inclusion ·
+#     #9 BlobRef fetch+rehash · #14 signer<->kid registry cross-check.
+#   SHACL-SPARQL tier (beyond Core, in addition to F): dcterms:identifier package-uniqueness (TC-C2);
+#     nodeId<->targetNodeId reference-resolution joins (#10/#13); lifecycle-chain timestamp ordering (#10);
+#     wasDerivedFrom laundering-guard cross-node condition (refinement (a)/TC-C9); locatedAt.contentHash
+#     SHOULD-match-target cross-node comparison.
+#   Out of SHACL entirely: falsifiability-by-construction (per-TYPE meta-property, §8.11.2 principle 5);
+#     @context-array membership (TC-C18; consumed at JSON-LD parse time, not a graph triple);
+#     ts:byteRange start<=end ORDERING (RDF multiset loses array order; needs rdf:List+sh:order or SPARQL).
+#################################################################
