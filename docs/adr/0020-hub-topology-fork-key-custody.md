@@ -29,6 +29,8 @@ Two concrete cases now force it:
 
 The reference-app posture (no SaaS, no hosted services) constrains but does not resolve this question: a platform **signing service** operated for third-party instances would be a hosted-service surface.
 
+The posture also bounds the *scope* of this analysis: a v1 fork instance is **single-tenant** (one instance, one organization, one publisher — ADR-0019 Decision 4). Key custody *across multiple organizations hosted on a single instance* (multi-tenant per-org keys) is therefore out of scope here — it rides the deferred multi-tenancy extension, and whoever builds that extension resolves its custody model then. The options below assume one instance = one publisher.
+
 ## Options
 
 ### Option 1 — Thin: per-instance keys + per-instance trust registry
