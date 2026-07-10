@@ -46,7 +46,7 @@ Civic AI Tools spans four repositories. If you're unsure where to file an issue 
 | **[civic-ai-tools](https://github.com/npstorey/civic-ai-tools)** (this repo) | Setup, MCP configs, skill docs, examples, the Typed Standards Specification | [Issues](https://github.com/npstorey/civic-ai-tools/issues) |
 | **[socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server)** | The Socrata MCP server itself | [Issues](https://github.com/npstorey/socrata-mcp-server/issues) |
 | **[civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website)** | Demo website at civicaitools.org | [Issues](https://github.com/npstorey/civic-ai-tools-website/issues) |
-| **typedstandards** | typedstandards.org site + `@typedstandards/verify-core` | file here and we'll route |
+| **[typedstandards](https://github.com/npstorey/typedstandards)** | typedstandards.org site + `@typedstandards/verify-core` | [Issues](https://github.com/npstorey/typedstandards/issues) |
 
 Not sure which repo? Open an issue here and we'll route it.
 

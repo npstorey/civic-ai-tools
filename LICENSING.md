@@ -2,7 +2,7 @@
 
 The single cross-repo record of license choices for the civic-ai-tools project (civic-ai-tools#75; DPG Standard Indicator 2 evidence for the planned DPGA submission, civic-ai-tools#73). Per-repo `LICENSE` files are authoritative for code; this document explains what applies where and why.
 
-**Audited:** 2026-06-11, against the live state of all four repos, the published npm packages, and the specification text.
+**Audited:** 2026-06-11, against the live state of all four repos, the published npm packages, and the specification text. **Updated 2026-07-10:** typedstandards flipped public — row below revised from the "declared at launch" placeholder to the actual MIT declaration.
 
 ## Code
 
@@ -11,7 +11,7 @@ The single cross-repo record of license choices for the civic-ai-tools project (
 | [civic-ai-tools](https://github.com/npstorey/civic-ai-tools) (this repo) | MIT ([LICENSE](LICENSE)) | Hub: MCP configs, setup scripts, skill docs, examples, architecture docs |
 | [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | MIT (LICENSE) | Reference implementation + civicaitools.org |
 | [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | MIT (LICENSE, **dual copyright**) | Fork of Scott Robbin's original MCP server; his copyright line and `author` field are preserved alongside the fork's (© 2025 Scott Robbin, © 2025 Nathan Storey). Published on npm under MIT |
-| typedstandards (private pre-launch) | MIT (LICENSE) | The public artifact is [`@typedstandards/verify-core`](https://www.npmjs.com/package/@typedstandards/verify-core) on npm — MIT, with LICENSE shipped in the tarball. When the repo (or the typedstandards.org spec home) goes public, licensing for that surface is declared as part of the launch (see `q3-session-briefs.md` brief #3, D1) |
+| [typedstandards](https://github.com/npstorey/typedstandards) | MIT (LICENSE) | Public since 2026-07-10. Code monorepo — the typedstandards.org site source and [`@typedstandards/verify-core`](https://www.npmjs.com/package/@typedstandards/verify-core) (on npm — MIT, LICENSE shipped in the tarball): all MIT under the repo's [LICENSE](https://github.com/npstorey/typedstandards/blob/main/LICENSE) (© 2026 Nathan Storey). The **specification text** it implements is authored in this repo under CC BY 4.0 (see "Specification text" below); typedstandards carries no separate spec-license surface |
 
 ## Specification text
 
