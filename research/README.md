@@ -15,6 +15,11 @@ SHACL and SysML v2 formalize **complementary surfaces** of the spec, not competi
 - **`shapes/typed-standards.shacl.ttl`** — the standalone SHACL shapes graph (Turtle), the artifact behind `01`.
 - **`sysml/typed-standards.sysml`** — the standalone SysML v2 model, the artifact behind `02`.
 
+Related architecture-view sketches (same research surface, separate thread from the formalism bundle):
+
+- **`04-architecture-views.md`** — Needs / Functional / Logical views of the repository and its ecosystem, with cross-layer traceability.
+- **`05-typed-standards-spec-architecture-views.md`** — recursive decomposition of the Typed Standards Spec component from `04` into its own needs, functions, and logical components; verified against `00`–`03` and validated against `docs/architecture/typed-standards-summary.md`.
+
 ## Suggested reading order
 
 1. `00-formal-model.md` — establish the shared, neutral model.

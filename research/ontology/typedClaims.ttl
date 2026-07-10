@@ -1,0 +1,497 @@
+##############################################################################
+# Typed Standards Claim Vocabulary — draft OWL ontology (research exploration)
+#
+# STATUS: research draft, NOT normative. The normative definition of these
+# terms is docs/architecture/typed-standards-specification.md §8.11. Promotion
+# of this vocabulary to a published ontology is gated on registry Q10
+# (docs/architecture/open-questions.md) per the Xanadu doctrine: no adopter,
+# no promotion. This file is a mechanical derivation of the §8.11 tables so
+# that the ontology candidate exists and can be criticized.
+#
+# Companion: research/shapes/typed-standards.shacl.ttl (validation shapes for
+# the envelope layer). This file covers the typed-claims layer semantics.
+##############################################################################
+
+@prefix ts:      <https://typedstandards.org/ns/ts#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix geo:     <http://www.opengis.net/ont/geosparql#> .
+@prefix qb:      <http://purl.org/linked-data/cube#> .
+@prefix schema:  <https://schema.org/> .
+
+##############################################################################
+# Ontology header
+##############################################################################
+
+<https://typedstandards.org/ns/ts> a owl:Ontology ;
+    dcterms:title "Typed Standards Claim Vocabulary"@en ;
+    dcterms:description """Draft ontology for the typed-claims layer of the
+Typed Standards Specification (§8.11). Contributes only what widely-adopted
+vocabularies do not already provide: the Claim shape and its subtypes, the
+ConfidenceStatement pattern, civic-specific geographic scope types, and the
+AnalyticalDerivation link from claim to LLM extraction trace. Provenance,
+temporal entities, geometries, and multidimensional observations are reused
+from PROV-O, OWL-Time, GeoSPARQL, and RDF Data Cube respectively."""@en ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+    owl:versionInfo "0.1.0-research-draft" ;
+    rdfs:seeAlso <https://github.com/npstorey/civic-ai-tools/blob/main/docs/architecture/typed-standards-specification.md> ;
+    rdfs:comment "Research draft. Non-normative. Publication gated on open-questions registry Q10."@en .
+
+##############################################################################
+# Core class: ts:Claim  (§8.11.4)
+##############################################################################
+
+ts:Claim a owl:Class ;
+    rdfs:label "Claim"@en ;
+    rdfs:comment """A structured, falsifiable assertion derived from analysis
+output. Every claim carries an explicit scope, a method-derived confidence
+statement, at least one prov:wasDerivedFrom reference into the source
+analysis's provenance graph, and a link to the analytical step that produced
+it (ts:derivedVia). Spec §8.11.2 principle 5: if a claim cannot be
+contradicted by another well-formed claim, it is not a claim."""@en ;
+    rdfs:subClassOf prov:Entity ;
+    rdfs:isDefinedBy <https://typedstandards.org/ns/ts> .
+
+##############################################################################
+# Claim subtypes  (§8.11.5 core claim types)
+##############################################################################
+
+ts:TrendClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Trend claim"@en ;
+    rdfs:comment "Asserts that a metric increased, decreased, or remained stable across two time periods within a scope. Requires ts:metric, ts:baselinePeriod, ts:comparisonPeriod, ts:direction, ts:magnitude."@en .
+
+ts:ComparisonClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Comparison claim"@en ;
+    rdfs:comment "Asserts that two scopes differ on a metric within a single time period. Requires ts:metric, ts:scopeA, ts:scopeB, ts:relation, ts:magnitude."@en .
+
+ts:ObservationClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Observation claim"@en ;
+    rdfs:comment "Asserts that a metric had a specific value within a scope at a point in time. Maps onto qb:Observation from the W3C RDF Data Cube vocabulary. Requires ts:metric, ts:value, ts:unit."@en ;
+    rdfs:seeAlso qb:Observation .
+
+ts:CompositionClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Composition claim"@en ;
+    rdfs:comment "Asserts a breakdown of a population, budget, or count into components (budget analyses, demographic breakdowns, etc.). Requires ts:whole, ts:components, ts:totalsTo."@en .
+
+ts:RelationshipClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Relationship claim"@en ;
+    rdfs:comment "Asserts a statistical relationship (correlation, regression coefficient) between two metrics within a scope. Deliberately distinguished from causal claims, which are excluded from the core vocabulary per §8.11.7 (causal inference requires experimental design or identifying assumptions the specification cannot verify; domain extensions may add causal claim types with explicit identification-strategy fields). Requires ts:metricA, ts:metricB, ts:relationshipType, ts:strength."@en .
+
+ts:QualitativeClaim a owl:Class ;
+    rdfs:subClassOf ts:Claim ;
+    rdfs:label "Qualitative claim"@en ;
+    rdfs:comment "A claim that does not reduce to a single numeric assertion (pattern, procedural finding, typology). Permitted but flagged; downstream processors may treat it differently. Requires ts:assertion and ts:groundingMethod; its ts:confidence may be ts:NotApplicable with a required description."@en .
+
+##############################################################################
+# Scope  (§8.11.4)
+##############################################################################
+
+ts:Scope a owl:Class ;
+    rdfs:label "Scope"@en ;
+    rdfs:comment "The geographic and temporal bounds of a claim. Implicit scope is non-conforming: 'crime is up' without geographic and temporal scope is not a valid claim (§8.11.7)."@en .
+
+ts:GeographicScope a owl:Class ;
+    rdfs:label "Geographic scope"@en ;
+    rdfs:comment "A geographic unit a claim applies to. Named subtypes anchor to a canonical reference authority where one exists. For arbitrary geometries, use this class directly with geo:hasGeometry pointing at an OGC GeoSPARQL geometry literal (WKT, GML, or GeoJSON-LD). International units (e.g. AU statistical-area-1, UK OA) belong in domain extensions, not the core."@en .
+
+# --- Geographic subtype taxonomy. Each rdfs:comment names the canonical
+# --- reference standard / authority per the §8.11.4 table.
+
+ts:CensusTract a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Census tract"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line (tract shapefile, GEOID encoding)."@en .
+
+ts:CensusBlock a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Census block"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line (tabblock shapefile)."@en .
+
+ts:CensusBlockGroup a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Census block group"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line (bg shapefile)."@en .
+
+ts:ZIPCodeTabulationArea a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "ZIP Code Tabulation Area"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line ZCTA (zcta shapefile)."@en .
+
+ts:SchoolDistrict a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "School district"@en ;
+    rdfs:comment "US Census Bureau EDGE plus TIGER/Line school-district shapefiles."@en .
+
+ts:MunicipalBoundary a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Municipal boundary"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line place shapefile."@en .
+
+ts:CountyBoundary a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "County boundary"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line county shapefile (FIPS county code)."@en .
+
+ts:StateBoundary a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "State boundary"@en ;
+    rdfs:comment "US Census Bureau TIGER/Line state shapefile (FIPS state code); ISO 3166-2 for international subdivisions."@en .
+
+ts:NeighborhoodTabulationArea a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Neighborhood Tabulation Area"@en ;
+    rdfs:comment "NYC Department of City Planning NTA (NYC-specific)."@en .
+
+ts:CommunityBoardDistrict a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Community board district"@en ;
+    rdfs:comment "NYC Department of City Planning Community District boundary file (NYC-specific)."@en .
+
+ts:CityCouncilDistrict a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "City council district"@en ;
+    rdfs:comment "Jurisdiction-specific; reference the publishing city's council-district authority. No single cross-city canonical authority."@en .
+
+ts:PolicePrecinct a owl:Class ;
+    rdfs:subClassOf ts:GeographicScope ;
+    rdfs:label "Police precinct"@en ;
+    rdfs:comment "Jurisdiction-specific (NYC: NYPD precinct boundaries via NYC OpenData). Flagged per registry Q14: the name may be too NYC-coded; some jurisdictions use district, division, or ward."@en .
+
+##############################################################################
+# Confidence  (§8.11.4)
+##############################################################################
+
+ts:ConfidenceStatement a owl:Class ;
+    rdfs:label "Confidence statement"@en ;
+    rdfs:comment "A structured, method-derived confidence attached to a claim. Free-form confidence ('high'/'medium'/'low' without method backing) is non-conforming (§8.11.7). Every confidence value must trace to a method recorded in the package (§8.11.2 principle 6)."@en .
+
+ts:ConfidenceMethod a owl:Class ;
+    rdfs:label "Confidence method"@en ;
+    rdfs:comment "A method by which a confidence value was derived. The starter set below is extensible by domain extensions under their own namespaces, provided new methods remain traceable to a recorded calculation in the package."@en .
+
+# --- Starter set of confidence methods, modeled as named individuals so the
+# --- ts:method value is a URI as in the spec's JSON-LD examples.
+
+ts:FrequentistInterval a ts:ConfidenceMethod ;
+    rdfs:label "Frequentist interval"@en ;
+    skos:scopeNote "Confidence interval from a statistical test."@en .
+
+ts:BayesianCredibleInterval a ts:ConfidenceMethod ;
+    rdfs:label "Bayesian credible interval"@en ;
+    skos:scopeNote "Bayesian posterior interval."@en .
+
+ts:SampleSizeBased a ts:ConfidenceMethod ;
+    rdfs:label "Sample-size based"@en ;
+    skos:scopeNote "Confidence implied by sample size against a known population."@en .
+
+ts:LLMReportedLogProbability a ts:ConfidenceMethod ;
+    rdfs:label "LLM-reported log probability"@en ;
+    skos:scopeNote "Token-level log probabilities from the model (limited applicability)."@en .
+
+ts:HumanReview a ts:ConfidenceMethod ;
+    rdfs:label "Human review"@en ;
+    skos:scopeNote "Reviewer-asserted confidence with reviewer identity."@en .
+
+ts:NotApplicable a ts:ConfidenceMethod ;
+    rdfs:label "Not applicable"@en ;
+    skos:scopeNote "The claim is qualitative or definitional; numeric confidence does not apply. Permitted, but must be accompanied by a description explaining why quantified confidence is not appropriate."@en .
+
+##############################################################################
+# AnalyticalDerivation  (§8.11.4) — the translation-laundering guard
+##############################################################################
+
+ts:AnalyticalDerivation a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Analytical derivation"@en ;
+    rdfs:comment "The analytical step that produced a claim — in particular, the extraction of a structured claim from LLM prose. Makes explicit that the structured claim is a translation of the prose, not the prose itself; makes the translation prompt inspectable and re-runnable; pins the claim to a specific span of source output for human review (§8.11.4). Structured form does not confer truth (§8.11.2 principle 4)."@en .
+
+ts:SourceOutputSpan a owl:Class ;
+    rdfs:label "Source output span"@en ;
+    rdfs:comment "A byte range within a named output file of the source analysis, pinning a derived claim to the prose it was extracted from."@en .
+
+##############################################################################
+# Auxiliary structures
+##############################################################################
+
+ts:Magnitude a owl:Class ;
+    rdfs:label "Magnitude"@en ;
+    rdfs:comment "The size of a change or difference, expressed as an absolute change and/or a percent change with a unit."@en .
+
+ts:Component a owl:Class ;
+    rdfs:label "Component"@en ;
+    rdfs:comment "One part of a composition claim's breakdown of a whole."@en .
+
+# --- Trend directions (controlled individuals)
+
+ts:TrendDirection a owl:Class ;
+    rdfs:label "Trend direction"@en .
+
+ts:Increase a ts:TrendDirection ; rdfs:label "Increase"@en .
+ts:Decrease a ts:TrendDirection ; rdfs:label "Decrease"@en .
+ts:NoSignificantChange a ts:TrendDirection ; rdfs:label "No significant change"@en .
+
+# --- Comparison relations (controlled individuals)
+
+ts:ComparisonRelation a owl:Class ;
+    rdfs:label "Comparison relation"@en .
+
+ts:GreaterThan a ts:ComparisonRelation ; rdfs:label "Greater than"@en .
+ts:LessThan a ts:ComparisonRelation ; rdfs:label "Less than"@en .
+ts:ApproximatelyEqual a ts:ComparisonRelation ; rdfs:label "Approximately equal"@en .
+
+##############################################################################
+# Properties — required on every ts:Claim  (§8.11.4)
+# (dcterms:identifier and prov:wasDerivedFrom are reused, not redeclared.)
+##############################################################################
+
+ts:subject a owl:ObjectProperty ;
+    rdfs:label "subject"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:comment "What the claim is about — typically a metric, indicator, or observable, identified by URI."@en .
+
+ts:scope a owl:ObjectProperty ;
+    rdfs:label "scope"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:Scope ;
+    rdfs:comment "The geographic and temporal bounds of the claim. Required on every claim."@en .
+
+ts:confidence a owl:ObjectProperty ;
+    rdfs:label "confidence"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:ConfidenceStatement ;
+    rdfs:comment "Method-derived confidence. Required on every claim."@en .
+
+ts:derivedVia a owl:ObjectProperty ;
+    rdfs:label "derived via"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:AnalyticalDerivation ;
+    rdfs:comment "Link to the analytical step that produced the claim. Required on every claim."@en .
+
+##############################################################################
+# Properties — optional on ts:Claim
+##############################################################################
+
+ts:contradicts a owl:ObjectProperty ;
+    rdfs:label "contradicts"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:Claim ;
+    rdfs:comment "Other claims (in this or other packages) the author is explicitly contesting. Also expressible as separately-signed attestation/contradicts/v1 nodes."@en .
+
+ts:corroborates a owl:ObjectProperty ;
+    rdfs:label "corroborates"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:Claim ;
+    rdfs:comment "Other claims the author is explicitly affirming. Also expressible as separately-signed attestation/corroborates/v1 nodes."@en .
+
+ts:supersedes a owl:ObjectProperty ;
+    rdfs:label "supersedes"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:Claim ;
+    rdfs:comment "A previous claim this one replaces. Also expressible as attestation/supersedes/v1."@en .
+
+ts:limitations a owl:DatatypeProperty ;
+    rdfs:label "limitations"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Author-acknowledged limitations of the claim."@en .
+
+##############################################################################
+# Properties — Scope structure
+##############################################################################
+
+ts:geographicScope a owl:ObjectProperty ;
+    rdfs:label "geographic scope"@en ;
+    rdfs:domain ts:Scope ;
+    rdfs:range ts:GeographicScope .
+
+ts:temporalScope a owl:ObjectProperty ;
+    rdfs:label "temporal scope"@en ;
+    rdfs:domain ts:Scope ;
+    rdfs:range time:TemporalEntity ;
+    rdfs:comment "Temporal scope uses W3C OWL-Time directly; the vocabulary adds nothing of its own."@en .
+
+##############################################################################
+# Properties — ConfidenceStatement structure
+##############################################################################
+
+ts:method a owl:ObjectProperty ;
+    rdfs:label "method"@en ;
+    rdfs:domain ts:ConfidenceStatement ;
+    rdfs:range ts:ConfidenceMethod ;
+    rdfs:comment "The method the confidence value derives from. Required on every confidence statement."@en .
+
+ts:level a owl:DatatypeProperty ;
+    rdfs:label "level"@en ;
+    rdfs:domain ts:ConfidenceStatement ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Confidence level (e.g. 0.95)."@en .
+
+ts:lowerBound a owl:DatatypeProperty ;
+    rdfs:label "lower bound"@en ;
+    rdfs:domain ts:ConfidenceStatement ;
+    rdfs:range xsd:decimal .
+
+ts:upperBound a owl:DatatypeProperty ;
+    rdfs:label "upper bound"@en ;
+    rdfs:domain ts:ConfidenceStatement ;
+    rdfs:range xsd:decimal .
+
+ts:methodReference a owl:DatatypeProperty ;
+    rdfs:label "method reference"@en ;
+    rdfs:domain ts:ConfidenceStatement ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Pointer into the package's trace identifying the recorded calculation the confidence derives from (e.g. 'trace.json#step-stat-test-3')."@en .
+
+##############################################################################
+# Properties — AnalyticalDerivation structure
+##############################################################################
+
+ts:traceReference a owl:DatatypeProperty ;
+    rdfs:label "trace reference"@en ;
+    rdfs:domain ts:AnalyticalDerivation ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Pointer into the package's trace identifying the extraction step (e.g. 'trace.json#step-claim-extraction-1')."@en .
+
+ts:translationModel a owl:ObjectProperty ;
+    rdfs:label "translation model"@en ;
+    rdfs:domain ts:AnalyticalDerivation ;
+    rdfs:range schema:SoftwareApplication ;
+    rdfs:comment "The model that performed the prose-to-structure extraction."@en .
+
+ts:translationPrompt a owl:ObjectProperty ;
+    rdfs:label "translation prompt"@en ;
+    rdfs:domain ts:AnalyticalDerivation ;
+    rdfs:comment "The prompt used for the extraction, by reference; inspectable and re-runnable for verification."@en .
+
+ts:sourceOutputSpan a owl:ObjectProperty ;
+    rdfs:label "source output span"@en ;
+    rdfs:domain ts:AnalyticalDerivation ;
+    rdfs:range ts:SourceOutputSpan .
+
+ts:outputFile a owl:DatatypeProperty ;
+    rdfs:label "output file"@en ;
+    rdfs:domain ts:SourceOutputSpan ;
+    rdfs:range xsd:string .
+
+ts:byteRange a owl:DatatypeProperty ;
+    rdfs:label "byte range"@en ;
+    rdfs:domain ts:SourceOutputSpan ;
+    rdfs:comment "Two-element [start, end] byte offsets into the output file. Modeled as an rdf:List in RDF; a JSON array in JSON-LD."@en .
+
+##############################################################################
+# Properties — claim-subtype specifics  (§8.11.5)
+##############################################################################
+
+ts:metric a owl:ObjectProperty ;
+    rdfs:label "metric"@en ;
+    rdfs:comment "The metric the claim concerns, as a URI — ideally referencing an external vocabulary (SDMX, Data Commons, domain extension)."@en .
+
+ts:baselinePeriod a owl:ObjectProperty ;
+    rdfs:label "baseline period"@en ;
+    rdfs:domain ts:TrendClaim ;
+    rdfs:range time:Interval .
+
+ts:comparisonPeriod a owl:ObjectProperty ;
+    rdfs:label "comparison period"@en ;
+    rdfs:domain ts:TrendClaim ;
+    rdfs:range time:Interval .
+
+ts:direction a owl:ObjectProperty ;
+    rdfs:label "direction"@en ;
+    rdfs:domain ts:TrendClaim ;
+    rdfs:range ts:TrendDirection .
+
+ts:magnitude a owl:ObjectProperty ;
+    rdfs:label "magnitude"@en ;
+    rdfs:range ts:Magnitude ;
+    rdfs:comment "Used by ts:TrendClaim and ts:ComparisonClaim."@en .
+
+ts:absoluteChange a owl:DatatypeProperty ;
+    rdfs:label "absolute change"@en ;
+    rdfs:domain ts:Magnitude ;
+    rdfs:range xsd:decimal .
+
+ts:percentChange a owl:DatatypeProperty ;
+    rdfs:label "percent change"@en ;
+    rdfs:domain ts:Magnitude ;
+    rdfs:range xsd:decimal .
+
+ts:unit a owl:ObjectProperty ;
+    rdfs:label "unit"@en ;
+    rdfs:comment "Unit of measure as a URI; QUDT or UCUM reference. Used by ts:ObservationClaim and ts:Magnitude."@en .
+
+ts:scopeA a owl:ObjectProperty ;
+    rdfs:label "scope A"@en ;
+    rdfs:domain ts:ComparisonClaim ;
+    rdfs:range ts:Scope .
+
+ts:scopeB a owl:ObjectProperty ;
+    rdfs:label "scope B"@en ;
+    rdfs:domain ts:ComparisonClaim ;
+    rdfs:range ts:Scope .
+
+ts:relation a owl:ObjectProperty ;
+    rdfs:label "relation"@en ;
+    rdfs:domain ts:ComparisonClaim ;
+    rdfs:range ts:ComparisonRelation .
+
+ts:value a rdf:Property ;
+    rdfs:label "value"@en ;
+    rdfs:domain ts:ObservationClaim ;
+    rdfs:comment "The observed value: a numeric literal or a qb:Observation. Left as rdf:Property (neither owl:ObjectProperty nor owl:DatatypeProperty) because the spec permits both shapes."@en .
+
+ts:whole a owl:ObjectProperty ;
+    rdfs:label "whole"@en ;
+    rdfs:domain ts:CompositionClaim ;
+    rdfs:range ts:Scope ;
+    rdfs:comment "The whole being decomposed."@en .
+
+ts:components a owl:ObjectProperty ;
+    rdfs:label "components"@en ;
+    rdfs:domain ts:CompositionClaim ;
+    rdfs:range ts:Component .
+
+ts:totalsTo a owl:DatatypeProperty ;
+    rdfs:label "totals to"@en ;
+    rdfs:domain ts:CompositionClaim ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "What the components sum to: 1.0 for proportions, total dollars for budgets, etc."@en .
+
+ts:metricA a owl:ObjectProperty ;
+    rdfs:label "metric A"@en ;
+    rdfs:domain ts:RelationshipClaim .
+
+ts:metricB a owl:ObjectProperty ;
+    rdfs:label "metric B"@en ;
+    rdfs:domain ts:RelationshipClaim .
+
+ts:relationshipType a owl:ObjectProperty ;
+    rdfs:label "relationship type"@en ;
+    rdfs:domain ts:RelationshipClaim ;
+    rdfs:comment "URI: Correlation / RegressionCoefficient / RankOrderAgreement / etc."@en .
+
+ts:strength a owl:DatatypeProperty ;
+    rdfs:label "strength"@en ;
+    rdfs:domain ts:RelationshipClaim ;
+    rdfs:range xsd:decimal .
+
+ts:assertion a owl:DatatypeProperty ;
+    rdfs:label "assertion"@en ;
+    rdfs:domain ts:QualitativeClaim ;
+    rdfs:range xsd:string .
+
+ts:groundingMethod a owl:ObjectProperty ;
+    rdfs:label "grounding method"@en ;
+    rdfs:domain ts:QualitativeClaim ;
+    rdfs:comment "URI: Pattern Recognition / Document Analysis / Comparative Synthesis / etc."@en .
