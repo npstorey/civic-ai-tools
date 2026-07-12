@@ -596,7 +596,7 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Status.** Open. Decide in the RFC-launch editing pass.
 - **Origin.** 2026-06-26 working session, via extraction row L1; registered 2026-07-01.
 - **Stakes.** Whether the public RFC preamble carries an explicit challenge taxonomy — five challenges named by the maintainer (**Ontological, Telemetric, Legible, Reproducible, Generalizable**) plus five proposed complements (**Adversarial, Adoptive/Incentive, Governance, Temporal, Epistemic**) — and if so, table vs. prose. A stated taxonomy pre-arms reviewers and frames the evaluative questions ("do the seams hold; is the generalization real").
-- **Current direction.** Undecided, including the table-vs-prose presentation question. The definitions currently live only in the 2026-06-26 working-session record, not in any repo — porting them is a precondition for deciding.
+- **Current direction.** Undecided, including the table-vs-prose presentation question. The ten challenge *names* survive above, but their definitions do not: the 2026-06-26 working-session record that held them was declared **unrecoverable on 2026-07-07**. The precondition is therefore no longer "port the definitions" but **re-draft them at the RFC-preamble editing pass** (the Stakes names are the seed).
 - **Resolution criteria.** The RFC-launch editing pass either adopts the taxonomy into the preamble or drops it with a recorded reason.
 - **Notes.** Worklist row L1.
 

@@ -64,7 +64,7 @@ Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
 |------|---------|
 | [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | Demo website at [civicaitools.org](https://civicaitools.org) — Next.js app with side-by-side MCP comparison |
 | [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | The MCP server itself (Socrata open data portals) |
-| [typedstandards](https://github.com/npstorey/typedstandards) (private) | `@typedstandards/verify-core` on npm + the standalone client-side verifier at [typedstandards.org](https://typedstandards.org) — the neutral home the Typed Standards spec publishes to (ADR-0014) |
+| [typedstandards](https://github.com/npstorey/typedstandards) (public since 2026-07-10) | `@typedstandards/verify-core` on npm + the standalone client-side verifier at [typedstandards.org](https://typedstandards.org) — the neutral home the Typed Standards spec publishes to (ADR-0014) |
 
 Sprint-based work for the website lives in that repo's `/sprints/` folder. This repo holds MCP server configs, skill docs, and setup tooling.
 
