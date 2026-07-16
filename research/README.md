@@ -19,6 +19,8 @@ Related architecture-view sketches (same research surface, separate thread from 
 
 - **`04-architecture-views.md`** — Needs / Functional / Logical views of the repository and its ecosystem, with cross-layer traceability.
 - **`05-typed-standards-spec-architecture-views.md`** — recursive decomposition of the Typed Standards Spec component from `04` into its own needs, functions, and logical components; verified against `00`–`03` and validated against `docs/architecture/typed-standards-summary.md`.
+- **`sysml/system-of-interest.sysml`** — `04` transcribed to SysML v2: stakeholders, needs N1–N4 (requirement defs with stakeholder links), functions F1–F6 (the mission pipeline), logical components, the 04 §3 topology as connections, and the cross-layer traceability as satisfy relationships.
+- **`sysml/tss-as-system.sysml`** — `05` transcribed to SysML v2: the spec's own users, needs TN1–TN6, their refinement of `04`'s N-needs, functions TF1–TF8 (the spec function flow), the 05 §3 components carrying their functions, and the 05 §4 traceability as satisfy relationships. Bridges `04`'s `SpecCorpus` component to the packages of the detail model `sysml/typed-standards.sysml`.
 
 ## Suggested reading order
 
