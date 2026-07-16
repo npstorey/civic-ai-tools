@@ -108,45 +108,71 @@ flowchart TB
 ## 3. Logical — the components that carry those functions
 
 Blue = normative spec content; grey subgraph = external infrastructure the spec anchors
-to but does not define (the hard boundary of [`03 §3`](./03-formalism-comparison.md));
-dashed = exploratory study artifacts in this `research/` bundle.
+to but does not define (the hard boundary of [`03 §3`](./03-formalism-comparison.md)).
+Governance flows in from the left; the spec anchors out to the right.
 
 ```mermaid
 flowchart LR
-    subgraph Spec["Normative spec content"]
-        SCHEMA["Data schema<br/>SignedNode envelope, EvidencePackage,<br/>attestation payloads, typed-claims<br/>vocabulary (§6–8)"]:::spec
-        BEHAV["Behavior spec<br/>§9.2 verification flow,<br/>publisher pipeline,<br/>cross-host publication (§8.8–8.9)"]:::spec
-        LIFE["Lifecycle state machines<br/>content-node lifecycle, visibility /<br/>location, trust-registry keys,<br/>notebook provenance (§8.10)"]:::spec
-        PROF["Profiles & vocabularies<br/>captureMethod (open core,<br/>per-profile closed), producer profile,<br/>datHere content profile (§8.6–8.7)"]:::spec
-        REQ["Requirements corpus<br/>normative preamble (§5.1),<br/>MUST/SHOULD/MAY of §5, §8, §9"]:::spec
-    end
-
     subgraph Gov["Governance surfaces"]
-        ADR["ADRs (settled decisions)"]
         OQ["open-questions registry<br/>(unresolved decisions,<br/>cited by Q-number)"]
+        ADR["ADRs (settled decisions)"]
         XAN["Xanadu doctrine<br/>(promotion gates)"]
     end
 
-    subgraph Ext["External anchors (out-of-band)"]
-        VC["verify-core<br/>(reference verifier)"]
-        REK["Rekor log + RFC 3161 TSA"]
-        TREG["publisher .well-known<br/>trust registries"]
+    subgraph Spec["Normative spec content"]
+        SCHEMA["Data schema<br/>SignedNode envelope, EvidencePackage,<br/>attestation payloads, typed-claims<br/>vocabulary (§6–8)"]:::spec
+        LIFE["Lifecycle state machines<br/>content-node lifecycle, visibility /<br/>location, trust-registry keys,<br/>notebook provenance (§8.10)"]:::spec
+        PROF["Profiles & vocabularies<br/>captureMethod (open core,<br/>per-profile closed), producer profile,<br/>datHere content profile (§8.6–8.7)"]:::spec
+        BEHAV["Behavior spec<br/>§9.2 verification flow,<br/>publisher pipeline,<br/>cross-host publication (§8.8–8.9)"]:::spec
+        REQ["Requirements corpus<br/>normative preamble (§5.1),<br/>MUST/SHOULD/MAY of §5, §8, §9"]:::spec
     end
 
-    subgraph Study["Study artifacts (exploratory)"]
+    subgraph Ext["External anchors (out-of-band)"]
+        TREG["publisher .well-known<br/>trust registries"]
+        VC["verify-core<br/>(reference verifier)"]
+        REK["Rekor log + RFC 3161 TSA"]
+    end
+
+    XAN -.gates.- OQ
+    OQ -.gates.- SCHEMA
+    OQ -.gates.- LIFE
+    ADR --> SCHEMA
+    ADR --> LIFE
+    ADR --> PROF
+
+    SCHEMA --> TREG
+    SCHEMA --> VC
+    BEHAV --> VC
+    BEHAV --> REK
+    REQ --> VC
+
+    classDef spec fill:#1f6feb,stroke:#0d419d,color:#ffffff
+```
+
+The exploratory study artifacts in this `research/` bundle (dashed) are **views over the
+same spec content** — split out of the diagram above so the formalized-by fan-in stays
+legible. Every dashed edge reads "formalized by"; the labeled edge carries the SysML
+model's behavior-coverage boundary.
+
+```mermaid
+flowchart LR
+    subgraph Spec2["Normative spec content (the views' shared subject)"]
+        SCHEMA2["Data schema (§6–8)"]:::spec
+        BEHAV2["Behavior spec (§9.2, §8.8–8.9)"]:::spec
+        LIFE2["Lifecycle state machines (§8.10)"]:::spec
+        REQ2["Requirements corpus (§5.1, §5, §8, §9)"]:::spec
+    end
+
+    subgraph Study["Study artifacts (exploratory views)"]
         SHACL["SHACL shapes<br/>(instance conformance)"]:::study
         SYSML["SysML v2 model<br/>(structure, §9.2 verify behavior,<br/>lifecycle machines,<br/>requirements traceability)"]:::study
     end
 
-    SCHEMA --> VC & TREG
-    BEHAV --> VC & REK
-    REQ --> VC
-    OQ -.gates.- SCHEMA & LIFE
-    ADR --> SCHEMA & LIFE & PROF
-    XAN -.gates.- OQ
-    SCHEMA -.formalized by.- SHACL & SYSML
-    LIFE & REQ -.formalized by.- SYSML
-    BEHAV -."formalized by (§9.2 verify flow only)".- SYSML
+    SCHEMA2 -.- SHACL
+    SCHEMA2 -.- SYSML
+    BEHAV2 -."§9.2 verify flow only".- SYSML
+    LIFE2 -.- SYSML
+    REQ2 -.- SYSML
 
     classDef spec fill:#1f6feb,stroke:#0d419d,color:#ffffff
     classDef study fill:#e2e8f0,stroke:#64748b,color:#334155,stroke-dasharray:4 3
@@ -156,7 +182,8 @@ flowchart LR
 
 Hierarchical trace from needs through functions to the logical components that carry
 them. Solid edge = primary realization, dotted edge = supporting. Component nodes are
-condensed from the §3 diagram.
+condensed from the §3 diagrams; within the Components box they are ordered by where
+their incoming edges originate, not by importance.
 
 ```mermaid
 flowchart LR
@@ -182,21 +209,26 @@ flowchart LR
 
     subgraph Components["Logical components"]
         SCHEMA["Data schema<br/>(§6–8)"]:::spec
-        BEHAV["Behavior spec<br/>(§9.2, §8.8–8.9)"]:::spec
-        LIFE["Lifecycle state<br/>machines (§8.10)"]:::spec
-        PROF["Profiles &<br/>vocabularies (§8.6–8.7)"]:::spec
-        REQ["Requirements corpus<br/>(§5.1, §5, §8, §9)"]:::spec
-        GOV["Governance surfaces<br/>(ADRs, open questions,<br/>Xanadu doctrine)"]
         EXT["External anchors<br/>(verify-core, Rekor/TSA,<br/>trust registries)"]
+        PROF["Profiles &<br/>vocabularies (§8.6–8.7)"]:::spec
+        BEHAV["Behavior spec<br/>(§9.2, §8.8–8.9)"]:::spec
+        REQ["Requirements corpus<br/>(§5.1, §5, §8, §9)"]:::spec
+        LIFE["Lifecycle state<br/>machines (§8.10)"]:::spec
+        GOV["Governance surfaces<br/>(ADRs, open questions,<br/>Xanadu doctrine)"]
     end
 
-    TN1 --> TF1 & TF2 & TF5
-    TN2 --> TF2 & TF6
-    TN3 --> TF1 & TF3
+    TN1 --> TF1
+    TN1 --> TF2
+    TN1 --> TF5
+    TN2 --> TF2
+    TN2 --> TF6
+    TN3 --> TF1
+    TN3 --> TF3
+    TN3 -.-> TF7
     TN4 --> TF5
     TN5 --> TF8
-    TN6 --> TF4 & TF8
-    TN3 -.-> TF7
+    TN6 --> TF4
+    TN6 --> TF8
 
     TF1 --> SCHEMA
     TF2 --> SCHEMA
@@ -206,9 +238,11 @@ flowchart LR
     TF4 --> SCHEMA
     TF5 --> PROF
     TF6 --> BEHAV
-    TF6 -.-> EXT & REQ
+    TF6 -.-> EXT
+    TF6 -.-> REQ
     TF7 --> LIFE
-    TF8 --> REQ & GOV
+    TF8 --> REQ
+    TF8 --> GOV
 
     classDef spec fill:#1f6feb,stroke:#0d419d,color:#ffffff
 ```
@@ -233,9 +267,9 @@ never the other way (`00 §status`: the spec is the single source of truth).
   subgraph is *outside* the spec-content subgraph. The SysML model does represent the
   anchors *structurally* (trust registry, TSA, Rekor as context parts with ports and
   pinned-anchor constants), but only as opaque context whose checks are delegated,
-  never executed — so the formalized-by edges above attach to spec content, not to the
-  anchor properties themselves. A green SHACL report plus a traced SysML model still
-  do not constitute verification.
+  never executed — which is why the §3 views diagram contains no anchors at all: the
+  formalized-by edges attach to spec content, never to the anchor properties themselves.
+  A green SHACL report plus a traced SysML model still do not constitute verification.
 - **Study-artifact placement** (`README`, `03 §5`): SHACL formalizes instance conformance
   of schema; SysML formalizes structure, the §9.2 verification flow (plus its
   SHACL-targetable structural validations), the four lifecycle machines, and
