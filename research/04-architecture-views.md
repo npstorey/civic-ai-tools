@@ -83,7 +83,6 @@ this repo.
 ```mermaid
 flowchart LR
     subgraph Needs
-        direction TB
         N1["N1 plain-English<br/>data access"]
         N2["N2 trustworthy<br/>AI analysis"]
         N3["N3 durable, citable<br/>evidence"]
@@ -91,7 +90,6 @@ flowchart LR
     end
 
     subgraph Functions
-        direction TB
         F1["F1 query"]
         F2["F2 analyze"]
         F3["F3 package"]
@@ -101,7 +99,6 @@ flowchart LR
     end
 
     subgraph Components["Logical components"]
-        direction TB
         CFG["MCP configs"]:::thisRepo
         SOC["socrata-mcp-server /<br/>Data Commons MCP"]
         SKILL["publish-evidence skill<br/>+ opengov skill docs"]:::thisRepo
@@ -111,20 +108,31 @@ flowchart LR
         SPEC["Typed Standards Spec,<br/>ADRs, open-questions registry"]:::thisRepo
     end
 
-    N1 --> F1 & F2
-    N2 --> F3 & F4 & F5
-    N2 -.-> F2 & F6
-    N3 --> F3 & F5
+    N1 --> F1
+    N1 --> F2
+    N2 --> F3
+    N2 --> F4
+    N2 --> F5
+    N2 -.-> F2
+    N2 -.-> F6
+    N3 --> F3
+    N3 --> F5
     N3 -.-> F4
     N4 --> F6
-    N4 -.-> F3 & F4 & F5
+    N4 -.-> F3
+    N4 -.-> F4
+    N4 -.-> F5
 
-    F1 --> CFG & SOC
+    F1 --> CFG
+    F1 --> SOC
     F2 --> SOC
     F2 -.-> SKILL
-    F3 --> SKILL & TRUST
-    F4 --> SKILL & WEB
-    F5 --> TS & TRUST
+    F3 --> SKILL
+    F3 --> TRUST
+    F4 --> SKILL
+    F4 --> WEB
+    F5 --> TS
+    F5 --> TRUST
     F6 --> SPEC
     F3 -. constrained by .- SPEC
     F4 -. constrained by .- SPEC
@@ -139,9 +147,10 @@ N3's dotted edge to F4 reflects that the registry makes evidence citable while d
 comes from F3/F5's timestamp and transparency-log steps; N4's dotted edges mark F3–F5 as
 the functions the open standard disciplines. The dotted `constrained by` edges between
 F3–F5 and the spec are arrowless and declared function-to-spec so the layout keeps its
-three columns; semantically the constraint flows from the spec to the functions (it
-specifies F3's package shape and F5's §9.2 verification sequence, and constrains F4's
-publish API contract).
+three stacked bands (an edge running the other way, spec-to-function, would fight the
+Functions→Components edges above it and break the vertical stacking); semantically the
+constraint flows from the spec to the functions (it specifies F3's package shape and F5's
+§9.2 verification sequence, and constrains F4's publish API contract).
 
 ### Needs × Logical components
 
