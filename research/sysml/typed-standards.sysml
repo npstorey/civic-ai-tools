@@ -1,9 +1,14 @@
 package TypedStandards {
     doc /* Typed Standards Specification v0.1.x as a SysML v2 model.
          Normative source: docs/architecture/typed-standards-specification.md.
-         Descriptive model; spec text is normative. Crypto/log/network checks are
-         delegated to external parts and are NOT executed by this model. Instance-level
-         graph-shape validation is SHACL's authoritative responsibility. */
+         Descriptive model; spec text is normative. One of the parallel research views
+         over the spec (research/00-05); each view answers to the spec, not to the
+         other views. Crypto/log/network checks are delegated to external parts and
+         are NOT executed by this model. Instance-level graph-shape validation is
+         SHACL's authoritative responsibility. Coverage boundary: behavior modeling
+         covers the §9.2 verify flow + structural validations and the four lifecycle
+         machines (§8.10, §8.3.3, §8.7.4); the publisher pipeline (§9.1) and
+         cross-host publication (§8.8-§8.9) are deliberately unmodeled. */
 
     package Primitives;
     package BuildState;
@@ -44,7 +49,7 @@ package Primitives {
         attribute blake3   : HexDigest[0..1];
     }
     item def BlobRef {                                           // §8.1.5
-        attribute ref         : String[1];                       // blob:sha256:<64-hex>
+        attribute 'ref'       : String[1];                       // blob:sha256:<64-hex> ('ref' is a SysML keyword; quoted-name escape)
         attribute url         : UriString[1];
         attribute contentType : String[1];
         attribute size        : Integer[1];
@@ -93,7 +98,7 @@ package Envelope {
         ref item signer               : Signer[0..1];
         ref item timestamp            : Rfc3161Timestamp[0..1];
         ref item rekorInclusionProof  : RekorInclusionProof[0..1];
-        ref item metadata             : Metadata[1];
+        ref item 'metadata'           : Metadata[1];             // ('metadata' is a SysML keyword; quoted-name escape)
         derived attribute nodeId : Primitives::HexDigest[1] = Verification::computeEnvelopeHash(self);
     }
 }
@@ -224,7 +229,7 @@ package ContentAnalysis {
     item def ExtensionsMap { ref item notebook : NotebookExtension[0..1];
                              ref item environment : EnvironmentExtension[0..1]; }
     item def EvidencePackage {                                // §8.1
-        ref item metadata : Metadata[1]; ref item prompt : Prompt[1];
+        ref item 'metadata' : Metadata[1]; ref item prompt : Prompt[1];
         attribute queries : String[0..*]; attribute dataSources : String[0..*];
         ref item cost : Cost[1]; ref item skillMetadata : SkillMetadata[1];
         attribute output : String[0..1]; ref item outputBlob : BlobRef[0..1];
@@ -252,7 +257,7 @@ package TypedClaims {
         attribute traceReference : String[1]; ref item translationModel : String[1];
         attribute translationPrompt : String[1]; ref item sourceOutputSpan : OutputSpan[1]; }
     abstract item def Magnitude;  abstract item def Component;
-    abstract item def Claim { attribute identifier : String[1]; attribute subject : UriString[1];
+    abstract item def Claim { attribute identifier : String[1]; attribute 'subject' : UriString[1];  // ('subject' is a SysML keyword)
                               ref item scope : Scope[1]; ref item confidence : ConfidenceStatement[1];
                               attribute wasDerivedFrom : UriString[1..*]; ref item derivedVia : AnalyticalDerivation[1];
                               attribute description : String[0..1]; attribute limitations : String[0..1];
@@ -285,10 +290,10 @@ package CaptureAndProfiles {
     attribute def ProducerProfile :> String;
     variation part def AnalysisNodeVariant :> AnalysisNode {        // §8.7 datHere variation
         variant part defaultProfile : AnalysisNode {
-            attribute redefines payload.metadata.contentProfile default ContentProfile::'default'; }
-        #BuildState::built
+            attribute redefines payload.'metadata'.contentProfile default ContentProfile::'default'; }
         variant part datHereProfile : AnalysisNode {
-            attribute redefines payload.metadata.contentProfile default ContentProfile::datHere;
+            metadata BuildState::built;
+            attribute redefines payload.'metadata'.contentProfile default ContentProfile::datHere;
             attribute redefines payload.summary : String[1];
             ref item redefines payload.extensions.notebook : NotebookExtension[1];
             ref item redefines payload.extensions.environment : EnvironmentExtension[1]; }   // §8.7.1(3)
@@ -369,7 +374,7 @@ package Lifecycle {
     }
     constraint def RetentionAsymmetry {                      // §8.10.3
         in withdraw : WithdrawsNode; in backupLoc : LocatedAtNode; in backupIndependentlyVerifiable : Boolean;
-        require constraint { (withdraw.signer.identifier != backupLoc.signer.identifier) implies backupIndependentlyVerifiable }
+        (withdraw.signer.identifier != backupLoc.signer.identifier) implies backupIndependentlyVerifiable
     }
     state def TrustRegistryKeyLifecycle {                    // §8.3.3
         entry; then active; state active; state deprecated; state revoked;
@@ -435,7 +440,7 @@ package Verification {
     calc def producerProfileIsDatHere { in p : CaptureAndProfiles::ProducerProfile; return : Boolean; }  // startsWith("ai-assisted-analysis/datHere")
     constraint def ProfileConsistencyShape {                 // §8.1.1 consistency invariant
         in pkg : ContentAnalysis::EvidencePackage;
-        (pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere)
+        (pkg.'metadata'.contentProfile == CaptureAndProfiles::ContentProfile::datHere)
             == producerProfileIsDatHere(pkg.producerProfile)
     }
     constraint def FamilyMembership; constraint def QecSetWellFormed;
@@ -478,11 +483,20 @@ package Conformance {
 
     requirement def <'R-sign-ed25519ph'> SignWithEd25519ph { subject pkg : Envelope::SignedNode;
         require constraint { pkg.sig.algorithm == "Ed25519ph" } }
-    satisfy SignWithEd25519ph by Envelope::SignatureEnvelope;  verify SignWithEd25519ph by Verification::CheckSignature;
+    // Standalone `verify X by Y;` is not in the SysML v2 grammar (unlike satisfy);
+    // verification defs carry the verify legs: objective verifies the requirement,
+    // the performed action is the §9.2 check that discharges it.
+    satisfy SignWithEd25519ph by Envelope::SignatureEnvelope;
+    verification def <'V-sign-ed25519ph'> VerifySignEd25519ph {
+        objective { verify requirement : SignWithEd25519ph; }
+        perform action check : Verification::CheckSignature; }
 
     requirement def <'R-signingKeyId-eq-kid'> SigningKeyIdEqualsKid { subject pkg : Envelope::SignedNode;
-        require constraint { pkg.metadata.signingKeyId == pkg.sig.kid } }
-    satisfy SigningKeyIdEqualsKid by Envelope::Metadata;  verify SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;
+        require constraint { pkg.'metadata'.signingKeyId == pkg.sig.kid } }
+    satisfy SigningKeyIdEqualsKid by Envelope::Metadata;
+    verification def <'V-signingKeyId'> VerifySigningKeyIdEqualsKid {
+        objective { verify requirement : SigningKeyIdEqualsKid; }
+        perform action check : Verification::CheckSigningKeyIdConsistency; }
 
     calc def registryIdentityForKid {                          // out-of-band join: sig.kid -> registry entry's signerIdentity.identifier
         in pkg : Envelope::SignedNode; in registry : Infrastructure::TrustRegistry; return : String; }
@@ -491,38 +505,53 @@ package Conformance {
         assume constraint { pkg.signer != null }
         doc /* sig.kid resolved via registry signerIdentity == signer.identifier; mismatch => REJECT (#14). */
         require constraint { pkg.signer.identifier == registryIdentityForKid(pkg, registry) } }
-    satisfy SignerIdentityCrossCheck by Envelope::Signer;  verify SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;
+    satisfy SignerIdentityCrossCheck by Envelope::Signer;
+    verification def <'V-signer-crosscheck'> VerifySignerIdentityCrossCheck {
+        objective { verify requirement : SignerIdentityCrossCheck; }
+        perform action check : Verification::CrossCheckSignerIdentity; }
 
     requirement def <'R-tsa-rekor'> CarryTimestampAndRekor { subject pkg : Envelope::SignedNode;   // SHOULD
         require constraint { (pkg.timestamp != null) and (pkg.rekorInclusionProof != null) } }
-    verify CarryTimestampAndRekor by Verification::CheckTimestamp;  verify CarryTimestampAndRekor by Verification::CheckRekorInclusion;
+    verification def <'V-tsa-rekor'> VerifyCarryTimestampAndRekor {
+        objective { verify requirement : CarryTimestampAndRekor; }
+        perform action checkTs : Verification::CheckTimestamp;
+        perform action checkRekor : Verification::CheckRekorInclusion; }
 
     requirement def <'R-pinned-anchors'> ValidateAgainstPinnedAnchors { subject ver : Implementation;
         doc /* RFC 3161 leaf -> pinned FreeTSA root; RFC 6962 inclusion -> pinned Rekor key. */
         require constraint : ValidatesPinnedAnchors { in impl = ver; } }
-    verify ValidateAgainstPinnedAnchors by Verification::CheckTimestamp;  verify ValidateAgainstPinnedAnchors by Verification::CheckRekorInclusion;
+    verification def <'V-pinned-anchors'> VerifyValidateAgainstPinnedAnchors {
+        objective { verify requirement : ValidateAgainstPinnedAnchors; }
+        perform action checkTs : Verification::CheckTimestamp;
+        perform action checkRekor : Verification::CheckRekorInclusion; }
 
     requirement def <'R-family-discriminator'> FamilyDiscriminator { subject node : Taxonomy::TypedNode;
         require constraint {
             (node istype Taxonomy::ContentNode implies size(node.targetNodeId) == 0)
             and (node istype Taxonomy::AttestationNode implies size(node.targetNodeId) >= 1) } }
     satisfy FamilyDiscriminator by Taxonomy::ContentNode;  satisfy FamilyDiscriminator by Taxonomy::AttestationNode;
-    verify FamilyDiscriminator by Verification::ValidateStructure;
+    verification def <'V-family'> VerifyFamilyDiscriminator {
+        objective { verify requirement : FamilyDiscriminator; }
+        perform action validate : Verification::ValidateStructure; }
 
     requirement def <'R-captureMethod-vocab'> CaptureMethodVocabularyConformance { subject pkg : Envelope::SignedNode;
         assume constraint : ProfileConsistencyShape;
         doc /* captureMethod in the resolved producerProfile vocabulary (ai-assisted-analysis v0.1 set). */
         require constraint : CheckCaptureMethodVocabPredicate { in pkg = pkg; } }
     satisfy CaptureMethodVocabularyConformance by CaptureAndProfiles::AiAssistedCaptureVocabulary;
-    verify  CaptureMethodVocabularyConformance by Verification::CheckCaptureMethodVocabulary;
+    verification def <'V-captureMethod-vocab'> VerifyCaptureMethodVocabulary {
+        objective { verify requirement : CaptureMethodVocabularyConformance; }
+        perform action check : Verification::CheckCaptureMethodVocabulary; }
 
     requirement def <'R-profile-consistency'> ProfileConsistency { subject pkg : ContentAnalysis::EvidencePackage;
         doc /* (contentProfile == "datHere") iff producerProfile starts with "ai-assisted-analysis/datHere". */
         require constraint : ProfileConsistencyShape { in pkg = pkg; } }
-    verify ProfileConsistency by Verification::ValidateStructure;
+    verification def <'V-profile-consistency'> VerifyProfileConsistency {
+        objective { verify requirement : ProfileConsistency; }
+        perform action validate : Verification::ValidateStructure; }
 
     requirement def <'R-summary-datHere'> SummaryRequiredUnderDatHere { subject pkg : ContentAnalysis::EvidencePackage;
-        assume constraint { pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
+        assume constraint { pkg.'metadata'.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
         require constraint { (pkg.summary != null) and (size(pkg.summary) > 0) } }
     satisfy SummaryRequiredUnderDatHere by CaptureAndProfiles::AnalysisNodeVariant::datHereProfile;
 
@@ -534,7 +563,10 @@ package Conformance {
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq { subject ver : Implementation;
         doc /* A withdraws from P does not invalidate another party's locatedAt; surface both. */
         require constraint : SurfacesRetention { in impl = ver; } }
-    satisfy RetentionAsymmetryReq by Lifecycle::RetentionAsymmetry;  verify RetentionAsymmetryReq by Verification::CheckLifecycleState;
+    satisfy RetentionAsymmetryReq by Lifecycle::RetentionAsymmetry;
+    verification def <'V-retention'> VerifyRetentionAsymmetry {
+        objective { verify requirement : RetentionAsymmetryReq; }
+        perform action check : Verification::CheckLifecycleState; }
 
     requirement def <'R-no-silent-delete'> NoSilentDeletion { subject impl : Implementation;
         doc /* No removal of withdrawn nodes except via audited administrative action. */
@@ -557,5 +589,8 @@ package Conformance {
         requirement retention          : RetentionAsymmetryReq;
         requirement noTruthScoring     : NoAutomatedTruthScoring;
     }
-    satisfy ConformantVerifier by Verification::VerifyNode;  verify ConformantVerifier by Verification::VerifyNodeFull;
+    satisfy ConformantVerifier by Verification::VerifyNode;
+    verification def <'V-conformant-verifier'> VerifyConformantVerifierCase {
+        objective { verify requirement : ConformantVerifier; }
+        perform action full : Verification::VerifyNodeFull; }
 }
