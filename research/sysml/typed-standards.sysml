@@ -49,6 +49,7 @@ package Primitives {
         attribute contentType : String[1];
         attribute size        : Integer[1];
     }
+    item def DerivationMethod;                                   // §8.12.1 wasDerivedFrom payload (plain object)
 }
 
 // ============================ ENVELOPE ============================
@@ -80,14 +81,14 @@ package Envelope {
         attribute createdAt      : Iso8601[1];
         attribute signingKeyId   : String[1];
         attribute captureMethod  : CaptureAndProfiles::CaptureMethodLabel[1];
-        attribute contentType    : ContentAnalysis::QecContentType[1..*];
-        attribute contentProfile : CaptureAndProfiles::ContentProfile[0..1];  // placement open — §10.3(1)
+        attribute contentType    : ContentAnalysis::QecContentType[0..*];     // §7.5 QEC framing; not in the §8.1.2 required set
+        attribute contentProfile : CaptureAndProfiles::ContentProfile[0..1];  // spec places it top-level (§8.1.1) AND under metadata (§8.7.1(7)); rename deferred per ADR-0006/Q27
     }
 
     abstract part def SignedNode {                              // §6.2, §7.1, §7.4
         attribute type                    : Primitives::UriString[1];
         attribute contentHash             : Primitives::ContentHash[1];
-        attribute contentCanonicalization : Primitives::UriString[1];
+        attribute contentCanonicalization : Primitives::UriString[0..1];      // recommended (v0.1); pre-v0.1 inferred from profile — §8.1.1
         ref item sig                  : SignatureEnvelope[1];
         ref item signer               : Signer[0..1];
         ref item timestamp            : Rfc3161Timestamp[0..1];
@@ -157,7 +158,10 @@ package Taxonomy {
     #BuildState::ratified part def WasDerivedFromNode :> AttestationNode {
         attribute redefines type default "attestation/wasDerivedFrom/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
-        ref item derivationMethod : TypedClaims::AnalyticalDerivation[1]; }   // launder guard (conditional)
+        // §8.12.1: plain object; MUST be a ts:AnalyticalDerivation only when the source is
+        // untyped content/analysis/v1 and the target is a typed content sub-type
+        // (refinement (a), the classification-laundering guard — §8.11.3 step 2).
+        ref item derivationMethod : Primitives::DerivationMethod[1]; }
     #BuildState::ratified part def AnswersQuestionNode :> AttestationNode {
         attribute redefines type default "attestation/answersQuestion/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
@@ -226,6 +230,7 @@ package ContentAnalysis {
         attribute output : String[0..1]; ref item outputBlob : BlobRef[0..1];
         attribute trace : String[0..1]; ref item traceBlob : BlobRef[0..1];
         attribute summary : String[0..1];                     // REQUIRED under datHere
+        attribute producerProfile : CaptureAndProfiles::ProducerProfile[0..1];  // §8.1.1 top-level; invariant w/ contentProfile per ProfileConsistencyShape
         ref item provenance : String[0..1]; ref item extensions : ExtensionsMap[0..1]; }
 }
 
@@ -243,13 +248,17 @@ package TypedClaims {
     item def ConfidenceStatement { attribute method : ConfidenceMethod[1]; attribute level : Real[0..1];
                                    attribute lowerBound : Real[0..1]; attribute upperBound : Real[0..1]; attribute methodReference : String[0..1]; }
     item def OutputSpan { attribute outputFile : String[1]; attribute byteRange : Integer[2]; }
-    item def AnalyticalDerivation { attribute traceReference : String[1]; ref item translationModel : String[1];
-                                    attribute translationPrompt : String[1]; ref item sourceOutputSpan : OutputSpan[1]; }
+    item def AnalyticalDerivation :> DerivationMethod {
+        attribute traceReference : String[1]; ref item translationModel : String[1];
+        attribute translationPrompt : String[1]; ref item sourceOutputSpan : OutputSpan[1]; }
     abstract item def Magnitude;  abstract item def Component;
     abstract item def Claim { attribute identifier : String[1]; attribute subject : UriString[1];
                               ref item scope : Scope[1]; ref item confidence : ConfidenceStatement[1];
                               attribute wasDerivedFrom : UriString[1..*]; ref item derivedVia : AnalyticalDerivation[1];
-                              attribute description : String[0..1]; attribute limitations : String[0..1]; }
+                              attribute description : String[0..1]; attribute limitations : String[0..1];
+                              // §8.11.4 optional inline relations (also expressible as attestation/* nodes)
+                              attribute contradicts : UriString[0..*]; attribute corroborates : UriString[0..*];
+                              attribute supersedes : UriString[0..1]; }
     enum def TrendDirection { Increase; Decrease; NoSignificantChange; }
     enum def ComparisonRel  { GreaterThan; LessThan; ApproximatelyEqual; }
     item def TrendClaim :> Claim { attribute metric : UriString[1]; ref item baselinePeriod : TemporalInterval[1];
@@ -293,7 +302,7 @@ package Infrastructure {
     item def SignerIdentity { attribute bindingTier : String[1]; attribute identifier : String[1]; attribute displayName : String[1]; }
     item def TrustRegistryEntry { attribute kid : String[1]; attribute publicKey : Base64[1];
         ref item signerIdentity : SignerIdentity[0..1]; attribute status : KeyStatus[1];
-        attribute activatedAt : String[1]; attribute deprecatedAt : String[1]; attribute revokedAt : String[1]; }
+        attribute activatedAt : String[1]; attribute deprecatedAt : String[0..1]; attribute revokedAt : String[0..1]; }
     item def TrustRegistry { ref item keys : TrustRegistryEntry[1..*]; }
     item def PinnedTsaAnchor { attribute sha256Fingerprint : HexDigest[1]; }
     item def PinnedRekorAnchor { attribute logId : HexDigest[1]; }
@@ -311,12 +320,18 @@ package Infrastructure {
     interface def VerifyToPackages { end verifierSide : ~PackageServePort;  end serverSide : PackageServePort;  }
     interface def VerifyToTsa      { end verifierSide : ~TsaPort;           end serverSide : TsaPort;           }
     interface def VerifyToRekor    { end verifierSide : ~RekorPort;         end serverSide : RekorPort;         }
+    interface def VerifyToBlobs    { end verifierSide : ~BlobPort;          end serverSide : BlobPort;          }
     part def VerificationSystem {                              // §7.3, §8.13 — typedstandards.org deliberately ABSENT
+        doc /* Online topology. The offline path (§9.4) replaces every link with a
+             VerificationContext carrying registry + anchors + attestation chain inline —
+             the ?inline=1 self-contained bundle of §8.8; the bundle itself is unmodeled. */
         part verifier : Verifier; part publisher : PublisherDomain; part tsa : PublicTsa; part rekor : RekorLog;
+        part blobStore : BlobStore;
         interface registryLink : VerifyToRegistry connect verifier.registry to publisher.registry;
         interface packagesLink : VerifyToPackages connect verifier.packages to publisher.packages;
         interface tsaLink      : VerifyToTsa      connect verifier.tsa      to tsa.tsa;
         interface rekorLink    : VerifyToRekor    connect verifier.rekor    to rekor.rekor;
+        interface blobsLink    : VerifyToBlobs    connect verifier.blobs    to blobStore.blobs;
     }
 }
 
@@ -334,6 +349,12 @@ package Lifecycle {
         entry; then committed; state committed; state published; state withdrawn; state superseded;
         transition committed_to_published first committed accept pub : PublishesNode
             if signerMatchesTarget(pub) or isDelegatedPublisher(pub) then published;
+        // §8.10.1: a publisher may withdraw/supersede a previously-emitted node "at any
+        // time" — including committed-but-unpublished (the zero-locatedAt draft case).
+        transition committed_to_withdrawn first committed accept wc : WithdrawsNode
+            if signerMatchesTarget(wc) and isNonEmpty(wc.reason) then withdrawn;
+        transition committed_to_superseded first committed accept sc : SupersedesNode
+            if signerMatchesTarget(sc) then superseded;
         transition published_to_withdrawn first published accept w : WithdrawsNode
             if signerMatchesTarget(w) and isNonEmpty(w.reason) then withdrawn;
         transition withdrawn_to_reinstated first withdrawn accept r : ReinstatesNode
@@ -411,7 +432,13 @@ package Verification {
         then action c15 : CheckCaptureMethodVocabulary { in node = node; }
         then done;
     }
-    constraint def FamilyMembership; constraint def QecSetWellFormed; constraint def ProfileConsistencyShape;
+    calc def producerProfileIsDatHere { in p : CaptureAndProfiles::ProducerProfile; return : Boolean; }  // startsWith("ai-assisted-analysis/datHere")
+    constraint def ProfileConsistencyShape {                 // §8.1.1 consistency invariant
+        in pkg : ContentAnalysis::EvidencePackage;
+        (pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere)
+            == producerProfileIsDatHere(pkg.producerProfile)
+    }
+    constraint def FamilyMembership; constraint def QecSetWellFormed;
     constraint def RequiredFieldsPresent; constraint def TargetNodeIdRule; constraint def TypeUriPattern;
     constraint def BlobRefShape; constraint def PromptVisibilityRule; constraint def ExtensionsKeysReverseDns;
     constraint def DatHereReqs1to7; constraint def ProvenanceExecutionConditional;
@@ -491,7 +518,7 @@ package Conformance {
 
     requirement def <'R-profile-consistency'> ProfileConsistency { subject pkg : ContentAnalysis::EvidencePackage;
         doc /* (contentProfile == "datHere") iff producerProfile starts with "ai-assisted-analysis/datHere". */
-        require constraint : ProfileConsistencyShape; }
+        require constraint : ProfileConsistencyShape { in pkg = pkg; } }
     verify ProfileConsistency by Verification::ValidateStructure;
 
     requirement def <'R-summary-datHere'> SummaryRequiredUnderDatHere { subject pkg : ContentAnalysis::EvidencePackage;
