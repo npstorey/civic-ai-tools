@@ -105,7 +105,7 @@ package Taxonomy {
     enum def BindingTier {                                      // §8.5 informative ladder + registry value
         pseudonymous; github; orcid; did_web; notarized; platform; legacy_embedded;
     }
-    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required; }
+    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required; self_attestation; }
 
     abstract part def TypedNode :> SignedNode {
         attribute targetNodeId : Primitives::HexDigest[0..*];
@@ -190,7 +190,10 @@ package Taxonomy {
         ref item results : String[1]; }
     #BuildState::ratified part def ConformsNode :> AttestationNode {
         attribute redefines type default "attestation/conforms/v1";
+        // §8.12.1: self-attestation OR specific-role-required (third-party)
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
+        assert constraint { (authorizationRule == AuthorizationRule::self_attestation)
+                         or (authorizationRule == AuthorizationRule::specific_role_required) }
         attribute standardId : Primitives::UriString[1]; }
 }
 
@@ -208,7 +211,14 @@ package ContentAnalysis {
     item def SkillMetadata { attribute skillText : String[0..1]; ref item skillTextBlob : BlobRef[0..1];
                              attribute mcpServerUrl : UriString[0..*]; }
     item def NotebookExtension { attribute format : String[0..1]; attribute provenance : String[0..1]; }
-    item def ExtensionsMap { ref item notebook : NotebookExtension[0..1]; }
+    item def McpServerRef { attribute url : UriString[1]; attribute name : String[0..1]; }
+    item def EnvironmentExtension {                            // §8.7.1(3) org.civicaitools.environment
+        attribute modelVersion : String[1]; attribute temperature : Real[1];
+        ref item mcpServers : McpServerRef[0..*];
+        attribute toolDefinitions : String[0..*]; ref item toolDefinitionsBlob : BlobRef[0..1];  // array OR BlobRef when large
+        attribute host : String[1]; }                          // publishing-host identifier
+    item def ExtensionsMap { ref item notebook : NotebookExtension[0..1];
+                             ref item environment : EnvironmentExtension[0..1]; }
     item def EvidencePackage {                                // §8.1
         ref item metadata : Metadata[1]; ref item prompt : Prompt[1];
         attribute queries : String[0..*]; attribute dataSources : String[0..*];
@@ -271,7 +281,8 @@ package CaptureAndProfiles {
         variant part datHereProfile : AnalysisNode {
             attribute redefines payload.metadata.contentProfile default ContentProfile::datHere;
             attribute redefines payload.summary : String[1];
-            ref item redefines payload.extensions.notebook : NotebookExtension[1]; }
+            ref item redefines payload.extensions.notebook : NotebookExtension[1];
+            ref item redefines payload.extensions.environment : EnvironmentExtension[1]; }   // §8.7.1(3)
     }
 }
 
@@ -446,10 +457,13 @@ package Conformance {
         require constraint { pkg.metadata.signingKeyId == pkg.sig.kid } }
     satisfy SigningKeyIdEqualsKid by Envelope::Metadata;  verify SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;
 
+    calc def registryIdentityForKid {                          // out-of-band join: sig.kid -> registry entry's signerIdentity.identifier
+        in pkg : Envelope::SignedNode; in registry : Infrastructure::TrustRegistry; return : String; }
     requirement def <'R-signer-crosscheck'> SignerIdentityCrossCheck { subject pkg : Envelope::SignedNode;
+        in registry : Infrastructure::TrustRegistry;
         assume constraint { pkg.signer != null }
-        doc /* sig.kid resolved via registry signerIdentity == signer.identifier; mismatch => REJECT (#14, out-of-band join). */
-        require constraint { pkg.signer.identifier == pkg.signer.identifier } }
+        doc /* sig.kid resolved via registry signerIdentity == signer.identifier; mismatch => REJECT (#14). */
+        require constraint { pkg.signer.identifier == registryIdentityForKid(pkg, registry) } }
     satisfy SignerIdentityCrossCheck by Envelope::Signer;  verify SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;
 
     requirement def <'R-tsa-rekor'> CarryTimestampAndRekor { subject pkg : Envelope::SignedNode;   // SHOULD
