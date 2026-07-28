@@ -1,0 +1,143 @@
+format: rulespec/v1
+module:
+  summary: |-
+    Accident Compensation (Earners' Levy) Regulations 2025 (SL 2025/18),
+    regulation 4 — the amount of earners' levy payable under section 219(1) of
+    the Accident Compensation Act 2001 to fund the Earners' Account.
+
+    Regulation 4 sets a standard levy rate, expressed in dollars per $100 of
+    earnings, for three successive tax-year bands: $1.45 for the 2025/26 tax
+    year (reg 4(1)(a)), $1.52 for the 2026/27 tax year (reg 4(2)(a)), and
+    $1.59 for the 2027/28 tax year and any later tax year (reg 4(3)(a)).
+    New Zealand personal tax years run 1 April to 31 March, and the
+    regulations come into force on 1 April 2025 (reg 2), so the three rate
+    versions take effect 2025-04-01, 2026-04-01, and 2027-04-01, with the
+    third open-ended ("and any later tax year").
+
+    For self-employed persons the regulation routes away from the standard
+    rate: where regulation 7 applies (agreement with the Corporation to
+    purchase weekly compensation), the levy is the amount calculated under
+    reg 7(2)/(4)/(6) for the respective tax year (reg 4(1)(c), 4(2)(c),
+    4(3)(c)); where regulation 6 applies but regulation 7 does not (worked
+    more than an average of 30 hours per week and earned below the specified
+    amount), the levy is the amount calculated under reg 6(2)/(4)/(6)
+    (reg 4(1)(b), 4(2)(b), 4(3)(b)). This module encodes the routing as a
+    derived selector; the regulation 6 and regulation 7 formulas themselves
+    belong to their own provisions and are out of scope here.
+
+    Reg 4(4) makes subclauses (1) to (3) subject to regulation 5 (maximum
+    amount of earnings on which the levy is payable). The reg 5 caps are a
+    separate provision and are not encoded in this module. Levy amounts are
+    exclusive of GST (reg 8, context note only).
+
+    Provenance: encoded directly from the official PCO XML ingested in the
+    corpus as snapshot 2026-06-16-rulespec-nz-pco, source file
+    sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml
+    (sha256
+    f675c8ac89dab2ed08c6e228b93c90c65f0d9aa29425a783790f08599ef0f574),
+    provision id LMS1019194. Every excerpt below is a verbatim substring of
+    the ingested provision text.
+  proof_validation:
+    required: true
+  source_verification:
+    corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+units:
+  - name: NZD
+    kind: currency
+    minor_units: 2
+rules:
+  # ---------------------------------------------------------------------------
+  # Parameter: the standard earners' levy rate, in dollars of levy per $100 of
+  # earnings, as reg 4 states it. Three effective-date versions, one per
+  # tax-year band; the 2027/28 value continues for later tax years until
+  # amended. Applies to all earners except those routed to the regulation 6 or
+  # regulation 7 formulas.
+  # ---------------------------------------------------------------------------
+  - name: acc_earners_levy_rate_per_100_earnings
+    kind: parameter
+    dtype: Money
+    unit: NZD
+    source: >-
+      Accident Compensation (Earners' Levy) Regulations 2025, reg 4(1)(a),
+      4(2)(a), and 4(3)(a); commencement date from reg 2
+    metadata:
+      proof:
+        atoms:
+          - path: versions[0].formula
+            kind: parameter
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "$1.45 per $100 of earnings"
+          - path: versions[0].effective_from
+            kind: parameter
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/2
+              excerpt: "These regulations come into force on 1 April 2025"
+          - path: versions[1].formula
+            kind: parameter
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "$1.52 per $100 of earnings"
+          - path: versions[2].formula
+            kind: parameter
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "$1.59 per $100 of earnings"
+          - path: versions[2].effective_from
+            kind: parameter
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "The amount of earners’ levy payable for the 2027/28 tax year, and any later tax year"
+    versions:
+      - effective_from: '2025-04-01'
+        formula: |-
+          1.45
+      - effective_from: '2026-04-01'
+        formula: |-
+          1.52
+      - effective_from: '2027-04-01'
+        formula: |-
+          1.59
+  # ---------------------------------------------------------------------------
+  # Derived: which calculation method reg 4 routes an earner to. Reg 4 gives
+  # the regulation 7 formula to self-employed persons with a weekly
+  # compensation purchase agreement, the regulation 6 formula to self-employed
+  # persons within its hours/earnings gate when regulation 7 does not apply,
+  # and the standard per-$100 rate to everyone else. The two applicability
+  # judgments are inputs supplied by encodings of regulations 6 and 7.
+  # ---------------------------------------------------------------------------
+  - name: acc_earners_levy_calculation_method
+    kind: derived
+    entity: Person
+    dtype: Text
+    period: Year
+    source: >-
+      Accident Compensation (Earners' Levy) Regulations 2025, reg 4(1)(b)-(c),
+      4(2)(b)-(c), and 4(3)(b)-(c)
+    metadata:
+      proof:
+        atoms:
+          - path: versions[0].formula
+            kind: formula
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "for self-employed persons to whom regulation 7 applies"
+          - path: versions[0].formula
+            kind: formula
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "for self-employed persons to whom regulation 6 applies (but regulation 7 does not apply)"
+          - path: versions[0].formula
+            kind: formula
+            source:
+              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4
+              excerpt: "for all earners, except those described in paragraphs (b) and (c)"
+    versions:
+      - effective_from: '2025-04-01'
+        formula: |-
+          if acc_earners_levy_regulation_7_applies:
+              "regulation 7 formula"
+          elif acc_earners_levy_regulation_6_applies:
+              "regulation 6 formula"
+          else:
+              "standard rate"
