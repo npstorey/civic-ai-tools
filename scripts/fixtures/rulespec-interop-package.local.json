@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "schemaVersion": "0.1.0",
+    "packageId": "b2922f28-07a5-4571-865a-f1547a42ff0e",
+    "createdAt": "2026-07-28T21:46:49.173Z",
+    "signingKeyId": "local:rulespec-interop-poc-2026-07",
+    "captureMethod": "claude-code-jsonl-readback"
+  },
+  "type": "content/analysis/v1",
+  "signer": {
+    "bindingTier": "local",
+    "identifier": "local:rulespec-interop-poc",
+    "displayName": "Rulespec Interop POC (local throwaway signer)"
+  },
+  "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1",
+  "prompt": {
+    "hash": "8755ae4650f69c12a0a4417446a54bce78d5df4a0c9bec332f9f927a85d5a1a7",
+    "visibility": "full_text",
+    "text": "Independently re-encode regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) in rulespec/v1 format, working only from the pinned axiom-corpus release nz-rulespec-2026-07-20 statute XML and without reading the rulespec-nz project's published encoding at any point during encoding; then, in a separate context, take the pinned rulespec-nz PR 104 checkout, recompute the sha256 digests of its published earners_levy artifacts and check them against its corpus journal, and perform a semantic comparison of the two encodings of regulation 4, classifying the result as byte-identical, semantically equal with byte differences, or semantically different."
+  },
+  "queries": [],
+  "dataSources": [],
+  "cost": {
+    "model": "anthropic/claude-fable-5"
+  },
+  "skillMetadata": {},
+  "output": "Fetched rulespec-nz (TheAxiomFoundation/rulespec-nz, PR 104) at commit 7dd2b1ad8f13ff934aa53af562a34ea7451502f6. Computed sha256 of nz/regulations/acc/earners_levy.yaml and observed 5fe16742f55876ab33a6560793295346f3bad34912f09b7b84311436be2effed, matching corpus-journal entryIndex 3; computed sha256 of nz/regulations/acc/earners_levy.test.yaml and observed 43308ecb29fc26e30819d3657f89eb531d878f7e6ffa78e3712f709acf5906a4, matching corpus-journal entryIndex 2. Independently re-encoded reg 4 from corpus release nz-rulespec-2026-07-20 (content sha256 58089115f520cb99a3b90e3be503be63041ebe4a72bec69f24a2f115ed1ba196, cut from axiom-corpus commit 92ac9c1bedf62968eeea9a873361f49075364157; statute source data/corpus/sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml, sha256 f675c8ac89dab2ed08c6e228b93c90c65f0d9aa29425a783790f08599ef0f574, provision id LMS1019194), producing eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b (scripts/fixtures/earners_levy.reencoded.yaml). The two digests differ, so the artifacts are not byte-identical, as expected for independent encodings.\n\nSemantic comparison classification: (c) semantically different as whole modules, with substantive agreement on the shared regulation-4 rate core. Agreement: both encodings carry the same three standard levy rates with the same effective dates (2025-04-01, 2026-04-01, 2027-04-01, third band open-ended), numerically equivalent under unit conversion — our per-$100 statement values 1.45/1.52/1.59 (dtype Money, NZD) equal their fractional values 0.0145/0.0152/0.0159 (dtype Rate) exactly; both cite the same corpus citation path nz/regulation/regulation/public/2025/0018/regulation/4. Meaning-bearing differences: (1) Routing — our module encodes reg 4's exclusive three-way routing (paragraphs (a)/(b)/(c) of each subclause) as a derived selector with regulation-7 priority, reflecting reg 4's paragraph (b) limb 'regulation 6 applies (but regulation 7 does not apply)'; their module contains no routing or selector rule, its regulation-6 derived amount (acc_low_self_employed_minimum_levy_excluding_gst) is gated only on regulation 6's own hours/earnings conditions with no regulation-7 exclusion, and no rule in their module selects which amount is the levy payable for a person to whom multiple pathways apply. (2) Scope — their module spans regulations 4 through 9 plus extra-statutory Inland Revenue administration values (GST-inclusive rates 0.0167/0.0175/0.0183, maximum-earnings caps 152790/156641/160244, cents-rounding scale) across 12 rules (7 parameters, 5 derived), and applies the regulation-5 earnings cap inline in its standard-levy formulas; our module encodes regulation 4 only, across 2 rules (1 parameter, 1 derived), deferring the regulation-5 cap (noted via reg 4(4) 'subject to regulation 5') and the regulation-6/regulation-7 amount formulas as out of scope. (3) Proof-atom style — ours carries verbatim statute excerpts on all 8 proof atoms and cites regulation 2 for the commencement date; theirs uses citation-path-only atoms without excerpts, covering regulations 4-9. Honest counterpoint recorded: restricted to the regulation-4 rate schedule alone, the two encodings would classify as semantically equal with byte differences; the module-level classification is (c) because the regulation-6 pathway's applicability condition and the routing structure differ in meaning, not merely in representation, and because the module scopes are substantively different. Which reading each reflects: ours reads reg 4 as a rate schedule plus an exclusive routing directive with the reg-6/reg-7 formulas external; theirs reads the regulations package as a library of parameters and standalone component amounts, leaving reg 4's (b)/(c) selection and the reg-7-priority limb unencoded for downstream composition.",
+  "trace": {
+    "resourceSpans": []
+  },
+  "provenance": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "civic": "https://civicaitools.org/ns/evidence/",
+      "dcterms": "http://purl.org/dc/terms/"
+    },
+    "@graph": [
+      {
+        "@id": "urn:civic-evidence:b2922f28-07a5-4571-865a-f1547a42ff0e:prompt:8755ae4650f69c12a0a4417446a54bce78d5df4a0c9bec332f9f927a85d5a1a7",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:8755ae4650f69c12a0a4417446a54bce78d5df4a0c9bec332f9f927a85d5a1a7",
+        "dcterms:description": "User query prompt",
+        "prov:value": "Independently re-encode regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) in rulespec/v1 format, working only from the pinned axiom-corpus release nz-rulespec-2026-07-20 statute XML and without reading the rulespec-nz project's published encoding at any point during encoding; then, in a separate context, take the pinned rulespec-nz PR 104 checkout, recompute the sha256 digests of its published earners_levy artifacts and check them against its corpus journal, and perform a semantic comparison of the two encodings of regulation 4, classifying the result as byte-identical, semantically equal with byte differences, or semantically different."
+      },
+      {
+        "@id": "urn:civic-evidence:b2922f28-07a5-4571-865a-f1547a42ff0e:output:ab8d7d807f7c0655e12f25517496b3c8a78e89aab480e09dde90d72d7b649854",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:ab8d7d807f7c0655e12f25517496b3c8a78e89aab480e09dde90d72d7b649854",
+        "dcterms:description": "AI-generated analysis output"
+      },
+      {
+        "@id": "urn:civic-evidence:model:anthropic-claude-fable-5",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "anthropic/claude-fable-5",
+        "dcterms:description": "Large language model via OpenRouter"
+      },
+      {
+        "@id": "urn:civic-evidence:platform:civic-ai-tools",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Civic AI Tools",
+        "civic:url": "https://civicaitools.org"
+      }
+    ]
+  },
+  "extensions": {
+    "org.civicaitools.rulespec-interop": {
+      "upstream_repo": "TheAxiomFoundation/rulespec-nz",
+      "upstream_pr_number": 104,
+      "observed_upstream_commit": "7dd2b1ad8f13ff934aa53af562a34ea7451502f6",
+      "observed_upstream_artifact_path": "nz/regulations/acc/earners_levy.yaml",
+      "observed_upstream_artifact_sha256": "5fe16742f55876ab33a6560793295346f3bad34912f09b7b84311436be2effed",
+      "observed_upstream_artifact_journal_entry_index": 3,
+      "observed_upstream_test_path": "nz/regulations/acc/earners_levy.test.yaml",
+      "observed_upstream_test_sha256": "43308ecb29fc26e30819d3657f89eb531d878f7e6ffa78e3712f709acf5906a4",
+      "observed_upstream_test_journal_entry_index": 2,
+      "corpus_citation_path": "nz/regulation/regulation/public/2025/0018/regulation/4",
+      "corpus_release": "nz-rulespec-2026-07-20",
+      "corpus_release_content_sha256": "58089115f520cb99a3b90e3be503be63041ebe4a72bec69f24a2f115ed1ba196",
+      "corpus_release_cut_commit": "92ac9c1bedf62968eeea9a873361f49075364157",
+      "statute_source_path": "data/corpus/sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml",
+      "statute_source_sha256": "f675c8ac89dab2ed08c6e228b93c90c65f0d9aa29425a783790f08599ef0f574",
+      "our_reencoding_path": "scripts/fixtures/earners_levy.reencoded.yaml",
+      "our_reencoding_sha256": "eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b",
+      "comparison_classification": "semantically-different",
+      "comparison_summary": "Shared reg-4 rate core agrees (same rates under per-$100 vs fractional representation, same effective dates); modules differ in meaning: their encoding omits reg 4(b)'s regulation-7 exclusion on the regulation-6 pathway and has no levy-payable routing rule, and the module scopes differ (their regs 4-9 plus IRD administration values across 12 rules vs our reg-4-only module of 2 rules)."
+    }
+  },
+  "contentHash": {
+    "sha256": "b48ea1e7eae8b8445a0ada2272ffa19953aaa7c1cc718e469437a38b6fc5a748"
+  }
+}
