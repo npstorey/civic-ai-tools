@@ -1,6 +1,9 @@
 # MCP servers (cloned by setup script)
 .mcp-servers/
 
+# Rulespec interop POC reference clones (cloned by hand for the POC; read-only)
+.rulespec-clones/
+
 # MCP config files (may contain API keys - use .example files as templates)
 .mcp.json
 .cursor/mcp.json
