@@ -57,6 +57,10 @@ try {
 
 let md = readFileSync(SRC, 'utf8');
 
+// Version label comes from the memo's own top-of-file changelog comment, so the
+// provenance line can never go stale against the content.
+const memoVersion = (md.match(/^<!-- (v\d+)/) || [, 'unversioned'])[1];
+
 // Replace each ```mermaid fence (in order) with a placeholder; the sidecar SVGs are
 // substituted into the rendered HTML afterwards, so marked never touches SVG markup.
 let fenceIndex = 0;
@@ -120,7 +124,7 @@ DIAGRAMS.forEach((path, i) => {
   body = body.replace(`<!--__DIAGRAM_${i}__-->`, `<figure class="diagram">\n${svg}\n</figure>`);
 });
 
-const provenance = `<!-- Standalone, fully self-contained copy (generated ${new Date().toISOString().slice(0, 10)}) of docs/research/rulespec-interop-poc.md (v2) from branch poc/rulespec-interop in civic-ai-tools. Source of truth is the markdown on that branch; regenerate with scripts/render-rulespec-interop-html.mjs rather than hand-editing this file. The two mermaid diagrams are inlined as SVG from the committed sidecars docs/research/rulespec-interop-poc-diagram-a.svg / -b.svg. Relative repo links were rewritten to public github.com/npstorey/civic-ai-tools URLs so they resolve for an outside reader. No external CSS, fonts, scripts, or images — opens offline in any browser and prints cleanly to PDF. -->`;
+const provenance = `<!-- Standalone, fully self-contained copy (generated ${new Date().toISOString().slice(0, 10)}) of docs/research/rulespec-interop-poc.md (${memoVersion}) from branch poc/rulespec-interop in civic-ai-tools. Source of truth is the markdown on that branch; regenerate with scripts/render-rulespec-interop-html.mjs rather than hand-editing this file. The two mermaid diagrams are inlined as SVG from the committed sidecars docs/research/rulespec-interop-poc-diagram-a.svg / -b.svg. Relative repo links were rewritten to public github.com/npstorey/civic-ai-tools URLs so they resolve for an outside reader. No external CSS, fonts, scripts, or images — opens offline in any browser and prints cleanly to PDF. -->`;
 
 const html = `<!doctype html>
 <html lang="en">
