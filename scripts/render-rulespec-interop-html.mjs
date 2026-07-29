@@ -6,10 +6,17 @@
 //   to a single fully self-contained HTML file: inline CSS (light/dark/print), no external
 //   scripts, stylesheets, fonts, or images. The memo's three ```mermaid fences are replaced,
 //   in order, with the committed sidecar SVGs — document order is diagram (c)
-//   (contemporaneous-vs-backfill, in the front matter), then (a) and (b) in the appendix,
-//   so the DIAGRAMS list below is c, a, b — inlined verbatim, so re-rendering never needs
-//   mermaid tooling. Relative ../adr/ and ../architecture/ links are rewritten to public
-//   github.com URLs; heading ids match GitHub's slugger so intra-doc anchors keep working.
+//   (contemporaneous-vs-backfill, in "What adopting would cost"), then (a) and (b) in the
+//   appendix, so the DIAGRAMS list below is c, a, b — inlined verbatim, so re-rendering
+//   never needs mermaid tooling. Relative ../adr/ and ../architecture/ links are rewritten
+//   to public github.com URLs; heading ids match GitHub's slugger so intra-doc anchors keep
+//   working.
+//
+//   Version metadata is md-only (since v9): the memo's leading <!-- vN … --> changelog
+//   comment(s) and its *Last updated:* paragraph are stripped from the rendered HTML; in
+//   their place the page carries one visible canonical-source line under the title/callout
+//   pointing at the markdown on branch poc/rulespec-interop. The derived version stamp
+//   still appears in the provenance comment in <head>.
 //
 // How to run (from anywhere; paths resolve from this script's location):
 //   node scripts/render-rulespec-interop-html.mjs [output.html]
@@ -30,7 +37,7 @@ import { createRequire } from 'node:module';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'docs', 'research', 'rulespec-interop-poc.md');
 const DIAGRAMS = [
-  // Document order: fence 1 is diagram (c) in "What adopting would cost them" (front matter);
+  // Document order: fence 1 is diagram (c) in "What adopting would cost" (front matter);
   // fences 2 and 3 are diagrams (a) and (b) in the appendix.
   join(ROOT, 'docs', 'research', 'rulespec-interop-poc-diagram-c.svg'),
   join(ROOT, 'docs', 'research', 'rulespec-interop-poc-diagram-a.svg'),
@@ -63,6 +70,29 @@ let md = readFileSync(SRC, 'utf8');
 // Version label comes from the memo's own top-of-file changelog comment, so the
 // provenance line can never go stale against the content.
 const memoVersion = (md.match(/^<!-- (v\d+)/) || [, 'unversioned'])[1];
+
+// Version metadata is md-only: strip the leading changelog HTML comment(s) — every
+// <!-- … --> block at the very top of the file — from the rendered output.
+while (/^\s*<!--[\s\S]*?-->\s*/.test(md)) {
+  md = md.replace(/^\s*<!--[\s\S]*?-->\s*/, '');
+}
+
+// …and swap the *Last updated:* italic paragraph (the line starting "*Last updated:"
+// plus any continuation lines up to the next blank line) for the one visible
+// canonical-source line the HTML carries instead.
+const CANONICAL_LINE =
+  '<p class="canonical-source">Canonical source: ' +
+  '<a href="https://github.com/npstorey/civic-ai-tools/blob/poc/rulespec-interop/docs/research/rulespec-interop-poc.md" target="_blank" rel="noopener">docs/research/rulespec-interop-poc.md</a> ' +
+  'on branch <code>poc/rulespec-interop</code> — version history lives there.</p>';
+const mdWithoutLastUpdated = md.replace(/^\*Last updated:.*(?:\n(?!\s*\n).*)*/m, CANONICAL_LINE);
+if (mdWithoutLastUpdated === md) {
+  console.error(
+    'error: no "*Last updated:" paragraph found in the memo — the canonical-source line ' +
+      'replaces it, so refusing to render without one.'
+  );
+  process.exit(1);
+}
+md = mdWithoutLastUpdated;
 
 // Replace each ```mermaid fence (in order) with a placeholder; the sidecar SVGs are
 // substituted into the rendered HTML afterwards, so marked never touches SVG markup.
@@ -212,8 +242,15 @@ ${provenance}
   th { font-weight:650; background:var(--accent-wash); white-space:nowrap; }
   tbody tr:last-child td { border-bottom:0; }
   td code, th code { font-size:.85em; }
-  em + em { display:none; }
   main > p > em:only-child { color:var(--faint); font-size:.9rem; }
+  /* The address-line callout: the first blockquote, directly under the H1. */
+  h1 + blockquote {
+    border-left:3px solid var(--accent); background:var(--accent-wash); color:var(--ink);
+    padding:.7rem 1.1rem; border-radius:0 6px 6px 0;
+  }
+  h1 + blockquote p { color:var(--ink); }
+  /* The visible replacement for the stripped md-only version metadata. */
+  .canonical-source { color:var(--faint); font-size:.9rem; }
   .diagram {
     margin:0 0 1.5rem; padding:0; overflow-x:auto;
     border:1px solid var(--line); border-radius:6px; background:#fff;
@@ -284,6 +321,19 @@ ${body}
 </html>
 `;
 
+// Guardrails: version metadata must not leak into the rendered HTML, and the visible
+// canonical-source line must be present exactly once.
+const problems = [];
+if (/\bLast updated:/.test(html)) problems.push('a "Last updated:" paragraph leaked into the HTML');
+if (/<!--\s*v\d+\s/.test(html)) problems.push('a changelog comment leaked into the HTML');
+if ((html.match(/class="canonical-source"/g) || []).length !== 1)
+  problems.push('the canonical-source line is missing or duplicated');
+if (problems.length) {
+  console.error(`error: ${problems.join('; ')}`);
+  process.exit(1);
+}
+
 writeFileSync(OUT, html, 'utf8');
 console.log(`wrote ${OUT}`);
+console.log(`memo version: ${memoVersion}`);
 console.log(`bytes: ${Buffer.byteLength(html)}`);

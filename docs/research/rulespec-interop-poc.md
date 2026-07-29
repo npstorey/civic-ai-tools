@@ -1,9 +1,17 @@
-<!-- v8 — 2026-07-29 — the sketch executed: node 3 (node 2's encoding-run record re-expressed under the SPECULATIVE, UNREGISTERED contentProfile sketch axiom/statute-encoding/v0-sketch, nodeId 77fda183…) + harness leg C(3) (verifier-must-keep-ignoring-the-sketch assertions) + leg E extended to six bindings; sketch section retitled "The worked example, executed"; node 2 remains the canonical honest record. v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
+<!-- v9 — 2026-07-29 — maintainer-facing restructure: address line promoted to a bold callout; TOC added; "The demonstration" unified (nodes 1/2/3 narrative + side-by-side verdicts + native <details> toggle for the node-3 profile run); NEW finding 9 (contentProfile is signature-covered but un-inspected — no §9.2 check reads it); NEW "A conclusion"; findings index and the full producer-profile sketch section moved to the appendix; version metadata is now md-only — the render script strips this comment and the Last-updated line from the HTML and emits a visible canonical-source line instead. v8 a8b9472; v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
 # Rulespec Interop POC
 
-*This note is addressed to the rulespec corpus maintainers; it is a build-side research memo and files nothing.*
+> **This note is addressed to the rulespec corpus maintainers.** It is a build-side research memo; it files nothing and asks for nothing.
 
-*Last updated: 2026-07-29 (v8) — the sketch executed: node 3 (node 2's encoding-run record re-expressed under the speculative, unregistered contentProfile sketch `axiom/statute-encoding/v0-sketch`, nodeId `77fda183…`) + harness leg C(3) + tri-binding extended; node 2 remains the canonical honest record. v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+*Last updated: 2026-07-29 (v9) — maintainer-facing restructure: address callout, TOC, unified demonstration (nodes 1/2/3 + verdicts + profile toggle), new finding 9, new conclusion; findings index and the full profile-sketch section now live in the appendix; version metadata stays md-only (the rendered HTML carries a canonical-source line instead). v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+
+1. [Executive summary](#executive-summary)
+2. [The demonstration](#the-demonstration)
+3. [What Typed Standards would give your corpus](#what-typed-standards-would-give-your-corpus)
+4. [What receipt has that Typed Standards lacks](#what-receipt-has-that-typed-standards-lacks)
+5. [What adopting would cost](#what-adopting-would-cost)
+6. [A conclusion](#a-conclusion)
+7. [Appendix — the evidence](#appendix--the-evidence)
 
 ## Executive Summary
 
@@ -13,18 +21,21 @@ The POC demonstrated the composition end to end for one NZ regulation: two local
 
 | Scope | POC artifacts | Status |
 |-------|---------------|--------|
-| **NZ — Earners' Levy regulation 4** | independent re-encode · node 1 (comparison event) · node 2 (encoding run) · both verifiers offline · digest join | **Complete** — [The demonstration](#the-demonstration-nz--complete) |
+| **NZ — Earners' Levy regulation 4** | independent re-encode · node 1 (comparison event) · node 2 (encoding run) · both verifiers offline · digest join | **Complete** — [The demonstration](#the-demonstration) |
 | **NZ — profile-bearing form (node 3)** | node 2's record re-expressed under the **speculative, unregistered** profile sketch `axiom/statute-encoding/v0-sketch`; verified offline; never publishable as-is | **Demo only** — [The worked example, executed](#the-worked-example-executed--a-speculative-profile-on-a-real-node) |
 | **US — 26 USC § 32** | interface + repository observations only; **no encoding run, no nodes** | **Exhibit of the gap, not POC work** — [appendix exhibit](#the-gap-seen-in-your-us-interface--32--exhibit-only) |
 
-## The demonstration (NZ — complete)
+## The demonstration
 
-Everything here is reproducible from branch `poc/rulespec-interop` via `./scripts/verify-rulespec-interop.sh` ([Reproduction](#reproduction)). From the same pinned PCO statute XML your encoding used, the POC independently re-encoded regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) under a never-read-the-target protocol ([Independence protocol](#independence-protocol)), and recorded two Typed Standards nodes:
+Everything here is reproducible from branch `poc/rulespec-interop` via `./scripts/verify-rulespec-interop.sh` ([Reproduction](#reproduction)). From the same pinned PCO statute XML your encoding used, the POC independently re-encoded regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) under a never-read-the-target protocol ([Independence protocol](#independence-protocol)), and recorded three Typed Standards nodes — two canonical records and one demo-only re-expression:
 
-- **Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md concedes the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
-- **Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observed-fact join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observed fact**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
+**Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observed-fact join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observed fact**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
 
-Both verifiers pass offline: your corpus under `receipt verify` (exit 0), all three of our nodes — 1, 2, and the [profile-demo node 3](#the-worked-example-executed--a-speculative-profile-on-a-real-node) — under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding (leg E). Throwaway key, dark #7/#8, no production publish — see [Limitations](#limitations). Full detail — pins, package construction, the [flow diagram](#the-end-to-end-flow) — is in the [appendix](#appendix--the-evidence).
+**Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md concedes the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
+
+**Node 3 — the profile-bearing form, demo only** (`content/analysis/v1`, nodeId `77fda183…`): node 2's encoding-run record re-expressed under the **speculative, unregistered** profile sketch `axiom/statute-encoding/v0-sketch` — same prompt, same complete output bytes, same model, same throwaway key — plus a `contentProfile` naming the sketch and a `profileDeclarations` block filling the sketch's required fields with the run's actual specifics. It was never published anywhere and could not be as-is; node 2 remains the canonical honest record. The toggle under the verdicts shows what the profile changes — and what it deliberately does not; the full sketch lives in the appendix ([The worked example, executed](#the-worked-example-executed--a-speculative-profile-on-a-real-node)).
+
+Both verifiers pass offline: your corpus under `receipt verify` (exit 0), all three of our nodes under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding (leg E, six readings of the re-encoding digest, one value). Throwaway key, dark #7/#8, no production publish — see [Limitations](#limitations). Full detail — pins, package construction, the [flow diagram](#the-end-to-end-flow) — is in the [appendix](#appendix--the-evidence).
 
 ### The two verdicts, side by side
 
@@ -155,6 +166,43 @@ VERDICT: PASS — custody and corpus binding
 
 Annotations (`#`) are ours; `./scripts/verify-rulespec-interop.sh` reproduces the un-annotated verdicts.
 
+<details>
+<summary><strong>Toggle: the same run under the speculative contentProfile (node 3)</strong></summary>
+
+Why doesn't `contentProfile` appear in the verdict at all? Because no §9.2 check reads `contentProfile`, the verdict *cannot* show it — the value rides signature-covered but un-inspected ([finding 9](#findings-index)).
+
+What node 3 declares, verbatim from the committed `scripts/fixtures/rulespec-interop-encoding-profile-payload.json` (`contentProfile` is a top-level payload field; `profileDeclarations` sits inside the extension block `org.civicaitools.rulespec-interop`; long digests elided to eight hex characters — the committed fixture carries the full values):
+
+```jsonc
+"contentProfile": "axiom/statute-encoding/v0-sketch",   // SPECULATIVE — unregistered; no verifier recognizes it
+"profileDeclarations": {
+  "corpusSourcePin": {
+    "release": "nz-rulespec-2026-07-20",
+    "contentSha256": "58089115…",
+    "cutCommit": "92ac9c1b…"
+  },
+  "corpusCitationPath": "nz/regulation/regulation/public/2025/0018/regulation/4",
+  "proofAtomDiscipline": "verbatim-excerpt",
+  "oracleComparisons": {
+    "status": "not-run",
+    "reason": "this encoding run compared against no oracle — no oracle harness exists in this POC; recorded not-run rather than omitted, per the DID-NOT-RUN-with-reason discipline the sketch borrows from the upstream gate-tier taxonomy"
+  },
+  "gateDeclarations": {
+    "status": "none-declared",
+    "reason": "no gates were declared or run for this encoding run; nothing here may read as a pass"
+  },
+  "modelIdentity": "anthropic/claude-fable-5",
+  "outputDigest": "eeb37719…",
+  "applyManifestRef": "self"
+}
+```
+
+The verdict delta against node 2, machine-checked (34 leaf fields, flattened-JSON comparison): exactly **three fields differ** — `nodeId` and `recomputedHash` (`77fda183…`) and `contentHash.contentHash.sha256` (`b30b548f…`); the remaining **31 leaves are identical**, including every deliberately-not-green one, and the sketch id appears **nowhere in the verdict**. Harness leg C(3) is the tripwire: it asserts that ignored state field by field and fails if a verifier ever starts treating the sketch as registered.
+
+The profile is **speculative and unregistered**: §9.2 check #15 would REJECT its `captureMethod` values today, and our own production publish API would 400 this `contentProfile` value (`default` and `datHere` are the only accepted values). Node 2 remains the canonical honest record; the full sketch and discussion are in the appendix — [The worked example, executed](#the-worked-example-executed--a-speculative-profile-on-a-real-node).
+
+</details>
+
 #### Your verifier: `receipt verify` over the pinned rulespec-nz clone
 
 **What this does and does not establish.** The PASS covers **custody and binding only**: the 80 rule files and 7 attested files are byte-exact against an append-only journal a code-pinned Ed25519 key signed and two independent RFC 3161 authorities witnessed, closed-world (no unlisted file, no missing file), history unrewritten. The verdict's own text disclaims the rest, and your `VERIFY.md` expands it: it does **not** re-run any of the 17 declared gates (6 are `ci-attested` — not reproducible by outsiders), does **not** prove the encodings are a correct reading of NZ law, does **not** prove freshness (a stale, honestly witnessed clone passes), and one declared gate — `guard/manual-rulespec-changes`, the very gate that would demand encoder apply manifests — **did not run at all** (`run-generated-guard: false`), which the journal is required to declare precisely so its absence cannot read as a pass.
@@ -215,65 +263,9 @@ flowchart LR
 
 The determinism attaches to the residue — the bytes your witnessed journal binds — not to the generative process. For those 80 files no process record exists, so a backfill node can only attest present-day observables, and no after-the-fact act can become a witness of a historical event: even re-running today's toolchain to byte-identical output would demonstrate reproduction of the artifact, not provenance of your encoding event. Contemporaneous capture at encode time is the half only you can do; the backfill half — the #1192 arc — is bounded in any format, yours or ours.
 
-### The worked example, executed — a speculative profile on a real node
+## A conclusion
 
-*Speculative and non-normative — research-doc form per the Xanadu doctrine. Nothing below is registered; §9.2 check #15 would REJECT these `captureMethod` values today, by design; our own production publish API would 400 the `contentProfile` value below (`default` and `datHere` are the only accepted values). Promotion runs through an ADR with a named adopter (Q32 mechanics for bundle distribution).* Every element is discipline the corpus already practices, traceable to an artifact of yours the POC holds:
-
-```yaml
-# HYPOTHETICAL — not a registered profile; #15 rejects these values today
-profileId: statute-encoding/v0-sketch
-captureMethodVocabulary:
-  - encoder-pipeline-run       # agentic/deterministic encoder over a pinned corpus source (your axiom-encode lane)
-  - chat-session-encoding      # hand-authored / AI-chat encoding runs (node 2's case)
-requiredDeclarationsPerRun:
-  corpusSourcePin:             # your .axiom/toolchain.toml discipline
-    { release: nz-rulespec-2026-07-20, contentSha256: "58089115…", cutCommit: "92ac9c1b…" }
-  corpusCitationPaths: required  # e.g. nz/regulation/regulation/public/2025/0018/regulation/4
-  proofAtomDiscipline: verbatim-excerpt | citation-only
-  oracleComparisons:           # which oracle, and the outcome
-    - { oracle: policyengine-coverage-classification, outcome: declared }
-  gateDeclarations:            # your tier taxonomy, flowing back toward TS per finding 4
-    tiers: [public, ci-attested, not-run-with-reason]
-  modelIdentity: required      # model/tool that produced the bytes
-  outputDigest: required       # sha256 of the produced rule file
-  applyManifestRef: required   # linkage to the encoder apply manifest
-```
-
-This sketch is now more than a sketch: **node 3** (`content/analysis/v1`, nodeId `77fda183d8cb978c95bc761fb821d0e31c2a54c496dbd6182f4f6b6e0c3d11a8`, contentHash sha256 `b30b548f1901f88bd0520a5ada62fa48cedf0e8862946556830f18b5647f64d4`) is node 2's encoding-run record re-expressed in the profile-bearing form — same prompt, same complete output bytes, same model, same capture label, same throwaway key — plus a `contentProfile` naming the sketch (namespaced on the node as `axiom/statute-encoding/v0-sketch`) and a `profileDeclarations` block filling the sketch's required fields with the run's actual specifics. From the signed payload:
-
-```jsonc
-"contentProfile": "axiom/statute-encoding/v0-sketch",   // SPECULATIVE — unregistered; no verifier recognizes it
-"profileDeclarations": {
-  "corpusSourcePin": { "release": "nz-rulespec-2026-07-20", "contentSha256": "58089115…", "cutCommit": "92ac9c1b…" },
-  "corpusCitationPath": "nz/regulation/regulation/public/2025/0018/regulation/4",
-  "proofAtomDiscipline": "verbatim-excerpt",
-  "oracleComparisons": { "status": "not-run", "reason": "this encoding run compared against no oracle — no oracle harness exists in this POC…" },
-  "gateDeclarations": { "status": "none-declared", "reason": "no gates were declared or run for this encoding run; nothing here may read as a pass" },
-  "modelIdentity": "anthropic/claude-fable-5", "outputDigest": "eeb37719…", "applyManifestRef": "self" }
-```
-
-The `not-run` and `none-declared` entries are the point, not a gap: declarations the run did not actually perform are recorded with a reason — your own DID-NOT-RUN-with-reason gate discipline, applied to ourselves.
-
-**The verdict delta, stated as a machine-checked diff against node 2** (34 leaf fields, flattened-JSON comparison, this session): exactly **three fields differ** — `nodeId` and `recomputedHash` are `77fda183…`, and `contentHash.contentHash.sha256` is `b30b548f…`. The remaining **31 leaves are identical**, including every deliberately-not-green one — and the speculative profile id appears **nowhere in the verdict**. That is the annotation that matters: verify-core 0.7.0 *signs over* the unknown `contentProfile` (it sits at byte offset 2675 of node 3's 13075 signed canonical bytes, the `profileDeclarations` block at 1384, the full YAML output at 2904) but no §9.2 check reads, resolves, or warns about it — the unregistered profile is tamper-evident yet semantically invisible. Harness leg C(3) asserts exactly this ignored state, field by field, and fails if a verifier ever starts treating the sketch as registered.
-
-To answer the design question directly: `contentProfile` is where the envelope says what its content *is*. Today our nodes could only say `default`; node 3 is what it looks like when the envelope can say "one of your statute encodings, produced under your own disciplines" — source pin, citation path, proof-atom discipline, oracle and gate declarations, model, output digest — with the declarations filled from a real run and the ones we didn't perform honestly marked not-run. **Node 2 remains the canonical honest record of the encoding run; node 3 demonstrates the profile-bearing *form* of the same run, nothing more** — it was never published anywhere, and could not be as-is.
-
-On `type`: `content/analysis/v1` sufficed for node 2, and a dedicated sub-type (e.g. a `content/encodingRun/v1`) is not obviously needed — the missing axis is the profile, not the type. A sub-type would be minted via ADR only if an adopter needs machine-discrimination between encoding runs and other analyses.
-
-## Findings (index)
-
-Observations only; nothing was filed. Full reasoning: v1 at `dbe1d2d` (finding 8 new in v4); each Xanadu gate is a real adopter need, not a POC.
-
-| # | Finding | To act |
-|---|---------|--------|
-| 1 | No `captureMethod` value describes an encoder pipeline — §9.2 #15 *REJECTs* out-of-vocabulary values (`captureMethod_unknown`), so an honest label is structurally blocked, not merely absent; node 2 carries the nearest-fit chat label. Per the spec's axis separation this lands on the producer-profile axis — one gap with finding 2 | Producer Profile guidance-bundle amendment (Q32 mechanics), gated on a named adopter |
-| 2 | No Producer Profile for statute encoding — the other half of finding 1's gap ([sketch, now executed as node 3](#the-worked-example-executed--a-speculative-profile-on-a-real-node)) | Profile promotion per ADR-0006, gated on an adopter |
-| 3 | No domain separation in §8.3.1 ([detail](#what-receipt-has-that-typed-standards-lacks)) | ADR — a domain tag changes signature bytes |
-| 4 | Gate-tier taxonomy (`public` / `ci-attested` / DID-NOT-RUN-with-reason) has no TS equivalent ([detail](#what-receipt-has-that-typed-standards-lacks)) | Relevant if TS packages carry declared gate results |
-| 5 | §8.10 asserts append-only; §9.2 never verifies completeness ([detail](#what-receipt-has-that-typed-standards-lacks)) | Spec/ADR question (interacts with Q2) |
-| 6 | [ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md) concepts map cleanly onto your model (`revises`/`supersedes` ↔ journal corrections; `vcsRef` ↔ `subjectCommit`/toolchain pins; §8.10 lineage ↔ release chain) | Nothing — the abstractions were pitched right |
-| 7 | Committed-mode friction, concrete: both nodes `visibility: committed` — commitment verifiable offline, bytes creator-distributed (ADR-0010 §5, by design; trades against the Rekor freshness lane, public in both visibility states) | Distribution-pattern question for a real committed-mode adopter |
-| 8 | [Q16](../architecture/open-questions.md#q16--formal-conformance-criteria) seed material: the two commitment fixtures with exact expected-verdict assertions, incl. the deliberately-not-green negative case | Observation only; Xanadu-gated on Q16's real consumer |
+What stands demonstrated: three locally-signed Typed Standards nodes over one NZ regulation; both verifiers passing offline — your corpus under `receipt verify` (exit 0), our three nodes under `verify-core` with zero network calls; one digest join to your witnessed journal that neither side had to negotiate; and a six-way byte binding of the re-encoding bytes (six independent readings, one value). What that composition establishes — and what it deliberately does not — is one appendix section, [What a passing pair establishes — and what it does not](#what-a-passing-pair-establishes--and-what-it-does-not), bounded by [Limitations](#limitations). The speculative profile run (node 3) added one more demonstration: the envelope can say what its content *is* — one of your statute encodings, produced under your declared disciplines — but nothing inspects that statement yet; giving it teeth is an ADR-gated path that starts with a named adopter, not with this memo. The findings index — nine observations, nothing filed — is in the [appendix](#findings-index). Everything lives on this branch: `./scripts/verify-rulespec-interop.sh` reproduces every claim above from a clean checkout. The standing boundary is unchanged: every node here is signed with a local throwaway key, so full-depth third-party verification of our leg requires a production publish, and that publish has not happened.
 
 ---
 
@@ -286,7 +278,7 @@ Observations only; nothing was filed. Full reasoning: v1 at `dbe1d2d` (finding 8
 
 ### The gap, seen in your US interface (§ 32 — exhibit only)
 
-**No POC artifact exists for US law: the encoding run, both nodes, both verifier legs, and the digest join are all NZ ([The demonstration](#the-demonstration-nz--complete)). This section only documents what the interface and repository show.** All facts verified 2026-07-29 — interface facts in the app's provision view, repository facts via the GitHub API.
+**No POC artifact exists for US law: the encoding run, both nodes, both verifier legs, and the digest join are all NZ ([The demonstration](#the-demonstration)). This section only documents what the interface and repository show.** All facts verified 2026-07-29 — interface facts in the app's provision view, repository facts via the GitHub API.
 
 Your public app renders US federal statutes per-provision. For 26 USC § 32(a)(1), the provision view shows the breadcrumb `AXIOM / US FEDERAL / STATUTES / TITLE 26 / § 32 / (A) / (1)`; one derived encoding (`eitc_phased_in`) sourced from `statutes/26/32.yaml`; the sentence **"This encoding covers the parent provision us/statute/26/32; no dedicated encoding exists for this exact provision yet."**; a "View on GitHub" link; and a RULES code panel. § 32(k) lists three derived encodings; its RULES panel displays the rulespec source itself, proof atoms included (`kind: parameter_table`, `corpus_citation_path: us/statute/26/32`) — even the proof atoms, the artifact's own citations into the corpus, bind *what* a value claims to derive from, not *how* the derivation was performed.
 
@@ -356,7 +348,7 @@ flowchart LR
 
 ### The end-to-end flow
 
-[The demonstration](#the-demonstration-nz--complete), as one picture:
+[The demonstration](#the-demonstration), as one picture:
 
 ```mermaid
 flowchart TD
@@ -481,6 +473,77 @@ It does **not** establish — and both verifiers say so in their own output:
 - That either encoding is a correct reading of New Zealand law (receipt's verdict text; TS spec §9.3 item 2 — correctness is a separately-signed attestation, never an envelope property).
 - That the clone is fresh (a stale, honestly witnessed clone passes receipt; check freshness out of band). TS discloses the symmetric property in its own text: an offline self-contained bundle verifies against the trust registry as of the bundle's `generatedAt` snapshot, post-snapshot revocations invisible — framed by spec §9.4 as offline physics, not a gap to fix (§10.2 states the same boundary) — the exact analog of receipt's stale-clone disclaimer.
 - That our packages are trustworthy to a third party: the key is `unknown_key`, there is no timestamp, no transparency-log entry, and no registry identity — for both nodes. Checks #7/#8 are unverified. Full-depth third-party verification of our leg requires the production publish, which has not happened.
+
+</details>
+
+<details>
+<summary><strong>The worked example, executed — a speculative profile on a real node</strong></summary>
+
+### The worked example, executed — a speculative profile on a real node
+
+*Speculative and non-normative — research-doc form per the Xanadu doctrine. Nothing below is registered; §9.2 check #15 would REJECT these `captureMethod` values today, by design; our own production publish API would 400 the `contentProfile` value below (`default` and `datHere` are the only accepted values). Promotion runs through an ADR with a named adopter (Q32 mechanics for bundle distribution).* Every element is discipline the corpus already practices, traceable to an artifact of yours the POC holds:
+
+```yaml
+# HYPOTHETICAL — not a registered profile; #15 rejects these values today
+profileId: statute-encoding/v0-sketch
+captureMethodVocabulary:
+  - encoder-pipeline-run       # agentic/deterministic encoder over a pinned corpus source (your axiom-encode lane)
+  - chat-session-encoding      # hand-authored / AI-chat encoding runs (node 2's case)
+requiredDeclarationsPerRun:
+  corpusSourcePin:             # your .axiom/toolchain.toml discipline
+    { release: nz-rulespec-2026-07-20, contentSha256: "58089115…", cutCommit: "92ac9c1b…" }
+  corpusCitationPaths: required  # e.g. nz/regulation/regulation/public/2025/0018/regulation/4
+  proofAtomDiscipline: verbatim-excerpt | citation-only
+  oracleComparisons:           # which oracle, and the outcome
+    - { oracle: policyengine-coverage-classification, outcome: declared }
+  gateDeclarations:            # your tier taxonomy, flowing back toward TS per finding 4
+    tiers: [public, ci-attested, not-run-with-reason]
+  modelIdentity: required      # model/tool that produced the bytes
+  outputDigest: required       # sha256 of the produced rule file
+  applyManifestRef: required   # linkage to the encoder apply manifest
+```
+
+This sketch is now more than a sketch: **node 3** (`content/analysis/v1`, nodeId `77fda183d8cb978c95bc761fb821d0e31c2a54c496dbd6182f4f6b6e0c3d11a8`, contentHash sha256 `b30b548f1901f88bd0520a5ada62fa48cedf0e8862946556830f18b5647f64d4`) is node 2's encoding-run record re-expressed in the profile-bearing form — same prompt, same complete output bytes, same model, same capture label, same throwaway key — plus a `contentProfile` naming the sketch (namespaced on the node as `axiom/statute-encoding/v0-sketch`) and a `profileDeclarations` block filling the sketch's required fields with the run's actual specifics. From the signed payload:
+
+```jsonc
+"contentProfile": "axiom/statute-encoding/v0-sketch",   // SPECULATIVE — unregistered; no verifier recognizes it
+"profileDeclarations": {
+  "corpusSourcePin": { "release": "nz-rulespec-2026-07-20", "contentSha256": "58089115…", "cutCommit": "92ac9c1b…" },
+  "corpusCitationPath": "nz/regulation/regulation/public/2025/0018/regulation/4",
+  "proofAtomDiscipline": "verbatim-excerpt",
+  "oracleComparisons": { "status": "not-run", "reason": "this encoding run compared against no oracle — no oracle harness exists in this POC…" },
+  "gateDeclarations": { "status": "none-declared", "reason": "no gates were declared or run for this encoding run; nothing here may read as a pass" },
+  "modelIdentity": "anthropic/claude-fable-5", "outputDigest": "eeb37719…", "applyManifestRef": "self" }
+```
+
+The `not-run` and `none-declared` entries are the point, not a gap: declarations the run did not actually perform are recorded with a reason — your own DID-NOT-RUN-with-reason gate discipline, applied to ourselves.
+
+**The verdict delta, stated as a machine-checked diff against node 2** (34 leaf fields, flattened-JSON comparison, this session): exactly **three fields differ** — `nodeId` and `recomputedHash` are `77fda183…`, and `contentHash.contentHash.sha256` is `b30b548f…`. The remaining **31 leaves are identical**, including every deliberately-not-green one — and the speculative profile id appears **nowhere in the verdict**. That is the annotation that matters: verify-core 0.7.0 *signs over* the unknown `contentProfile` (it sits at byte offset 2675 of node 3's 13075 signed canonical bytes, the `profileDeclarations` block at 1384, the full YAML output at 2904) but no §9.2 check reads, resolves, or warns about it — the unregistered profile is tamper-evident yet semantically invisible. Harness leg C(3) asserts exactly this ignored state, field by field, and fails if a verifier ever starts treating the sketch as registered.
+
+To answer the design question directly: `contentProfile` is where the envelope says what its content *is*. Today our nodes could only say `default`; node 3 is what it looks like when the envelope can say "one of your statute encodings, produced under your own disciplines" — source pin, citation path, proof-atom discipline, oracle and gate declarations, model, output digest — with the declarations filled from a real run and the ones we didn't perform honestly marked not-run. **Node 2 remains the canonical honest record of the encoding run; node 3 demonstrates the profile-bearing *form* of the same run, nothing more** — it was never published anywhere, and could not be as-is.
+
+On `type`: `content/analysis/v1` sufficed for node 2, and a dedicated sub-type (e.g. a `content/encodingRun/v1`) is not obviously needed — the missing axis is the profile, not the type. A sub-type would be minted via ADR only if an adopter needs machine-discrimination between encoding runs and other analyses.
+
+</details>
+
+<details>
+<summary><strong>Findings (index)</strong></summary>
+
+### Findings (index)
+
+Observations only; nothing was filed. Full reasoning: v1 at `dbe1d2d` (finding 8 new in v4; finding 9 new in v9); each Xanadu gate is a real adopter need, not a POC.
+
+| # | Finding | To act |
+|---|---------|--------|
+| 1 | No `captureMethod` value describes an encoder pipeline — §9.2 #15 *REJECTs* out-of-vocabulary values (`captureMethod_unknown`), so an honest label is structurally blocked, not merely absent; node 2 carries the nearest-fit chat label. Per the spec's axis separation this lands on the producer-profile axis — one gap with finding 2 | Producer Profile guidance-bundle amendment (Q32 mechanics), gated on a named adopter |
+| 2 | No Producer Profile for statute encoding — the other half of finding 1's gap ([sketch, now executed as node 3](#the-worked-example-executed--a-speculative-profile-on-a-real-node)) | Profile promotion per ADR-0006, gated on an adopter |
+| 3 | No domain separation in §8.3.1 ([detail](#what-receipt-has-that-typed-standards-lacks)) | ADR — a domain tag changes signature bytes |
+| 4 | Gate-tier taxonomy (`public` / `ci-attested` / DID-NOT-RUN-with-reason) has no TS equivalent ([detail](#what-receipt-has-that-typed-standards-lacks)) | Relevant if TS packages carry declared gate results |
+| 5 | §8.10 asserts append-only; §9.2 never verifies completeness ([detail](#what-receipt-has-that-typed-standards-lacks)) | Spec/ADR question (interacts with Q2) |
+| 6 | [ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md) concepts map cleanly onto your model (`revises`/`supersedes` ↔ journal corrections; `vcsRef` ↔ `subjectCommit`/toolchain pins; §8.10 lineage ↔ release chain) | Nothing — the abstractions were pitched right |
+| 7 | Committed-mode friction, concrete: both nodes `visibility: committed` — commitment verifiable offline, bytes creator-distributed (ADR-0010 §5, by design; trades against the Rekor freshness lane, public in both visibility states) | Distribution-pattern question for a real committed-mode adopter |
+| 8 | [Q16](../architecture/open-questions.md#q16--formal-conformance-criteria) seed material: the two commitment fixtures with exact expected-verdict assertions, incl. the deliberately-not-green negative case | Observation only; Xanadu-gated on Q16's real consumer |
+| 9 | `contentProfile` is signature-covered but semantically un-inspected — no §9.2 check reads, resolves, or warns about it, so node 3's unregistered sketch id is tamper-evident yet appears nowhere in the verdict ([the toggle](#the-two-verdicts-side-by-side); [worked example](#the-worked-example-executed--a-speculative-profile-on-a-real-node)) | Spec/verifier question — whether §9.2 should gain a contentProfile-resolution check (the #15 analog for the profile axis); Xanadu-gated on a registered profile an adopter actually needs |
 
 </details>
 
