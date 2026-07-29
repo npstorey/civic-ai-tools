@@ -1,17 +1,22 @@
+<!-- v11 — 2026-07-29 — four owner-directed edits: the callout's second clause now says the memo is reproducible from the branch it lives on (replacing "files nothing and asks for nothing"); "A conclusion" renamed "Next steps" (heading + TOC anchor, connective tissue lightly adjusted, no content cut); observations-not-facts terminology sweep across memo prose (signed fixtures and verbatim verdict blocks untouched; mermaid-fence diagram labels left to stay in sync with the committed sidecar SVGs); purpose block + attribution inserted above the Executive Summary (Typed Standards definition from the spec abstract, reference-implementation line, prepared-by line). v10 356550c; earlier chain below. -->
 <!-- v10 — 2026-07-29 — side-by-side redesign: the Typed Standards column now defaults to a human-readable envelope summary written in the receipt report's own register (section headers, [ok  ]/[--  ] markers, indented detail), sectioned by verifiability — ESTABLISHED OFFLINE / CARRIED IN THE SIGNED BYTES, INSPECTED BY NO CHECK / NOT VERIFIABLE IN THIS LOCAL PASS — with an explicit presentation-ours label so the visual rhyme can't read as verifier output; the verbatim annotated verify-core JSON verdict moves behind an in-cell toggle (the annotations note moves with it); the node-3 profile toggle below the table is unchanged; render-script CSS for the ours-label + in-cell details. v9 8acc9f3; v8 a8b9472; v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
 # Rulespec Interop POC
 
-> **This note is addressed to the rulespec corpus maintainers.** It is a build-side research memo; it files nothing and asks for nothing.
+> **This note is addressed to the rulespec corpus maintainers.** It is a build-side research memo; everything in it is reproducible from the branch it lives on.
 
-*Last updated: 2026-07-29 (v10) — side-by-side redesign: the Typed Standards column now defaults to a receipt-register envelope summary sectioned by verifiability (established offline · carried-but-uninspected · dark by choice), labeled as our presentation; the verbatim annotated JSON verdict sits behind an in-cell toggle. v9 `8acc9f3`; v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+*Last updated: 2026-07-29 (v11) — callout rewording (reproducible-from-branch clause); "A conclusion" renamed "Next steps"; observations-not-facts terminology sweep (memo prose only; fixtures and verbatim verdict blocks untouched); purpose block + attribution above the Executive Summary. v10 `356550c`; v9 `8acc9f3`; v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
 
 1. [Executive summary](#executive-summary)
 2. [The demonstration](#the-demonstration)
 3. [What Typed Standards would give your corpus](#what-typed-standards-would-give-your-corpus)
 4. [What receipt has that Typed Standards lacks](#what-receipt-has-that-typed-standards-lacks)
 5. [What adopting would cost](#what-adopting-would-cost)
-6. [A conclusion](#a-conclusion)
+6. [Next steps](#next-steps)
 7. [Appendix — the evidence](#appendix--the-evidence)
+
+[Typed Standards](https://typedstandards.org) is a content-agnostic open standard for production-process attestation of analytical artifacts: a signed, content-addressed, capture-method-labeled record of how an artifact was produced, verifiable by a third party who does not trust the publisher ([specification](https://github.com/npstorey/civic-ai-tools/blob/main/docs/architecture/typed-standards-specification.md)). The [Civic AI Tools](https://civicaitools.org) project carries its reference implementation.
+
+*Prepared by Nathan Storey, creator of Civic AI Tools and Typed Standards.*
 
 ## Executive Summary
 
@@ -29,7 +34,7 @@ The POC demonstrated the composition end to end for one NZ regulation: two local
 
 Everything here is reproducible from branch `poc/rulespec-interop` via `./scripts/verify-rulespec-interop.sh` ([Reproduction](#reproduction)). From the same pinned PCO statute XML your encoding used, the POC independently re-encoded regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) under a never-read-the-target protocol ([Independence protocol](#independence-protocol)), and recorded three Typed Standards nodes — two canonical records and one demo-only re-expression:
 
-**Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observed-fact join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observed fact**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
+**Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observation join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observation**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
 
 **Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md concedes the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
 
@@ -128,7 +133,7 @@ ESTABLISHED OFFLINE, FROM THIS BUNDLE ALONE
 &nbsp;
 CARRIED IN THE SIGNED BYTES — INSPECTED BY NO §9.2 CHECK
   [--  ] extension block org.civicaitools.rulespec-interop
-         your artifact's digest as an observed fact — sha256 5fe16742… — equal to
+         your artifact's digest as an observation — sha256 5fe16742… — equal to
          the digest your witnessed journal binds at entryIndex 3: the join key;
          plus release/toolchain pins, paths, and the comparison record
          (harness legs D/E read these; no verifier check interprets them)
@@ -326,9 +331,9 @@ flowchart LR
 
 The determinism attaches to the residue — the bytes your witnessed journal binds — not to the generative process. For those 80 files no process record exists, so a backfill node can only attest present-day observables, and no after-the-fact act can become a witness of a historical event: even re-running today's toolchain to byte-identical output would demonstrate reproduction of the artifact, not provenance of your encoding event. Contemporaneous capture at encode time is the half only you can do; the backfill half — the #1192 arc — is bounded in any format, yours or ours.
 
-## A conclusion
+## Next steps
 
-What stands demonstrated: three locally-signed Typed Standards nodes over one NZ regulation; both verifiers passing offline — your corpus under `receipt verify` (exit 0), our three nodes under `verify-core` with zero network calls; one digest join to your witnessed journal that neither side had to negotiate; and a six-way byte binding of the re-encoding bytes (six independent readings, one value). What that composition establishes — and what it deliberately does not — is one appendix section, [What a passing pair establishes — and what it does not](#what-a-passing-pair-establishes--and-what-it-does-not), bounded by [Limitations](#limitations). The speculative profile run (node 3) added one more demonstration: the envelope can say what its content *is* — one of your statute encodings, produced under your declared disciplines — but nothing inspects that statement yet; giving it teeth is an ADR-gated path that starts with a named adopter, not with this memo. The findings index — nine observations, nothing filed — is in the [appendix](#findings-index). Everything lives on this branch: `./scripts/verify-rulespec-interop.sh` reproduces every claim above from a clean checkout. The standing boundary is unchanged: every node here is signed with a local throwaway key, so full-depth third-party verification of our leg requires a production publish, and that publish has not happened.
+What stands demonstrated: three locally-signed Typed Standards nodes over one NZ regulation; both verifiers passing offline — your corpus under `receipt verify` (exit 0), our three nodes under `verify-core` with zero network calls; one digest join to your witnessed journal that neither side had to negotiate; and a six-way byte binding of the re-encoding bytes (six independent readings, one value). What that composition establishes — and what it deliberately does not — is one appendix section, [What a passing pair establishes — and what it does not](#what-a-passing-pair-establishes--and-what-it-does-not), bounded by [Limitations](#limitations). Three things point forward from here. The speculative profile run (node 3) added one more demonstration: the envelope can say what its content *is* — one of your statute encodings, produced under your declared disciplines — but nothing inspects that statement yet; giving it teeth is an ADR-gated path that starts with a named adopter, not with this memo. The findings index — nine observations, nothing filed — is in the [appendix](#findings-index), awaiting triage on our side. And the standing boundary is unchanged: every node here is signed with a local throwaway key, so full-depth third-party verification of our leg requires a production publish, and that publish has not happened. Everything lives on this branch: `./scripts/verify-rulespec-interop.sh` reproduces every claim above from a clean checkout.
 
 ---
 
@@ -341,7 +346,7 @@ What stands demonstrated: three locally-signed Typed Standards nodes over one NZ
 
 ### The gap, seen in your US interface (§ 32 — exhibit only)
 
-**No POC artifact exists for US law: the encoding run, both nodes, both verifier legs, and the digest join are all NZ ([The demonstration](#the-demonstration)). This section only documents what the interface and repository show.** All facts verified 2026-07-29 — interface facts in the app's provision view, repository facts via the GitHub API.
+**No POC artifact exists for US law: the encoding run, both nodes, both verifier legs, and the digest join are all NZ ([The demonstration](#the-demonstration)). This section only documents what the interface and repository show.** All observations recorded 2026-07-29 — interface observations in the app's provision view, repository observations via the GitHub API.
 
 Your public app renders US federal statutes per-provision. For 26 USC § 32(a)(1), the provision view shows the breadcrumb `AXIOM / US FEDERAL / STATUTES / TITLE 26 / § 32 / (A) / (1)`; one derived encoding (`eitc_phased_in`) sourced from `statutes/26/32.yaml`; the sentence **"This encoding covers the parent provision us/statute/26/32; no dedicated encoding exists for this exact provision yet."**; a "View on GitHub" link; and a RULES code panel. § 32(k) lists three derived encodings; its RULES panel displays the rulespec source itself, proof atoms included (`kind: parameter_table`, `corpus_citation_path: us/statute/26/32`) — even the proof atoms, the artifact's own citations into the corpus, bind *what* a value claims to derive from, not *how* the derivation was performed.
 
@@ -376,7 +381,7 @@ The git history behind "View on GitHub" is, today, the only production record th
 
 ### The two-layer picture
 
-receipt establishes **custody of a witnessed tree**: the bytes you hold are exactly what a code-pinned producer key signed and two independent RFC 3161 authorities witnessed, closed-world, history unrewritten. Typed Standards establishes **provenance and identity of one artifact**: a per-artifact signed node stating how a specific thing came to be, portable on its own. The seam is one SHA-256 digest both sides already compute: your witnessed journal binds it, our signed bytes carry it as an observed fact.
+receipt establishes **custody of a witnessed tree**: the bytes you hold are exactly what a code-pinned producer key signed and two independent RFC 3161 authorities witnessed, closed-world, history unrewritten. Typed Standards establishes **provenance and identity of one artifact**: a per-artifact signed node stating how a specific thing came to be, portable on its own. The seam is one SHA-256 digest both sides already compute: your witnessed journal binds it, our signed bytes carry it as an observation.
 
 ```mermaid
 flowchart LR
@@ -472,7 +477,7 @@ The re-encoding was produced by an orchestrated multi-agent run under a protocol
 
 ### Package construction
 
-Both nodes were built locally to the Typed Standards package schema: JCS canonicalization under the `legacy-json/v1` content rule, multihash `contentHash`, envelope hash = `nodeId`, Ed25519ph per spec §8.3.1. Neither node claims to reproduce, endorse, or co-sign the upstream encoding — node 1's extension block `org.civicaitools.rulespec-interop` carries the upstream facts *as observed*, inside the signed canonical bytes; the harness prints containment offsets as proof (node 1: upstream digest at byte 1209 of 9020 JCS bytes; node 2: output digest at byte 1318 of 12055, the complete re-encoded YAML at byte 1886). Both are signed with a **throwaway local key**, kid `local:rulespec-interop-poc-2026-07`, signer `local:rulespec-interop-poc` — deliberately absent from the trust-registry snapshot in the commitment fixtures. No TSA token, no Rekor entry, `visibility: committed`, **no production publish**. The checks left dark are exactly the spec's **external anchors** (trust registry, RFC 3161 TSA, Rekor log — spec §7.3); a production publish is what lights them.
+Both nodes were built locally to the Typed Standards package schema: JCS canonicalization under the `legacy-json/v1` content rule, multihash `contentHash`, envelope hash = `nodeId`, Ed25519ph per spec §8.3.1. Neither node claims to reproduce, endorse, or co-sign the upstream encoding — node 1's extension block `org.civicaitools.rulespec-interop` carries the upstream observations, inside the signed canonical bytes; the harness prints containment offsets as proof (node 1: upstream digest at byte 1209 of 9020 JCS bytes; node 2: output digest at byte 1318 of 12055, the complete re-encoded YAML at byte 1886). Both are signed with a **throwaway local key**, kid `local:rulespec-interop-poc-2026-07`, signer `local:rulespec-interop-poc` — deliberately absent from the trust-registry snapshot in the commitment fixtures. No TSA token, no Rekor entry, `visibility: committed`, **no production publish**. The checks left dark are exactly the spec's **external anchors** (trust registry, RFC 3161 TSA, Rekor log — spec §7.3); a production publish is what lights them.
 
 </details>
 
@@ -498,7 +503,7 @@ node 2 extension output_sha256:                               eeb3771924255c2f0c
 node 1 extension our_reencoding_sha256:                       eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b
 ```
 
-**What the join is, and is not:** our signed envelope contains an **observed fact about your published artifact**, confirmed by your own verification structure — anyone holding our packages and your clone can re-derive every leg offline. It is a harness leg rather than a verifier check, deliberately: extension content is signature-covered but semantically advisory (spec §8.1.6; no §9.2 check interprets extension contents), so legs D and E live above what any conformant verifier checks. And it is *not* a claim that our re-encoding reproduced your bytes — it did not, and was never expected to (`eeb37719…` vs `5fe16742…`): independent YAML serializations of independently made encoding judgments do not collide.
+**What the join is, and is not:** our signed envelope contains an **observation about your published artifact**, confirmed by your own verification structure — anyone holding our packages and your clone can re-derive every leg offline. It is a harness leg rather than a verifier check, deliberately: extension content is signature-covered but semantically advisory (spec §8.1.6; no §9.2 check interprets extension contents), so legs D and E live above what any conformant verifier checks. And it is *not* a claim that our re-encoding reproduced your bytes — it did not, and was never expected to (`eeb37719…` vs `5fe16742…`): independent YAML serializations of independently made encoding judgments do not collide.
 
 </details>
 
