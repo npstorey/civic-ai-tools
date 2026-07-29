@@ -1,9 +1,9 @@
-<!-- v7 — 2026-07-29 — addressed directly to the corpus maintainers; Executive Summary; verdicts side-by-side with annotations (harness label: Typed Standards verifier); would-give moved before cost; US exhibit + evidence sections into a collapsible appendix; Limitations stays visible. v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
+<!-- v8 — 2026-07-29 — the sketch executed: node 3 (node 2's encoding-run record re-expressed under the SPECULATIVE, UNREGISTERED contentProfile sketch axiom/statute-encoding/v0-sketch, nodeId 77fda183…) + harness leg C(3) (verifier-must-keep-ignoring-the-sketch assertions) + leg E extended to six bindings; sketch section retitled "The worked example, executed"; node 2 remains the canonical honest record. v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
 # Rulespec Interop POC
 
 *This note is addressed to the rulespec corpus maintainers; it is a build-side research memo and files nothing.*
 
-*Last updated: 2026-07-29 (v7) — addressed directly to the corpus maintainers; Executive Summary; verdicts side-by-side with annotations (harness label: Typed Standards verifier); would-give moved before cost; US exhibit + evidence sections into a collapsible appendix; Limitations stays visible. v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+*Last updated: 2026-07-29 (v8) — the sketch executed: node 3 (node 2's encoding-run record re-expressed under the speculative, unregistered contentProfile sketch `axiom/statute-encoding/v0-sketch`, nodeId `77fda183…`) + harness leg C(3) + tri-binding extended; node 2 remains the canonical honest record. v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
 
 ## Executive Summary
 
@@ -14,6 +14,7 @@ The POC demonstrated the composition end to end for one NZ regulation: two local
 | Scope | POC artifacts | Status |
 |-------|---------------|--------|
 | **NZ — Earners' Levy regulation 4** | independent re-encode · node 1 (comparison event) · node 2 (encoding run) · both verifiers offline · digest join | **Complete** — [The demonstration](#the-demonstration-nz--complete) |
+| **NZ — profile-bearing form (node 3)** | node 2's record re-expressed under the **speculative, unregistered** profile sketch `axiom/statute-encoding/v0-sketch`; verified offline; never publishable as-is | **Demo only** — [The worked example, executed](#the-worked-example-executed--a-speculative-profile-on-a-real-node) |
 | **US — 26 USC § 32** | interface + repository observations only; **no encoding run, no nodes** | **Exhibit of the gap, not POC work** — [appendix exhibit](#the-gap-seen-in-your-us-interface--32--exhibit-only) |
 
 ## The demonstration (NZ — complete)
@@ -23,7 +24,7 @@ Everything here is reproducible from branch `poc/rulespec-interop` via `./script
 - **Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md concedes the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
 - **Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observed-fact join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observed fact**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
 
-Both verifiers pass offline: your corpus under `receipt verify` (exit 0), both our nodes under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding (leg E). Throwaway key, dark #7/#8, no production publish — see [Limitations](#limitations). Full detail — pins, package construction, the [flow diagram](#the-end-to-end-flow) — is in the [appendix](#appendix--the-evidence).
+Both verifiers pass offline: your corpus under `receipt verify` (exit 0), all three of our nodes — 1, 2, and the [profile-demo node 3](#the-worked-example-executed--a-speculative-profile-on-a-real-node) — under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding (leg E). Throwaway key, dark #7/#8, no production publish — see [Limitations](#limitations). Full detail — pins, package construction, the [flow diagram](#the-end-to-end-flow) — is in the [appendix](#appendix--the-evidence).
 
 ### The two verdicts, side by side
 
@@ -214,9 +215,9 @@ flowchart LR
 
 The determinism attaches to the residue — the bytes your witnessed journal binds — not to the generative process. For those 80 files no process record exists, so a backfill node can only attest present-day observables, and no after-the-fact act can become a witness of a historical event: even re-running today's toolchain to byte-identical output would demonstrate reproduction of the artifact, not provenance of your encoding event. Contemporaneous capture at encode time is the half only you can do; the backfill half — the #1192 arc — is bounded in any format, yours or ours.
 
-### What a statute-encoding Producer Profile would declare — a sketch
+### The worked example, executed — a speculative profile on a real node
 
-*Speculative and non-normative — research-doc form per the Xanadu doctrine. Nothing below is registered; §9.2 check #15 would REJECT these `captureMethod` values today, by design. Promotion runs through an ADR with a named adopter (Q32 mechanics for bundle distribution).* Every element is discipline the corpus already practices, traceable to an artifact of yours the POC holds:
+*Speculative and non-normative — research-doc form per the Xanadu doctrine. Nothing below is registered; §9.2 check #15 would REJECT these `captureMethod` values today, by design; our own production publish API would 400 the `contentProfile` value below (`default` and `datHere` are the only accepted values). Promotion runs through an ADR with a named adopter (Q32 mechanics for bundle distribution).* Every element is discipline the corpus already practices, traceable to an artifact of yours the POC holds:
 
 ```yaml
 # HYPOTHETICAL — not a registered profile; #15 rejects these values today
@@ -238,6 +239,25 @@ requiredDeclarationsPerRun:
   applyManifestRef: required   # linkage to the encoder apply manifest
 ```
 
+This sketch is now more than a sketch: **node 3** (`content/analysis/v1`, nodeId `77fda183d8cb978c95bc761fb821d0e31c2a54c496dbd6182f4f6b6e0c3d11a8`, contentHash sha256 `b30b548f1901f88bd0520a5ada62fa48cedf0e8862946556830f18b5647f64d4`) is node 2's encoding-run record re-expressed in the profile-bearing form — same prompt, same complete output bytes, same model, same capture label, same throwaway key — plus a `contentProfile` naming the sketch (namespaced on the node as `axiom/statute-encoding/v0-sketch`) and a `profileDeclarations` block filling the sketch's required fields with the run's actual specifics. From the signed payload:
+
+```jsonc
+"contentProfile": "axiom/statute-encoding/v0-sketch",   // SPECULATIVE — unregistered; no verifier recognizes it
+"profileDeclarations": {
+  "corpusSourcePin": { "release": "nz-rulespec-2026-07-20", "contentSha256": "58089115…", "cutCommit": "92ac9c1b…" },
+  "corpusCitationPath": "nz/regulation/regulation/public/2025/0018/regulation/4",
+  "proofAtomDiscipline": "verbatim-excerpt",
+  "oracleComparisons": { "status": "not-run", "reason": "this encoding run compared against no oracle — no oracle harness exists in this POC…" },
+  "gateDeclarations": { "status": "none-declared", "reason": "no gates were declared or run for this encoding run; nothing here may read as a pass" },
+  "modelIdentity": "anthropic/claude-fable-5", "outputDigest": "eeb37719…", "applyManifestRef": "self" }
+```
+
+The `not-run` and `none-declared` entries are the point, not a gap: declarations the run did not actually perform are recorded with a reason — your own DID-NOT-RUN-with-reason gate discipline, applied to ourselves.
+
+**The verdict delta, stated as a machine-checked diff against node 2** (34 leaf fields, flattened-JSON comparison, this session): exactly **three fields differ** — `nodeId` and `recomputedHash` are `77fda183…`, and `contentHash.contentHash.sha256` is `b30b548f…`. The remaining **31 leaves are identical**, including every deliberately-not-green one — and the speculative profile id appears **nowhere in the verdict**. That is the annotation that matters: verify-core 0.7.0 *signs over* the unknown `contentProfile` (it sits at byte offset 2675 of node 3's 13075 signed canonical bytes, the `profileDeclarations` block at 1384, the full YAML output at 2904) but no §9.2 check reads, resolves, or warns about it — the unregistered profile is tamper-evident yet semantically invisible. Harness leg C(3) asserts exactly this ignored state, field by field, and fails if a verifier ever starts treating the sketch as registered.
+
+To answer the design question directly: `contentProfile` is where the envelope says what its content *is*. Today our nodes could only say `default`; node 3 is what it looks like when the envelope can say "one of your statute encodings, produced under your own disciplines" — source pin, citation path, proof-atom discipline, oracle and gate declarations, model, output digest — with the declarations filled from a real run and the ones we didn't perform honestly marked not-run. **Node 2 remains the canonical honest record of the encoding run; node 3 demonstrates the profile-bearing *form* of the same run, nothing more** — it was never published anywhere, and could not be as-is.
+
 On `type`: `content/analysis/v1` sufficed for node 2, and a dedicated sub-type (e.g. a `content/encodingRun/v1`) is not obviously needed — the missing axis is the profile, not the type. A sub-type would be minted via ADR only if an adopter needs machine-discrimination between encoding runs and other analyses.
 
 ## Findings (index)
@@ -247,7 +267,7 @@ Observations only; nothing was filed. Full reasoning: v1 at `dbe1d2d` (finding 8
 | # | Finding | To act |
 |---|---------|--------|
 | 1 | No `captureMethod` value describes an encoder pipeline — §9.2 #15 *REJECTs* out-of-vocabulary values (`captureMethod_unknown`), so an honest label is structurally blocked, not merely absent; node 2 carries the nearest-fit chat label. Per the spec's axis separation this lands on the producer-profile axis — one gap with finding 2 | Producer Profile guidance-bundle amendment (Q32 mechanics), gated on a named adopter |
-| 2 | No Producer Profile for statute encoding — the other half of finding 1's gap ([sketch](#what-a-statute-encoding-producer-profile-would-declare--a-sketch)) | Profile promotion per ADR-0006, gated on an adopter |
+| 2 | No Producer Profile for statute encoding — the other half of finding 1's gap ([sketch, now executed as node 3](#the-worked-example-executed--a-speculative-profile-on-a-real-node)) | Profile promotion per ADR-0006, gated on an adopter |
 | 3 | No domain separation in §8.3.1 ([detail](#what-receipt-has-that-typed-standards-lacks)) | ADR — a domain tag changes signature bytes |
 | 4 | Gate-tier taxonomy (`public` / `ci-attested` / DID-NOT-RUN-with-reason) has no TS equivalent ([detail](#what-receipt-has-that-typed-standards-lacks)) | Relevant if TS packages carry declared gate results |
 | 5 | §8.10 asserts append-only; §9.2 never verifies completeness ([detail](#what-receipt-has-that-typed-standards-lacks)) | Spec/ADR question (interacts with Q2) |
@@ -475,9 +495,9 @@ From a clean checkout of branch `poc/rulespec-interop`:
 ./scripts/verify-rulespec-interop.sh
 ```
 
-Requirements: `git`, `uv`, `node`/`npm`. Network is used only to fetch the pinned sources when absent; verification itself is offline — leg C stubs `fetch` to throw and asserts zero network calls (the [Q15](../architecture/open-questions.md#q15--external-verification-testing) offline-bundle harness pattern, graduated into spec §9.4). Six legs: **A** pinned clones · **B** `receipt verify` · **C(1)/C(2)** verify-core over nodes 1/2 · **D** the digest join · **E** the tri-binding. The script exits non-zero on any divergence — including an unexpectedly *green* key-trust/timestamp/Rekor result.
+Requirements: `git`, `uv`, `node`/`npm`. Network is used only to fetch the pinned sources when absent; verification itself is offline — leg C stubs `fetch` to throw and asserts zero network calls (the [Q15](../architecture/open-questions.md#q15--external-verification-testing) offline-bundle harness pattern, graduated into spec §9.4). Seven legs: **A** pinned clones · **B** `receipt verify` · **C(1)/C(2)/C(3)** verify-core over nodes 1/2/3 (C(3) additionally asserts the verifier keeps *ignoring* node 3's unregistered profile sketch — it fails if a verifier starts treating it as registered) · **D** the digest join · **E** the tri-binding, extended to node 3's carried bytes and `profileDeclarations.outputDigest` (six readings, one value). The script exits non-zero on any divergence — including an unexpectedly *green* key-trust/timestamp/Rekor result.
 
-Committed artifacts: `scripts/verify-rulespec-interop.sh`; `scripts/fixtures/earners_levy.reencoded.yaml` (our re-encoding, sha256 `eeb37719…`); node 1's and node 2's payload / built package / commitment bundle under `scripts/fixtures/rulespec-interop-*` (payloads carry the extension blocks; commitment bundles carry package + envelope hash + Ed25519ph signature + trust-registry snapshot); and three `.gitignore` lines keeping `.rulespec-clones/` out of the tree.
+Committed artifacts: `scripts/verify-rulespec-interop.sh`; `scripts/fixtures/earners_levy.reencoded.yaml` (our re-encoding, sha256 `eeb37719…`); the payload / built package / commitment bundle for each node under `scripts/fixtures/rulespec-interop-*` — node 1 (`-payload.json` / `-package.local.json` / `-commitment.local.json`), node 2 (`-encoding-…`), node 3 (`-encoding-profile-…` — neutral file names; the speculative profile id appears only inside file contents) — payloads carry the extension blocks; commitment bundles carry package + envelope hash + Ed25519ph signature + trust-registry snapshot; and three `.gitignore` lines keeping `.rulespec-clones/` out of the tree.
 
 </details>
 

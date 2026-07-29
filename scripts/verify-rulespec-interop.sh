@@ -10,28 +10,39 @@
 #   leg B  bootstrap the uv-managed receipt venv (Python >= 3.11, receipt pinned
 #          to a git SHA) and run `receipt verify --spec verification/spec.py`
 #          against the pinned rulespec-nz clone — THEIR verifier, exit 0 required
-#   leg C  offline-verify BOTH committed local commitment bundles with
+#   leg C  offline-verify all THREE committed local commitment bundles with
 #          @typedstandards/verify-core@0.7.0 — OUR verifier — with fetch stubbed
-#          to THROW (spec §9.4 / Q15 pattern): node 1 (the comparison event) and
+#          to THROW (spec §9.4 / Q15 pattern): node 1 (the comparison event),
 #          node 2 (the encoding run — an encoder apply manifest in Typed
 #          Standards form, whose output field carries the re-encoded YAML bytes
-#          themselves). Required verdict shape for EACH: all structural checks
+#          themselves), and node 3 (node 2's record re-expressed under the
+#          SPECULATIVE, UNREGISTERED contentProfile sketch
+#          axiom/statute-encoding/v0-sketch — a demonstration of the
+#          profile-bearing form; node 2 remains the canonical honest record).
+#          Required verdict shape for EACH: all structural checks
 #          pass (#1 #2 #3 #4 #12 #13), key trust is unknown_key (#5 — the
 #          throwaway signing key is deliberately NOT in the registry snapshot),
 #          #7 (RFC 3161) and #8 (Rekor) are honestly UNVERIFIED (calm-absent),
 #          #14 degrades to no_registry_identity, and ZERO network calls are
 #          attempted. A fully green verdict is NOT expected and would itself be
-#          a failure of this harness's honesty.
+#          a failure of this harness's honesty. Leg C(3) additionally asserts
+#          the verifier keeps IGNORING the unregistered sketch profile (#3 rule
+#          unchanged, #15 profileType unchanged, profile id absent from the
+#          verdict) — it must FAIL if a verifier starts treating the sketch as
+#          registered — and that the honest not-run/none-declared declarations
+#          are intact.
 #   leg D  the digest join: the node-1 payload extension's
 #          observed_upstream_artifact_sha256 == corpus-journal entryIndex 3's
 #          sha256 for nz/regulations/acc/earners_levy.yaml == a fresh
 #          shasum -a 256 of that file in the pinned clone. All three printed.
-#   leg E  the tri-binding: sha256 of the OUTPUT BYTES CARRIED INSIDE node 2's
-#          signed package == fresh shasum -a 256 of the committed
-#          scripts/fixtures/earners_levy.reencoded.yaml == node 2's extension
-#          output_sha256 == node 1's extension our_reencoding_sha256 — i.e. the
-#          encoding node, the fixture file, and the comparison node all bind
-#          the same bytes. All four printed.
+#   leg E  the tri-binding, extended to node 3: sha256 of the OUTPUT BYTES
+#          CARRIED INSIDE node 2's signed package == fresh shasum -a 256 of the
+#          committed scripts/fixtures/earners_levy.reencoded.yaml == node 2's
+#          extension output_sha256 == node 1's extension our_reencoding_sha256
+#          == sha256 of the output bytes carried inside node 3's signed package
+#          == node 3's profileDeclarations.outputDigest — i.e. the encoding
+#          node, the fixture file, the comparison node, and the profile-demo
+#          node all bind the same bytes. All six printed.
 #
 # No secrets, no credentials, no production (civicaitools.org) requests.
 # Network is used ONLY to clone/install pinned sources when absent
@@ -131,26 +142,32 @@ echo "   @typedstandards/verify-core @ $(node -p "require('$HARNESS/node_modules
 # checkout carries no file under gitignored .rulespec-clones/). fetch is
 # stubbed to THROW; the exact expected verdict shape is asserted field by
 # field — a divergence in EITHER direction (including an unexpectedly green
-# #5/#7/#8) exits non-zero. The runner is generic over the two POC nodes:
+# #5/#7/#8) exits non-zero. The runner is generic over the three POC nodes:
 # the third argument names the extension digest field whose value must sit
 # inside the signed JCS canonical bytes (node 1: the observed upstream
-# artifact digest; node 2: the digest of its own carried output).
+# artifact digest; nodes 2/3: the digest of their own carried output); the
+# optional fourth argument `profile-demo` (node 3) adds the speculative-
+# contentProfile assertions.
 cat > "$HARNESS/run-offline-verify.mjs" <<'MJSEOF'
 // poc/rulespec-interop — OFFLINE verification of a local commitment bundle
 // with @typedstandards/verify-core (spec §9.2 sequence, §9.4 / Q15
 // offline-harness pattern: fetch stubbed to THROW; zero network asserted).
-// Runs against BOTH POC nodes (comparison event + encoding run); they share
-// key, signer, type, captureMethod, and absence profile, so the expected
-// verdict shape is identical for both — only the hashes differ.
+// Runs against all THREE POC nodes (comparison event + encoding run +
+// profile-bearing demo); they share key, signer, type, captureMethod, and
+// absence profile, so the expected verdict shape is identical for all —
+// only the hashes differ. Node 3 additionally carries the SPECULATIVE,
+// UNREGISTERED contentProfile sketch, which verify-core 0.7.0 must keep
+// silently ignoring (see the profile-demo assertions below).
 //
-// Expected verdict shape (written down BEFORE any run — see the phase-3 and
-// encoding-node records): structural checks pass (#1 #2 #3 #4 #12 #13), key
-// trust is unknown_key (#5), signer-identity check degrades to
-// no_registry_identity (#14), #7/#8 are calm-absent/UNVERIFIED (no TSA token,
-// no Rekor entry), #9 vacuous, #10 active/none, #15 ok. Any divergence —
-// better or worse — fails this script.
+// Expected verdict shape (written down BEFORE any run — see the phase-3,
+// encoding-node, and node-3 pre-run records): structural checks pass
+// (#1 #2 #3 #4 #12 #13), key trust is unknown_key (#5), signer-identity
+// check degrades to no_registry_identity (#14), #7/#8 are
+// calm-absent/UNVERIFIED (no TSA token, no Rekor entry), #9 vacuous,
+// #10 active/none, #15 ok. Any divergence — better or worse — fails this
+// script.
 //
-// Usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key>
+// Usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key> [profile-demo]
 
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
@@ -160,11 +177,12 @@ import {
   jcs,
 } from '@typedstandards/verify-core';
 
-const [, , commitmentPath, payloadPath, containmentKey] = process.argv;
+const [, , commitmentPath, payloadPath, containmentKey, mode] = process.argv;
 if (!commitmentPath || !payloadPath || !containmentKey) {
-  console.error('usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key>');
+  console.error('usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key> [profile-demo]');
   process.exit(2);
 }
+const profileDemo = mode === 'profile-demo';
 const commitment = JSON.parse(readFileSync(commitmentPath, 'utf8'));
 const payload = JSON.parse(readFileSync(payloadPath, 'utf8'));
 
@@ -258,6 +276,57 @@ assert.deepEqual(
 // zero network
 assert.equal(fetches, 0, 'ZERO network calls attempted');
 
+// --- the contentProfile axis ----------------------------------------------
+// Node 3 (profile-demo mode) carries metadata.contentProfile =
+// "axiom/statute-encoding/v0-sketch" — a SPECULATIVE, UNREGISTERED sketch id
+// (no spec value, no ADR, no registry, no verifier vocabulary). The step-1
+// prediction, written BEFORE any run: verify-core 0.7.0 consults
+// contentProfile only (a) on check #3's pre-v0.1 fallback branch — never
+// taken here, the package carries an explicit contentCanonicalization — and
+// (b) in check #15's profile-type resolution, where every non-datHere value
+// falls through to the implicit 'ai-assisted-analysis'. So the unknown
+// profile id must leave the verdict IDENTICAL in shape to nodes 1/2 (the
+// exact #3 and #15 states are already asserted above for every node) and
+// must appear NOWHERE in the verdict. If a future verify-core starts
+// treating the sketch as registered — a different #3 rule, a different #15
+// profileType, or any verdict surface naming the profile id — these
+// assertions FAIL, by design: the demo is only honest while the profile
+// stays unregistered.
+const SKETCH_PROFILE = 'axiom/statute-encoding/v0-sketch';
+if (profileDemo) {
+  assert.equal(pkg.metadata.contentProfile, SKETCH_PROFILE, 'node 3 metadata.contentProfile');
+  assert.ok(
+    !JSON.stringify(result).includes(SKETCH_PROFILE),
+    'verdict must NOT mention the sketch profile id — the verifier must not treat it as registered',
+  );
+  assert.ok(!('producerProfile' in pkg), 'node 3 must not claim a producerProfile');
+  const ext3 = pkg.extensions['org.civicaitools.rulespec-interop'];
+  assert.equal(ext3.role, 'encoding-run-profile-demo', 'node 3 role discriminator');
+  assert.equal(ext3.profileStatus, 'speculative-unregistered-sketch', 'node 3 profileStatus');
+  assert.equal(
+    ext3.profileDeclarations.oracleComparisons.status,
+    'not-run',
+    'oracleComparisons must stay honestly not-run (no oracle was compared in this POC)',
+  );
+  assert.ok(ext3.profileDeclarations.oracleComparisons.reason.length > 0, 'oracleComparisons carries a reason');
+  assert.equal(
+    ext3.profileDeclarations.gateDeclarations.status,
+    'none-declared',
+    'gateDeclarations must stay honestly none-declared',
+  );
+  assert.ok(ext3.profileDeclarations.gateDeclarations.reason.length > 0, 'gateDeclarations carries a reason');
+  assert.equal(
+    ext3.profileDeclarations.outputDigest,
+    ext3.output_sha256,
+    'profileDeclarations.outputDigest == extension output_sha256',
+  );
+} else {
+  assert.ok(
+    !('contentProfile' in pkg.metadata),
+    'nodes 1/2 carry no contentProfile (default by absence)',
+  );
+}
+
 // --- extension round-trip + signed-bytes containment ----------------------
 const extPayload = JSON.stringify(payload.extensions['org.civicaitools.rulespec-interop']);
 const extPackage = JSON.stringify(pkg.extensions['org.civicaitools.rulespec-interop']);
@@ -276,6 +345,13 @@ const escapedOutputBody = JSON.stringify(pkg.output).slice(1, -1);
 const outputOffset = canonical.indexOf(escapedOutputBody);
 assert.ok(outputOffset >= 0, 'FULL output body sits INSIDE the JCS canonical (signed) bytes');
 console.log(`output containment: full output (JSON-escaped body, ${escapedOutputBody.length} chars) at byte offset ${outputOffset} of ${Buffer.byteLength(canonical, 'utf8')} JCS bytes`);
+if (profileDemo) {
+  const profileOffset = canonical.indexOf(`"contentProfile":"${SKETCH_PROFILE}"`);
+  assert.ok(profileOffset >= 0, 'speculative contentProfile sits INSIDE the JCS canonical (signed) bytes');
+  const declOffset = canonical.indexOf('"profileDeclarations":');
+  assert.ok(declOffset >= 0, 'profileDeclarations block sits INSIDE the JCS canonical (signed) bytes');
+  console.log(`profile containment: contentProfile "${SKETCH_PROFILE}" at byte offset ${profileOffset}; profileDeclarations at byte offset ${declOffset} of ${Buffer.byteLength(canonical, 'utf8')} JCS bytes`);
+}
 
 console.log('OFFLINE VERIFY: expected verdict shape CONFIRMED (structural pass + unknown_key + #7/#8 unverified + 0 fetches)');
 MJSEOF
@@ -292,6 +368,13 @@ node "$HARNESS/run-offline-verify.mjs" \
   "$FIXTURES/rulespec-interop-encoding-payload.json" \
   output_sha256 \
   || fail "verify-core offline verification (node 2) did not match the expected verdict shape"
+echo "   --- leg C(3): node 3 — the encoding run under the speculative profile sketch (demo form) ---"
+node "$HARNESS/run-offline-verify.mjs" \
+  "$FIXTURES/rulespec-interop-encoding-profile-commitment.local.json" \
+  "$FIXTURES/rulespec-interop-encoding-profile-payload.json" \
+  output_sha256 \
+  profile-demo \
+  || fail "verify-core offline verification (node 3) did not match the expected verdict shape"
 
 # --------------------------------------------------------------------------
 note "leg D: triple digest join (extension == journal entryIndex 3 == fresh shasum)"
@@ -312,12 +395,14 @@ echo "   fresh shasum -a 256 (pinned clone):          $FRESH_DIGEST"
 echo "   digest join: all three values identical"
 
 # --------------------------------------------------------------------------
-note "leg E: tri-binding (encoding node's carried bytes == fixture file == node-1 extension)"
+note "leg E: tri-binding (encoding node's carried bytes == fixture file == node-1 extension == node-3 carried bytes)"
 # --------------------------------------------------------------------------
 # The encoding node CARRIES the re-encoded YAML as its output field, inside its
-# signed bytes. Assert: sha256(those carried bytes) == fresh shasum of the
-# committed fixture file == node 2's extension output_sha256 == node 1's
-# extension our_reencoding_sha256. Four independent readings, one value.
+# signed bytes — and so does node 3 (the profile-demo re-expression). Assert:
+# sha256(node 2's carried bytes) == fresh shasum of the committed fixture file
+# == node 2's extension output_sha256 == node 1's extension
+# our_reencoding_sha256 == sha256(node 3's carried bytes) == node 3's
+# profileDeclarations.outputDigest. Six independent readings, one value.
 CARRIED_DIGEST="$(node -e "
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -337,16 +422,40 @@ console.log(crypto.createHash('sha256').update(Buffer.from(commitment.package.ou
 NODE2_EXT_DIGEST="$(node -p "JSON.parse(require('fs').readFileSync('$FIXTURES/rulespec-interop-encoding-payload.json','utf8')).extensions['org.civicaitools.rulespec-interop'].output_sha256")"
 NODE1_EXT_DIGEST="$(node -p "JSON.parse(require('fs').readFileSync('$FIXTURES/rulespec-interop-payload.json','utf8')).extensions['org.civicaitools.rulespec-interop'].our_reencoding_sha256")"
 FILE_DIGEST="$(shasum -a 256 "$FIXTURES/earners_levy.reencoded.yaml" | awk '{print $1}')"
+# Node 3 carries the SAME output bytes inside its own signed package; its
+# profileDeclarations.outputDigest must also bind them.
+CARRIED3_DIGEST="$(node -e "
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const commitment = JSON.parse(fs.readFileSync('$FIXTURES/rulespec-interop-encoding-profile-commitment.local.json', 'utf8'));
+const pkgFixture = JSON.parse(fs.readFileSync('$FIXTURES/rulespec-interop-encoding-profile-package.local.json', 'utf8'));
+if (JSON.stringify(pkgFixture) !== JSON.stringify(commitment.package)) {
+  console.error('node 3 package fixture does not match the package inside the commitment bundle');
+  process.exit(1);
+}
+const ext = commitment.package.extensions['org.civicaitools.rulespec-interop'];
+if (ext.role !== 'encoding-run-profile-demo') {
+  console.error('node 3 extension is missing the role: encoding-run-profile-demo discriminator');
+  process.exit(1);
+}
+console.log(crypto.createHash('sha256').update(Buffer.from(commitment.package.output, 'utf8')).digest('hex'));
+")"
+NODE3_DECL_DIGEST="$(node -p "JSON.parse(require('fs').readFileSync('$FIXTURES/rulespec-interop-encoding-profile-payload.json','utf8')).extensions['org.civicaitools.rulespec-interop'].profileDeclarations.outputDigest")"
 echo "   sha256 of output bytes carried in node 2's signed package: $CARRIED_DIGEST"
 echo "   fresh shasum -a 256 of committed earners_levy.reencoded.yaml: $FILE_DIGEST"
 echo "   node 2 extension output_sha256:                              $NODE2_EXT_DIGEST"
 echo "   node 1 extension our_reencoding_sha256:                      $NODE1_EXT_DIGEST"
+echo "   sha256 of output bytes carried in node 3's signed package: $CARRIED3_DIGEST"
+echo "   node 3 profileDeclarations.outputDigest:                     $NODE3_DECL_DIGEST"
 [ "$CARRIED_DIGEST" = "$FILE_DIGEST" ] || fail "tri-binding: carried output bytes != fixture file"
 [ "$CARRIED_DIGEST" = "$NODE2_EXT_DIGEST" ] || fail "tri-binding: carried output bytes != node 2 extension output_sha256"
 [ "$CARRIED_DIGEST" = "$NODE1_EXT_DIGEST" ] || fail "tri-binding: carried output bytes != node 1 extension our_reencoding_sha256"
-echo "   tri-binding: all four values identical — encoding node, fixture file, and comparison node bind the same bytes"
+[ "$CARRIED3_DIGEST" = "$FILE_DIGEST" ] || fail "tri-binding: node 3 carried output bytes != fixture file"
+[ "$NODE3_DECL_DIGEST" = "$FILE_DIGEST" ] || fail "tri-binding: node 3 profileDeclarations.outputDigest != fixture file"
+echo "   tri-binding: all six values identical — encoding node, fixture file, comparison node, and profile-demo node bind the same bytes"
 
 echo
 echo "ALL LEGS PASSED: pinned clones + receipt verify (exit 0) + verify-core offline"
-echo "verdicts for BOTH nodes (structural pass, unknown_key, #7/#8 unverified,"
-echo "0 fetches) + digest join + tri-binding of the re-encoding bytes."
+echo "verdicts for all THREE nodes (structural pass, unknown_key, #7/#8 unverified,"
+echo "0 fetches; node 3's speculative profile ignored, not resolved) + digest join"
+echo "+ tri-binding of the re-encoding bytes across nodes 1, 2, and 3."
