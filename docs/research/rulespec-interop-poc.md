@@ -1,13 +1,79 @@
-<!-- v4 — 2026-07-29 — precision pass: finding-3 trigger (cross-protocol, not cross-class), finding-4 fairness, verifier-vs-spec vocabulary note, freshness symmetry (§9.4 as-of), Rekor-discloses/sealed tension, finding-1+2 unification via #15 REJECT + axis separation, join-as-harness-leg rationale, Q15/Q16 links + finding 8, contemporaneous-vs-backfill asymmetry. v3 at f74ad55; v2 at 60b9345; v1 at dbe1d2d. -->
+<!-- v5 — 2026-07-29 — story-first restructure: leads with the missing artifact-class (contemporaneous production attestation) and the in-interface exhibit; comparison demoted to supporting evidence; full detail moved to the appendix. Frozen v4 alongside as rulespec-interop-poc-v4-archive.md. v4 at 3eeea0e; v3 at f74ad55; v2 at 60b9345; v1 at dbe1d2d. -->
 # Rulespec Interop POC
 
-A proof of concept composing two independently designed verification systems — The Axiom Foundation's [receipt](https://github.com/TheAxiomFoundation/receipt) witnessed-corpus verifier and this project's Typed Standards evidence envelope (`@typedstandards/verify-core`) — on a single SHA-256 digest that neither side had to negotiate with the other. [rulespec-nz](https://github.com/TheAxiomFoundation/rulespec-nz) publishes machine-readable encodings of NZ statutes and regulations (`rulespec/v1` YAML); its [PR #104](https://github.com/TheAxiomFoundation/rulespec-nz/pull/104) binds all 80 rule files into a witnessed, offline-verifiable corpus journal. The POC independently re-encoded one provision from the same pinned statute XML, recorded both the comparison and the encoding run itself as Typed Standards nodes, verified everything with both projects' verifiers offline, and joined the two systems on the digest. The comparison also surfaced a substantive encoding divergence — regulation 4's routing for self-employed persons under regulation 7 — laid out neutrally in [Comparison result](#comparison-result); neither reading is assumed correct. Everything here is reproducible from branch `poc/rulespec-interop` via `./scripts/verify-rulespec-interop.sh` ([Reproduction](#reproduction)).
+*Last updated: 2026-07-29 (v5) — story-first restructure: leads with the missing artifact-class (contemporaneous production attestation) and the in-interface exhibit; comparison demoted to supporting evidence; full detail moved to the appendix. Frozen v4 alongside as `rulespec-interop-poc-v4-archive.md`. v4 at `3eeea0e`; v3 at `f74ad55`; v2 at `60b9345`; v1 at `dbe1d2d`.*
 
-*Last updated: 2026-07-29 (v4) — precision pass: finding-3 trigger (cross-protocol, not cross-class), finding-4 fairness, verifier-vs-spec vocabulary note, freshness symmetry (§9.4 as-of), Rekor-discloses/sealed tension, finding-1+2 unification, join-as-harness-leg rationale, Q15/Q16 links + finding 8, contemporaneous-vs-backfill asymmetry. v3 at `f74ad55`; v2 at `60b9345`; v1 at `dbe1d2d`.*
+## The point
+
+Any two independent encodings of the same law will diverge somewhere — divergence is inevitable, and by itself unremarkable. What makes a divergence *explainable* rather than merely observable is a contemporaneous record of **how** each encoding came to be — which sources were read, what instructions ran, what model produced the bytes, what judgment calls were made — and, as far as we can find, no published corpus of machine-readable law carries that record. The Axiom Foundation's rulespec corpora show both halves at once: the published artifacts are deterministic and well-bound — git everywhere, and in the NZ pilot a witnessed, offline-verifiable corpus journal over all 80 rule files ([rulespec-nz](https://github.com/TheAxiomFoundation/rulespec-nz) [PR #104](https://github.com/TheAxiomFoundation/rulespec-nz/pull/104)) — while the processes that authored those artifacts are non-deterministic, judgment-laden, and unrecorded. A Typed Standards node per encoding run — a ~12 KB signed contemporaneous production record carrying the source pin, the instruction, the model, and the complete output bytes — adds exactly that record, without the producer changing formats, keys, or journals.
+
+The POC demonstrated the composition end to end for one regulation: two locally-signed Typed Standards nodes over one NZ regulation, both projects' verifiers — The Axiom Foundation's [receipt](https://github.com/TheAxiomFoundation/receipt) witnessed-corpus verifier and this project's `@typedstandards/verify-core` — passing offline, joined to their witnessed journal on a single SHA-256 digest neither side had to negotiate ([The demonstration](#the-demonstration)). The encoding divergence the comparison surfaced is the use-case exhibit, not the finding: it is what an unexplainable divergence looks like today ([Divergence made explainable](#divergence-made-explainable)).
 
 **Read the [Limitations](#limitations) section before citing any result here.** In particular: their verifier was installed from an unreleased PR branch, our packages are signed with a local throwaway key that no trust registry lists, and both upstream PRs are still open, so all upstream artifacts are pre-merge.
 
-## The two-layer picture
+## The gap, seen where readers meet the corpus
+
+The Axiom Foundation's public app renders US federal statutes per-provision. Every fact in this section was verified on 2026-07-29 — the interface facts as observed in the app's provision view that day, the repository facts via the GitHub API.
+
+For 26 USC § 32(a)(1) — the Earned Income Tax Credit's credit-allowance sentence — the provision view shows:
+
+- the breadcrumb `AXIOM / US FEDERAL / STATUTES / TITLE 26 / § 32 / (A) / (1)`;
+- `ENCODINGS · 1` — `eitc_phased_in`, `26 USC § 32 (a)(1) · derived`;
+- `SHOWN SOURCE statutes/26/32.yaml`, captioned "Displaying the canonical repository encoding.";
+- the sentence **"This encoding covers the parent provision us/statute/26/32; no dedicated encoding exists for this exact provision yet."**;
+- a "View on GitHub" link; and
+- a RULES code panel.
+
+<!-- SCREENSHOT 1: §32(a)(1) provision view — pending -->
+<!-- SCREENSHOT 2: eitc_phased_in RULES panel — pending -->
+
+§ 32(k)'s view similarly lists three derived encodings: `eitc_demographic_eligible`, `eitc_allowed`, `eitc`.
+
+<!-- SCREENSHOT 3: §32(k) view, three derived encodings — pending -->
+
+On the repository side, verified via the GitHub API the same day: [TheAxiomFoundation/rulespec-us](https://github.com/TheAxiomFoundation/rulespec-us) is public; `us/statutes/26/32.yaml` is a 706-line `rulespec/v1` module citing `corpus_citation_path: us/statute/26/32` — a whole-section citation; a `us/statutes/26/32/` subdirectory exists alongside it; and the repo has **no `verification/` directory and no corpus journal** (code search: zero hits) — the witnessed-corpus lane exists only in the NZ pilot ([rulespec-nz PR #104](https://github.com/TheAxiomFoundation/rulespec-nz/pull/104)). The pinned axiom-corpus snapshot this POC already holds (commit `92ac9c1b…`) includes `us` statute sources.
+
+<!-- SCREENSHOT 4: GitHub blob/history for us/statutes/26/32.yaml — pending -->
+
+The interface shows everything that exists: the artifact, its `derived` tag, the canonical repository path, the GitHub link. The git history behind that link is, today, the only production record there is. Nothing anywhere records how `statutes/26/32.yaml` came to be — which sources were read, what instructions ran, what judgment calls were made. That absence is invisible until two encodings disagree; then it is the whole problem.
+
+## The demonstration
+
+The NZ demonstration is complete, and everything in it is reproducible from branch `poc/rulespec-interop` via `./scripts/verify-rulespec-interop.sh` ([Reproduction](#reproduction)). From the same pinned PCO statute XML their encoding used, the POC independently re-encoded regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) under a never-read-the-target protocol ([Independence protocol](#independence-protocol)), and recorded two Typed Standards nodes:
+
+- **Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`) is the contemporaneous production record, cut from the live run's own records at run time rather than reconstructed later: the statute source path and digest in; the complete re-encoded YAML verbatim out (full bytes inside the signed canonical JSON); plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record — ~12 KB as a commitment bundle. This is the artifact-class their own witnessed VERIFY.md concedes the NZ corpus has zero of for its 80 rule files ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand such manifests, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict), and the backfill is tracked in their [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
+- **Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`) records the observed-fact join to their witnessed journal: *their* artifact's digest enters our signed bytes as an **observed fact**, not a co-signed claim — and that digest, the digest their journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
+
+Both verifiers pass offline: their corpus under `receipt verify` (exit 0), both our nodes under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding of the re-encoding bytes across node 2, the committed fixture, and node 1 (leg E). Neither project changed formats, keys, schemas, or endpoints. The honest local-first caveat: both nodes are signed with a throwaway key that verify-core reports as `unknown_key`, checks #7 (RFC 3161) and #8 (Rekor) are deliberately dark, and the production publish is a separately gated decision not made here ([Package construction](#package-construction)). Full detail — pins, verdicts verbatim, the two-layer picture, the [end-to-end flow diagram](#the-end-to-end-flow) — is in the [appendix](#appendix--the-evidence).
+
+## Divergence made explainable
+
+Our independent encoding of NZ regulation 4 diverged from theirs on the regulation-7 routing for self-employed persons — as independent encodings always will, somewhere. Today that divergence is merely observable: two artifacts, two digests, no way to ask why. With a production record on both sides it becomes explainable — the recorded sources, instructions, and judgment points of each run can be compared directly, and the disagreement traced to where the readings parted. Node 2 is that record for our run; no such record exists for any of their 80 NZ files or their US files. The full comparison — laid out neutrally, neither reading assumed correct — is in [Comparison result](#comparison-result).
+
+## What adopting would cost them
+
+Minimal, and stated honestly. No format change, no key change, no journal change — the POC changed nothing of theirs (leg A asserts both clones bit-identical to the pinned SHAs and clean on every run). Adoption is one TS node per encoding run, emitted at encode time in node 2's form (~12 KB as a commitment bundle). Nor is adoption blocked on our side by the [finding 1/2](#findings-index) vocabulary gap: an upstream-shipped encoder Producer Profile would degrade gracefully on our verifier today — an unresolvable profile bundle reports `producerProfile_bundle_unresolved` with the declared value preserved verbatim (§9.2 #15) — until the Q32 bundle-distribution mechanism lands.
+
+For the 80 existing files a backfill node is possible but bounded, and the bound is worth stating precisely. An encoding run is a non-deterministic, judgment-laden process that produces a deterministic artifact; the determinism attaches to the residue — the bytes their journal binds — not to the generative process. For those 80 files no process record exists (their own witnessed VERIFY.md concession), so a backfill node can only attest present-day observables — digests and source pins as they stand now, not the original production event — and no after-the-fact act can become a witness of a historical event: even re-running today's tooling to byte-identical output would demonstrate reproduction of the artifact, not provenance of their encoding event. Contemporaneous capture at encode time is therefore the half of the work only they can do; the backfill half — the #1192 arc — is bounded in any format, theirs or ours. That retro-attestation limit is the honest-label problem from v1 finding 1.
+
+## Findings (index)
+
+Observations only; nothing was filed, and no spec, ADR, or open-questions edit was made from this POC. Full reasoning for findings 1–7 is in v1 at `dbe1d2d` (finding 8 is new in v4); each Xanadu gate is a real adopter need, not a POC.
+
+1. **No `captureMethod` value describes an encoder pipeline** — §8.6's vocabulary is chat-capture only, and the constraint is harder than a missing option: check #15 *REJECTs* any `captureMethod` outside the resolved profile's vocabulary (`captureMethod_unknown`, §9.2 #15), so an honest encoder-pipeline label is not merely absent but structurally blocked today — node 2 necessarily carries the nearest-fit chat label. Per the spec's own axis separation (§8.6: `captureMethod` = how the bytes were captured; §8.7: content profile = how the content is shaped; the producer profile's guidance bundle = the discipline that declares the vocabulary), encoder-pipeline-ness properly lands on the producer-profile axis — which makes findings 1 and 2 two halves of one gap (it also bounds backfill honesty, per [cost](#what-adopting-would-cost-them)). To act: Producer Profile guidance-bundle amendment (Q32 mechanics), gated on a named adopter.
+2. **No Producer Profile for statute encoding** — the thing rulespec-nz *is* has no profile declaring capture vocabulary, proof-atom discipline, or gate expectations; the other half of finding 1's gap, on the axis where it properly belongs. To act: profile promotion per ADR-0006, gated on an adopter.
+3. **No domain separation in §8.3.1** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 1. To act: ADR; a domain tag changes signature bytes, a versioned envelope change.
+4. **Gate-tier taxonomy has no TS equivalent** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 2. Relevant if TS packages start carrying declared gate results.
+5. **§8.10 asserts append-only; §9.2 never verifies completeness** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 3. A completeness-carrying serialization is a spec/ADR question (interacts with Q2).
+6. **ADR-0016 concepts map cleanly onto their model** — `revises`/`supersedes` ↔ their journal correction rows; `vcsRef` ↔ their `subjectCommit`/toolchain pins; §8.10 lineage ↔ their release chain ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md)). Nothing to act — the mapping is evidence the abstractions were pitched at the right level.
+7. **Committed-mode friction, made concrete** — both nodes are `visibility: committed`; production-published, a third party could verify the commitment offline but the bytes are creator-distributed only (ADR-0010 §5, by design). The committed state is itself a designed capability, not an accident: the [summary's](../architecture/typed-standards-summary.md) "What it enables" section names commit-now-publish-later — an existed-by-a-particular-time proof before disclosure, for embargo workflows, pre-publication review, and priority claims — and the distribution friction observed here is the flip side of that deliberate property. Note the designed tension with the Rekor freshness lane in [What Typed Standards would give the corpus](#what-typed-standards-would-give-the-corpus) item 2: the Rekor commitment is public in both visibility states, so commit-now-publish-later is not a no-public-footprint mode. To act: a distribution-pattern question for a real committed-mode adopter.
+8. **Q16 seed material, observed.** The POC's two commitment fixtures with exact expected-verdict assertions — including the deliberately-not-green negative case (the harness fails on an unexpectedly *green* #5/#7/#8) — are candidate seed material for the [Q16](../architecture/open-questions.md#q16--formal-conformance-criteria) conformance reference corpus (formal conformance criteria: a versioned suite, a reference corpus beyond the ad-hoc Q15 fixtures, a conformance-claims registration mechanism — all still open per the registry). Observation only; Xanadu-gated on Q16's real consumer, nothing filed.
+
+---
+
+## Appendix — the evidence
+
+### The two-layer picture
 
 The two systems answer different questions about the same corpus, and neither answers the other's. receipt establishes **custody of a witnessed tree**: the bytes you hold are exactly what a code-pinned producer key signed and two independent RFC 3161 authorities witnessed, closed-world, history unrewritten. Typed Standards establishes **provenance and identity of one artifact**: a per-artifact signed node stating how a specific thing came to be — source pins, prompt, model, output bytes — portable on its own, with designed slots for publisher identity, timestamping, and transparency logging. The seam between them is one SHA-256 digest both sides already compute: their journal binds it, our signed bytes carry it as an observed fact. Neither project changed formats, keys, schemas, or endpoints. Positioning against adjacent verification standards is a stated design surface of Typed Standards — the [summary's](../architecture/typed-standards-summary.md) "Relationship to adjacent standards" section enumerates eleven, from in-toto to C2PA, each with a declared relationship — and receipt is a live adjacent system not on that enumerated list: the zero-negotiation join here is evidence the posture generalizes beyond the standards the summary names.
 
@@ -37,12 +103,9 @@ flowchart LR
 
 *Reading notes: every edge converges on the seam — the one digest both systems publish independently, with no negotiation between them. The NEITHER lane is load-bearing: both verifiers disclaim those properties in their own output, quoted verbatim in [the two verdicts](#the-two-verdicts) — and the freshness cell is symmetric by both systems' own normative text (their stale-clone disclaimer; spec §9.4's `generatedAt` as-of note).*
 
-## What the POC built
+### The end-to-end flow
 
-- **An independent re-encoding** of regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ), from the same pinned PCO statute XML their encoding used, under a never-read-the-target protocol ([Independence protocol](#independence-protocol)).
-- **Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): a first-hand record of comparing the two encodings; *their* artifact's digest enters the signed bytes as an **observed fact**, not a co-signed claim.
-- **Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the re-encoding itself, emitted as evidence. It carries the statute source path and digest as input, the complete re-encoded YAML verbatim as output (full bytes inside the signed canonical JSON), the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record.
-- **Both verifiers pass offline**: their corpus under `receipt verify` (exit 0), both our nodes under `@typedstandards/verify-core@0.7.0` with fetch stubbed to throw (zero network calls), plus the digest join (leg D) and the tri-binding of the re-encoding bytes across node 2, the committed fixture, and node 1 (leg E).
+[The demonstration](#the-demonstration), as one picture:
 
 ```mermaid
 flowchart TD
@@ -65,9 +128,9 @@ flowchart TD
 
 *Reading notes: two encodings from one pinned source, two signed nodes, two verifiers. The join (leg D) and the tri-binding (leg E) are separate claims — one joins our signed record to their witnessed journal, the other binds the re-encoding bytes across node 2, the committed fixture, and node 1 — and they meet only at the final exit-0.*
 
-## What the POC exercised of the spec
+### What the POC exercised of the spec
 
-Read as a partial conformance exercise against [`typed-standards-specification.md`](../architecture/typed-standards-specification.md) (v0.1): some surfaces of the spec the POC exercised, some it deliberately left dark, and two it exposed gaps in. Every row's status is checkable against the [appendix](#appendix--the-evidence) or the harness.
+Read as a partial conformance exercise against [`typed-standards-specification.md`](../architecture/typed-standards-specification.md) (v0.1): some surfaces of the spec the POC exercised, some it deliberately left dark, and two it exposed gaps in. Every row's status is checkable against the evidence sections in this appendix or the harness.
 
 | Spec surface | POC status | Evidence |
 |--------------|------------|----------|
@@ -81,7 +144,7 @@ Read as a partial conformance exercise against [`typed-standards-specification.m
 | Extensions (§8.1.6 — reverse-DNS keys inside the signed canonical JSON) | **Exercised, load-bearing** | the digest join and the tri-binding both ride extension fields — [legs D and E](#the-digest-join-and-the-tri-binding) |
 | Governance surfaces (open-questions registry, ADRs, the Xanadu gate) | **Respected, not exercised** | findings recorded as observations; nothing filed — [Findings (index)](#findings-index) |
 
-## What Typed Standards would give the corpus
+### What Typed Standards would give the corpus
 
 Stated as a technical fit assessment against what the POC actually verified — not a roadmap for either project.
 
@@ -91,7 +154,7 @@ Stated as a technical fit assessment against what the POC actually verified — 
 4. **Per-artifact citability.** Their journal does record per-file digests (entryIndex 3 is exactly how leg D joins), but the unit of verification is the whole clone, closed-world — by design. A TS node verifies alone: leg C verifies a single ~12 KB commitment bundle offline, no clone required. Complementary, not competing: whole-tree custody vs a portable per-artifact record that can travel with a citation.
 5. **A designed home for the correctness claims both verifiers disclaim.** Both verdicts state they do not prove the encodings correctly read NZ law. `attestation/evaluates/v1` — ratified in the TS v0.1 sub-type table (spec §8.12: `targetNodeId`, `methodology`, `scoringRubric`, `results`; authorization `specific-role-required`) — is the designed home for a separately-signed correctness evaluation by a named evaluator. Ratified, not yet operationalized; per-sub-type operationalization lands via downstream ADRs.
 
-## What receipt has that Typed Standards lacks
+### What receipt has that Typed Standards lacks
 
 The gaps run in both directions; the POC surfaced three where their design is concretely ahead (full reasoning: v1 findings 3–5 at `dbe1d2d`).
 
@@ -100,29 +163,6 @@ The gaps run in both directions; the POC surfaced three where their design is co
 3. **Lifecycle completeness.** TS §8.10 asserts an append-only lifecycle, but §9.2 check #10 verifies only the chain the proof carrier supplies — this run's own verdicts show the consequence: `lifecycle.source: "none"`, empty chain, still `active`. Their `release_chain` recomputes every state and append digest from the append-only JSONL, so an omitted correction is a verification failure, not a silent absence — a working answer to a TS open problem, one repo away.
 
 Two projects with complementary gaps: they built the custody layer TS defers; TS built the per-artifact provenance layer their own published lane says is missing.
-
-## What adopting would cost them
-
-Minimal, and stated honestly. No format change, no key change, no journal change — the POC changed nothing of theirs (leg A asserts both clones bit-identical to the pinned SHAs and clean on every run). Adoption is one TS node per encoding run, emitted at encode time in node 2's form (~12 KB as a commitment bundle). Nor is adoption blocked on our side by the [finding 1/2](#findings-index) vocabulary gap: an upstream-shipped encoder Producer Profile would degrade gracefully on our verifier today — an unresolvable profile bundle reports `producerProfile_bundle_unresolved` with the declared value preserved verbatim (§9.2 #15) — until the Q32 bundle-distribution mechanism lands.
-
-For the 80 existing files a backfill node is possible but bounded, and the bound is worth stating precisely. An encoding run is a non-deterministic, judgment-laden process that produces a deterministic artifact; the determinism attaches to the residue — the bytes their journal binds — not to the generative process. For those 80 files no process record exists (their own witnessed VERIFY.md concession), so a backfill node can only attest present-day observables — digests and source pins as they stand now, not the original production event — and no after-the-fact act can become a witness of a historical event: even re-running today's tooling to byte-identical output would demonstrate reproduction of the artifact, not provenance of their encoding event. Contemporaneous capture at encode time is therefore the half of the work only they can do; the backfill half — the #1192 arc — is bounded in any format, theirs or ours. That retro-attestation limit is the honest-label problem from v1 finding 1.
-
-## Findings (index)
-
-Observations only; nothing was filed, and no spec, ADR, or open-questions edit was made from this POC. Full reasoning for findings 1–7 is in v1 at `dbe1d2d` (finding 8 is new in v4); each Xanadu gate is a real adopter need, not a POC.
-
-1. **No `captureMethod` value describes an encoder pipeline** — §8.6's vocabulary is chat-capture only, and the constraint is harder than a missing option: check #15 *REJECTs* any `captureMethod` outside the resolved profile's vocabulary (`captureMethod_unknown`, §9.2 #15), so an honest encoder-pipeline label is not merely absent but structurally blocked today — node 2 necessarily carries the nearest-fit chat label. Per the spec's own axis separation (§8.6: `captureMethod` = how the bytes were captured; §8.7: content profile = how the content is shaped; the producer profile's guidance bundle = the discipline that declares the vocabulary), encoder-pipeline-ness properly lands on the producer-profile axis — which makes findings 1 and 2 two halves of one gap (it also bounds backfill honesty, per [cost](#what-adopting-would-cost-them)). To act: Producer Profile guidance-bundle amendment (Q32 mechanics), gated on a named adopter.
-2. **No Producer Profile for statute encoding** — the thing rulespec-nz *is* has no profile declaring capture vocabulary, proof-atom discipline, or gate expectations; the other half of finding 1's gap, on the axis where it properly belongs. To act: profile promotion per ADR-0006, gated on an adopter.
-3. **No domain separation in §8.3.1** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 1. To act: ADR; a domain tag changes signature bytes, a versioned envelope change.
-4. **Gate-tier taxonomy has no TS equivalent** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 2. Relevant if TS packages start carrying declared gate results.
-5. **§8.10 asserts append-only; §9.2 never verifies completeness** — expanded in [What receipt has](#what-receipt-has-that-typed-standards-lacks) item 3. A completeness-carrying serialization is a spec/ADR question (interacts with Q2).
-6. **ADR-0016 concepts map cleanly onto their model** — `revises`/`supersedes` ↔ their journal correction rows; `vcsRef` ↔ their `subjectCommit`/toolchain pins; §8.10 lineage ↔ their release chain ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md)). Nothing to act — the mapping is evidence the abstractions were pitched at the right level.
-7. **Committed-mode friction, made concrete** — both nodes are `visibility: committed`; production-published, a third party could verify the commitment offline but the bytes are creator-distributed only (ADR-0010 §5, by design). The committed state is itself a designed capability, not an accident: the [summary's](../architecture/typed-standards-summary.md) "What it enables" section names commit-now-publish-later — an existed-by-a-particular-time proof before disclosure, for embargo workflows, pre-publication review, and priority claims — and the distribution friction observed here is the flip side of that deliberate property. Note the designed tension with the Rekor freshness lane in [What Typed Standards would give the corpus](#what-typed-standards-would-give-the-corpus) item 2: the Rekor commitment is public in both visibility states, so commit-now-publish-later is not a no-public-footprint mode. To act: a distribution-pattern question for a real committed-mode adopter.
-8. **Q16 seed material, observed.** The POC's two commitment fixtures with exact expected-verdict assertions — including the deliberately-not-green negative case (the harness fails on an unexpectedly *green* #5/#7/#8) — are candidate seed material for the [Q16](../architecture/open-questions.md#q16--formal-conformance-criteria) conformance reference corpus (formal conformance criteria: a versioned suite, a reference corpus beyond the ad-hoc Q15 fixtures, a conformance-claims registration mechanism — all still open per the registry). Observation only; Xanadu-gated on Q16's real consumer, nothing filed.
-
----
-
-## Appendix — the evidence
 
 ### Pins and upstream state
 
