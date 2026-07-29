@@ -4,12 +4,12 @@
 // What it does:
 //   Renders docs/research/rulespec-interop-poc.md (this repo, branch poc/rulespec-interop)
 //   to a single fully self-contained HTML file: inline CSS (light/dark/print), no external
-//   scripts, stylesheets, fonts, or images. The memo's two ```mermaid fences are replaced,
-//   in order, with the committed sidecar SVGs
-//   docs/research/rulespec-interop-poc-diagram-a.svg / -b.svg inlined verbatim — so
-//   re-rendering never needs mermaid tooling. Relative ../adr/ and ../architecture/ links
-//   are rewritten to public github.com URLs; heading ids match GitHub's slugger so intra-doc
-//   anchors keep working.
+//   scripts, stylesheets, fonts, or images. The memo's three ```mermaid fences are replaced,
+//   in order, with the committed sidecar SVGs — document order is diagram (c)
+//   (contemporaneous-vs-backfill, in the front matter), then (a) and (b) in the appendix,
+//   so the DIAGRAMS list below is c, a, b — inlined verbatim, so re-rendering never needs
+//   mermaid tooling. Relative ../adr/ and ../architecture/ links are rewritten to public
+//   github.com URLs; heading ids match GitHub's slugger so intra-doc anchors keep working.
 //
 // How to run (from anywhere; paths resolve from this script's location):
 //   node scripts/render-rulespec-interop-html.mjs [output.html]
@@ -30,6 +30,9 @@ import { createRequire } from 'node:module';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'docs', 'research', 'rulespec-interop-poc.md');
 const DIAGRAMS = [
+  // Document order: fence 1 is diagram (c) in "What adopting would cost them" (front matter);
+  // fences 2 and 3 are diagrams (a) and (b) in the appendix.
+  join(ROOT, 'docs', 'research', 'rulespec-interop-poc-diagram-c.svg'),
   join(ROOT, 'docs', 'research', 'rulespec-interop-poc-diagram-a.svg'),
   join(ROOT, 'docs', 'research', 'rulespec-interop-poc-diagram-b.svg'),
 ];
@@ -124,7 +127,7 @@ DIAGRAMS.forEach((path, i) => {
   body = body.replace(`<!--__DIAGRAM_${i}__-->`, `<figure class="diagram">\n${svg}\n</figure>`);
 });
 
-const provenance = `<!-- Standalone, fully self-contained copy (generated ${new Date().toISOString().slice(0, 10)}) of docs/research/rulespec-interop-poc.md (${memoVersion}) from branch poc/rulespec-interop in civic-ai-tools. Source of truth is the markdown on that branch; regenerate with scripts/render-rulespec-interop-html.mjs rather than hand-editing this file. The two mermaid diagrams are inlined as SVG from the committed sidecars docs/research/rulespec-interop-poc-diagram-a.svg / -b.svg. Relative repo links were rewritten to public github.com/npstorey/civic-ai-tools URLs so they resolve for an outside reader. No external CSS, fonts, scripts, or images — opens offline in any browser and prints cleanly to PDF. -->`;
+const provenance = `<!-- Standalone, fully self-contained copy (generated ${new Date().toISOString().slice(0, 10)}) of docs/research/rulespec-interop-poc.md (${memoVersion}) from branch poc/rulespec-interop in civic-ai-tools. Source of truth is the markdown on that branch; regenerate with scripts/render-rulespec-interop-html.mjs rather than hand-editing this file. The three mermaid diagrams are inlined as SVG from the committed sidecars docs/research/rulespec-interop-poc-diagram-c.svg / -a.svg / -b.svg (document order). Relative repo links were rewritten to public github.com/npstorey/civic-ai-tools URLs so they resolve for an outside reader. No external CSS, fonts, scripts, or images — opens offline in any browser and prints cleanly to PDF. -->`;
 
 const html = `<!doctype html>
 <html lang="en">
