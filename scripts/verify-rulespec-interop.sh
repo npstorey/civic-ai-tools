@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# verify-rulespec-interop.sh — poc/rulespec-interop phase 3 verification harness.
+# verify-rulespec-interop.sh — poc/rulespec-interop verification harness
+# (phase 3 single-node harness, extended for the dual-node POC).
 #
 # Reproduces, from a clean checkout of this branch, the full offline verification
 # of the rulespec-interop POC artifacts:
@@ -9,19 +10,28 @@
 #   leg B  bootstrap the uv-managed receipt venv (Python >= 3.11, receipt pinned
 #          to a git SHA) and run `receipt verify --spec verification/spec.py`
 #          against the pinned rulespec-nz clone — THEIR verifier, exit 0 required
-#   leg C  offline-verify the committed local commitment bundle with
+#   leg C  offline-verify BOTH committed local commitment bundles with
 #          @typedstandards/verify-core@0.7.0 — OUR verifier — with fetch stubbed
-#          to THROW (spec §9.4 / Q15 pattern). Required verdict shape: all
-#          structural checks pass (#1 #2 #3 #4 #12 #13), key trust is
-#          unknown_key (#5 — the throwaway signing key is deliberately NOT in
-#          the registry snapshot), #7 (RFC 3161) and #8 (Rekor) are honestly
-#          UNVERIFIED (calm-absent), #14 degrades to no_registry_identity, and
-#          ZERO network calls are attempted. A fully green verdict is NOT
-#          expected and would itself be a failure of this harness's honesty.
-#   leg D  the digest join: the payload extension's
+#          to THROW (spec §9.4 / Q15 pattern): node 1 (the comparison event) and
+#          node 2 (the encoding run — an encoder apply manifest in Typed
+#          Standards form, whose output field carries the re-encoded YAML bytes
+#          themselves). Required verdict shape for EACH: all structural checks
+#          pass (#1 #2 #3 #4 #12 #13), key trust is unknown_key (#5 — the
+#          throwaway signing key is deliberately NOT in the registry snapshot),
+#          #7 (RFC 3161) and #8 (Rekor) are honestly UNVERIFIED (calm-absent),
+#          #14 degrades to no_registry_identity, and ZERO network calls are
+#          attempted. A fully green verdict is NOT expected and would itself be
+#          a failure of this harness's honesty.
+#   leg D  the digest join: the node-1 payload extension's
 #          observed_upstream_artifact_sha256 == corpus-journal entryIndex 3's
 #          sha256 for nz/regulations/acc/earners_levy.yaml == a fresh
 #          shasum -a 256 of that file in the pinned clone. All three printed.
+#   leg E  the tri-binding: sha256 of the OUTPUT BYTES CARRIED INSIDE node 2's
+#          signed package == fresh shasum -a 256 of the committed
+#          scripts/fixtures/earners_levy.reencoded.yaml == node 2's extension
+#          output_sha256 == node 1's extension our_reencoding_sha256 — i.e. the
+#          encoding node, the fixture file, and the comparison node all bind
+#          the same bytes. All four printed.
 #
 # No secrets, no credentials, no production (civicaitools.org) requests.
 # Network is used ONLY to clone/install pinned sources when absent
@@ -121,19 +131,26 @@ echo "   @typedstandards/verify-core @ $(node -p "require('$HARNESS/node_modules
 # checkout carries no file under gitignored .rulespec-clones/). fetch is
 # stubbed to THROW; the exact expected verdict shape is asserted field by
 # field — a divergence in EITHER direction (including an unexpectedly green
-# #5/#7/#8) exits non-zero.
+# #5/#7/#8) exits non-zero. The runner is generic over the two POC nodes:
+# the third argument names the extension digest field whose value must sit
+# inside the signed JCS canonical bytes (node 1: the observed upstream
+# artifact digest; node 2: the digest of its own carried output).
 cat > "$HARNESS/run-offline-verify.mjs" <<'MJSEOF'
-// poc/rulespec-interop phase 3 — OFFLINE verification of the local commitment
-// bundle with @typedstandards/verify-core (spec §9.2 sequence, §9.4 / Q15
+// poc/rulespec-interop — OFFLINE verification of a local commitment bundle
+// with @typedstandards/verify-core (spec §9.2 sequence, §9.4 / Q15
 // offline-harness pattern: fetch stubbed to THROW; zero network asserted).
+// Runs against BOTH POC nodes (comparison event + encoding run); they share
+// key, signer, type, captureMethod, and absence profile, so the expected
+// verdict shape is identical for both — only the hashes differ.
 //
-// Expected verdict shape (written down BEFORE any run — see the phase-3 record):
-// structural checks pass (#1 #2 #3 #4 #12 #13), key trust is unknown_key (#5),
-// signer-identity check degrades to no_registry_identity (#14), #7/#8 are
-// calm-absent/UNVERIFIED (no TSA token, no Rekor entry), #9 vacuous, #10
-// active/none, #15 ok. Any divergence — better or worse — fails this script.
+// Expected verdict shape (written down BEFORE any run — see the phase-3 and
+// encoding-node records): structural checks pass (#1 #2 #3 #4 #12 #13), key
+// trust is unknown_key (#5), signer-identity check degrades to
+// no_registry_identity (#14), #7/#8 are calm-absent/UNVERIFIED (no TSA token,
+// no Rekor entry), #9 vacuous, #10 active/none, #15 ok. Any divergence —
+// better or worse — fails this script.
 //
-// Usage: node run-offline-verify.mjs <commitment.json> <payload.json>
+// Usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key>
 
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
@@ -143,9 +160,9 @@ import {
   jcs,
 } from '@typedstandards/verify-core';
 
-const [, , commitmentPath, payloadPath] = process.argv;
-if (!commitmentPath || !payloadPath) {
-  console.error('usage: node run-offline-verify.mjs <commitment.json> <payload.json>');
+const [, , commitmentPath, payloadPath, containmentKey] = process.argv;
+if (!commitmentPath || !payloadPath || !containmentKey) {
+  console.error('usage: node run-offline-verify.mjs <commitment.json> <payload.json> <containment-ext-key>');
   process.exit(2);
 }
 const commitment = JSON.parse(readFileSync(commitmentPath, 'utf8'));
@@ -174,6 +191,7 @@ const input = {
 
 const result = await verifyEvidence(input, { registry, fetch: blockedFetch });
 
+console.log(`=== bundle: ${commitmentPath} ===`);
 console.log('=== verify-core v0.7.0 verdict (verbatim, FULL) ===');
 console.log(JSON.stringify(result, null, 2));
 console.log('=== network calls attempted:', fetches, '===');
@@ -245,18 +263,35 @@ const extPayload = JSON.stringify(payload.extensions['org.civicaitools.rulespec-
 const extPackage = JSON.stringify(pkg.extensions['org.civicaitools.rulespec-interop']);
 assert.equal(extPackage, extPayload, 'extension round-trips into the signed package unchanged');
 const canonical = jcs(pkg);
-const digest = payload.extensions['org.civicaitools.rulespec-interop'].observed_upstream_artifact_sha256;
+const digest = payload.extensions['org.civicaitools.rulespec-interop'][containmentKey];
+assert.match(String(digest), /^[0-9a-f]{64}$/, `extension field ${containmentKey} is a sha256 hex digest`);
 const offset = canonical.indexOf(digest);
-assert.ok(offset >= 0, 'observed upstream digest sits INSIDE the JCS canonical (signed) bytes');
-console.log(`extension containment: upstream digest ${digest.slice(0, 8)}… at byte offset ${offset} of ${Buffer.byteLength(canonical, 'utf8')} JCS bytes`);
+assert.ok(offset >= 0, `extension ${containmentKey} sits INSIDE the JCS canonical (signed) bytes`);
+console.log(`extension containment: ${containmentKey} ${digest.slice(0, 8)}… at byte offset ${offset} of ${Buffer.byteLength(canonical, 'utf8')} JCS bytes`);
+// The package's FULL output field (for the encoding node, the verbatim
+// re-encoded YAML) also sits inside the signed bytes. RFC 8785 string
+// serialization equals ECMAScript JSON.stringify for strings, so the
+// JSON-escaped body of the output is a substring of the JCS bytes.
+const escapedOutputBody = JSON.stringify(pkg.output).slice(1, -1);
+const outputOffset = canonical.indexOf(escapedOutputBody);
+assert.ok(outputOffset >= 0, 'FULL output body sits INSIDE the JCS canonical (signed) bytes');
+console.log(`output containment: full output (JSON-escaped body, ${escapedOutputBody.length} chars) at byte offset ${outputOffset} of ${Buffer.byteLength(canonical, 'utf8')} JCS bytes`);
 
 console.log('OFFLINE VERIFY: expected verdict shape CONFIRMED (structural pass + unknown_key + #7/#8 unverified + 0 fetches)');
 MJSEOF
 
+echo "   --- leg C(1): node 1 — the comparison event ---"
 node "$HARNESS/run-offline-verify.mjs" \
   "$FIXTURES/rulespec-interop-commitment.local.json" \
   "$FIXTURES/rulespec-interop-payload.json" \
-  || fail "verify-core offline verification did not match the expected verdict shape"
+  observed_upstream_artifact_sha256 \
+  || fail "verify-core offline verification (node 1) did not match the expected verdict shape"
+echo "   --- leg C(2): node 2 — the encoding run (apply-manifest form) ---"
+node "$HARNESS/run-offline-verify.mjs" \
+  "$FIXTURES/rulespec-interop-encoding-commitment.local.json" \
+  "$FIXTURES/rulespec-interop-encoding-payload.json" \
+  output_sha256 \
+  || fail "verify-core offline verification (node 2) did not match the expected verdict shape"
 
 # --------------------------------------------------------------------------
 note "leg D: triple digest join (extension == journal entryIndex 3 == fresh shasum)"
@@ -276,6 +311,42 @@ echo "   fresh shasum -a 256 (pinned clone):          $FRESH_DIGEST"
 [ "$JOURNAL_DIGEST" = "$FRESH_DIGEST" ] || fail "digest join: journal != fresh shasum"
 echo "   digest join: all three values identical"
 
+# --------------------------------------------------------------------------
+note "leg E: tri-binding (encoding node's carried bytes == fixture file == node-1 extension)"
+# --------------------------------------------------------------------------
+# The encoding node CARRIES the re-encoded YAML as its output field, inside its
+# signed bytes. Assert: sha256(those carried bytes) == fresh shasum of the
+# committed fixture file == node 2's extension output_sha256 == node 1's
+# extension our_reencoding_sha256. Four independent readings, one value.
+CARRIED_DIGEST="$(node -e "
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const commitment = JSON.parse(fs.readFileSync('$FIXTURES/rulespec-interop-encoding-commitment.local.json', 'utf8'));
+const pkgFixture = JSON.parse(fs.readFileSync('$FIXTURES/rulespec-interop-encoding-package.local.json', 'utf8'));
+if (JSON.stringify(pkgFixture) !== JSON.stringify(commitment.package)) {
+  console.error('encoding package fixture does not match the package inside the commitment bundle');
+  process.exit(1);
+}
+const ext = commitment.package.extensions['org.civicaitools.rulespec-interop'];
+if (ext.role !== 'encoding-run') {
+  console.error('encoding node extension is missing the role: encoding-run discriminator');
+  process.exit(1);
+}
+console.log(crypto.createHash('sha256').update(Buffer.from(commitment.package.output, 'utf8')).digest('hex'));
+")"
+NODE2_EXT_DIGEST="$(node -p "JSON.parse(require('fs').readFileSync('$FIXTURES/rulespec-interop-encoding-payload.json','utf8')).extensions['org.civicaitools.rulespec-interop'].output_sha256")"
+NODE1_EXT_DIGEST="$(node -p "JSON.parse(require('fs').readFileSync('$FIXTURES/rulespec-interop-payload.json','utf8')).extensions['org.civicaitools.rulespec-interop'].our_reencoding_sha256")"
+FILE_DIGEST="$(shasum -a 256 "$FIXTURES/earners_levy.reencoded.yaml" | awk '{print $1}')"
+echo "   sha256 of output bytes carried in node 2's signed package: $CARRIED_DIGEST"
+echo "   fresh shasum -a 256 of committed earners_levy.reencoded.yaml: $FILE_DIGEST"
+echo "   node 2 extension output_sha256:                              $NODE2_EXT_DIGEST"
+echo "   node 1 extension our_reencoding_sha256:                      $NODE1_EXT_DIGEST"
+[ "$CARRIED_DIGEST" = "$FILE_DIGEST" ] || fail "tri-binding: carried output bytes != fixture file"
+[ "$CARRIED_DIGEST" = "$NODE2_EXT_DIGEST" ] || fail "tri-binding: carried output bytes != node 2 extension output_sha256"
+[ "$CARRIED_DIGEST" = "$NODE1_EXT_DIGEST" ] || fail "tri-binding: carried output bytes != node 1 extension our_reencoding_sha256"
+echo "   tri-binding: all four values identical — encoding node, fixture file, and comparison node bind the same bytes"
+
 echo
 echo "ALL LEGS PASSED: pinned clones + receipt verify (exit 0) + verify-core offline"
-echo "verdict (structural pass, unknown_key, #7/#8 unverified, 0 fetches) + digest join."
+echo "verdicts for BOTH nodes (structural pass, unknown_key, #7/#8 unverified,"
+echo "0 fetches) + digest join + tri-binding of the re-encoding bytes."

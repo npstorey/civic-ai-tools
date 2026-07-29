@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "schemaVersion": "0.1.0",
+    "packageId": "92184651-6b4b-4187-8057-80f3f1e273b0",
+    "createdAt": "2026-07-29T01:12:43.668Z",
+    "signingKeyId": "local:rulespec-interop-poc-2026-07",
+    "captureMethod": "claude-code-jsonl-readback"
+  },
+  "type": "content/analysis/v1",
+  "signer": {
+    "bindingTier": "local",
+    "identifier": "local:rulespec-interop-poc",
+    "displayName": "Rulespec Interop POC (local throwaway signer)"
+  },
+  "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1",
+  "prompt": {
+    "hash": "dab2c489cca858ae928caad15d041ade2af835d6554d13aeb6f45ee6c7b9a46b",
+    "visibility": "full_text",
+    "text": "Re-encode regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) as a rulespec/v1 YAML module, working ONLY from the pinned axiom-corpus release nz-rulespec-2026-07-20's official PCO statute XML (data/corpus/sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml, provision id LMS1019194, citation path nz/regulation/regulation/public/2025/0018/regulation/4). Never read the rulespec-nz project's published encoding of the same provision at any point during encoding. Learn the rulespec/v1 schema only from the repository's own documentation (.axiom/repository-structure.yaml, README.md, CONTRIBUTING.md, AGENTS.md, docs/axiom-ecosystem-integration.md) and from exemplar rule files for unrelated provisions (Wellington supermarket zoning, childcare assistance, student allowances, community services card)."
+  },
+  "queries": [],
+  "dataSources": [],
+  "cost": {
+    "model": "anthropic/claude-fable-5"
+  },
+  "skillMetadata": {},
+  "output": "format: rulespec/v1\nmodule:\n  summary: |-\n    Accident Compensation (Earners' Levy) Regulations 2025 (SL 2025/18),\n    regulation 4 — the amount of earners' levy payable under section 219(1) of\n    the Accident Compensation Act 2001 to fund the Earners' Account.\n\n    Regulation 4 sets a standard levy rate, expressed in dollars per $100 of\n    earnings, for three successive tax-year bands: $1.45 for the 2025/26 tax\n    year (reg 4(1)(a)), $1.52 for the 2026/27 tax year (reg 4(2)(a)), and\n    $1.59 for the 2027/28 tax year and any later tax year (reg 4(3)(a)).\n    New Zealand personal tax years run 1 April to 31 March, and the\n    regulations come into force on 1 April 2025 (reg 2), so the three rate\n    versions take effect 2025-04-01, 2026-04-01, and 2027-04-01, with the\n    third open-ended (\"and any later tax year\").\n\n    For self-employed persons the regulation routes away from the standard\n    rate: where regulation 7 applies (agreement with the Corporation to\n    purchase weekly compensation), the levy is the amount calculated under\n    reg 7(2)/(4)/(6) for the respective tax year (reg 4(1)(c), 4(2)(c),\n    4(3)(c)); where regulation 6 applies but regulation 7 does not (worked\n    more than an average of 30 hours per week and earned below the specified\n    amount), the levy is the amount calculated under reg 6(2)/(4)/(6)\n    (reg 4(1)(b), 4(2)(b), 4(3)(b)). This module encodes the routing as a\n    derived selector; the regulation 6 and regulation 7 formulas themselves\n    belong to their own provisions and are out of scope here.\n\n    Reg 4(4) makes subclauses (1) to (3) subject to regulation 5 (maximum\n    amount of earnings on which the levy is payable). The reg 5 caps are a\n    separate provision and are not encoded in this module. Levy amounts are\n    exclusive of GST (reg 8, context note only).\n\n    Provenance: encoded directly from the official PCO XML ingested in the\n    corpus as snapshot 2026-06-16-rulespec-nz-pco, source file\n    sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml\n    (sha256\n    f675c8ac89dab2ed08c6e228b93c90c65f0d9aa29425a783790f08599ef0f574),\n    provision id LMS1019194. Every excerpt below is a verbatim substring of\n    the ingested provision text.\n  proof_validation:\n    required: true\n  source_verification:\n    corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\nunits:\n  - name: NZD\n    kind: currency\n    minor_units: 2\nrules:\n  # ---------------------------------------------------------------------------\n  # Parameter: the standard earners' levy rate, in dollars of levy per $100 of\n  # earnings, as reg 4 states it. Three effective-date versions, one per\n  # tax-year band; the 2027/28 value continues for later tax years until\n  # amended. Applies to all earners except those routed to the regulation 6 or\n  # regulation 7 formulas.\n  # ---------------------------------------------------------------------------\n  - name: acc_earners_levy_rate_per_100_earnings\n    kind: parameter\n    dtype: Money\n    unit: NZD\n    source: >-\n      Accident Compensation (Earners' Levy) Regulations 2025, reg 4(1)(a),\n      4(2)(a), and 4(3)(a); commencement date from reg 2\n    metadata:\n      proof:\n        atoms:\n          - path: versions[0].formula\n            kind: parameter\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"$1.45 per $100 of earnings\"\n          - path: versions[0].effective_from\n            kind: parameter\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/2\n              excerpt: \"These regulations come into force on 1 April 2025\"\n          - path: versions[1].formula\n            kind: parameter\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"$1.52 per $100 of earnings\"\n          - path: versions[2].formula\n            kind: parameter\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"$1.59 per $100 of earnings\"\n          - path: versions[2].effective_from\n            kind: parameter\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"The amount of earners’ levy payable for the 2027/28 tax year, and any later tax year\"\n    versions:\n      - effective_from: '2025-04-01'\n        formula: |-\n          1.45\n      - effective_from: '2026-04-01'\n        formula: |-\n          1.52\n      - effective_from: '2027-04-01'\n        formula: |-\n          1.59\n  # ---------------------------------------------------------------------------\n  # Derived: which calculation method reg 4 routes an earner to. Reg 4 gives\n  # the regulation 7 formula to self-employed persons with a weekly\n  # compensation purchase agreement, the regulation 6 formula to self-employed\n  # persons within its hours/earnings gate when regulation 7 does not apply,\n  # and the standard per-$100 rate to everyone else. The two applicability\n  # judgments are inputs supplied by encodings of regulations 6 and 7.\n  # ---------------------------------------------------------------------------\n  - name: acc_earners_levy_calculation_method\n    kind: derived\n    entity: Person\n    dtype: Text\n    period: Year\n    source: >-\n      Accident Compensation (Earners' Levy) Regulations 2025, reg 4(1)(b)-(c),\n      4(2)(b)-(c), and 4(3)(b)-(c)\n    metadata:\n      proof:\n        atoms:\n          - path: versions[0].formula\n            kind: formula\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"for self-employed persons to whom regulation 7 applies\"\n          - path: versions[0].formula\n            kind: formula\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"for self-employed persons to whom regulation 6 applies (but regulation 7 does not apply)\"\n          - path: versions[0].formula\n            kind: formula\n            source:\n              corpus_citation_path: nz/regulation/regulation/public/2025/0018/regulation/4\n              excerpt: \"for all earners, except those described in paragraphs (b) and (c)\"\n    versions:\n      - effective_from: '2025-04-01'\n        formula: |-\n          if acc_earners_levy_regulation_7_applies:\n              \"regulation 7 formula\"\n          elif acc_earners_levy_regulation_6_applies:\n              \"regulation 6 formula\"\n          else:\n              \"standard rate\"\n",
+  "trace": {
+    "resourceSpans": []
+  },
+  "provenance": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "civic": "https://civicaitools.org/ns/evidence/",
+      "dcterms": "http://purl.org/dc/terms/"
+    },
+    "@graph": [
+      {
+        "@id": "urn:civic-evidence:92184651-6b4b-4187-8057-80f3f1e273b0:prompt:dab2c489cca858ae928caad15d041ade2af835d6554d13aeb6f45ee6c7b9a46b",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:dab2c489cca858ae928caad15d041ade2af835d6554d13aeb6f45ee6c7b9a46b",
+        "dcterms:description": "User query prompt",
+        "prov:value": "Re-encode regulation 4 of the Accident Compensation (Earners' Levy) Regulations 2025 (NZ) as a rulespec/v1 YAML module, working ONLY from the pinned axiom-corpus release nz-rulespec-2026-07-20's official PCO statute XML (data/corpus/sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml, provision id LMS1019194, citation path nz/regulation/regulation/public/2025/0018/regulation/4). Never read the rulespec-nz project's published encoding of the same provision at any point during encoding. Learn the rulespec/v1 schema only from the repository's own documentation (.axiom/repository-structure.yaml, README.md, CONTRIBUTING.md, AGENTS.md, docs/axiom-ecosystem-integration.md) and from exemplar rule files for unrelated provisions (Wellington supermarket zoning, childcare assistance, student allowances, community services card)."
+      },
+      {
+        "@id": "urn:civic-evidence:92184651-6b4b-4187-8057-80f3f1e273b0:output:eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b",
+        "dcterms:description": "AI-generated analysis output"
+      },
+      {
+        "@id": "urn:civic-evidence:model:anthropic-claude-fable-5",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "anthropic/claude-fable-5",
+        "dcterms:description": "Large language model via OpenRouter"
+      },
+      {
+        "@id": "urn:civic-evidence:platform:civic-ai-tools",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Civic AI Tools",
+        "civic:url": "https://civicaitools.org"
+      }
+    ]
+  },
+  "extensions": {
+    "org.civicaitools.rulespec-interop": {
+      "role": "encoding-run",
+      "statute_source_path": "data/corpus/sources/nz/regulation/2026-06-16-rulespec-nz-pco/regulation/public/2025/0018/wholeof.xml",
+      "statute_source_sha256": "f675c8ac89dab2ed08c6e228b93c90c65f0d9aa29425a783790f08599ef0f574",
+      "provision_id": "LMS1019194",
+      "corpus_citation_path": "nz/regulation/regulation/public/2025/0018/regulation/4",
+      "corpus_release": "nz-rulespec-2026-07-20",
+      "corpus_release_content_sha256": "58089115f520cb99a3b90e3be503be63041ebe4a72bec69f24a2f115ed1ba196",
+      "corpus_release_cut_commit": "92ac9c1bedf62968eeea9a873361f49075364157",
+      "output_path": "scripts/fixtures/earners_levy.reencoded.yaml",
+      "output_sha256": "eeb3771924255c2f0c8b9cd393b22b8dc19667651b62322f42017e16e504e88b",
+      "model": "anthropic/claude-fable-5",
+      "independence_protocol": {
+        "never_read_target": true,
+        "target_never_read": "rulespec-nz nz/regulations/acc/earners_levy.yaml — the upstream project's encoding of the same provision was not read at any point during encoding",
+        "schema_learned_from": [
+          ".axiom/repository-structure.yaml",
+          "README.md",
+          "CONTRIBUTING.md",
+          "AGENTS.md",
+          "docs/axiom-ecosystem-integration.md",
+          "nz/regulations/rma_district_plans/wellington_city/supermarket_zoning.yaml",
+          "nz/regulations/social_security/childcare_assistance/core.yaml",
+          "nz/regulations/student_allowances/core.yaml",
+          "nz/regulations/health_entitlement_cards/community_services_card/core.yaml"
+        ]
+      }
+    }
+  },
+  "contentHash": {
+    "sha256": "2a1fa337b25f40ecdf3f3dc87667dd8e7de46dbbdb6c53dfa7bec8e4629aa91c"
+  }
+}
