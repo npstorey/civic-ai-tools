@@ -219,6 +219,40 @@ ${provenance}
     border:1px solid var(--line); border-radius:6px; background:#fff;
   }
   .diagram svg { display:block; max-width:100%; height:auto; margin:0 auto; }
+  /* Collapsible appendix blocks (raw <details> in the memo). */
+  details {
+    margin:0 0 1rem; border:1px solid var(--line); border-radius:6px;
+    background:var(--card); padding:.15rem .95rem;
+  }
+  details > summary { cursor:pointer; padding:.55rem 0; }
+  details > summary:hover { color:var(--accent); }
+  details[open] { padding-bottom:.75rem; }
+  details > :last-child { margin-bottom:0; }
+  /* Side-by-side verdicts (raw <table class="verdicts"> in the memo).
+     Two columns on wide viewports (breaking out of the 50rem column so both
+     verdicts are legible), stacked on narrow; each pre cell scrolls on its own. */
+  table.verdicts {
+    table-layout:fixed; width:100%; font-size:.9rem;
+    border:1px solid var(--line); border-radius:6px; background:var(--card);
+  }
+  table.verdicts th, table.verdicts td {
+    width:50%; vertical-align:top; padding:.6rem .8rem;
+    white-space:normal; border-bottom:1px solid var(--line);
+  }
+  table.verdicts th { font-weight:650; background:var(--accent-wash); }
+  table.verdicts td { border-bottom:0; }
+  table.verdicts pre { margin:0; max-width:100%; overflow-x:auto; }
+  @media (min-width:900px) {
+    table.verdicts {
+      width:min(94vw, 80rem);
+      margin-left:calc((100% - min(94vw, 80rem)) / 2);
+    }
+  }
+  @media (max-width:899.98px) {
+    table.verdicts, table.verdicts tbody, table.verdicts tr,
+    table.verdicts th, table.verdicts td { display:block; width:100%; }
+    table.verdicts th { border-bottom:1px solid var(--line); }
+  }
   @media (max-width:640px) {
     main { padding:2.25rem 1.1rem 4rem; }
     h1 { font-size:1.7rem; }
@@ -235,6 +269,8 @@ ${provenance}
     h2 { page-break-after:avoid; }
     pre, .tw, table { page-break-inside:avoid; }
     .diagram { page-break-inside:avoid; border-color:#ccc; }
+    table.verdicts { width:100%; margin-left:0; page-break-inside:auto; }
+    details { border-color:#ccc; }
     a { color:#111; border:0; }
     a[href^="http"]::after { content:" (" attr(href) ")"; font-size:.75em; color:#666; word-break:break-all; }
   }

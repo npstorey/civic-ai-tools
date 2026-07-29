@@ -192,7 +192,7 @@ const input = {
 const result = await verifyEvidence(input, { registry, fetch: blockedFetch });
 
 console.log(`=== bundle: ${commitmentPath} ===`);
-console.log('=== verify-core v0.7.0 verdict (verbatim, FULL) ===');
+console.log('=== Typed Standards verifier (verify-core v0.7.0) — verdict (verbatim, FULL) ===');
 console.log(JSON.stringify(result, null, 2));
 console.log('=== network calls attempted:', fetches, '===');
 
