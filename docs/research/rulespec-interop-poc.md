@@ -24,18 +24,23 @@ For 26 USC § 32(a)(1) — the Earned Income Tax Credit's credit-allowance sente
 - a "View on GitHub" link; and
 - a RULES code panel.
 
-<!-- SCREENSHOT 1: §32(a)(1) provision view — pending -->
-<!-- SCREENSHOT 2: eitc_phased_in RULES panel — pending -->
+<!-- SCREENSHOT 1 (captured; staged at .rulespec-clones/ui-screenshots/us32a1-provision-view-eitc-phased-in.png): §32(a)(1) provision view -->
+<!-- SCREENSHOT 2: eitc_phased_in RULES panel for §32(a)(1) — pending -->
 
-§ 32(k)'s view similarly lists three derived encodings: `eitc_demographic_eligible`, `eitc_allowed`, `eitc`.
+§ 32(k)'s view similarly lists three derived encodings: `eitc_demographic_eligible`, `eitc_allowed`, `eitc`. Its RULES panel displays the rulespec source itself — e.g. `eitc_phase_in_rates`, `kind: parameter`, `dtype: Rate`, `indexed_by: qualifying_child_count`, `source: 26 USC 32(b)(1)`, with proof atoms of `kind: parameter_table` citing `corpus_citation_path: us/statute/26/32` and carrying the excerpt "credit percentage and phaseout percentage table". Even the proof atoms — the artifact's own citations into the corpus — bind *what* a value claims to derive from, not *how* the derivation was performed.
 
-<!-- SCREENSHOT 3: §32(k) view, three derived encodings — pending -->
+<!-- SCREENSHOT 3 (captured; staged at .rulespec-clones/ui-screenshots/us32k-provision-view-three-encodings.png): §32(k) view, three derived encodings -->
+<!-- SCREENSHOT 3b (captured; staged at .rulespec-clones/ui-screenshots/us32k-rules-panel-eitc-phase-in-rates.png): §32(k) RULES panel showing eitc_phase_in_rates -->
+
+The app's front door goes further: EITC is rendered as an executable rule graph — steps `EITC Allowed` (42 rules) and `EITC Before Eligibility` (45 rules) wiring into `RESULT · EITC`, with a "Run a scenario" affordance. The EITC rule's detail panel answers nearly every question a reader could ask of the artifact: `SOURCE 26 USC 32(a), 32(c)(1)(E), 32(i), 32(k)`; `ENTITY TaxUnit`; `PERIOD Year`; `UNIT USD`; `BUILT FROM · 2` (`EITC Allowed`, `EITC Before Eligibility`); `USED BY · 0` ("nothing — a final result"); the formula itself (`if EITC Allowed: EITC Before Eligibility else: 0`); a "Read the law →" link. Its one status word is `STATUS Encoded` — a statement about the artifact's present state. Nothing in the panel, and nothing behind it, speaks to the encoding *event*: when it happened, by what process, from which source snapshot, under what instructions.
+
+<!-- SCREENSHOT 5 (captured; staged at .rulespec-clones/ui-screenshots/app-scenario-graph-eitc-detail-panel.png): scenario-graph view with the EITC detail panel (STATUS: Encoded) -->
 
 On the repository side, verified via the GitHub API the same day: [TheAxiomFoundation/rulespec-us](https://github.com/TheAxiomFoundation/rulespec-us) is public; `us/statutes/26/32.yaml` is a 706-line `rulespec/v1` module citing `corpus_citation_path: us/statute/26/32` — a whole-section citation; a `us/statutes/26/32/` subdirectory exists alongside it; and the repo has **no `verification/` directory and no corpus journal** (code search: zero hits) — the witnessed-corpus lane exists only in the NZ pilot ([rulespec-nz PR #104](https://github.com/TheAxiomFoundation/rulespec-nz/pull/104)). The pinned axiom-corpus snapshot this POC already holds (commit `92ac9c1b…`) includes `us` statute sources.
 
 <!-- SCREENSHOT 4: GitHub blob/history for us/statutes/26/32.yaml — pending -->
 
-The interface shows everything that exists: the artifact, its `derived` tag, the canonical repository path, the GitHub link. The git history behind that link is, today, the only production record there is. Nothing anywhere records how `statutes/26/32.yaml` came to be — which sources were read, what instructions ran, what judgment calls were made. That absence is invisible until two encodings disagree; then it is the whole problem.
+The interface shows everything that exists: the artifact, its `derived` tag, the canonical repository path, the GitHub link. The git history behind that link is, today, the only production record there is. Nothing anywhere records how `statutes/26/32.yaml` came to be — which sources were read, what instructions ran, what judgment calls were made. That absence is invisible until two encodings disagree; then it is the whole problem. The status vocabulary is the tell: an artifact can be `Encoded` — there is no vocabulary anywhere for how it came to be encoded.
 
 ## The demonstration
 
