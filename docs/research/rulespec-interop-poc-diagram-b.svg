@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="890" viewBox="0 0 1160 890" role="img" aria-label="End-to-end POC flow: pinned statute XML to both encodings, both verifiers, the digest join, the tri-binding, and all legs passed">
+<!-- Hand-authored sidecar render of the second mermaid diagram in docs/research/rulespec-interop-poc.md
+     (branch poc/rulespec-interop). Same nodes, edges, labels, and groupings as the mermaid source.
+     Self-contained: no scripts, no external references, no url() asset loads (the only url(#...) uses
+     are internal arrowhead marker fragments). -->
+<title>Rulespec interop POC: end-to-end flow</title>
+<defs>
+<marker id="arwB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1160" height="890" fill="#ffffff"/>
+<g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" fill="#24292f">
+
+<!-- XML -->
+<rect x="430" y="24" width="300" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="580" y="45" font-size="13" text-anchor="middle">pinned statute XML (PCO, axiom-corpus)</text>
+<text x="580" y="61" font-size="13" text-anchor="middle">wholeof.xml — sha256 f675c8ac...</text>
+
+<!-- ENC1 -->
+<rect x="70" y="140" width="330" height="64" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="235" y="160" font-size="13" text-anchor="middle">their encoding</text>
+<text x="235" y="176" font-size="13" text-anchor="middle">nz/regulations/acc/earners_levy.yaml</text>
+<text x="235" y="192" font-size="13" text-anchor="middle">sha256 5fe16742...</text>
+
+<!-- ENC2 -->
+<rect x="740" y="140" width="350" height="64" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="915" y="160" font-size="13" text-anchor="middle">our independent re-encoding</text>
+<text x="915" y="176" font-size="13" text-anchor="middle">(never-read-target protocol)</text>
+<text x="915" y="192" font-size="13" text-anchor="middle">earners_levy.reencoded.yaml — sha256 eeb37719...</text>
+
+<!-- RV -->
+<rect x="60" y="280" width="330" height="64" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="225" y="300" font-size="13" text-anchor="middle">receipt verify — their verifier</text>
+<text x="225" y="316" font-size="13" text-anchor="middle">PASS: custody + binding</text>
+<text x="225" y="332" font-size="13" text-anchor="middle">journal entryIndex 3 = 5fe16742...</text>
+
+<!-- CMP -->
+<rect x="470" y="280" width="230" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="585" y="301" font-size="13" text-anchor="middle">semantic comparison</text>
+<text x="585" y="317" font-size="13" text-anchor="middle">(separate context)</text>
+
+<!-- NODE2 -->
+<rect x="740" y="270" width="360" height="80" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="920" y="290" font-size="13" text-anchor="middle">node 2 — encoding run</text>
+<text x="920" y="306" font-size="13" text-anchor="middle">content/analysis/v1</text>
+<text x="920" y="322" font-size="13" text-anchor="middle">prompt + model + full output bytes in signed JSON</text>
+<text x="920" y="338" font-size="13" text-anchor="middle">nodeId 02c5b37b...</text>
+
+<!-- NODE1 -->
+<rect x="430" y="420" width="310" height="80" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="585" y="440" font-size="13" text-anchor="middle">node 1 — comparison event</text>
+<text x="585" y="456" font-size="13" text-anchor="middle">content/analysis/v1</text>
+<text x="585" y="472" font-size="13" text-anchor="middle">upstream digest as observed fact</text>
+<text x="585" y="488" font-size="13" text-anchor="middle">nodeId 1c376b2a...</text>
+
+<!-- VC2 -->
+<rect x="760" y="430" width="310" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="915" y="451" font-size="13" text-anchor="middle">verify-core — our verifier, offline</text>
+<text x="915" y="467" font-size="13" text-anchor="middle">structural pass, unknown_key, 0 fetches</text>
+
+<!-- VC1 -->
+<rect x="430" y="580" width="310" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="585" y="601" font-size="13" text-anchor="middle">verify-core — our verifier, offline</text>
+<text x="585" y="617" font-size="13" text-anchor="middle">structural pass, unknown_key, 0 fetches</text>
+
+<!-- JOIN -->
+<rect x="180" y="700" width="380" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="370" y="721" font-size="13" text-anchor="middle">digest join (leg D):</text>
+<text x="370" y="737" font-size="13" text-anchor="middle">signed extension = witnessed journal = fresh shasum</text>
+
+<!-- BIND -->
+<rect x="650" y="700" width="390" height="50" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="845" y="721" font-size="13" text-anchor="middle">tri-binding (leg E):</text>
+<text x="845" y="737" font-size="13" text-anchor="middle">bytes in node 2 = committed fixture = digest in node 1</text>
+
+<!-- DONE -->
+<rect x="440" y="820" width="280" height="44" rx="7" fill="#e9f3ea" stroke="#56845e" stroke-width="1.4"/>
+<text x="580" y="847" font-size="13" font-weight="600" text-anchor="middle">ALL LEGS PASSED — exit 0</text>
+
+<!-- edges -->
+<path d="M 505 74 C 430 100, 320 112, 245 134" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 655 74 C 730 100, 840 112, 905 134" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 230 204 L 227 276" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 335 204 C 420 235, 470 255, 530 276" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 830 204 C 745 235, 695 255, 642 276" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 920 204 L 920 266" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 585 330 L 585 416" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 918 350 L 916 426" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 585 500 L 585 576" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 220 344 C 205 470, 225 610, 315 697" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 540 630 C 505 655, 465 675, 428 697" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 900 480 C 882 555, 865 625, 851 697" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 430 750 C 468 778, 500 795, 528 817" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+<path d="M 790 750 C 745 778, 700 795, 645 817" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwB)"/>
+
+</g>
+</svg>

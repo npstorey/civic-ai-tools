@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="800" viewBox="0 0 1060 800" role="img" aria-label="Two-layer picture: what receipt establishes, what Typed Standards establishes, what neither establishes, joined on one SHA-256 digest">
+<!-- Hand-authored sidecar render of the first mermaid diagram in docs/research/rulespec-interop-poc.md
+     (branch poc/rulespec-interop). Same nodes, edges, labels, and groupings as the mermaid source.
+     Self-contained: no scripts, no external references, no url() asset loads (the only url(#...) uses
+     are internal arrowhead marker fragments). -->
+<title>receipt and Typed Standards: the two-layer picture</title>
+<defs>
+<marker id="arwA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1060" height="800" fill="#ffffff"/>
+<g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" fill="#24292f">
+
+<!-- subgraph THEIRS -->
+<rect x="24" y="24" width="470" height="256" rx="10" fill="#f2f4f6" stroke="#8b98a5" stroke-width="1.2"/>
+<text x="259" y="46" font-size="13" font-weight="600" text-anchor="middle" fill="#3d4750">receipt establishes — custody of a witnessed tree</text>
+<rect x="44" y="58" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="77" font-size="13" text-anchor="middle">80 rule files byte-exact against an</text>
+<text x="259" y="93" font-size="13" text-anchor="middle">append-only journal, closed-world</text>
+<rect x="44" y="112" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="131" font-size="13" text-anchor="middle">release signed by a code-pinned</text>
+<text x="259" y="147" font-size="13" text-anchor="middle">producer key (bare SPKI in spec.py)</text>
+<rect x="44" y="166" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="185" font-size="13" text-anchor="middle">two independent RFC 3161 witnesses</text>
+<text x="259" y="201" font-size="13" text-anchor="middle">(digicert, freetsa)</text>
+<rect x="44" y="220" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="239" font-size="13" text-anchor="middle">history unrewritten: each release</text>
+<text x="259" y="255" font-size="13" text-anchor="middle">seals the prior journal</text>
+
+<!-- subgraph OURS -->
+<rect x="24" y="300" width="470" height="256" rx="10" fill="#eef5f3" stroke="#7ba99e" stroke-width="1.2"/>
+<text x="259" y="322" font-size="13" font-weight="600" text-anchor="middle" fill="#3d4750">Typed Standards establishes — provenance of one artifact</text>
+<rect x="44" y="334" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="353" font-size="13" text-anchor="middle">per-artifact signed node:</text>
+<text x="259" y="369" font-size="13" text-anchor="middle">nodeId = envelope hash, verifiable alone</text>
+<rect x="44" y="388" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="407" font-size="13" text-anchor="middle">how the artifact was produced:</text>
+<text x="259" y="423" font-size="13" text-anchor="middle">source pin, prompt, model, output bytes</text>
+<rect x="44" y="442" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="461" font-size="13" text-anchor="middle">first-hand comparison event;</text>
+<text x="259" y="477" font-size="13" text-anchor="middle">upstream digest as an observed fact</text>
+<rect x="44" y="496" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="515" font-size="13" text-anchor="middle">designed slots: registry identity,</text>
+<text x="259" y="531" font-size="13" text-anchor="middle">RFC 3161 timestamp, Rekor entry</text>
+
+<!-- subgraph NEITHER -->
+<rect x="24" y="576" width="470" height="202" rx="10" fill="#f7f2ec" stroke="#b9a58c" stroke-width="1.2"/>
+<text x="259" y="598" font-size="13" font-weight="600" text-anchor="middle" fill="#3d4750">NEITHER establishes</text>
+<rect x="44" y="610" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="638" font-size="13" text-anchor="middle">a correct reading of NZ law</text>
+<rect x="44" y="664" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="692" font-size="13" text-anchor="middle">that any declared gate actually passed</text>
+<rect x="44" y="718" width="430" height="46" rx="7" fill="#ffffff" stroke="#9aa5ad"/>
+<text x="259" y="737" font-size="13" text-anchor="middle">freshness: a stale, honestly</text>
+<text x="259" y="753" font-size="13" text-anchor="middle">witnessed clone passes both</text>
+
+<!-- SEAM node -->
+<rect x="700" y="261" width="330" height="58" rx="8" fill="#faf3dd" stroke="#b08d3e" stroke-width="1.4"/>
+<text x="865" y="286" font-size="13" font-weight="600" text-anchor="middle">sha256 5fe16742...</text>
+<text x="865" y="302" font-size="13" text-anchor="middle">one digest, zero negotiation</text>
+
+<!-- edges -->
+<path d="M 494 152 C 600 152, 610 282, 692 282" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwA)"/>
+<rect x="500" y="208" width="204" height="18" fill="#ffffff"/>
+<text x="602" y="221" font-size="12" font-style="italic" text-anchor="middle" fill="#57606a">digest bound in witnessed journal</text>
+<path d="M 494 428 C 600 428, 610 298, 692 298" fill="none" stroke="#57606a" stroke-width="1.3" marker-end="url(#arwA)"/>
+<rect x="509" y="354" width="186" height="18" fill="#ffffff"/>
+<text x="602" y="367" font-size="12" font-style="italic" text-anchor="middle" fill="#57606a">digest carried in signed bytes</text>
+
+</g>
+</svg>
