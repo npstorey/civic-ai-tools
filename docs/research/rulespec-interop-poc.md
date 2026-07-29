@@ -1,3 +1,4 @@
+<!-- v17 — 2026-07-29 — two comms-review line edits: "concedes" → "states" (node-2 paragraph), and the US-exhibit closing line reworded ("shows the shape of the gap" replacing the poker-register "tell"). -->
 <!-- v16 — 2026-07-29 — de-jargon sweep for the external audience: internal-governance vocabulary (project-doctrine names, decision-process shorthand, bare internal question numbers, internal adopter-gating phrasing, bundle-mechanism shorthand) translated to plain English throughout; restraint semantics preserved exactly (every gate still reads "a change we would make only with a committed adopter who needs it"); substantive decision-record links (ADR-0006/0010/0016) kept, each introduced in plain words; open-questions registry links kept under plain-English link text. -->
 <!-- v15 — 2026-07-29 — Next steps rewritten: one-line recap + three numbered calls to action (explore TS for new encoding events and retroactive observations; possible content-profile-schema collaboration; frank value-add discussion); repetition with the Executive Summary and Limitations removed. -->
 <!-- v14 — 2026-07-29 — intro per owner line edits: transparency-commitments clause replaces the shared-aim clause; "traceability in RuleSpec" scoping; TS sentence opens "One possible solution is"; reference-implementation clause folded into the attribution line. -->
@@ -9,7 +10,7 @@
 
 > **This note is addressed to the rulespec corpus maintainers.** It is a build-side research memo; everything in it is reproducible from the branch it lives on.
 
-*Last updated: 2026-07-29 (v16) — internal-governance vocabulary translated to plain English throughout; restraint semantics preserved. v15 `a77e594`; v14 `ac2df7a`; v13 `58b8ea0`; v12 `a5309f1`; v11 `b679e83`; v10 `356550c`; v9 `8acc9f3`; v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+*Last updated: 2026-07-29 (v17) — comms-review line edits: concedes→states; US-exhibit closing line reworded. v16 `a23e62e`; v15 `a77e594`; v14 `ac2df7a`; v13 `58b8ea0`; v12 `a5309f1`; v11 `b679e83`; v10 `356550c`; v9 `8acc9f3`; v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
 
 1. [Executive summary](#executive-summary)
 2. [The demonstration](#the-demonstration)
@@ -43,7 +44,7 @@ Everything here is reproducible from branch `poc/rulespec-interop` via `./script
 
 **Node 1 — the comparison event** (`content/analysis/v1`, nodeId `1c376b2a…`): the observation join to your witnessed journal — *your* artifact's digest enters our signed bytes as an **observation**, not a co-signed claim; that digest, the digest your journal binds at entryIndex 3, and a fresh recompute over the pinned clone are identical ([The digest join and the tri-binding](#the-digest-join-and-the-tri-binding)).
 
-**Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md concedes the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
+**Node 2 — the encoding run** (`content/analysis/v1`, nodeId `02c5b37b…`): the contemporaneous production record, cut from the live run's own records at run time — statute source path and digest in; the complete re-encoded YAML verbatim out; plus the output digest, the model, the full-text encoding prompt, and a signed `independence_protocol` record. This is an **encoder apply manifest** in Typed Standards form — the artifact-class your own witnessed VERIFY.md states the NZ corpus has zero of ("no machine check asserts that these rule files carry encoder apply manifests — `rulespec-nz` has none"); the gate that would demand them, `guard/manual-rulespec-changes`, is disabled in the published lane (`run-generated-guard: false`, printed as DID-NOT-RUN in the receipt verdict); backfill tracked in your [axiom-encode#1192](https://github.com/TheAxiomFoundation/axiom-encode/issues/1192).
 
 **Node 3 — the profile-bearing form, demo only** (`content/analysis/v1`, nodeId `77fda183…`): node 2's encoding-run record re-expressed under the **speculative, unregistered** profile sketch `axiom/statute-encoding/v0-sketch` — same prompt, same complete output bytes, same model, same throwaway key — plus a `contentProfile` naming the sketch and a `profileDeclarations` block filling the sketch's required fields with the run's actual specifics. It was never published anywhere and could not be as-is; node 2 remains the canonical honest record. The toggle under the verdicts shows what the profile changes — and what it deliberately does not; the full sketch lives in the appendix ([The worked example, executed](#the-worked-example-executed--a-speculative-profile-on-a-real-node)).
 
@@ -383,7 +384,7 @@ Repository side, same day: [rulespec-us](https://github.com/TheAxiomFoundation/r
 
 <!-- SCREENSHOT 4: GitHub blob/history for us/statutes/26/32.yaml — pending -->
 
-The git history behind "View on GitHub" is, today, the only production record there is — invisible as an absence until two encodings disagree, and then the whole problem. The status vocabulary is the tell: an artifact can be `Encoded`; nothing anywhere says how it came to be encoded.
+The git history behind "View on GitHub" is, today, the only production record there is — invisible as an absence until two encodings disagree, and then the whole problem. The status vocabulary shows the shape of the gap: an artifact can be `Encoded`; nothing anywhere records how.
 
 </details>
 
