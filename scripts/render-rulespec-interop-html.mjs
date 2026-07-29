@@ -279,6 +279,14 @@ ${provenance}
   table.verdicts th { font-weight:650; background:var(--accent-wash); }
   table.verdicts td { border-bottom:0; }
   table.verdicts pre { margin:0; max-width:100%; overflow-x:auto; }
+  /* v10: the TS cell's default view is our summary <pre>, preceded by the
+     presentation-ours disclaimer and followed by an in-cell <details> holding
+     the verbatim annotated JSON verdict. */
+  table.verdicts td .ours-label { margin:0 0 .65rem; font-size:.8rem; color:var(--muted); }
+  table.verdicts td details { margin:.9rem 0 .25rem; padding:.1rem .8rem; }
+  table.verdicts td details > summary { font-size:.9rem; padding:.45rem 0; }
+  table.verdicts td details pre { margin:.6rem 0 .75rem; }
+  table.verdicts td details p { font-size:.85rem; color:var(--muted); margin:0 0 .6rem; }
   @media (min-width:900px) {
     table.verdicts {
       width:min(94vw, 80rem);

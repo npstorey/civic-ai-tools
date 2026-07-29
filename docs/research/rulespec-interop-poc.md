@@ -1,9 +1,9 @@
-<!-- v9 — 2026-07-29 — maintainer-facing restructure: address line promoted to a bold callout; TOC added; "The demonstration" unified (nodes 1/2/3 narrative + side-by-side verdicts + native <details> toggle for the node-3 profile run); NEW finding 9 (contentProfile is signature-covered but un-inspected — no §9.2 check reads it); NEW "A conclusion"; findings index and the full producer-profile sketch section moved to the appendix; version metadata is now md-only — the render script strips this comment and the Last-updated line from the HTML and emits a visible canonical-source line instead. v8 a8b9472; v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
+<!-- v10 — 2026-07-29 — side-by-side redesign: the Typed Standards column now defaults to a human-readable envelope summary written in the receipt report's own register (section headers, [ok  ]/[--  ] markers, indented detail), sectioned by verifiability — ESTABLISHED OFFLINE / CARRIED IN THE SIGNED BYTES, INSPECTED BY NO CHECK / NOT VERIFIABLE IN THIS LOCAL PASS — with an explicit presentation-ours label so the visual rhyme can't read as verifier output; the verbatim annotated verify-core JSON verdict moves behind an in-cell toggle (the annotations note moves with it); the node-3 profile toggle below the table is unchanged; render-script CSS for the ours-label + in-cell details. v9 8acc9f3; v8 a8b9472; v7 fce0c0a; v6 7435fee; v5.1 deb9b5c; v5 49bcc8d; v4 archived 3eeea0e; v3 f74ad55; v2 60b9345; v1 dbe1d2d. -->
 # Rulespec Interop POC
 
 > **This note is addressed to the rulespec corpus maintainers.** It is a build-side research memo; it files nothing and asks for nothing.
 
-*Last updated: 2026-07-29 (v9) — maintainer-facing restructure: address callout, TOC, unified demonstration (nodes 1/2/3 + verdicts + profile toggle), new finding 9, new conclusion; findings index and the full profile-sketch section now live in the appendix; version metadata stays md-only (the rendered HTML carries a canonical-source line instead). v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
+*Last updated: 2026-07-29 (v10) — side-by-side redesign: the Typed Standards column now defaults to a receipt-register envelope summary sectioned by verifiability (established offline · carried-but-uninspected · dark by choice), labeled as our presentation; the verbatim annotated JSON verdict sits behind an in-cell toggle. v9 `8acc9f3`; v8 `a8b9472`; v7 `fce0c0a`; v6 `7435fee`; v5.1 `deb9b5c`; v5 `49bcc8d`; v4 archived (`rulespec-interop-poc-v4-archive.md`, `3eeea0e`); v3 `f74ad55`; v2 `60b9345`; v1 `dbe1d2d`.*
 
 1. [Executive summary](#executive-summary)
 2. [The demonstration](#the-demonstration)
@@ -39,7 +39,7 @@ Both verifiers pass offline: your corpus under `receipt verify` (exit 0), all th
 
 ### The two verdicts, side by side
 
-Both verdict blocks below are verbatim from a run of `./scripts/verify-rulespec-interop.sh` on 2026-07-29 (exit code 0): your verifier over the pinned rulespec-nz clone on the left; ours (`@typedstandards/verify-core@0.7.0`, offline, fetch stubbed to throw) over node 1 on the right.
+Your verifier's block on the left is verbatim from a run of `./scripts/verify-rulespec-interop.sh` on 2026-07-29 (exit code 0), over the pinned rulespec-nz clone. On the right, the default view is **our summary** of what the Typed Standards envelope for node 1 establishes — written deliberately in your report's register and sectioned by what is verifiable today versus not. It is derived field-for-field from the same run's `@typedstandards/verify-core@0.7.0` verdict (offline, fetch stubbed to throw) and the committed node-1 fixtures; the verdict itself sits verbatim, with our `#` annotations, behind the first toggle inside the cell.
 
 <table class="verdicts">
 <tr>
@@ -95,6 +95,69 @@ VERDICT: PASS — custody and corpus binding
 </pre>
 </td>
 <td>
+<p class="ours-label"><em>presentation ours — this summary is derived field-for-field from the verify-core verdict (toggle below for the verbatim JSON) and the committed node-1 fixtures; unlike the left column, it is not verifier output.</em></p>
+<pre>
+verify-core 0.7.0 — Typed Standards node 1 (comparison event), offline
+  node  1c376b2a56f9e4167a7bb762c8984cf60a3a9624a8316ded00e863384f191b08
+  type  content/analysis/v1 · kid local:rulespec-interop-poc-2026-07
+  network calls attempted: 0
+  markers  [ok  ] a §9.2 check reported this outcome · [--  ] no check vouches here
+&nbsp;
+ESTABLISHED OFFLINE, FROM THIS BUNDLE ALONE
+  [ok  ] envelope integrity (#1)
+         JCS canonical bytes re-hashed (SHA-256); recomputed hash equals the
+         envelope hash — hashMatch true, envelopeIntegrity verified
+  [ok  ] signature (#2)
+         Ed25519ph verifies against the public key embedded in the bundle;
+         kid local:rulespec-interop-poc-2026-07
+  [ok  ] canonicalization rule (#3)
+         resolves: legacy-json/v1 — the default content profile's rule
+  [ok  ] content hash (#4)
+         sha256 multihash matched —
+         b48ea1e7eae8b8445a0ada2272ffa19953aaa7c1cc718e469437a38b6fc5a748
+  [ok  ] type resolution (#12)
+         content/analysis/v1
+  [ok  ] nodeId binding (#13)
+         nodeId = recomputed envelope hash (1c376b2a…)
+  [ok  ] captureMethod vocabulary (#15)
+         claude-code-jsonl-readback · profileType ai-assisted-analysis
+         (nearest-fit chat label; an honest encoder label is #15-blocked — finding 1)
+  (the verdict's remaining fields: lifecycle active, source "none", empty chain —
+   #10 checks only the chain the carrier supplies, and none was; blobRefs [] —
+   #9 had nothing to verify)
+&nbsp;
+CARRIED IN THE SIGNED BYTES — INSPECTED BY NO §9.2 CHECK
+  [--  ] extension block org.civicaitools.rulespec-interop
+         your artifact's digest as an observed fact — sha256 5fe16742… — equal to
+         the digest your witnessed journal binds at entryIndex 3: the join key;
+         plus release/toolchain pins, paths, and the comparison record
+         (harness legs D/E read these; no verifier check interprets them)
+  [--  ] prompt
+         full text rides in the signed bytes (promptVisibility full_text)
+  [--  ] provenance
+         the package's W3C PROV-O graph (prov / dcterms / civic contexts)
+  [--  ] contentProfile
+         absent ⇒ default; the node-3 toggle below the table shows the same run
+         re-expressed under the speculative profile sketch
+&nbsp;
+NOT VERIFIABLE IN THIS LOCAL PASS — DARK BY CHOICE
+  [--  ] key trust (#5)
+         unknown_key — throwaway POC key; no trust registry lists it
+  [--  ] signer identity (#14)
+         no_registry_identity — claimed: local:rulespec-interop-poc
+  [--  ] RFC 3161 timestamp (#7)
+         absent — no production publish, so no token exists to check
+  [--  ] Rekor inclusion (#8)
+         absent — no transparency-log entry exists to check
+&nbsp;
+SUMMARY (ours): structural pass — hash, signature, content binding, type, and
+  vocabulary all recompute offline from this bundle alone. It does NOT establish
+  key trust, signer identity, timestamp, or log inclusion: those anchors are
+  dark by choice here, and the production publish that lights them is a
+  separately gated step, not taken.
+</pre>
+<details>
+<summary><strong>Toggle: the verbatim verify-core JSON verdict (annotated)</strong></summary>
 <pre>
 === Typed Standards verifier (verify-core v0.7.0) — verdict (verbatim, FULL) ===
 {
@@ -160,11 +223,11 @@ VERDICT: PASS — custody and corpus binding
 }
 === network calls attempted: 0 ===
 </pre>
+<p>Annotations (<code>#</code>) are ours; <code>./scripts/verify-rulespec-interop.sh</code> reproduces the un-annotated verdict.</p>
+</details>
 </td>
 </tr>
 </table>
-
-Annotations (`#`) are ours; `./scripts/verify-rulespec-interop.sh` reproduces the un-annotated verdicts.
 
 <details>
 <summary><strong>Toggle: the same run under the speculative contentProfile (node 3)</strong></summary>
