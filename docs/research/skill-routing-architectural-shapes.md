@@ -230,8 +230,59 @@ Defer C, D, E, F, G indefinitely unless a concrete need emerges that can't be me
 - **Shape F** is blocked on civic-ai-tools not having a methodology axis yet. Introducing one is a standalone product decision (do we ship problem-framing / analytical / communication skills at all?) rather than a composition refactor. Worth revisiting after M8 when the core data-source axis is validated on a real demo and the evidence spin-out thinking in `evidence-spin-out-strategy.md` starts to commit to specific downstream consumers. Spiritually related to `sgarcese/Civic-Analytics-Agent-Workflow-Claude-Skill` in the landscape.
 - **Shape G** is blocked on both the skill registry ([civic-ai-tools-website#57](https://github.com/npstorey/civic-ai-tools-website/issues/57)) having a usable draft AND the MCP protocol roadmap research in [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44) confirming whether upstream is addressing meta-MCP-to-MCP delegation in a way that would change the design. Research phase only; implementation not scoped.
 
+## The tool-schema axis
+
+*Added 2026-07-24. Research only; nothing scoped.*
+
+Everything above routes **skill guidance**. The Problem section states the scope decision explicitly:
+
+> load only the relevant source's skill guidance into the system prompt, **keep all tool schemas available** so the LLM can still call cross-source tools if needed.
+
+That assumption is sound at present scale and stops being sound as source count grows. Tool schemas have the same three costs the skill text does — linear token growth, attention dilution, unbounded maintenance — and a fourth the skill text does not: **tool-selection accuracy degrades as the candidate set grows**, which is a correctness problem rather than a cost problem.
+
+### Where the numbers actually sit
+
+Nine tool schemas are sent on every request today (the registry indexes 11 names across three servers). Adding `nyc-charter-laws-rules` would make it 14. Adding all six BetaNYC servers unprefixed would make it 58 — with seven name collisions. See [`betanyc-mcp-integration-evaluation.md`](betanyc-mcp-integration-evaluation.md).
+
+So routing the tool set solves nothing at 14 and becomes real somewhere past 50. The two servers that would push us there (Council, 24 and 20 tools) are also the two with the weakest integration case.
+
+Worth noting: this doc's own staged trigger for skill routing is "**4+ sources** OR token cost becomes measurable pain." Adding any fourth source hits that trigger, so the skill-routing and tool-routing decisions arrive at the same moment rather than sequentially.
+
+### Namespacing is a prerequisite, not part of the same question
+
+Routing presumes stable tool identity. Today it isn't stable: the registry's flat `toolIndex` resolves duplicate names last-write-wins and silently, and two BetaNYC servers expose a `search` that would displace Socrata's. Boston's `ckan__` prefix already establishes a convention in the codebase without documenting it.
+
+Namespacing must be settled before any tool-set routing is designed, and it is worth settling on its own merits regardless of whether routing ever happens. Tracked separately as [Q60](../architecture/open-questions.md#q60--tool-name-namespacing-across-mcp-sources).
+
+### The enabling seam already half-exists
+
+`mcpTools` is a module-level constant imported by four route handlers (`compare`, `compare-stream`, `query-notebook`, `evidence/[slug]/replay`) and passed straight through as `tools:`. There is no per-request assembly point at all.
+
+But `activeSources` — the input any source-level tool gating would key on — **already exists and is already tested**, as the parameter to `composeSkillPrompt`. The concept of "which sources are live for this request" is built; it simply does not gate the tool array yet.
+
+The whole enabling change is therefore `mcpTools` constant → `selectTools(activeSources)` function. That is worth doing when a fourth source lands, independent of any routing strategy, because it is the precondition for all of them.
+
+### How the tool axis maps onto the shapes above
+
+- **Source-level gating** — expose only the tools of active sources. This is Shape A/B applied to the tool array instead of the skill text, and it comes nearly free once `selectTools` exists and `activeSources` feeds it. Predictable, no extra model call.
+- **Deferred / retrieval-based loading** — tool *names* visible, schemas fetched on demand. This is close to Shape D (progressive disclosure), but achieved client-side rather than depending on universal `prompts/list` support, which is what Shape D is blocked on.
+- **Shapes C, E, F, G** apply to the tool axis unchanged; nothing about them is skill-specific.
+
+Two supporting facts:
+
+- **The protocol permits varying the exposed set.** `tools/list` is cursor-paginated (`cursor` / `nextCursor`), and there is a `listChanged` capability with a `notifications/tools/list_changed` message. Changing the tool set mid-session is spec-legal, not a workaround.
+- **Deferred tool loading is shipped elsewhere, not hypothetical.** Claude Code exposes a large tool inventory as names only, with schemas fetched via a search call when a tool is actually needed. That is a production instance of the shape, and a reference to copy rather than a design to invent.
+
+### Gate status
+
+Fails the [Xanadu](../architecture/xanadu-doctrine.md) test today: no adopter is blocked, and the motivating scale is hypothetical. Under the doctrine it stays in research-doc form — which is this section — with no ADR and no spec text.
+
+Re-test trigger: a fourth source landing, or measured degradation in tool selection. The namespacing prerequisite passes the gate on its own and is registered separately.
+
 ## Cross-references
 
+- Tool-schema axis prerequisite: [Q60](../architecture/open-questions.md#q60--tool-name-namespacing-across-mcp-sources)
+- Candidate fourth source that would trigger the staged recommendation: [`betanyc-mcp-integration-evaluation.md`](betanyc-mcp-integration-evaluation.md)
 - Design issue (Shapes A–F): [civic-ai-tools-website#65](https://github.com/npstorey/civic-ai-tools-website/issues/65)
 - Design issue (Shape G): [civic-ai-tools#44](https://github.com/npstorey/civic-ai-tools/issues/44)
 - Current composition contract: `civic-ai-tools-website/src/lib/mcp/socrata-skill.ts` (post-M9.2 refactor)
