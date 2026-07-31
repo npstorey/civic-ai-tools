@@ -1,7 +1,7 @@
 # ADR-0021: Producer-side core extraction (`@typedstandards/produce-core`) and the format/domain line (Q59)
 
-- **Status:** **Proposed** — drafted 2026-07-31 by an orchestration session per Stream 1 of the civic-data-analysis stack program; decision pending maintainer review. On acceptance, [Q59](../architecture/open-questions.md#q59--producer-side-core-no-portable-counterpart-to-verify-core) resolves via its option (a), contingent on the demonstration named in §Consequences.
-- **Date:** 2026-07-31 (draft)
+- **Status:** **Accepted** 2026-07-31 (maintainer review; merged #113 — drafted the same day by an orchestration session per Stream 1 of the civic-data-analysis stack program). [Q59](../architecture/open-questions.md#q59--producer-side-core-no-portable-counterpart-to-verify-core) resolves via its option (a) **contingent on the demonstration named in §Consequences**; the registry flip rides that demonstration, not this acceptance.
+- **Date:** 2026-07-31 (decision + draft)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
