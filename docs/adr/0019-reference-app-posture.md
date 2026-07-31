@@ -1,6 +1,6 @@
 # ADR-0019: Reference-application product posture — open-source, demo-hostable, fork-first ("Postgres, not Heroku")
 
-- **Status:** Proposed (awaiting maintainer decision)
+- **Status:** Accepted (2026-07-31, #105) — decisions reviewed/revised 2026-07-09; accept-as-is confirmed 2026-07-30. Terminology note: this ADR's "fork-first" framing is refined to instance/install-first by [ADR-0020](0020-instance-key-custody.md), which evolves it.
 - **Date:** 2026-07-08
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —

@@ -575,11 +575,11 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 
 ### Q56 — Hub topology: thin vs. thick hub; registry location and key custody
 
-- **Status.** Open. Flagged as shaping "nearly everything downstream" in the 2026-06 working sessions.
+- **Status.** **Instance case resolved** by [ADR-0020](../adr/0020-instance-key-custody.md) (Accepted 2026-07-31); **spoke case open**, re-scoped to [civic-ai-tools#102](https://github.com/npstorey/civic-ai-tools/issues/102). Flagged as shaping "nearly everything downstream" in the 2026-06 working sessions.
 - **Origin.** 2026-06 working sessions (extraction row I7); registered 2026-07-01.
 - **Stakes.** The hub-and-spoke integration architecture: the hub (civicaitools.org + the spec + the neutral verifier) versus per-source MCP servers as spokes (Socrata today; OpenContext, Data Commons, future CKAN/ArcGIS). **Thin hub** = the hub only indexes and verifies; spokes own capture and publishing under their own keys. **Thick hub** = the hub owns the capture/publish/eval pipeline; spokes are data conduits. The choice shapes the future SDK shape (Q32/Q37's "future SDK shape" placeholders), the registry protocol, federation (Q2), and — pre-launch-sensitive — *who signs spoke-emitted packages* (key custody; see the succession artifact in `../sustainability.md`).
-- **Current direction.** Undecided. The reference implementation today is a thick hub de facto (platform-held key, server-side capture); nothing yet commits the architecture to that shape.
-- **Resolution criteria.** Resolves as an ADR when the first spoke-emitted package forces the custody/pipeline decision — most likely trigger: the Socrata MCP server emitting Typed Standards envelopes (tracked as a hub issue).
+- **Current direction.** Instance key custody **decided** (ADR-0020 §A–C: thin / per-instance keys + per-instance trust registry; an intentional unsigned dev tier that reaches neither `sealed` nor `public`; platform signing ruled out by the [ADR-0019](../adr/0019-reference-app-posture.md) no-hosted-service posture). The reference implementation is a thick hub de facto until the instance producer-side work (stack program Stream 1/S3) ships per-instance signing. The broader thin-vs-thick *topology* beyond key custody, and spoke custody, remain open.
+- **Resolution criteria.** Instance case: **resolved** (ADR-0020). Spoke case: resolves when the first spoke-emitted package forces it ([#102](https://github.com/npstorey/civic-ai-tools/issues/102)) — the earlier "whichever forcing function fires first must cover both the instance and spoke cases" rule is **superseded** by ADR-0020 Decision D (the cases are unbundled; #102 carries the spoke decision).
 - **Notes.** Worklist row I7.
 
 ### Q57 — L3 semantic packaging as serializations of one content

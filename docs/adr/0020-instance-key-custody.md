@@ -1,6 +1,6 @@
 # ADR-0020: Key custody for instances (Q56) — per-instance keys with an intentional unsigned dev tier
 
-- **Status:** **Proposed** — decision drafted 2026-07-30, revised 2026-07-31 per maintainer review (terminology `fork`→`instance`; tier-model precision — an unsigned package is a *signing status*, not a third `visibility` value; dev-tier guardrails; co-signing non-preclusion); awaiting sign-off. Accepted on merge. **Scope narrowed:** this ADR decides **instance** custody; the **spoke** case is unbundled and deferred to [civic-ai-tools#102](https://github.com/npstorey/civic-ai-tools/issues/102) (see §Deferred).
+- **Status:** **Accepted** 2026-07-31 (merged #106) — decision 2026-07-30, revised 2026-07-31 per maintainer review (terminology `fork`→`instance`; tier-model precision — an unsigned package is a *signing status*, not a third `visibility` value; dev-tier guardrails; co-signing non-preclusion). **Scope narrowed:** this ADR decides **instance** custody; the **spoke** case is unbundled and deferred to [civic-ai-tools#102](https://github.com/npstorey/civic-ai-tools/issues/102) (see §Deferred).
 - **Date:** 2026-07-30 (decision) · 2026-07-08 (options skeleton)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
