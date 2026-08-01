@@ -1,0 +1,1042 @@
+{
+  "_meta": {
+    "description": "Byte-golden expectations captured from the reference implementation (civic-ai-tools-website src/lib/evidence packager.ts / attestation.ts) with clock, RNG, and key-id env stubbed to fixed values. Each case names the reference test(s) whose input it replicates. For equivalent inputs, produce-core must emit byte-identical serialized JSON, content hashes, and envelope hashes.",
+    "referenceRepo": "civic-ai-tools-website",
+    "referenceCommit": "d39fdc17e8e237b5cac225e83cf7ca686b42b115",
+    "capturedAt": "2026-01-02T03:04:05.000Z (stubbed instant; capture run 2026-07-31)",
+    "determinism": {
+      "packageId": "11111111-2222-4333-8444-555555555555",
+      "createdAt": "2026-01-02T03:04:05.000Z",
+      "signingKeyId": "adopter:test-key-1"
+    }
+  },
+  "envelopeCases": [
+    {
+      "name": "legacy-inline",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: inline output + inline trace produces a package hash",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: legacy input (no type) emits NO contentHash/contentCanonicalization and hashes via JSON.stringify (byte-identical)",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: round-trip: legacy package re-verifies byte-identical (legacy detection chain)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]}}",
+        "contentHashSha256": null,
+        "envelopeHash": "42c6a118790b7e438ed5285502980a05e7e4253e915880ae357f93d6416e484c"
+      }
+    },
+    {
+      "name": "legacy-capture-method",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: with captureMethod, metadata.captureMethod matches input",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: chat-flow-stream WITHOUT contentProfile does NOT emit summary in canonical JSON (backwards-compat)",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: chat-flow-stream WITHOUT contentProfile does NOT emit org.civicaitools.environment extension (backwards-compat)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "captureMethod": "chat-flow-stream",
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\",\"captureMethod\":\"chat-flow-stream\"},\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]}}",
+        "contentHashSha256": null,
+        "envelopeHash": "5c9cfdfc59ee45b16f3c65a2b07288bdeeb2ffe499fb88a1d8f91b478d887ba4"
+      }
+    },
+    {
+      "name": "v01-default",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: v0.1 input (type present) emits legacy-json/v1 rule + multihash contentHash, hashes via JCS",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: v0.1 default contentHash fingerprints the package minus contentHash (legacy-json/v1)",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: round-trip: v0.1 default package re-verifies (JCS detection chain)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "type": "content/analysis/v1",
+        "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1",
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"content/analysis/v1\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]},\"contentHash\":{\"sha256\":\"a05b6afed2ee33b20e2fdcf09993760c758c8b35b01ab349f04d8d50aab8ad4f\"}}",
+        "contentHashSha256": "a05b6afed2ee33b20e2fdcf09993760c758c8b35b01ab349f04d8d50aab8ad4f",
+        "envelopeHash": "6a2515e8cd155b403db217834ca8c50ca2421b12e3efaadd0dc9997c71c7d45c"
+      }
+    },
+    {
+      "name": "v01-dathere-empty-notebook",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: v0.1 datHere emits dathere-ag-jupyter/v1 rule + fingerprints the executed notebook",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: datHere content profile produces canonical JSON with summary",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: datHere content profile auto-emits org.civicaitools.environment extension",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: datHere auto-derives producerProfile = ai-assisted-analysis/datHere",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: datHere content profile preserves caller-supplied extensions alongside auto-emitted environment"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "summary": "Test summary.",
+        "contentProfile": "datHere",
+        "producerProfile": "ai-assisted-analysis/datHere",
+        "type": "content/analysis/v1",
+        "contentCanonicalization": "https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1",
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        },
+        "extensions": {
+          "org.civicaitools.notebook": {
+            "nbformat": 4,
+            "nbformat_minor": 5,
+            "cells": [],
+            "metadata": {}
+          },
+          "org.civicaitools.environment": {
+            "modelVersion": "openai/gpt-4o",
+            "temperature": 0,
+            "mcpServers": [],
+            "toolDefinitions": [],
+            "host": "civicaitools.org"
+          }
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\",\"contentProfile\":\"datHere\"},\"producerProfile\":\"ai-assisted-analysis/datHere\",\"type\":\"content/analysis/v1\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1\",\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"summary\":\"Test summary.\",\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]},\"extensions\":{\"org.civicaitools.notebook\":{\"nbformat\":4,\"nbformat_minor\":5,\"cells\":[],\"metadata\":{}},\"org.civicaitools.environment\":{\"modelVersion\":\"openai/gpt-4o\",\"temperature\":0,\"mcpServers\":[],\"toolDefinitions\":[],\"host\":\"civicaitools.org\"}},\"contentHash\":{\"sha256\":\"ce65c2f4ffc92bc8f49e73ccdb5930b62bb014d1c70b33f66318bb97c228b39e\"}}",
+        "contentHashSha256": "ce65c2f4ffc92bc8f49e73ccdb5930b62bb014d1c70b33f66318bb97c228b39e",
+        "envelopeHash": "042815da4e366b7e13e3327debfca2793fcaee3ce1b5f3aa813549871050b6f3"
+      }
+    },
+    {
+      "name": "v01-dathere-executed-notebook",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: round-trip: v0.1 datHere package re-verifies (JCS detection chain)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "summary": "Test summary.",
+        "contentProfile": "datHere",
+        "producerProfile": "ai-assisted-analysis/datHere",
+        "type": "content/analysis/v1",
+        "contentCanonicalization": "https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1",
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        },
+        "extensions": {
+          "org.civicaitools.notebook": {
+            "nbformat": 4,
+            "nbformat_minor": 5,
+            "cells": [
+              {
+                "cell_type": "code",
+                "source": [
+                  "print(1)"
+                ],
+                "outputs": [],
+                "metadata": {}
+              }
+            ],
+            "metadata": {}
+          },
+          "org.civicaitools.environment": {
+            "modelVersion": "openai/gpt-4o",
+            "temperature": 0,
+            "mcpServers": [],
+            "toolDefinitions": [],
+            "host": "civicaitools.org"
+          }
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\",\"contentProfile\":\"datHere\"},\"producerProfile\":\"ai-assisted-analysis/datHere\",\"type\":\"content/analysis/v1\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1\",\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"summary\":\"Test summary.\",\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]},\"extensions\":{\"org.civicaitools.notebook\":{\"nbformat\":4,\"nbformat_minor\":5,\"cells\":[{\"cell_type\":\"code\",\"source\":[\"print(1)\"],\"outputs\":[],\"metadata\":{}}],\"metadata\":{}},\"org.civicaitools.environment\":{\"modelVersion\":\"openai/gpt-4o\",\"temperature\":0,\"mcpServers\":[],\"toolDefinitions\":[],\"host\":\"civicaitools.org\"}},\"contentHash\":{\"sha256\":\"21bc4d35a6cda882b8ae39530b7f591beb4891581b3e323005b2333b2edf8dff\"}}",
+        "contentHashSha256": "21bc4d35a6cda882b8ae39530b7f591beb4891581b3e323005b2333b2edf8dff",
+        "envelopeHash": "26d3906aad14369e8fd9399429f6e749a12e7149b3113ee6f022bcfd54dad225"
+      }
+    },
+    {
+      "name": "legacy-blobref-output",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: BlobRef output is preserved in the package JSON",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: BlobRef output produces a deterministic package hash (idempotency)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": {
+          "ref": "blob:sha256:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+          "url": "https://example.public.blob.vercel-storage.com/evidence-refs/ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73.bin",
+          "contentType": "text/plain",
+          "size": 7
+        },
+        "trace": {
+          "resourceSpans": []
+        },
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":{\"ref\":\"blob:sha256:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73\",\"url\":\"https://example.public.blob.vercel-storage.com/evidence-refs/ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73.bin\",\"contentType\":\"text/plain\",\"size\":7},\"trace\":{\"resourceSpans\":[]},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]}}",
+        "contentHashSha256": null,
+        "envelopeHash": "9165d3d27cccd0977f1c8bfd2c31dcb972b74ec78e91e70bf87966844d06ffc8"
+      }
+    },
+    {
+      "name": "legacy-blobref-trace-skill-override",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: BlobRef trace + skillMetadataOverride populates skill metadata"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {
+          "systemPromptHash": "e751da4a00000000000000000000000000000000000000000000000000000000",
+          "mcpServerUrl": "https://socrata-mcp.civicaitools.org",
+          "skillText": {
+            "ref": "blob:sha256:b222c80175f8430d339cabe3f95f34384d06336c105fdfc029ec36640eddaef6",
+            "url": "https://example.public.blob.vercel-storage.com/evidence-refs/b222c80175f8430d339cabe3f95f34384d06336c105fdfc029ec36640eddaef6.bin",
+            "contentType": "text/markdown",
+            "size": 11
+          }
+        },
+        "output": "Around 400,000.",
+        "trace": {
+          "ref": "blob:sha256:57bc3a530fb2531e27616aa44e504e044b9d41aea1c0f16b843d1fddb58a1cb9",
+          "url": "https://example.public.blob.vercel-storage.com/evidence-refs/57bc3a530fb2531e27616aa44e504e044b9d41aea1c0f16b843d1fddb58a1cb9.bin",
+          "contentType": "application/json",
+          "size": 20
+        },
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{\"systemPromptHash\":\"e751da4a00000000000000000000000000000000000000000000000000000000\",\"mcpServerUrl\":\"https://socrata-mcp.civicaitools.org\",\"skillText\":{\"ref\":\"blob:sha256:b222c80175f8430d339cabe3f95f34384d06336c105fdfc029ec36640eddaef6\",\"url\":\"https://example.public.blob.vercel-storage.com/evidence-refs/b222c80175f8430d339cabe3f95f34384d06336c105fdfc029ec36640eddaef6.bin\",\"contentType\":\"text/markdown\",\"size\":11}},\"output\":\"Around 400,000.\",\"trace\":{\"ref\":\"blob:sha256:57bc3a530fb2531e27616aa44e504e044b9d41aea1c0f16b843d1fddb58a1cb9\",\"url\":\"https://example.public.blob.vercel-storage.com/evidence-refs/57bc3a530fb2531e27616aa44e504e044b9d41aea1c0f16b843d1fddb58a1cb9.bin\",\"contentType\":\"application/json\",\"size\":20},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]}}",
+        "contentHashSha256": null,
+        "envelopeHash": "018a9d59583c96a5a64a078e4ed76c69b5db94d86e42e4b081febe8829acbc1c"
+      }
+    },
+    {
+      "name": "v01-signer-producer-capture",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: signer is emitted at top level when supplied",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: explicit producerProfile is preserved (not overridden by auto-derive)",
+        "civic-ai-tools-website src/lib/evidence/packager.test.ts :: buildEvidencePackage: type is emitted at top level when supplied"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "prompt": "How many 311 noise complaints last year?",
+        "promptVisibility": "full_text",
+        "queries": [
+          {
+            "tool": "get_data",
+            "operationType": "query",
+            "arguments": {
+              "type": "query",
+              "portal": "data.cityofnewyork.us",
+              "dataset_id": "erm2-nwe9",
+              "select": "count(*)"
+            },
+            "datasetId": "erm2-nwe9",
+            "portal": "data.cityofnewyork.us",
+            "resultRows": 1,
+            "resultColumns": 1
+          }
+        ],
+        "dataSources": [
+          {
+            "sourceId": "socrata",
+            "catalogType": "socrata",
+            "portalUrl": "https://data.cityofnewyork.us",
+            "datasetId": "erm2-nwe9",
+            "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+            "accessTimestamp": "2026-01-02T03:04:05.000Z"
+          }
+        ],
+        "cost": {
+          "promptTokens": 100,
+          "completionTokens": 20,
+          "totalTokens": 120,
+          "model": "openai/gpt-4o"
+        },
+        "skillMetadata": {},
+        "output": "Around 400,000.",
+        "trace": {
+          "resourceSpans": []
+        },
+        "captureMethod": "claude-code-jsonl-readback",
+        "producerProfile": "ai-assisted-analysis/civicaitools-default",
+        "type": "content/analysis/v1",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1",
+        "provenance": {
+          "@context": {
+            "prov": "http://www.w3.org/ns/prov#",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+            "civic": "https://civicaitools.org/ns/evidence/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@graph": [
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0",
+              "dcterms:description": "User query prompt",
+              "prov:value": "How many 311 noise complaints last year?"
+            },
+            {
+              "@id": "urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "@type": "prov:Entity",
+              "civic:contentHash": "sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2",
+              "dcterms:description": "AI-generated analysis output"
+            },
+            {
+              "@id": "urn:civic-evidence:model:openai-gpt-4o",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "openai/gpt-4o",
+              "dcterms:description": "Large language model via OpenRouter"
+            },
+            {
+              "@id": "urn:civic-evidence:platform:civic-ai-tools",
+              "@type": [
+                "prov:Agent",
+                "prov:SoftwareAgent"
+              ],
+              "dcterms:title": "Civic AI Tools",
+              "civic:url": "https://civicaitools.org"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\",\"captureMethod\":\"claude-code-jsonl-readback\"},\"producerProfile\":\"ai-assisted-analysis/civicaitools-default\",\"type\":\"content/analysis/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"prompt\":{\"hash\":\"3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"visibility\":\"full_text\",\"text\":\"How many 311 noise complaints last year?\"},\"queries\":[{\"tool\":\"get_data\",\"operationType\":\"query\",\"arguments\":{\"type\":\"query\",\"portal\":\"data.cityofnewyork.us\",\"dataset_id\":\"erm2-nwe9\",\"select\":\"count(*)\"},\"datasetId\":\"erm2-nwe9\",\"portal\":\"data.cityofnewyork.us\",\"resultRows\":1,\"resultColumns\":1}],\"dataSources\":[{\"sourceId\":\"socrata\",\"catalogType\":\"socrata\",\"portalUrl\":\"https://data.cityofnewyork.us\",\"datasetId\":\"erm2-nwe9\",\"datasetUrl\":\"https://data.cityofnewyork.us/d/erm2-nwe9\",\"accessTimestamp\":\"2026-01-02T03:04:05.000Z\"}],\"cost\":{\"promptTokens\":100,\"completionTokens\":20,\"totalTokens\":120,\"model\":\"openai/gpt-4o\"},\"skillMetadata\":{},\"output\":\"Around 400,000.\",\"trace\":{\"resourceSpans\":[]},\"provenance\":{\"@context\":{\"prov\":\"http://www.w3.org/ns/prov#\",\"xsd\":\"http://www.w3.org/2001/XMLSchema#\",\"civic\":\"https://civicaitools.org/ns/evidence/\",\"dcterms\":\"http://purl.org/dc/terms/\"},\"@graph\":[{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:prompt:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:3e7a528652636c5c2f9f9dab2eb23881f15dcdfae1fb446fba1389b15b9e43c0\",\"dcterms:description\":\"User query prompt\",\"prov:value\":\"How many 311 noise complaints last year?\"},{\"@id\":\"urn:civic-evidence:11111111-2222-4333-8444-555555555555:output:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"@type\":\"prov:Entity\",\"civic:contentHash\":\"sha256:97166bfed6ba462fd890e9f5cde53e4a359efad8a92286705f959c69e157f7d2\",\"dcterms:description\":\"AI-generated analysis output\"},{\"@id\":\"urn:civic-evidence:model:openai-gpt-4o\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"openai/gpt-4o\",\"dcterms:description\":\"Large language model via OpenRouter\"},{\"@id\":\"urn:civic-evidence:platform:civic-ai-tools\",\"@type\":[\"prov:Agent\",\"prov:SoftwareAgent\"],\"dcterms:title\":\"Civic AI Tools\",\"civic:url\":\"https://civicaitools.org\"}]},\"contentHash\":{\"sha256\":\"664b5725c3137fcee53d77ff45e56d38fc0ab62462d7fc1b2d62f0099293e142\"}}",
+        "contentHashSha256": "664b5725c3137fcee53d77ff45e56d38fc0ab62462d7fc1b2d62f0099293e142",
+        "envelopeHash": "39d3e537569b946a4c1d298c24574046788fb7c86bf7d24c2b2cbd59054635ce"
+      }
+    }
+  ],
+  "attestationCases": [
+    {
+      "name": "withdraws",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: withdraws node carries the conformant envelope fields",
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: nodeId is the JCS envelope hash and re-verifies after a storage round-trip",
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: contentHash fingerprints the node minus contentHash (legacy-json/v1)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/withdraws/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "reason": "data error in source dataset"
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/withdraws/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"reason\":\"data error in source dataset\",\"effectiveAt\":\"2026-01-02T03:04:05.000Z\",\"contentHash\":{\"sha256\":\"699ab6ba38161b7229e2c8f2dc372612a19c021c44e775da6545d7c8e4c74f62\"}}",
+        "contentHashSha256": "699ab6ba38161b7229e2c8f2dc372612a19c021c44e775da6545d7c8e4c74f62",
+        "nodeId": "514ebcbdeed266892358f8b0467a6dbaa98c71d7ef510386371662d2be92018e"
+      }
+    },
+    {
+      "name": "reinstates",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: reinstates node carries priorWithdrawalNodeId and no effectiveAt"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/reinstates/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "reason": "source corrected",
+        "priorWithdrawalNodeId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/reinstates/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"reason\":\"source corrected\",\"priorWithdrawalNodeId\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"contentHash\":{\"sha256\":\"32f1a2f1da6391fbc806ab2435317197d9423f726b31ae830fc14171fccf977e\"}}",
+        "contentHashSha256": "32f1a2f1da6391fbc806ab2435317197d9423f726b31ae830fc14171fccf977e",
+        "nodeId": "bafb34b18ce36dd8a182e224c223b2704578b607fd2fa1bd6276aa0cfe2f73f7"
+      }
+    },
+    {
+      "name": "publishes",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: publishes node carries publicationHost + releasedAt (defaults to envelope ts)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/publishes/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "publicationHost": "civicaitools.org"
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/publishes/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"publicationHost\":\"civicaitools.org\",\"releasedAt\":\"2026-01-02T03:04:05.000Z\",\"contentHash\":{\"sha256\":\"d5bba6e89d92a62ea4e851a6c9b8370a765b143ea6dd6662995dbbb3bbcdb20d\"}}",
+        "contentHashSha256": "d5bba6e89d92a62ea4e851a6c9b8370a765b143ea6dd6662995dbbb3bbcdb20d",
+        "nodeId": "6ab7c1bc242db97dd33a71866feb7d4a9143fe9f0243beb4ff0db462635f7d90"
+      }
+    },
+    {
+      "name": "located-at",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: locatedAt node carries uri + targetContentHash distinct from its own contentHash (Q48)"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/locatedAt/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "uri": "https://blob.example/evidence-packages/aaaa.json",
+        "targetContentHash": {
+          "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        "contentLength": 1234
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/locatedAt/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"uri\":\"https://blob.example/evidence-packages/aaaa.json\",\"targetContentHash\":{\"sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"},\"contentLength\":1234,\"contentHash\":{\"sha256\":\"c3684b03960f92cfc494e67c43f51cd5efffc2efa1a324d9bbf7fbe9735c0d2f\"}}",
+        "contentHashSha256": "c3684b03960f92cfc494e67c43f51cd5efffc2efa1a324d9bbf7fbe9735c0d2f",
+        "nodeId": "5054aa462a59f46b58671caf967950baf30f38f7a75ea447268e0a98a4b4e817"
+      }
+    },
+    {
+      "name": "located-at-minimal",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: locatedAt omits optional fields when not supplied"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/locatedAt/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "uri": "https://blob.example/x.json"
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/locatedAt/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"uri\":\"https://blob.example/x.json\",\"contentHash\":{\"sha256\":\"5aff63b4ef7803ce996f0747315447483a112a4aad27666f64c383f6414b5e0e\"}}",
+        "contentHashSha256": "5aff63b4ef7803ce996f0747315447483a112a4aad27666f64c383f6414b5e0e",
+        "nodeId": "2a3a95ef10c6482c4e5284b373e00174e3b7973f0231c964f87ac970e71ca0af"
+      }
+    },
+    {
+      "name": "evaluates",
+      "sourceTests": [
+        "civic-ai-tools-website src/lib/evidence/attestation.test.ts :: buildAttestationNode: evaluates node carries methodology + scoringRubric + results"
+      ],
+      "input": {
+        "packageId": "11111111-2222-4333-8444-555555555555",
+        "createdAt": "2026-01-02T03:04:05.000Z",
+        "signingKeyId": "adopter:test-key-1",
+        "type": "attestation/evaluates/v1",
+        "targetNodeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signer": {
+          "bindingTier": "platform",
+          "identifier": "platform:civic-ai-tools",
+          "displayName": "Civic AI Tools Platform"
+        },
+        "methodology": {
+          "testSet": "civicaitools-adversarial-rubric/six-criterion-v1",
+          "promptSetVersion": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "evaluatorModel": "anthropic/claude-sonnet-4-6"
+        },
+        "scoringRubric": "civicaitools-adversarial-rubric/six-criterion-v1",
+        "results": {
+          "perCriterion": {
+            "dataSourceIdentification": {
+              "score": 8,
+              "comment": "solid"
+            }
+          },
+          "overallScore": 8,
+          "assessment": "Good."
+        }
+      },
+      "expected": {
+        "serializedJson": "{\"metadata\":{\"schemaVersion\":\"0.1.0\",\"packageId\":\"11111111-2222-4333-8444-555555555555\",\"createdAt\":\"2026-01-02T03:04:05.000Z\",\"signingKeyId\":\"adopter:test-key-1\"},\"type\":\"attestation/evaluates/v1\",\"signer\":{\"bindingTier\":\"platform\",\"identifier\":\"platform:civic-ai-tools\",\"displayName\":\"Civic AI Tools Platform\"},\"targetNodeId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"contentCanonicalization\":\"https://typedstandards.org/canonicalization/legacy-json/v1\",\"methodology\":{\"testSet\":\"civicaitools-adversarial-rubric/six-criterion-v1\",\"promptSetVersion\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"evaluatorModel\":\"anthropic/claude-sonnet-4-6\"},\"scoringRubric\":\"civicaitools-adversarial-rubric/six-criterion-v1\",\"results\":{\"perCriterion\":{\"dataSourceIdentification\":{\"score\":8,\"comment\":\"solid\"}},\"overallScore\":8,\"assessment\":\"Good.\"},\"contentHash\":{\"sha256\":\"5dafa8c0c33b744e9b6f0f717aca285084c8bc3927950d33b3faded9d2df2b7b\"}}",
+        "contentHashSha256": "5dafa8c0c33b744e9b6f0f717aca285084c8bc3927950d33b3faded9d2df2b7b",
+        "nodeId": "dffe55d8e9a94f50da388b3587988b9e8fcd1ee38455d96a9d1fe0bb8aea79eb"
+      }
+    }
+  ]
+}
