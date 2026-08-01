@@ -205,7 +205,7 @@ The threshold can be overridden with `--max-inline-bytes N` (e.g., force-inline 
 
    The script resolves auth in this order and uses the first that matches: saved bearer token → `CIVICAITOOLS_SESSION_TOKEN` → `CIVICAITOOLS_SESSION_TOKEN_OP`. Never echo those values. Never pass them on the command line. Oversized fields are uploaded to Vercel Blob before the `/api/evidence` POST; each upload uses the same credentials as the main POST.
 
-4. On success the script prints a JSON result with `slug`, `evidenceUrl`, `packageHash`, and `readbackUrl`. Show the user:
+4. On success the script prints a JSON result with `slug`, `evidenceUrl`, `packageHash`, and `readbackUrl` — plus, for published (not committed) records, `blobHint`: the canonical, content-addressable package-blob URL. The blob host is not baked into the script; it is read from the target instance's own response (`packageUrl` on the public `GET /api/evidence/<slug>/commitment`), falling back to a blob URL returned by an upload earlier in the same run. If neither is available the hint is omitted with a warning; `--blob-host` (or `CIVICAITOOLS_BLOB_HOST`) is the escape hatch for instances whose commitment endpoint isn't reachable from where the skill runs. Show the user:
    - The full evidence URL (`https://civicaitools.org/evidence/<slug>`)
    - The package hash (first 12 chars is fine)
    - A one-line next-step hint: "Open the URL to run adversarial / consistency attestations from the dashboard."
