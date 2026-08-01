@@ -1,0 +1,29 @@
+{
+  // Build config for civic-typed-harness. Mirrors @typedstandards/produce-core:
+  // the source is browser-safe and imports siblings with explicit `.ts`
+  // extensions. `rewriteRelativeImportExtensions` converts those to `.js` on
+  // emit so the built ESM resolves under plain Node, bundlers, and the browser
+  // alike — one source, no per-target rewrite.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
+
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "dist", "node_modules"]
+}

@@ -19,6 +19,9 @@ analysis_results.json
 *.output.json
 output/
 
+# Node (npm workspaces since S2)
+node_modules/
+
 # Python
 __pycache__/
 *.py[cod]
