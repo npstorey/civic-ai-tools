@@ -43,6 +43,11 @@ Environment variables (read at run time, never logged):
                                     resolved via ``op read``.
     CIVICAITOOLS_BASE_URL           Override the publish base URL
                                     (default ``https://www.civicaitools.org``).
+    CIVICAITOOLS_BLOB_HOST          Escape hatch only. Public blob-store
+                                    host used to build the package
+                                    ``blobHint``. Unset by default — the
+                                    host is read out of the server's own
+                                    responses (see ``resolve_blob_host``).
     XDG_CONFIG_HOME                 Respected when locating the
                                     credentials file.
 
@@ -66,6 +71,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 import webbrowser
@@ -1049,11 +1055,99 @@ def post_evidence(
         sys.exit(3)
 
 
-VERCEL_BLOB_HOST = "ayoozcuc1c16axbw.public.blob.vercel-storage.com"
+# --------------------------------------------------------------------------
+# Package blob URL — host derived from the server's own responses
+# --------------------------------------------------------------------------
+#
+# The public blob-store host is instance identity, not protocol: every
+# deployment of the registry has its own store. It is therefore never a
+# constant in this script (which adopters copy verbatim) — it is read back
+# out of URLs the target instance itself produced.
 
 
-def blob_url_for(package_hash: str) -> str:
-    return f"https://{VERCEL_BLOB_HOST}/evidence-packages/{package_hash}.json"
+def blob_host_from_url(url: Any) -> str | None:
+    """Return the host component of ``url``, or None if it isn't a usable
+    absolute HTTP(S) URL."""
+    if not isinstance(url, str) or not url.strip():
+        return None
+    try:
+        parsed = urllib.parse.urlsplit(url.strip())
+    except ValueError:
+        return None
+    if parsed.scheme not in ("https", "http") or not parsed.netloc:
+        return None
+    return parsed.netloc
+
+
+def blob_url_for(package_hash: str, blob_host: str) -> str:
+    """Canonical, content-addressable package-blob URL on ``blob_host``.
+
+    Mirrors the server's own key convention for published packages —
+    ``evidence-packages/<packageHash>.json``, no random suffix. The host
+    comes from ``resolve_blob_host``; there is no default.
+    """
+    return f"https://{blob_host}/evidence-packages/{package_hash}.json"
+
+
+def fetch_commitment_blob_host(base_url: str, slug: str) -> str | None:
+    """Read this instance's blob host off the public commitment view.
+
+    ``GET /api/evidence/<slug>/commitment`` needs no authentication and
+    carries ``packageUrl`` — the canonical, public package-blob URL for
+    the record just published. Best-effort: any failure returns None and
+    the caller degrades to omitting the hint rather than guessing a host.
+    """
+    url = f"{base_url.rstrip('/')}/api/evidence/{slug}/commitment"
+    req = urllib.request.Request(
+        url,
+        method="GET",
+        headers={"User-Agent": "civic-ai-tools-publish-evidence/0.3"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            parsed = json.loads(resp.read().decode("utf-8"))
+    except (OSError, ValueError):
+        # OSError covers urllib's URLError/HTTPError and socket timeouts;
+        # ValueError covers json.JSONDecodeError and decode failures.
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return blob_host_from_url(parsed.get("packageUrl"))
+
+
+def resolve_blob_host(
+    *,
+    override: str | None,
+    base_url: str,
+    slug: str,
+    observed_urls: list[str],
+) -> str | None:
+    """Resolve the target instance's public blob host.
+
+    Resolution order:
+
+    1. ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST`` — documented escape
+       hatch for environments where the commitment endpoint isn't
+       reachable from where the skill runs. Unset in the default flow.
+    2. The commitment view's ``packageUrl`` — server-authoritative for
+       the package blob on whichever instance was just published to.
+    3. A blob URL this run already received from the store while
+       uploading BlobRef fields (same store as the package blob). Used
+       only when (2) is unreachable, and costs no extra request.
+
+    Returns None when no response offered a host; the caller then omits
+    the hint instead of guessing.
+    """
+    if override and override.strip():
+        return blob_host_from_url(override) or override.strip().strip("/")
+    host = fetch_commitment_blob_host(base_url, slug)
+    if host:
+        return host
+    for url in observed_urls:
+        host = blob_host_from_url(url)
+        if host:
+            return host
+    return None
 
 
 def _redacted_preview(
@@ -1287,6 +1381,17 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--blob-host",
+        default=os.environ.get("CIVICAITOOLS_BLOB_HOST", ""),
+        help=(
+            "Escape hatch: the target instance's public blob-store host "
+            "(e.g. `<store>.public.blob.vercel-storage.com`), used to "
+            "build the `blobHint` in the result. Not needed in the normal "
+            "flow — the host is read from the server's own commitment "
+            "response. Defaults to $CIVICAITOOLS_BLOB_HOST."
+        ),
+    )
+    parser.add_argument(
         "--dev",
         action="store_true",
         help="Use the dev cookie name `next-auth.session-token` instead of "
@@ -1404,8 +1509,12 @@ def main() -> None:
     auth_method, auth_value = resolve_auth(args.base_url)
     cookie_name = DEV_COOKIE_NAME if args.dev else PROD_COOKIE_NAME
 
+    # Blob URLs the store returns during this run. Kept as a fallback
+    # source for the instance's blob host (see resolve_blob_host).
+    uploaded_blob_urls: list[str] = []
+
     def do_upload(value: Any, content_type: str, extension: str) -> dict[str, Any]:
-        return upload_blob_ref(
+        blob_ref = upload_blob_ref(
             value=value,
             content_type=content_type,
             extension=extension,
@@ -1414,6 +1523,9 @@ def main() -> None:
             auth_value=auth_value,
             cookie_name=cookie_name,
         )
+        if isinstance(blob_ref.get("url"), str):
+            uploaded_blob_urls.append(blob_ref["url"])
+        return blob_ref
 
     body, _stats = build_request_body(
         payload,
@@ -1458,7 +1570,23 @@ def main() -> None:
             "Publish from the civicaitools.org dashboard when ready."
         )
     else:
-        output["blobHint"] = blob_url_for(package_hash)
+        blob_host = resolve_blob_host(
+            override=args.blob_host,
+            base_url=args.base_url,
+            slug=slug,
+            observed_urls=uploaded_blob_urls,
+        )
+        if blob_host:
+            output["blobHint"] = blob_url_for(package_hash, blob_host)
+        else:
+            eprint(
+                "warning: could not resolve this instance's blob host from "
+                "the server's responses, so `blobHint` is omitted. The "
+                "canonical package URL is served as `packageUrl` by "
+                f"{args.base_url.rstrip('/')}/api/evidence/{slug}/commitment; "
+                "set CIVICAITOOLS_BLOB_HOST (or --blob-host) if that "
+                "endpoint isn't reachable from here."
+            )
 
     print(json.dumps(output, indent=2))
 
