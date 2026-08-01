@@ -1,7 +1,7 @@
 # ADR-0022: Civic-harness packaging — npm workspaces and the first package in the hub repo
 
-- **Status:** Proposed
-- **Date:** 2026-08-01 (drafted by the S2 P1 implementation session, riding its PR per the sprint's G0 decision 1)
+- **Status:** **Accepted** 2026-08-01 (maintainer review, post-merge of #117)
+- **Date:** 2026-08-01 (decision; drafted the same day by the S2 P1 implementation session, riding its PR per the sprint's G0 decision 1)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
