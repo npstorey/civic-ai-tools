@@ -1,0 +1,810 @@
+{
+  "//": "Golden fixtures captured 2026-08-01 (regenerated same day) from civic-ai-tools-website src/lib/evidence (provenance.ts, data-sources.ts) — the byte-parity reference for the harness port. Fixture convention: synthetic span timestamps stay under 13 digits so they cannot pattern-match as card/account numbers in pre-push sensitivity scans.",
+  "provenanceInput": {
+    "packageId": "pkg-golden-001",
+    "promptHash": "prompthash123",
+    "promptText": "How many noise complaints were filed in 2025?",
+    "outputText": "There were 12 complaints.",
+    "model": "openai/gpt-4o",
+    "portal": "data.cityofnewyork.us"
+  },
+  "trace": {
+    "resourceSpans": [
+      {
+        "scopeSpans": [
+          {
+            "spans": [
+              {
+                "name": "skill_fetch",
+                "spanId": "skill-span-1",
+                "attributes": [
+                  {
+                    "key": "skill.text_hash",
+                    "value": {
+                      "stringValue": "aaa111"
+                    }
+                  },
+                  {
+                    "key": "skill.mcp_server_url",
+                    "value": {
+                      "stringValue": "https://socrata-mcp.civicaitools.org"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "llm_inference",
+                "spanId": "inf-1",
+                "startTimeUnixNano": "1000000000",
+                "endTimeUnixNano": "2000000000",
+                "attributes": [
+                  {
+                    "key": "gen_ai.inference_index",
+                    "value": {
+                      "stringValue": "0"
+                    }
+                  },
+                  {
+                    "key": "gen_ai.response.prompt_tokens",
+                    "value": {
+                      "stringValue": "120"
+                    }
+                  },
+                  {
+                    "key": "gen_ai.response.completion_tokens",
+                    "value": {
+                      "stringValue": "45"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mcp_tool_call",
+                "spanId": "tool-1",
+                "startTimeUnixNano": "3000000000",
+                "endTimeUnixNano": "4000000000",
+                "attributes": [
+                  {
+                    "key": "mcp.source",
+                    "value": {
+                      "stringValue": "socrata"
+                    }
+                  },
+                  {
+                    "key": "tool.name",
+                    "value": {
+                      "stringValue": "get_data"
+                    }
+                  },
+                  {
+                    "key": "tool.operation_type",
+                    "value": {
+                      "stringValue": "query"
+                    }
+                  },
+                  {
+                    "key": "tool.arguments",
+                    "value": {
+                      "stringValue": "{\"type\":\"query\",\"dataset_id\":\"erm2-nwe9\"}"
+                    }
+                  },
+                  {
+                    "key": "tool.response_hash",
+                    "value": {
+                      "stringValue": "bbb222"
+                    }
+                  },
+                  {
+                    "key": "tool.dataset_id",
+                    "value": {
+                      "stringValue": "erm2-nwe9"
+                    }
+                  },
+                  {
+                    "key": "tool.portal_domain",
+                    "value": {
+                      "stringValue": "data.cityofnewyork.us"
+                    }
+                  },
+                  {
+                    "key": "tool.response_rows",
+                    "value": {
+                      "stringValue": "12"
+                    }
+                  },
+                  {
+                    "key": "tool.duration_ms",
+                    "value": {
+                      "stringValue": "850"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mcp_tool_call",
+                "spanId": "tool-2",
+                "startTimeUnixNano": "5000000000",
+                "endTimeUnixNano": "6000000000",
+                "attributes": [
+                  {
+                    "key": "mcp.source",
+                    "value": {
+                      "stringValue": "data-commons"
+                    }
+                  },
+                  {
+                    "key": "tool.name",
+                    "value": {
+                      "stringValue": "get_observations"
+                    }
+                  },
+                  {
+                    "key": "tool.operation_type",
+                    "value": {
+                      "stringValue": "query"
+                    }
+                  },
+                  {
+                    "key": "tool.arguments",
+                    "value": {
+                      "stringValue": "{\"variable_dcid\":\"Count_Person\"}"
+                    }
+                  },
+                  {
+                    "key": "tool.response_hash",
+                    "value": {
+                      "stringValue": "ccc333"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mcp_tool_call",
+                "spanId": "tool-3",
+                "startTimeUnixNano": "7000000000",
+                "endTimeUnixNano": "8000000000",
+                "attributes": [
+                  {
+                    "key": "mcp.source",
+                    "value": {
+                      "stringValue": "boston-opencontext"
+                    }
+                  },
+                  {
+                    "key": "tool.name",
+                    "value": {
+                      "stringValue": "ckan__aggregate_data"
+                    }
+                  },
+                  {
+                    "key": "tool.operation_type",
+                    "value": {
+                      "stringValue": "query"
+                    }
+                  },
+                  {
+                    "key": "tool.arguments",
+                    "value": {
+                      "stringValue": "{\"resource_id\":\"abc\"}"
+                    }
+                  },
+                  {
+                    "key": "tool.response_hash",
+                    "value": {
+                      "stringValue": "ddd444"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mcp_tool_call",
+                "spanId": "tool-4",
+                "startTimeUnixNano": "9000000000",
+                "endTimeUnixNano": "10000000000",
+                "attributes": [
+                  {
+                    "key": "mcp.source",
+                    "value": {
+                      "stringValue": "euro stat"
+                    }
+                  },
+                  {
+                    "key": "tool.name",
+                    "value": {
+                      "stringValue": "mystery_tool"
+                    }
+                  },
+                  {
+                    "key": "tool.operation_type",
+                    "value": {
+                      "stringValue": "query"
+                    }
+                  },
+                  {
+                    "key": "tool.arguments",
+                    "value": {
+                      "stringValue": "{\"q\":\"x\"}"
+                    }
+                  },
+                  {
+                    "key": "tool.response_hash",
+                    "value": {
+                      "stringValue": "eee555"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mcp_tool_call",
+                "spanId": "tool-5",
+                "startTimeUnixNano": "11000000000",
+                "endTimeUnixNano": "12000000000",
+                "attributes": [
+                  {
+                    "key": "tool.name",
+                    "value": {
+                      "stringValue": "get_data"
+                    }
+                  },
+                  {
+                    "key": "tool.operation_type",
+                    "value": {
+                      "stringValue": "metadata"
+                    }
+                  },
+                  {
+                    "key": "tool.arguments",
+                    "value": {
+                      "stringValue": "{\"type\":\"metadata\",\"dataset_id\":\"43nn-pn8j\"}"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "llm_inference",
+                "spanId": "inf-2",
+                "startTimeUnixNano": "13000000000",
+                "endTimeUnixNano": "14000000000",
+                "attributes": [
+                  {
+                    "key": "gen_ai.inference_index",
+                    "value": {
+                      "stringValue": "1"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "synthesis",
+                "spanId": "synth-1",
+                "startTimeUnixNano": "15000000000",
+                "endTimeUnixNano": "16000000000",
+                "attributes": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "provenanceGraph": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "civic": "https://civicaitools.org/ns/evidence/",
+      "dcterms": "http://purl.org/dc/terms/"
+    },
+    "@graph": [
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:prompt:prompthash123",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:prompthash123",
+        "dcterms:description": "User query prompt",
+        "prov:value": "How many noise complaints were filed in 2025?"
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:skill:aaa111",
+        "@type": [
+          "prov:Entity",
+          "prov:Plan"
+        ],
+        "civic:contentHash": "sha256:aaa111",
+        "dcterms:description": "Composed MCP skill guidance (system prompt)"
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:output:123571add9bd101d35ab7e7da90b5710d0d98eb8ac494c94c3c7b1cee8aac577",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:123571add9bd101d35ab7e7da90b5710d0d98eb8ac494c94c3c7b1cee8aac577",
+        "dcterms:description": "AI-generated analysis output"
+      },
+      {
+        "@id": "urn:civic-evidence:model:openai-gpt-4o",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "openai/gpt-4o",
+        "dcterms:description": "Large language model via OpenRouter"
+      },
+      {
+        "@id": "urn:civic-evidence:mcp-server:socrata",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Socrata MCP Server",
+        "civic:serverUrl": "https://socrata-mcp.civicaitools.org",
+        "civic:sourceId": "socrata"
+      },
+      {
+        "@id": "urn:civic-evidence:mcp-server:data-commons",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Google Data Commons MCP Server",
+        "civic:serverUrl": "https://api.datacommons.org/mcp",
+        "civic:sourceId": "data-commons"
+      },
+      {
+        "@id": "urn:civic-evidence:mcp-server:boston-opencontext",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Boston OpenContext MCP Server",
+        "civic:serverUrl": "https://data-mcp.boston.gov/mcp",
+        "civic:sourceId": "boston-opencontext"
+      },
+      {
+        "@id": "urn:civic-evidence:mcp-server:euro%20stat",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "euro stat MCP Server",
+        "civic:serverUrl": "euro stat",
+        "civic:sourceId": "euro stat"
+      },
+      {
+        "@id": "urn:civic-evidence:platform:civic-ai-tools",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Civic AI Tools",
+        "civic:url": "https://civicaitools.org"
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1",
+        "@type": "prov:Activity",
+        "dcterms:description": "LLM inference call (iteration 0)",
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:model:openai-gpt-4o"
+        },
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:prompt:prompthash123"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:skill:aaa111"
+          }
+        ],
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:01.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:02.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "civic:promptTokens": 120,
+        "civic:completionTokens": 45
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-2",
+        "@type": "prov:Activity",
+        "dcterms:description": "LLM inference call (iteration 1)",
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:model:openai-gpt-4o"
+        },
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:prompt:prompthash123"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:skill:aaa111"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:bbb222"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:ccc333"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:ddd444"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:eee555"
+          }
+        ],
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:13.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:14.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:query:bb4ba745d8c8cad9aa349d4e36b5d0042a936dce26140ee1e36140acce425736",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:bb4ba745d8c8cad9aa349d4e36b5d0042a936dce26140ee1e36140acce425736",
+        "civic:toolName": "get_data",
+        "civic:operationType": "query",
+        "dcterms:description": "MCP tool arguments (query)",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:data:bbb222",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:bbb222",
+        "dcterms:description": "Data response from data.cityofnewyork.us",
+        "civic:sourceId": "socrata",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-1"
+        },
+        "civic:datasetId": "erm2-nwe9",
+        "civic:portalDomain": "data.cityofnewyork.us",
+        "civic:datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+        "civic:croissantMetadataUrl": null,
+        "civic:responseRows": 12
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-1",
+        "@type": "prov:Activity",
+        "dcterms:description": "MCP tool call: get_data (query)",
+        "civic:sourceId": "socrata",
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:query:bb4ba745d8c8cad9aa349d4e36b5d0042a936dce26140ee1e36140acce425736"
+          }
+        ],
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:mcp-server:socrata"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:03.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:04.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "civic:durationMs": 850
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:query:9fa0829aba3b6663a521ece5820717e7dee55c346681fa53f29b36044fe3fd35",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:9fa0829aba3b6663a521ece5820717e7dee55c346681fa53f29b36044fe3fd35",
+        "civic:toolName": "get_observations",
+        "civic:operationType": "query",
+        "dcterms:description": "MCP tool arguments (query)",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:data:ccc333",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:ccc333",
+        "dcterms:description": "Data response from Google Data Commons MCP Server",
+        "civic:sourceId": "data-commons",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-2"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-2",
+        "@type": "prov:Activity",
+        "dcterms:description": "MCP tool call: get_observations (query)",
+        "civic:sourceId": "data-commons",
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:query:9fa0829aba3b6663a521ece5820717e7dee55c346681fa53f29b36044fe3fd35"
+          }
+        ],
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:mcp-server:data-commons"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:05.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:06.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:query:1f6ca9e86ea4683e81935dc771d8e4bc7108fd9d76ed7e3e8c77b4b291b827ed",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:1f6ca9e86ea4683e81935dc771d8e4bc7108fd9d76ed7e3e8c77b4b291b827ed",
+        "civic:toolName": "ckan__aggregate_data",
+        "civic:operationType": "query",
+        "dcterms:description": "MCP tool arguments (query)",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:data:ddd444",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:ddd444",
+        "dcterms:description": "Data response from Boston OpenContext MCP Server",
+        "civic:sourceId": "boston-opencontext",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-3"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-3",
+        "@type": "prov:Activity",
+        "dcterms:description": "MCP tool call: ckan__aggregate_data (query)",
+        "civic:sourceId": "boston-opencontext",
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:query:1f6ca9e86ea4683e81935dc771d8e4bc7108fd9d76ed7e3e8c77b4b291b827ed"
+          }
+        ],
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:mcp-server:boston-opencontext"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:07.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:08.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:query:a69fbbcf7209c6f659a75067c9fa03037c2ae23f55a6f854d5994209129bbbf6",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:a69fbbcf7209c6f659a75067c9fa03037c2ae23f55a6f854d5994209129bbbf6",
+        "civic:toolName": "mystery_tool",
+        "civic:operationType": "query",
+        "dcterms:description": "MCP tool arguments (query)",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:data:eee555",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:eee555",
+        "dcterms:description": "Data response from euro stat",
+        "civic:sourceId": "euro stat",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-4"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-4",
+        "@type": "prov:Activity",
+        "dcterms:description": "MCP tool call: mystery_tool (query)",
+        "civic:sourceId": "euro stat",
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:query:a69fbbcf7209c6f659a75067c9fa03037c2ae23f55a6f854d5994209129bbbf6"
+          }
+        ],
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:mcp-server:socrata"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:09.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:10.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:query:650cf2c074ab50b03d3a0fefe16d7dc3ed8835af511f596aac0dfb1505adbdf0",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:650cf2c074ab50b03d3a0fefe16d7dc3ed8835af511f596aac0dfb1505adbdf0",
+        "civic:toolName": "get_data",
+        "civic:operationType": "metadata",
+        "dcterms:description": "MCP tool arguments (metadata)",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:tool-call:tool-5",
+        "@type": "prov:Activity",
+        "dcterms:description": "MCP tool call: get_data (metadata)",
+        "civic:sourceId": "socrata",
+        "prov:used": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:query:650cf2c074ab50b03d3a0fefe16d7dc3ed8835af511f596aac0dfb1505adbdf0"
+          }
+        ],
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:mcp-server:socrata"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:11.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:12.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:synthesis:synth-1",
+        "@type": "prov:Activity",
+        "dcterms:description": "Output synthesis",
+        "prov:wasAssociatedWith": {
+          "@id": "urn:civic-evidence:model:openai-gpt-4o"
+        },
+        "prov:startedAtTime": {
+          "@value": "1970-01-01T00:00:15.000Z",
+          "@type": "xsd:dateTime"
+        },
+        "prov:endedAtTime": {
+          "@value": "1970-01-01T00:00:16.000Z",
+          "@type": "xsd:dateTime"
+        }
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:output:123571add9bd101d35ab7e7da90b5710d0d98eb8ac494c94c3c7b1cee8aac577",
+        "@type": "prov:Entity",
+        "prov:wasGeneratedBy": {
+          "@id": "urn:civic-evidence:pkg-golden-001:synthesis:synth-1"
+        },
+        "prov:wasDerivedFrom": [
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:bbb222"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:ccc333"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:ddd444"
+          },
+          {
+            "@id": "urn:civic-evidence:pkg-golden-001:data:eee555"
+          }
+        ]
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-001:inference:inf-1",
+        "@type": "prov:Activity",
+        "prov:qualifiedAssociation": {
+          "@type": "prov:Association",
+          "prov:agent": {
+            "@id": "urn:civic-evidence:model:openai-gpt-4o"
+          },
+          "prov:hadPlan": {
+            "@id": "urn:civic-evidence:pkg-golden-001:skill:aaa111"
+          }
+        }
+      }
+    ]
+  },
+  "provenanceGraphMinimal": {
+    "@context": {
+      "prov": "http://www.w3.org/ns/prov#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "civic": "https://civicaitools.org/ns/evidence/",
+      "dcterms": "http://purl.org/dc/terms/"
+    },
+    "@graph": [
+      {
+        "@id": "urn:civic-evidence:pkg-golden-002:prompt:ph2",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:ph2",
+        "dcterms:description": "User query prompt"
+      },
+      {
+        "@id": "urn:civic-evidence:pkg-golden-002:output:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+        "@type": "prov:Entity",
+        "civic:contentHash": "sha256:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+        "dcterms:description": "AI-generated analysis output"
+      },
+      {
+        "@id": "urn:civic-evidence:model:anthropic-claude-3-5-sonnet",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "anthropic/claude-3-5-sonnet",
+        "dcterms:description": "Large language model via OpenRouter"
+      },
+      {
+        "@id": "urn:civic-evidence:platform:civic-ai-tools",
+        "@type": [
+          "prov:Agent",
+          "prov:SoftwareAgent"
+        ],
+        "dcterms:title": "Civic AI Tools",
+        "civic:url": "https://civicaitools.org"
+      }
+    ]
+  },
+  "toolCalls": [
+    {
+      "name": "get_data",
+      "args": {
+        "type": "query",
+        "portal": "data.cityofnewyork.us",
+        "dataset_id": "erm2-nwe9"
+      }
+    },
+    {
+      "name": "get_observations",
+      "args": {
+        "variable_dcid": "Count_Person"
+      }
+    },
+    {
+      "name": "ckan__aggregate_data",
+      "args": {
+        "resource_id": "abc"
+      }
+    },
+    {
+      "name": "mystery_tool",
+      "args": {
+        "q": "x"
+      }
+    },
+    {
+      "name": "get_data",
+      "args": {
+        "type": "metadata",
+        "portal": "data.cityofnewyork.us",
+        "dataset_id": "43nn-pn8j"
+      }
+    }
+  ],
+  "dataSourcesNow": "2026-08-01T00:00:00.000Z",
+  "dataSources": [
+    {
+      "sourceId": "socrata",
+      "catalogType": "socrata",
+      "portalUrl": "https://data.cityofnewyork.us",
+      "datasetId": "erm2-nwe9",
+      "datasetUrl": "https://data.cityofnewyork.us/d/erm2-nwe9",
+      "accessTimestamp": "2026-08-01T00:00:00.000Z"
+    },
+    {
+      "sourceId": "socrata",
+      "catalogType": "socrata",
+      "portalUrl": "https://data.cityofnewyork.us",
+      "datasetId": "43nn-pn8j",
+      "datasetUrl": "https://data.cityofnewyork.us/d/43nn-pn8j",
+      "accessTimestamp": "2026-08-01T00:00:00.000Z"
+    },
+    {
+      "sourceId": "data-commons",
+      "catalogType": "data-commons",
+      "portalUrl": "https://api.datacommons.org/mcp",
+      "accessTimestamp": "2026-08-01T00:00:00.000Z"
+    },
+    {
+      "sourceId": "boston-opencontext",
+      "catalogType": "ckan",
+      "portalUrl": "https://data.boston.gov",
+      "accessTimestamp": "2026-08-01T00:00:00.000Z"
+    }
+  ]
+}
