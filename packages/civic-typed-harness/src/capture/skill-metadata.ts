@@ -3,8 +3,7 @@
 // `src/lib/evidence/packager.ts:303–322` (extraction) and `:354–357` (the
 // trace-as-BlobRef inspection fallback) per the S2 brief §1.
 
-import { isBlobRef } from '@typedstandards/verify-core';
-import type { BlobRef } from '@typedstandards/produce-core';
+import { isBlobRef, type BlobRef } from '@typedstandards/produce-core';
 
 /** Skill metadata extracted from a trace's `skill_fetch` span. Feeds the
  *  envelope's `skillMetadata` block (and the datHere policy's

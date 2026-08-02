@@ -12,8 +12,11 @@
 // to EVALUATION_RUBRIC is a NEW rubric version — never edit the text without
 // versioning intent.
 
-import { sha256Hex } from '@typedstandards/verify-core';
-import type { EvidencePackage, EvaluationResults } from '@typedstandards/produce-core';
+import {
+  sha256Hex,
+  type EvidencePackage,
+  type EvaluationResults,
+} from '@typedstandards/produce-core';
 
 /** Rubric identifier carried as the `scoringRubric` payload field and the
  *  methodology `testSet`. Six criteria, 1-10 each, plus aggregate. */

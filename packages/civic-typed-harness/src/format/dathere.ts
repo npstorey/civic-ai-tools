@@ -14,14 +14,14 @@
 // reference packager emitted it, so equivalent inputs produce byte-identical
 // canonical JSON through the core's conditional spreads.
 //
-// The canonicalization rule URIs come from @typedstandards/verify-core
-// (produce-core's own dependency — present transitively by construction);
-// the harness re-emits, never redefines, them.
+// The canonicalization rule URIs are verify-core's, reached through
+// @typedstandards/produce-core's 0.2.0 re-exports (the harness's single
+// declared dependency); the harness re-emits, never redefines, them.
 
 import {
   DATHERE_AG_JUPYTER_CANONICALIZATION,
   LEGACY_JSON_CANONICALIZATION,
-} from '@typedstandards/verify-core';
+} from '@typedstandards/produce-core';
 
 /** The datHere content-profile label (ADR-0004). */
 export const DATHERE_CONTENT_PROFILE = 'datHere';

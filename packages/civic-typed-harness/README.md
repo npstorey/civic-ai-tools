@@ -1,8 +1,8 @@
-# civic-typed-harness
+# @typedstandards/civic-typed-harness
 
 The civic **domain harness** for [Typed Standards](../../docs/architecture/typed-standards-specification.md) evidence packages — the DOMAIN side of the format/domain line drawn in [ADR-0021](../../docs/adr/0021-produce-core-extraction.md), relocated from the reference app as an installable package ([ADR-0022](../../docs/adr/0022-civic-typed-harness-packaging.md)). The operating rule: **the harness derives, the core assembles** — everything here produces domain-derived values (civic vocabulary terms, datHere policy fields, provenance graphs, capture artifacts) that feed [`@typedstandards/produce-core`](https://www.npmjs.com/package/@typedstandards/produce-core)'s neutral envelope assembly.
 
-> **Working name.** `civic-typed-harness` is the working name (sprint G0 decision); the final npm name/scope is deferred to the project's naming taxonomy and only gates *publishing*, not this code. The package is `private: true` and is **not published to npm** — it will publish when the reference app is ready to consume it (S3).
+> **Name.** The package landed in-repo under the working name `civic-typed-harness` with the final npm name deferred (ADR-0022 §B). It publishes as **`@typedstandards/civic-typed-harness`** — the standard's scope with the full layer-3 basename; the rationale, the alternatives scored, and the named reversal condition are recorded in the planning-side naming memo and summarized in the [ADR-0022 addendum](../../docs/adr/0022-civic-typed-harness-packaging.md#addendum-2026-08-02--final-npm-name).
 
 ## What's inside
 
@@ -31,7 +31,7 @@ Every value that names a deployment is a **typed config input**, with the civica
 
 No I/O, no network, no environment reads, no Node built-ins, browser-safe — anywhere in the package. Clock and RNG are permitted **in capture modules only** (span timestamps and ids are what capture *is*) and are injectable for deterministic tests. Enforced mechanically twice: `eslint.config.mjs` (`no-restricted-imports` / `-globals` / `-properties` / `-syntax`) and `src/purity.test.ts` (browser-safety + determinism + module-boundary checks under `node --test`).
 
-Runtime dependency: **`@typedstandards/produce-core` only.** `@typedstandards/verify-core` arrives transitively through it (pinned by produce-core's own dependency) and is imported directly for the primitives produce-core does not re-export (`sha256Hex`, `isBlobRef`, the canonicalization-rule URIs, the Q32 vocabulary table) — one hashing implementation across producer, harness, and verifier by construction.
+Runtime dependency: **`@typedstandards/produce-core` (`^0.2.0`) only.** The verify-core primitives the harness consumes (`sha256Hex`, `isBlobRef`, the canonicalization-rule URIs, the Q32 vocabulary table, the `CaptureMethod` type) are reached through produce-core's 0.2.0 re-exports rather than imported from `@typedstandards/verify-core` directly — one declared dependency, no phantom, and still one hashing implementation across producer, harness, and verifier by construction (produce-core re-exports the same bindings verify-core defines, verified by reference identity).
 
 > **Q32 adjacency** (open-questions registry): the captureMethod vocabulary re-exported from `src/format/profiles.ts` is verify-core's hardcoded fallback table, pending versioned, content-addressed guidance bundles. Flagged, not solved, here.
 
@@ -43,7 +43,7 @@ The port is tested for **byte parity** against golden outputs captured from the 
 
 ```bash
 npm install          # from the repo root (npm workspaces)
-npm test  --workspace civic-typed-harness
-npm run lint  --workspace civic-typed-harness
-npm run build --workspace civic-typed-harness
+npm test  --workspace @typedstandards/civic-typed-harness
+npm run lint  --workspace @typedstandards/civic-typed-harness
+npm run build --workspace @typedstandards/civic-typed-harness
 ```

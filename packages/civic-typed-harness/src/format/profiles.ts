@@ -11,8 +11,12 @@
 // package. Flagged, not solved, here — do not grow this module into a bundle
 // mechanism without resolving Q32 first.
 
-import { PROFILE_CAPTURE_VOCAB } from '@typedstandards/verify-core';
-import type { CaptureMethod } from '@typedstandards/verify-core';
+// Reached through @typedstandards/produce-core's 0.2.0 re-exports (the
+// harness's single declared dependency); the table itself is verify-core's.
+import {
+  PROFILE_CAPTURE_VOCAB,
+  type CaptureMethod,
+} from '@typedstandards/produce-core';
 
 export type { CaptureMethod };
 

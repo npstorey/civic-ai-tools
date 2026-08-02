@@ -1,8 +1,8 @@
 // OTel-compatible trace capture (CAPTURE group) — types + TraceBuilder,
 // relocated whole from civic-ai-tools-website `src/lib/evidence/trace.ts:1–199`
 // per the S2 brief §1, with two changes:
-//   - `hash()` is re-backed by the @noble/hashes SHA-256 exported through
-//     @typedstandards/verify-core (produce-core's own dependency), removing
+//   - `hash()` is re-backed by the @noble/hashes SHA-256 that verify-core
+//     implements and @typedstandards/produce-core re-exports (0.2.0), removing
 //     the module's only `node:crypto` use — the harness is browser-safe.
 //   - The resource/scope identity constants (`service.name`, scope
 //     name/version, semconv version) are typed config inputs with the demo
@@ -12,7 +12,7 @@
 // capture *is*): this module is the sanctioned exception to the package's
 // determinism rule, and both are injectable for deterministic tests.
 
-import { sha256Hex } from '@typedstandards/verify-core';
+import { sha256Hex } from '@typedstandards/produce-core';
 
 // --- Types (OTel-compatible trace format) ---
 
