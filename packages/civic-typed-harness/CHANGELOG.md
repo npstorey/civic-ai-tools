@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-08-02
 
 Initial release: the civic **domain harness** for Typed Standards evidence
 packages — the DOMAIN side of the format/domain line drawn in
