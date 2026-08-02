@@ -1,0 +1,6 @@
+# Build output. The `prepare` script builds on every `npm install` and on
+# `npm pack`/`npm publish`, so dist/ appears in every contributor's tree —
+# it is generated, never committed. Publish inclusion is governed by the
+# manifest's `files` whitelist, not by this file.
+dist/
+tsconfig.tsbuildinfo
