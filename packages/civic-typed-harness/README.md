@@ -37,7 +37,7 @@ Runtime dependency: **`@typedstandards/produce-core` (`^0.2.0`) only.** The veri
 
 ## Byte-compatibility
 
-The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the demo default config, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Full fixture-level byte-compat against produce-core's `reference-golden.json` and the produce→verify composition round-trip land in the next sprint phase.
+The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the demo default config, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Fixture-level byte-compat against produce-core's `reference-golden.json` (`src/golden-reproduction.test.ts`) and the produce→verify composition round-trip (`src/composition-roundtrip.test.ts`) landed in S2 P2 and run with the suite.
 
 ## Develop
 
