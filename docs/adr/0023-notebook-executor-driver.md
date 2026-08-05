@@ -1,6 +1,6 @@
 # ADR-0023: Notebook executor as a driver interface — Vercel Sandbox default, local container-runner as the portable shape
 
-- **Status:** **Proposed** 2026-08-04 (drafted by the S3b P4 implementation session, riding its PR; acceptance is a maintainer-review flip, per the ADR-0022 precedent)
+- **Status:** **Accepted** 2026-08-05 (maintainer review, post-merge of #125; the seam shipped in civic-ai-tools-website#176 and its both-drivers parity bar was met byte-identically)
 - **Date:** 2026-08-04 (decision + draft)
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
