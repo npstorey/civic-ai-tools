@@ -86,7 +86,14 @@ DEV_COOKIE_NAME = "next-auth.session-token"
 ALLOWED_SOURCES = {"socrata", "data-commons"}
 ALLOWED_PROMPT_VISIBILITY = {"full_text", "hash_only"}
 ALLOWED_CAPTURE_MODES = {"single_final_turn", "full_conversation"}
-ALLOWED_VISIBILITY = {"published", "committed"}
+ALLOWED_VISIBILITY = {"public", "sealed"}
+# Legacy visibility literals (pre-ADR-0016 §A: "committed" collided with
+# "git commit" for a VCS-native adopter; "published" was act-shaped for a
+# field named `visibility`). The API accepts all four literals indefinitely
+# (civic-ai-tools#71 back-compat SHOULD) and this skill mirrors that: legacy
+# values are never a hard error, only normalized with a deprecation note
+# (see `normalize_visibility` below). Canonical values are what get sent.
+LEGACY_VISIBILITY_ALIASES = {"published": "public", "committed": "sealed"}
 ALLOWED_TURN_ROLES = {"user", "assistant", "tool"}
 # Capture-method enum per ADR-0003. The skill always emits
 # ``claude-code-jsonl-readback``; the other values exist so the server's
@@ -520,7 +527,44 @@ def negative_pattern_scan(payload: dict[str, Any]) -> None:
     sys.exit(2)
 
 
+def normalize_visibility(payload: dict[str, Any]) -> None:
+    """Map a legacy `visibility` literal to its ADR-0016 §A canonical value.
+
+    Mutates ``payload["visibility"]`` in place when a legacy alias is
+    present (``published`` -> ``public``, ``committed`` -> ``sealed``).
+    Legacy input is accepted indefinitely and never hard-errors — the
+    substitution is only reported, on stderr, as a deprecation note.
+    Canonical values and unset/unrecognized values pass through
+    untouched (an unrecognized value is caught by ``validate_payload``).
+
+    Called from ``validate_payload`` (its first step) so every caller —
+    ``main()`` after merging the ``--visibility`` CLI override into
+    ``payload``, and any direct/test caller of ``validate_payload`` —
+    gets the same normalization + note regardless of whether the legacy
+    value came from the payload JSON or the CLI flag.
+    """
+    raw = payload.get("visibility")
+    canonical = LEGACY_VISIBILITY_ALIASES.get(raw)
+    if canonical is not None:
+        eprint(
+            f"note: visibility value {raw!r} is a legacy alias — ADR-0016 "
+            "§A renamed `committed` -> `sealed` and `published` -> "
+            f"`public`. Sending `{canonical}`. Prefer `--visibility "
+            f"{canonical}` (or `\"visibility\": \"{canonical}\"` in the "
+            "payload) going forward; the legacy spelling keeps working but "
+            "is deprecated."
+        )
+        payload["visibility"] = canonical
+
+
 def validate_payload(payload: dict[str, Any]) -> None:
+    # Legacy `visibility` literals are mapped to their canonical value
+    # before anything else runs, so every downstream reader of
+    # ``payload["visibility"]`` (this function's own check below,
+    # ``build_request_body``, direct callers in tests) sees only
+    # canonical values or a genuinely-invalid one.
+    normalize_visibility(payload)
+
     required = [
         "title",
         "summary",
@@ -579,7 +623,7 @@ def validate_payload(payload: dict[str, Any]) -> None:
             f"{sorted(ALLOWED_CAPTURE_METHODS)} (got {capture_method!r})"
         )
         sys.exit(2)
-    visibility = payload.get("visibility", "published")
+    visibility = payload.get("visibility", "public")
     if visibility not in ALLOWED_VISIBILITY:
         eprint(
             f"error: visibility must be one of "
@@ -919,11 +963,15 @@ def build_request_body(
         "title": payload["title"],
         "summary": payload["summary"],
         "captureMethod": payload.get("captureMethod", DEFAULT_CAPTURE_METHOD),
-        # Request-level visibility (civic-ai-tools#71): "published" (default —
-        # the skill is invoked as "publish this", so public is the expected
-        # outcome) or "committed" (signed + transparency-logged, content
-        # private; promote later from the civicaitools.org dashboard).
-        "visibility": payload.get("visibility", "published"),
+        # Request-level visibility (civic-ai-tools#71; ADR-0016 §A): "public"
+        # (default — the skill is invoked as "publish this", so public is
+        # the expected outcome) or "sealed" (signed + transparency-logged,
+        # content private; promote later from the civicaitools.org
+        # dashboard). Legacy `published`/`committed` payload values are
+        # normalized to `public`/`sealed` by `validate_payload` (which
+        # always runs before this) — this key only ever sees canonical
+        # values or an absent key by the time it's read here.
+        "visibility": payload.get("visibility", "public"),
     }
     if payload.get("duration_ms") is not None:
         body["duration_ms"] = payload["duration_ms"]
@@ -1082,9 +1130,11 @@ def blob_host_from_url(url: Any) -> str | None:
 def blob_url_for(package_hash: str, blob_host: str) -> str:
     """Canonical, content-addressable package-blob URL on ``blob_host``.
 
-    Mirrors the server's own key convention for published packages —
-    ``evidence-packages/<packageHash>.json``, no random suffix. The host
-    comes from ``resolve_blob_host``; there is no default.
+    Mirrors the server's own key convention for public (not sealed)
+    packages — ``evidence-packages/<packageHash>.json``, no random
+    suffix. Sealed packages use a random, non-hash-derivable key instead
+    (server-side; see the "Sealed responses" note in ``main()``). The
+    host comes from ``resolve_blob_host``; there is no default.
     """
     return f"https://{blob_host}/evidence-packages/{package_hash}.json"
 
@@ -1413,12 +1463,15 @@ def main() -> None:
     )
     parser.add_argument(
         "--visibility",
-        choices=sorted(ALLOWED_VISIBILITY),
+        choices=sorted(ALLOWED_VISIBILITY | set(LEGACY_VISIBILITY_ALIASES)),
         default=None,
-        help="Override the payload's `visibility` (civic-ai-tools#71): "
-        "`published` (default — content public + listed) or `committed` "
-        "(signed, timestamped, and registered on the transparency log, "
-        "but content stays private; publish later from the dashboard).",
+        help="Override the payload's `visibility` (civic-ai-tools#71; "
+        "ADR-0016 §A): `public` (default — content public + listed) or "
+        "`sealed` (signed, timestamped, and registered on the "
+        "transparency log, but content stays private; publish later from "
+        "the dashboard). Legacy `published`/`committed` are still "
+        "accepted and mapped automatically to `public`/`sealed`, with a "
+        "deprecation note on stderr.",
     )
     parser.add_argument(
         "--max-inline-bytes",
@@ -1544,11 +1597,15 @@ def main() -> None:
         eprint(json.dumps(result, indent=2))
         sys.exit(4)
 
-    # Committed responses carry no public `url` (civic-ai-tools#71): the
-    # detail page is creator-only and the content blob lives at a random,
-    # non-derivable key — so neither evidenceUrl-as-public nor a hash-derived
-    # blobHint would be honest. The hint is omitted and the URL labeled.
-    visibility = result.get("visibility", "published")
+    # Sealed responses carry no public `url` (civic-ai-tools#71; ADR-0016
+    # §A): the detail page is creator-only and the content blob lives at a
+    # random, non-derivable key — so neither evidenceUrl-as-public nor a
+    # hash-derived blobHint would be honest. The hint is omitted and the URL
+    # labeled. `result["visibility"]` is whatever the server returned
+    # verbatim — a current instance serves `sealed`/`public`, but the skill
+    # may be pointed at an older instance still serving `committed`/
+    # `published`, so the comparison below tolerates both pairs.
+    visibility = result.get("visibility", "public")
     relative_url = result.get("url") or f"/evidence/{slug}"
     full_url = f"{args.base_url.rstrip('/')}{relative_url}"
 
@@ -1562,9 +1619,9 @@ def main() -> None:
         )),
         "readbackUrl": f"{args.base_url.rstrip('/')}/api/evidence/{slug}",
     }
-    if visibility == "committed":
+    if visibility in ("sealed", "committed"):
         output["note"] = (
-            "Committed (not published): the page and read-back URLs are "
+            "Sealed (not public): the page and read-back URLs are "
             "creator-only; the public commitment is at "
             f"{args.base_url.rstrip('/')}/api/evidence/{slug}/commitment. "
             "Publish from the civicaitools.org dashboard when ready."

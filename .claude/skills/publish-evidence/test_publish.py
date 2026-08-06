@@ -298,76 +298,103 @@ class ResolveBlobHostTests(unittest.TestCase):
             )
 
 
+def _run_main(
+    commitment: object,
+    extra_argv: list[str] | None = None,
+    server_visibility: str = "public",
+) -> tuple[dict[str, object], str, dict[str, object] | None]:
+    """Run ``main()`` against a stubbed server. ``commitment`` is the
+    stubbed response (or exception) for the commitment GET. ``extra_argv``
+    is appended to the CLI invocation (e.g. ``["--visibility",
+    "committed"]``). ``server_visibility`` is the ``visibility`` value the
+    stubbed ``POST /api/evidence`` response carries — defaults to
+    ``"public"`` (what a current-instance server serves per ADR-0016 §A);
+    pass a legacy value (``"published"`` / ``"committed"``) to simulate an
+    older instance. Returns ``(parsed_stdout, stderr_text,
+    sent_request_body)`` — the third element is the JSON body actually
+    POSTed to ``/api/evidence`` (``None`` if the request never fired).
+
+    Shared by ``PublishOutputTests`` (blob-hint derivation) and
+    ``VisibilityCliEndToEndTests`` (visibility rename / legacy-flag
+    coverage) — both exercise the same ``main()`` call path against a
+    stubbed server, no network, no credentials."""
+    served_url = (
+        f"/evidence/{SLUG}"
+        if server_visibility in ("public", "published")
+        else None
+    )
+    publish_response = _FakeResponse(
+        json.dumps(
+            {
+                "slug": SLUG,
+                "url": served_url,
+                "packageHash": PACKAGE_HASH,
+                "visibility": server_visibility,
+            }
+        )
+    )
+    sent_bodies: list[dict[str, object]] = []
+
+    def fake_urlopen(req: object, *args: object, **kwargs: object) -> object:
+        full_url = getattr(req, "full_url", "")
+        if full_url.endswith("/commitment"):
+            if isinstance(commitment, Exception):
+                raise commitment
+            return commitment
+        if full_url.endswith("/api/evidence"):
+            data = getattr(req, "data", None)
+            if data:
+                sent_bodies.append(json.loads(data.decode("utf-8")))
+            return publish_response
+        raise AssertionError(f"unexpected request to {full_url}")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        payload_path = Path(tmp) / "payload.json"
+        payload_path.write_text(
+            json.dumps(
+                _payload(
+                    toolCalls=[
+                        {
+                            "name": "get_data",
+                            "source": "socrata",
+                            "args": {"type": "query"},
+                        }
+                    ]
+                )
+            ),
+            encoding="utf-8",
+        )
+        argv = [
+            "publish.py",
+            "--payload",
+            str(payload_path),
+            "--base-url",
+            BASE_URL,
+        ] + (extra_argv or [])
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with mock.patch.object(sys, "argv", argv), mock.patch.object(
+            publish, "resolve_auth", return_value=("bearer", "stub-token")
+        ), mock.patch("urllib.request.urlopen", side_effect=fake_urlopen), \
+                redirect_stdout(stdout), redirect_stderr(stderr):
+            publish.main()
+    sent_body = sent_bodies[-1] if sent_bodies else None
+    return json.loads(stdout.getvalue()), stderr.getvalue(), sent_body
+
+
 class PublishOutputTests(unittest.TestCase):
     """End-to-end over the one call path that produces a blob URL:
     ``main()`` publishing a package. All server responses are stubbed —
     no network, no credentials."""
 
-    def _run_main(self, commitment: object) -> tuple[dict[str, object], str]:
-        """Run ``main()`` against a stubbed server. ``commitment`` is the
-        stubbed response (or exception) for the commitment GET. Returns
-        ``(parsed_stdout, stderr_text)``."""
-        publish_response = _FakeResponse(
-            json.dumps(
-                {
-                    "slug": SLUG,
-                    "url": f"/evidence/{SLUG}",
-                    "packageHash": PACKAGE_HASH,
-                    "visibility": "published",
-                }
-            )
-        )
-
-        def fake_urlopen(req: object, *args: object, **kwargs: object) -> object:
-            full_url = getattr(req, "full_url", "")
-            if full_url.endswith("/commitment"):
-                if isinstance(commitment, Exception):
-                    raise commitment
-                return commitment
-            if full_url.endswith("/api/evidence"):
-                return publish_response
-            raise AssertionError(f"unexpected request to {full_url}")
-
-        with tempfile.TemporaryDirectory() as tmp:
-            payload_path = Path(tmp) / "payload.json"
-            payload_path.write_text(
-                json.dumps(
-                    _payload(
-                        toolCalls=[
-                            {
-                                "name": "get_data",
-                                "source": "socrata",
-                                "args": {"type": "query"},
-                            }
-                        ]
-                    )
-                ),
-                encoding="utf-8",
-            )
-            argv = [
-                "publish.py",
-                "--payload",
-                str(payload_path),
-                "--base-url",
-                BASE_URL,
-            ]
-            stdout, stderr = io.StringIO(), io.StringIO()
-            with mock.patch.object(sys, "argv", argv), mock.patch.object(
-                publish, "resolve_auth", return_value=("bearer", "stub-token")
-            ), mock.patch("urllib.request.urlopen", side_effect=fake_urlopen), \
-                    redirect_stdout(stdout), redirect_stderr(stderr):
-                publish.main()
-        return json.loads(stdout.getvalue()), stderr.getvalue()
-
     def test_hint_is_derived_from_the_commitment_response(self) -> None:
-        result, stderr = self._run_main(_commitment_response(STORE_HOST))
+        result, stderr, _body = _run_main(_commitment_response(STORE_HOST))
         self.assertEqual(
             result["blobHint"], _legacy_blob_url_for(STORE_HOST, PACKAGE_HASH)
         )
         self.assertEqual(stderr, "")
 
     def test_hint_omitted_when_no_response_offers_a_host(self) -> None:
-        result, stderr = self._run_main(urllib.error.URLError("down"))
+        result, stderr, _body = _run_main(urllib.error.URLError("down"))
         self.assertNotIn("blobHint", result)
         self.assertIn("blob host", stderr)
         # The rest of the result is unaffected.
@@ -376,10 +403,167 @@ class PublishOutputTests(unittest.TestCase):
 
     def test_hint_honours_the_escape_hatch(self) -> None:
         with mock.patch.dict(os.environ, {"CIVICAITOOLS_BLOB_HOST": OTHER_HOST}):
-            result, _stderr = self._run_main(_commitment_response(STORE_HOST))
+            result, _stderr, _body = _run_main(_commitment_response(STORE_HOST))
         self.assertEqual(
             result["blobHint"], _legacy_blob_url_for(OTHER_HOST, PACKAGE_HASH)
         )
+
+
+# --------------------------------------------------------------------------
+# Visibility rename (ADR-0016 §A: `committed` -> `sealed`, `published` ->
+# `public`) + legacy-flag back-compat (sprint decision G0-4: never a hard
+# error, always a deprecation note).
+# --------------------------------------------------------------------------
+
+
+class VisibilityConstantsTests(unittest.TestCase):
+    """The canonical/legacy vocabularies themselves."""
+
+    def test_allowed_visibility_is_canonical_only(self) -> None:
+        self.assertEqual(publish.ALLOWED_VISIBILITY, {"public", "sealed"})
+
+    def test_legacy_aliases_map_to_canonical(self) -> None:
+        self.assertEqual(
+            publish.LEGACY_VISIBILITY_ALIASES,
+            {"published": "public", "committed": "sealed"},
+        )
+        # Every legacy value maps into the canonical set; no legacy value
+        # is itself allowed through unmapped.
+        for legacy, canonical in publish.LEGACY_VISIBILITY_ALIASES.items():
+            self.assertIn(canonical, publish.ALLOWED_VISIBILITY)
+            self.assertNotIn(legacy, publish.ALLOWED_VISIBILITY)
+
+
+class NormalizeVisibilityUnitTests(unittest.TestCase):
+    """`normalize_visibility` / `validate_payload` mapping, in isolation."""
+
+    def test_legacy_committed_maps_to_sealed_with_note(self) -> None:
+        payload = _payload(visibility="committed")
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            publish.validate_payload(payload)
+        self.assertEqual(payload["visibility"], "sealed")
+        note = stderr.getvalue()
+        self.assertIn("committed", note)
+        self.assertIn("sealed", note)
+        self.assertIn("ADR-0016", note)
+
+    def test_legacy_published_maps_to_public_with_note(self) -> None:
+        payload = _payload(visibility="published")
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            publish.validate_payload(payload)
+        self.assertEqual(payload["visibility"], "public")
+        self.assertIn("published", stderr.getvalue())
+
+    def test_canonical_sealed_passes_through_with_no_note(self) -> None:
+        payload = _payload(visibility="sealed")
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            publish.validate_payload(payload)
+        self.assertEqual(payload["visibility"], "sealed")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_canonical_public_passes_through_with_no_note(self) -> None:
+        payload = _payload(visibility="public")
+        stderr = io.StringIO()
+        with redirect_stderr(stderr):
+            publish.validate_payload(payload)
+        self.assertEqual(payload["visibility"], "public")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_unset_visibility_defaults_to_public(self) -> None:
+        payload = _payload()
+        self.assertNotIn("visibility", payload)
+        publish.validate_payload(payload)
+        # validate_payload doesn't write the default back — it only
+        # normalizes a *present* value — so the key stays absent; the
+        # default is applied downstream (build_request_body).
+        self.assertNotIn("visibility", payload)
+
+    def test_genuinely_invalid_value_still_hard_errors(self) -> None:
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):
+            publish.validate_payload(_payload(visibility="draft"))
+        self.assertEqual(cm.exception.code, 2)
+
+
+class VisibilityCliEndToEndTests(unittest.TestCase):
+    """Reuses the module-level ``_run_main`` helper (shared with
+    ``PublishOutputTests``) for full CLI-flag -> request-body ->
+    printed-result coverage of the visibility rename + legacy aliases."""
+
+    def test_legacy_committed_flag_sends_sealed_and_notes_on_stderr(self) -> None:
+        result, stderr, body = _run_main(
+            _commitment_response(STORE_HOST),
+            extra_argv=["--visibility", "committed"],
+            server_visibility="sealed",
+        )
+        self.assertEqual(body["visibility"], "sealed")
+        self.assertEqual(result["visibility"], "sealed")
+        self.assertIn("note", result)
+        self.assertIn("Sealed (not public)", result["note"])
+        self.assertNotIn("blobHint", result)
+        self.assertIn("legacy alias", stderr)
+        self.assertIn("committed", stderr)
+        self.assertIn("sealed", stderr)
+
+    def test_legacy_published_flag_sends_public_with_no_note(self) -> None:
+        result, stderr, body = _run_main(
+            _commitment_response(STORE_HOST),
+            extra_argv=["--visibility", "published"],
+            server_visibility="public",
+        )
+        self.assertEqual(body["visibility"], "public")
+        self.assertEqual(result["visibility"], "public")
+        self.assertNotIn("note", result)
+        self.assertIn("blobHint", result)
+        self.assertIn("legacy alias", stderr)
+
+    def test_new_sealed_flag_sends_sealed_with_no_deprecation_note(self) -> None:
+        result, stderr, body = _run_main(
+            _commitment_response(STORE_HOST),
+            extra_argv=["--visibility", "sealed"],
+            server_visibility="sealed",
+        )
+        self.assertEqual(body["visibility"], "sealed")
+        self.assertEqual(result["visibility"], "sealed")
+        self.assertIn("Sealed (not public)", result["note"])
+        # Canonical input: no deprecation note anywhere in stderr.
+        self.assertNotIn("legacy alias", stderr)
+
+    def test_new_public_flag_sends_public_with_no_deprecation_note(self) -> None:
+        result, stderr, body = _run_main(
+            _commitment_response(STORE_HOST),
+            extra_argv=["--visibility", "public"],
+            server_visibility="public",
+        )
+        self.assertEqual(body["visibility"], "public")
+        self.assertEqual(result["visibility"], "public")
+        self.assertNotIn("legacy alias", stderr)
+
+    def test_default_with_no_flag_sends_public(self) -> None:
+        # No --visibility at all: the payload has no `visibility` key
+        # either, so the skill's own default (public — "publish this" is
+        # the expected outcome) applies.
+        result, stderr, body = _run_main(
+            _commitment_response(STORE_HOST), server_visibility="public"
+        )
+        self.assertEqual(body["visibility"], "public")
+        self.assertNotIn("legacy alias", stderr)
+
+    def test_served_legacy_committed_still_tolerated_on_readback(self) -> None:
+        """The server MAY be an older instance still serving the legacy
+        label back (never the request skill sends, per ADR-0016 §A back-
+        compat) — the skill's own comparisons must tolerate it."""
+        result, _stderr, _body = _run_main(
+            _commitment_response(STORE_HOST),
+            extra_argv=["--visibility", "sealed"],
+            server_visibility="committed",
+        )
+        self.assertEqual(result["visibility"], "committed")
+        self.assertIn("note", result)
+        self.assertIn("Sealed (not public)", result["note"])
+        self.assertNotIn("blobHint", result)
 
 
 if __name__ == "__main__":
