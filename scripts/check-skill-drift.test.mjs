@@ -15,7 +15,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -24,11 +25,13 @@ import {
   condenseDiff,
   decodeTemplateEscapes,
   diffLines,
+  encodeTemplateLiteral,
   exportNameFor,
   extractEmbeddedSkill,
   formatReport,
   normalizeForComparison,
   rawUrlFor,
+  renderEmbeddedModule,
   runDriftCheck,
 } from './check-skill-drift.mjs';
 
@@ -270,6 +273,55 @@ test('CLI exits 2 on a usage error', () => {
   const r = runCli(['--nope']);
   assert.equal(r.status, 2);
   assert.match(r.stderr, /unrecognized argument/);
+});
+
+// ── the emitter (the mechanical fix for drift) ──────────────────────────────
+
+test('encodeTemplateLiteral escapes exactly the three sequences that need it', () => {
+  assert.equal(encodeTemplateLiteral('a`b'), 'a\\`b');
+  assert.equal(encodeTemplateLiteral('a\\b'), 'a\\\\b');
+  assert.equal(encodeTemplateLiteral('cost ${x}'), 'cost \\${x}');
+  assert.equal(encodeTemplateLiteral('$query and $ alone'), '$query and $ alone', '$ is literal');
+  assert.equal(encodeTemplateLiteral('em — dash\nnewline'), 'em — dash\nnewline');
+});
+
+test('emit round-trips: renderEmbeddedModule -> extractEmbeddedSkill is the identity', () => {
+  const md = sampleMd();
+  const rendered = renderEmbeddedModule('sample', md);
+  const back = extractEmbeddedSkill(rendered, 'SAMPLE_SKILL');
+  assert.equal(back.ok, true, back.reason);
+  assert.equal(back.text, md);
+});
+
+test('emit round-trips on the REAL source-of-truth documents', () => {
+  // Offline, and the strongest form of the escaping-rule guarantee: whatever
+  // docs/skills/*.md contains, the emitted module decodes back to it exactly.
+  // This is the property the P4-style re-sync would rely on.
+  for (const skill of EMBEDDED_SKILLS) {
+    const md = normalizeForComparison(
+      readFileSync(join(repoRoot, 'docs', 'skills', `${skill}.md`), 'utf8'),
+    );
+    const rendered = renderEmbeddedModule(skill, md);
+    const back = extractEmbeddedSkill(rendered, exportNameFor(skill));
+    assert.equal(back.ok, true, `${skill}: ${back.reason}`);
+    assert.equal(back.text, md, `${skill}: round-trips byte-for-byte`);
+    assert.equal(
+      compareSkill(skill, md, back.text).status,
+      'in-sync',
+      `${skill}: the emitted module would pass the drift check`,
+    );
+  }
+});
+
+test('CLI --emit writes modules that pass the check', () => {
+  const outDir = mkdtempSync(join(tmpdir(), 'skill-drift-emit-'));
+  const emit = runCli(['--docs', fixtureDocs, '--skills', 'sample', '--emit', outDir]);
+  assert.equal(emit.status, 0, emit.stderr);
+  assert.match(emit.stdout, /wrote .*sample\.ts/);
+  const verify = runCli(['--docs', fixtureDocs, '--source', outDir, '--skills', 'sample']);
+  assert.equal(verify.status, 0, verify.stdout + verify.stderr);
+  assert.match(verify.stdout, /Skill-drift check passed/);
+  rmSync(outDir, { recursive: true, force: true });
 });
 
 // ── properties of the script itself ─────────────────────────────────────────
