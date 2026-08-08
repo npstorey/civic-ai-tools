@@ -1,0 +1,7 @@
+{
+  "name": "fixture-phantom-pkg",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Budget-check fixture (failure mode a): shipped src imports bare specifiers that are absent from this manifest's dependencies. Module names are deliberately fake; nothing here is a real dependency of this repo, and this package is never installed or built.",
+  "dependencies": {}
+}
