@@ -1,0 +1,18 @@
+{
+  "$comment": [
+    "Dependency budgets: the runtime-dependency allowlist per package in this repo,",
+    "enforced in CI by scripts/check-dependency-budget.mjs (root script: npm run check:budgets).",
+    "Each budget restates a decision of record, cited per entry — growing a budget",
+    "means changing the decision (ADR-level), not just editing this file.",
+    "Scope: `dependencies` only; devDependencies (build/test tooling) are unbudgeted.",
+    "Same format as the sibling file in typedstandards; the checker is a copy of that repo's."
+  ],
+  "packages": [
+    {
+      "path": "packages/civic-typed-harness",
+      "name": "@typedstandards/civic-typed-harness",
+      "budget": ["@typedstandards/produce-core"],
+      "source": "ADR-0022 §E as amended by its 2026-08-02 addendum — produce-core 0.2.0 re-exports the harness's whole consumption set (sha256Hex, isBlobRef, the canonicalization-rule URIs, PROFILE_CAPTURE_VOCAB, CaptureMethod), so the harness declares exactly ONE runtime dependency, @typedstandards/produce-core ^0.2.0, and imports nothing undeclared. verify-core arrives transitively and must NOT be declared or imported directly (docs/adr/0022-civic-typed-harness-packaging.md)."
+    }
+  ]
+}

@@ -25,8 +25,11 @@ Clients can also explicitly request a modality by passing `modality: "web"` or `
 
 ## Governance
 
-- **Source of truth**: These files are the canonical skill guidance. The socrata-mcp-server embeds copies at build time.
-- **Review process**: Changes to skill guidance should be reviewed in a PR to this repo (`civic-ai-tools`). After merge, update the copies in `socrata-mcp-server/src/skills/` and rebuild.
+- **Source of truth**: These files are the canonical skill guidance. The socrata-mcp-server carries committed copies of `base.md`, `web.md`, and `local.md` as string constants in `src/skills/`; `data-commons.md` has no embedded copy.
+- **Review process**: Changes to skill guidance are reviewed in a PR to this repo (`civic-ai-tools`). The embedded copies are updated in a follow-up PR to `socrata-mcp-server` — never edited there directly.
+- **Enforcement**: CI checks byte-identity between these files and the embedded copies on every pull request and push to `main`, via `scripts/check-skill-drift.mjs` (which fetches the copies from the public repo). Drift fails the build.
+- **Syncing**: run `node scripts/check-skill-drift.mjs --emit <dir>` to render the embedded modules from these files, then land them in `socrata-mcp-server/src/skills/`. Do not transcribe by hand — hand transcription is how the copies drifted before the check existed.
+- **Both audiences**: these documents are read as repo docs *and* served verbatim to MCP clients, so they must work in both contexts: absolute URLs rather than repo-relative links, and no references to other files by filename.
 - **Legacy file**: `../opengov-skill.md` is the original monolithic doc, kept for reference. It points here as the source of truth.
 
 ## Adding a new modality

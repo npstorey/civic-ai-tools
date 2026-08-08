@@ -36,6 +36,7 @@
     "@typedstandards/produce-core": "^0.2.0"
   },
   "devDependencies": {
+    "@typedstandards/verify-core": "^0.8.0",
     "@typescript-eslint/parser": "^8",
     "eslint": "^9",
     "typescript": "^5.9.3"

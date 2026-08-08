@@ -10,6 +10,14 @@
   "scripts": {
     "validate-directory": "node scripts/validate-directory.mjs",
     "generate-directory-md": "node scripts/generate-directory-md.mjs",
-    "migrate-directory": "node scripts/migrate-directory.mjs"
+    "migrate-directory": "node scripts/migrate-directory.mjs",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "check:budgets": "node scripts/check-dependency-budget.mjs",
+    "check:budgets:self-test": "node --test scripts/check-dependency-budget.test.mjs",
+    "check:skill-drift": "node scripts/check-skill-drift.mjs",
+    "check:skill-drift:self-test": "node --test scripts/check-skill-drift.test.mjs"
   }
 }

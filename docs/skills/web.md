@@ -1,7 +1,7 @@
 # Socrata MCP Skill — Web Overlay
 
 > **Applies to:** Web demo (civicaitools.org) and other HTTP-connected clients.
-> **Use with:** `base.md` (loaded first, then this overlay).
+> **Use with:** the base guidance (loaded first, then this overlay).
 
 ## Date Filter Enforcement
 
@@ -37,7 +37,7 @@ When a user hits a limit (complex multi-city query, long date range, deep analys
 
 ## Reproducible-Notebook Mode (Opt-In)
 
-The web demo exposes a user-toggleable "Reproducible notebook" mode on the chat input. When the user has selected it, the same analysis pipeline runs, but the final answer is rendered as an *executed* Jupyter notebook (Phase A discovery → Phase B notebook synthesis → Phase C sandbox execution → Phase D execution stamping). See [ADR-0005](https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0005-executed-notebook-architecture.md) for the architecture and `executed-notebook-architecture-project-plan.md` for context.
+The web demo exposes a user-toggleable "Reproducible notebook" mode on the chat input. When the user has selected it, the same analysis pipeline runs, but the final answer is rendered as an *executed* Jupyter notebook (Phase A discovery → Phase B notebook synthesis → Phase C sandbox execution → Phase D execution stamping). See [ADR-0005](https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0005-executed-notebook-architecture.md) for the architecture.
 
 When the user is in reproducible-notebook mode, write your final answer as the body of a **rendering code cell** that the publisher's pipeline will place at the end of the notebook (before the appended comparison cell). The cell's outputs become section F of the A-G evidence envelope (per OES §9.1.4). Specifically:
 
