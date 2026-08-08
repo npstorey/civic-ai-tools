@@ -237,7 +237,7 @@ Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platf
 
 ## Key Datasets by Portal
 
-A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.md`](../datasets.md). Below are the most-used datasets per portal for quick reference. Use the MCP `search` tool for datasets not listed here.
+A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.md`](https://github.com/npstorey/civic-ai-tools/blob/main/docs/datasets.md). Below are the most-used datasets per portal for quick reference. Use the MCP `search` tool for datasets not listed here.
 
 ### NYC (`data.cityofnewyork.us`)
 

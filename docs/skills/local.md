@@ -1,11 +1,11 @@
 # Socrata MCP Skill — Local Overlay
 
 > **Applies to:** Local CLI clients (Claude Code, Cursor, Copilot) via stdio transport.
-> **Use with:** `base.md` (loaded first, then this overlay).
+> **Use with:** the base guidance (loaded first, then this overlay).
 
 ## Date Defaults
 
-Use the Date Range Guidelines table in `base.md` as a starting point, but you have more flexibility:
+Use the Date Range Guidelines table in the base guidance as a starting point, but you have more flexibility:
 
 - For single-city queries, you can extend ranges beyond the table defaults if the user's question warrants it. Just warn about potentially large result sets.
 - For multi-city queries, stick closer to the table defaults but don't hard-block longer ranges — warn and proceed if the user confirms.
@@ -22,7 +22,7 @@ Local clients have no demo constraints. You can:
 
 ## Output Format
 
-Use the full output structure from `base.md` including:
+Use the full output structure from the base guidance including:
 - Key Metrics table
 - Executive Summary
 - Detailed Analysis
