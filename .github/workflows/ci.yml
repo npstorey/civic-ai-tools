@@ -1,0 +1,88 @@
+# CI for civic-ai-tools.
+#
+# CHARTER: credential-free. This workflow references no repository or org
+# secret anywhere (the context expression for one appears nowhere below), and
+# uses no third-party actions beyond actions/checkout and actions/setup-node.
+# Keep it that way: the audit is a grep for that expression. The only network access
+# beyond the npm registry is the skill-drift step's unauthenticated GET of
+# public raw files from the socrata-mcp-server repo.
+#
+# NODE VERSION: the root manifest declares no `engines`; the one workspace
+# (packages/civic-typed-harness) declares `node >= 18`. Node 22 is used because
+# the harness's test script runs `node --test --experimental-strip-types`,
+# which needs >= 22.6, and because 22 is what the phase was verified on
+# (v22.23.1 / npm 10.9.8).
+#
+# INSTALL: plain `npm ci`, deliberately WITHOUT --ignore-scripts. The harness
+# manifest carries `prepare: npm run build`, and npm 10.x runs workspace
+# `prepare` scripts even under --ignore-scripts, so the flag would buy nothing
+# here — it would only mask the fact that install builds the package. That
+# `prepare` is benign in this repo (one workspace; its single runtime
+# dependency, @typedstandards/produce-core, resolves from the registry rather
+# than from a sibling workspace's unbuilt dist) and it has consumers outside
+# CI, so it stays. Verified on a fresh clone: `npm ci` succeeds and leaves
+# packages/civic-typed-harness/dist populated.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # The root scripts fan out over `--workspaces --if-present`; today that is
+      # exactly packages/civic-typed-harness. Keeping the fanout form means a
+      # second package is covered the day it lands.
+      - name: Build (harness)
+        run: npm run build
+
+      # Includes the golden byte-compat suite — golden-reproduction.test.ts and
+      # composition-roundtrip.test.ts ride `npm test`; they are the acceptance
+      # bar ADR-0022 §Consequences sets for the harness relocation.
+      - name: Test (harness, incl. golden byte-compat)
+        run: npm test
+
+      - name: Typecheck (harness)
+        run: npm run typecheck
+
+      - name: Lint (harness purity config)
+        run: npm run lint
+
+      - name: Dependency-budget checker self-test
+        run: npm run check:budgets:self-test
+
+      - name: Dependency-budget check
+        run: npm run check:budgets
+
+      - name: Skill-drift checker self-test
+        run: npm run check:skill-drift:self-test
+
+      # Compares docs/skills/{base,local,web}.md — the source of truth per
+      # docs/skills/README.md §Governance — against the copies embedded in
+      # socrata-mcp-server@main, fetched unauthenticated from
+      # raw.githubusercontent.com. This is the one step whose result depends on
+      # another repo's state; a fetch failure fails the job rather than passing
+      # quietly, on the principle that a check which cannot run has not passed.
+      - name: Skill-drift check
+        run: npm run check:skill-drift
