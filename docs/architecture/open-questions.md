@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-08-03
+Last updated: 2026-08-08
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -619,6 +619,42 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Current direction.** Prefix per source, extending the `ckan__` precedent. Three sub-questions are unresolved: **(a)** whether the prefix is applied by us at the registry boundary — works against any upstream, but requires rewriting names in both the advertised schema and the dispatched call — or requested upstream, which is cleaner but is not ours to decide and would need coordinating across six independently maintained repos; **(b)** whether the registry should *detect* collisions and fail loudly instead of overwriting, which is worth doing whatever the naming convention turns out to be; **(c)** whether the scheme is documented as a contract for forks or left as an internal convention.
 - **Resolution criteria.** Either a documented namespacing convention plus a registry that rejects or disambiguates duplicate tool names, or a recorded decision that sources are curated tightly enough to handle collisions case-by-case. A silent last-write-wins index is not an acceptable end state under either answer.
 - **Notes.** Detection is separable from the convention and much cheaper — a duplicate-name check in `buildMcpRegistry` converts a silent failure into a startup error and could land on its own. The tool-schema routing axis in [`../research/skill-routing-architectural-shapes.md`](../research/skill-routing-architectural-shapes.md) depends on stable tool identity and therefore treats this question as its prerequisite; that axis fails the Xanadu gate while this question does not, because the collision is present and concrete rather than projected at hypothetical scale. Collision inventory and evidence: [`../research/betanyc-mcp-integration-evaluation.md`](../research/betanyc-mcp-integration-evaluation.md).
+
+### Q61 — Multi-turn conversation protocol: envelope shape, prompt-hash identity, rubric scoring
+
+- **Status.** Open. Filed as a contract rider at the app-front-door v0.1.0 close ([civic-ai-tools-website#191](https://github.com/npstorey/civic-ai-tools-website/issues/191)) — the sprint deliberately kept multi-turn out of scope and required these questions registered before any v0.2 scoping.
+- **Origin.** The app-front-door planning brief's scope decision: multi-turn is "a protocol question wearing a UI costume." The v0.1.0 app surface (`/ask`) shipped single-shot; no conversation state exists anywhere in the product.
+- **Stakes.** The evidence-package envelope (one envelope with a turn array vs. a chain of linked nodes); prompt-hash identity (which turn's prompt hash is *the* prompt hash, affecting §8 envelope semantics and verifier checks); the adversarial-eval rubric (how a conversation is scored — per turn, per conversation, or per derived claim); any v0.2 multi-turn surface on the gated app host.
+- **Current direction.** None — deliberately unscoped. Registering ahead of scoping is the point.
+- **Resolution criteria.** A v0.2 planning round that scopes the app surface's conversation model must answer all three sub-questions; resolution lands as an ADR plus spec sections, not as UI work that invents the protocol implicitly.
+- **Notes.** Related product-shape inputs for the same round: [Q62](#q62--ask-default-presentation-answer-first-vs-side-by-side), [Q64](#q64--cross-host-session-visibility-session-aware-apex).
+
+### Q62 — `/ask` default presentation: answer-first vs. side-by-side
+
+- **Status.** Open. Scoping input for v0.2, not a defect.
+- **Origin.** Owner input at the website#191 Gate C smoke, after using the shipped `/ask` mount.
+- **Stakes.** The `(app)` query surface's configuration (`QuerySurface` and its mount); what the A/B comparison *is* on each surface — the comparison is marketing pedagogy, while the app surface's job is producing evidence.
+- **Current direction.** Leaning answer-first: with-MCP primary, the executed notebook prominent, the A/B comparison demoted to an option. Direction, not commitment.
+- **Resolution criteria.** Decided in a v0.2 planning round alongside [Q61](#q61--multi-turn-conversation-protocol-envelope-shape-prompt-hash-identity-rubric-scoring); the shared-component seam (P1's extraction) is the implementation surface either way.
+- **Notes.** Filed from website#191.
+
+### Q63 — Sign-in entry UX / onboarding flow
+
+- **Status.** Open. Deliberately not scoped.
+- **Origin.** The website#191 P4c/P4d cross-host sign-in work shipped the mechanical intent handoff (`?signin=1` → auto-invoke on single-provider instances); the broader question of what a first-run signed-in experience should be was explicitly left unanswered.
+- **Stakes.** The gated surface's first-run experience; how an allowlisted user learns what the surface is for.
+- **Current direction.** None.
+- **Resolution criteria.** A future planning round takes it up; until then the provider panel at `/ask` is the entry experience.
+- **Notes.** Related: [Q64](#q64--cross-host-session-visibility-session-aware-apex).
+
+### Q64 — Cross-host session visibility; session-aware apex
+
+- **Status.** Open — no direction yet (owner-explicit at filing).
+- **Origin.** The website#191 final Gate C smoke: crossing from the signed-in app host to marketing surfaces appears signed-out. Host-scoped cookies — the session is intact on the app host; the apex simply cannot see it. Nothing is broken; the stateless marketing/app split (P3) is behaving as designed.
+- **Stakes.** The stateless host split itself; the apex home experience; auth cookie scope and its security surface.
+- **Current direction.** Under consideration, explicitly not committed: a session-aware apex — signed-in visitors get the product experience at the home address, the A/B demo demoted to an advanced option, returning-visitor routing — which would want cross-host session *status* (a CORS status endpoint, or a parent-domain cookie with its subdomain-exposure cost) rather than the stateless split.
+- **Resolution criteria.** Scoped in a v0.2 planning round; any resolution must state the cookie-scope security tradeoff explicitly.
+- **Notes.** Related: [Q62](#q62--ask-default-presentation-answer-first-vs-side-by-side), [Q63](#q63--sign-in-entry-ux--onboarding-flow). Filed from website#191.
 
 ---
 
