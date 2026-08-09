@@ -1,5 +1,7 @@
 # Model Evaluation Results
 
+> **Point-in-time snapshot — evaluation run 2026-03-10, not repeated.** Model lineups, pricing, and tool-calling reliability have all moved since. Read this for the *methodology* ([eval-queries.md](eval-queries.md)) and the failure taxonomy, not for a current ranking.
+
 Systematic comparison of LLM performance on civic data queries via the Socrata MCP server.
 
 Evaluation date: 2026-03-10

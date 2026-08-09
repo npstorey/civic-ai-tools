@@ -5,7 +5,7 @@
 
 ## Current state
 
-civic-ai-tools is a solo-maintained, self-funded, open-source project. All three repositories are MIT-licensed. The demo website runs on Vercel Pro; the Socrata MCP server runs on Render's paid tier; storage is Neon Postgres plus Vercel Blob. Costs are personal; maintainer time is uncompensated.
+civic-ai-tools is a solo-maintained, self-funded, open-source project. All four repositories are MIT-licensed. The demo website runs on Vercel Pro; the Socrata MCP server runs on Render's paid tier; storage is Neon Postgres plus Vercel Blob. Costs are personal; maintainer time is uncompensated.
 
 Release cadence has held at one-to-two-week coordinated cross-repo tags since v0.1.0 (March 2026). The evidence system shipped at v0.6.0, multi-source data access shipped at v0.7.0 and v0.8.0. `ROADMAP.md` is refreshed quarterly.
 
@@ -30,7 +30,7 @@ Without adopting commitments that would require a team, funding could accelerate
 
 ## What funding would not change
 
-- The MIT license on all three repositories.
+- The MIT license on all four repositories.
 - The *disclosure, not validation* stance in the evidence system.
 - The public, issue-linked roadmap and the ADR process.
 - The out-of-scope list in `ROADMAP.md` Section 7 — including no proprietary data sources, no platform-issued correctness claims, no enterprise SLAs, and no editorial moderation at scale.

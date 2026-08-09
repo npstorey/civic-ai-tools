@@ -6,6 +6,8 @@ Companion: typed-standards-specification.md (full version)
 License: CC BY 4.0 (same as the full specification)
 ---
 
+> **Companion, not authority.** This is the leave-behind summary of the Typed Standards Specification. It was last updated 2026-05-26; the specification has moved since. Where the two differ, [typed-standards-specification.md](typed-standards-specification.md) governs.
+
 # Typed Standards
 
 An open standard for **production-process attestation** of analytical artifacts: a cryptographically signed, content-addressed, capture-method-labeled record of *how* an artifact was produced, verifiable by a third party who does not trust the publisher.

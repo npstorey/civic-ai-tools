@@ -1,5 +1,7 @@
 # Dataset Directory Size Evaluation
 
+*Research artifact from 2026-03-10. Retained as method-of-record; not a live decision.*
+
 Analysis of whether the current curated dataset directory (~15-20 datasets per portal, 78 total) is optimal for AI-assisted civic data queries.
 
 Created: 2026-03-10

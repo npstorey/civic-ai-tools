@@ -5,6 +5,8 @@ High-value civic datasets across major Socrata open data portals. This is a hand
 Last verified: 2026-03-08
 License: CC0 1.0 — this directory (the curation, descriptions, and field notes) is dedicated to the public domain; see [LICENSING.md](../LICENSING.md). The datasets it points to are governed by their source portals' terms.
 
+> **Point-in-time curation.** Dataset IDs and availability were last verified on the date above. Portals retire and re-key datasets; if an ID here 404s, use the MCP server's search tool and please [open an issue](https://github.com/npstorey/civic-ai-tools/issues).
+
 ---
 
 ## NYC Open Data (`data.cityofnewyork.us`)

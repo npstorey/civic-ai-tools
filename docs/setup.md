@@ -1,4 +1,11 @@
+---
+Status: Reference guide — last verified 2026-03-08
+Audience: Anyone setting up the local starter (VS Code, Cursor, Claude Code, Codex)
+---
+
 # Setup Guide
+
+> The short path is the [README quick start](../README.md#quick-start). This guide is the long form: prerequisites, per-tool setup, API keys, and troubleshooting.
 
 This guide walks you through setting up the civic-ai-tools project to work with **Cursor IDE** or **Claude Code CLI**.
 

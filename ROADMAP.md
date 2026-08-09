@@ -125,7 +125,7 @@ Scope-request categories the project explicitly does not take on. Each has a sho
 
 - **Platform-issued correctness claims.** The registry publishes *disclosures*, not *validations*. Expert attestations, when present, are separately signed objects produced by identifiable attesters.
 
-- **Enterprise SLAs or managed hosting.** The demo runs on standard Vercel Pro. All three repos are open source; organizations wanting higher SLAs should run their own instances.
+- **Enterprise SLAs or managed hosting.** The demo runs on standard Vercel Pro. All four repos are open source; organizations wanting higher SLAs should run their own instances.
 
 - **Editorial moderation of published analyses at scale.** Withdrawal and reinstatement are signed, public actions available to authors. The registry does not editorially moderate beyond obvious-abuse response. Hosting an evidence package does not endorse its claims.
 

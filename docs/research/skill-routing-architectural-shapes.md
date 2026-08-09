@@ -1,6 +1,6 @@
 # Skill routing architectural shapes
 
-*Research, not a decision. Captures the design space for dynamic skill-guidance loading when a project wires up multiple MCP data sources.*
+*Research, not a decision. Captures the design space for dynamic skill-guidance loading when a project wires up multiple MCP data sources. Captured April 2026; no follow-up work committed.*
 
 ## Context
 

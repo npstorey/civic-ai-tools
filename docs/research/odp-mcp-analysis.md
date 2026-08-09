@@ -1,5 +1,7 @@
 # odp-mcp Analysis: Pagination and Result Limit Patterns
 
+*Research, not a decision. Captured March 2026; no follow-up work committed.*
+
 Research for [civic-ai-tools#18](https://github.com/npstorey/civic-ai-tools/issues/18). Analyzed [socrata/odp-mcp](https://github.com/socrata/odp-mcp) (commit history as of March 2026).
 
 ## Result Size Limits

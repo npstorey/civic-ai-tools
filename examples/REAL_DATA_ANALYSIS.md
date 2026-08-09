@@ -1,5 +1,7 @@
 # Real Data Analysis Results 🎯
 
+> **Historical output — generated January 2026, not re-run since.** Kept as a worked example of the analysis shape, not as current data. The scripts that produced it are in this directory and can be re-run; the numbers below are a snapshot and should not be cited. (The "January 2025" line below is a typo in the original output — the file entered the repo in January 2026.)
+
 **Generated:** January 2025  
 **Data Sources:** NYC Open Data (Socrata API) & Google Data Commons
 

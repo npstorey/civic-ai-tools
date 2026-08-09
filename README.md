@@ -12,6 +12,10 @@ Civic AI Tools sits at one layer of a broader landscape where open data meets AI
 
 > **Integrating against the evidence registry?** The reference implementation and its integration contract live in [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) — start at [`docs/api/evidence-publish.md`](https://github.com/npstorey/civic-ai-tools-website/blob/main/docs/api/evidence-publish.md). This repo holds the protocol decisions (ADRs, the open-questions registry) and the Typed Standards Specification the contract cites.
 
+> **Reviewing the standard?** The Typed Standards Specification is [`docs/architecture/typed-standards-specification.md`](docs/architecture/typed-standards-specification.md) (v0.1 Working Draft, CC BY 4.0); the short version is [`typed-standards-summary.md`](docs/architecture/typed-standards-summary.md). Reviewers should start at [`docs/community-review/v0.1-rfc-reviewer-orientation.md`](docs/community-review/v0.1-rfc-reviewer-orientation.md) — a one-page reading guide.
+
+> **Running your own instance?** This repo is the local starter. To deploy the evidence platform on your own infrastructure, see [`civic-ai-tools-website/docs/deploy.md`](https://github.com/npstorey/civic-ai-tools-website/blob/main/docs/deploy.md).
+
 ## What can you do with this?
 
 - Ask questions about NYC 311 complaints, restaurant inspections, or housing violations in plain English
@@ -82,10 +86,17 @@ See [examples/README.md](examples/README.md) for the full list.
 
 ## Related projects
 
+Civic AI Tools is one of four repositories in this project — see [CONTRIBUTING.md](CONTRIBUTING.md#this-is-a-multi-repo-project) for the full map and where to file what.
+
 | Repository | Description |
 |-----------|-------------|
 | [socrata-mcp-server](https://github.com/npstorey/socrata-mcp-server) | The MCP server that connects AI tools to Socrata open data portals. This repo uses it as a dependency. |
 | [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) | Demo website at [civicaitools.org](https://civicaitools.org) — side-by-side comparison of AI with and without live data access |
+| [typedstandards](https://github.com/npstorey/typedstandards) | The standard's home — @typedstandards/verify-core, @typedstandards/produce-core, and [typedstandards.org](https://typedstandards.org). The specification *text* lives in this repo; the packages and site live there. |
+
+## Packages
+
+This repo is an npm workspace. [packages/civic-typed-harness](packages/civic-typed-harness) publishes as [`@typedstandards/civic-typed-harness`](https://www.npmjs.com/package/@typedstandards/civic-typed-harness) — the civic **domain** harness layered on `@typedstandards/produce-core`'s neutral envelope assembly ([ADR-0021](docs/adr/0021-produce-core-extraction.md), [ADR-0022](docs/adr/0022-civic-typed-harness-packaging.md)).
 
 ## Documentation
 
@@ -107,9 +118,11 @@ See [examples/README.md](examples/README.md) for the full list.
 
 ### Architecture
 - [docs/architecture/](docs/architecture/) — Canonical architecture documents and spec drafts (internal working drafts; not stable specs)
+- [docs/architecture/typed-standards-specification.md](docs/architecture/typed-standards-specification.md) — **the Typed Standards Specification** (v0.1 Working Draft, CC BY 4.0). Version-tagged: changes are patch revisions, not edits.
+- [docs/community-review/](docs/community-review/) — reviewer orientation and the circulated render of the spec.
 - [docs/architecture/end-state-vision.md](docs/architecture/end-state-vision.md) — Layered architecture target with build-state coloring and full glossary
-- [docs/architecture/open-evidence-standard.md](docs/architecture/open-evidence-standard.md) — Internal working draft of the Open Evidence Standard (pre-v0.1)
-- [docs/architecture/civic-claim-vocabulary-draft-spec.md](docs/architecture/civic-claim-vocabulary-draft-spec.md) — Internal working draft of the Civic Claim Vocabulary, the typed-claims layer (pre-v0.1)
+- [docs/architecture/open-evidence-standard.md](docs/architecture/open-evidence-standard.md) — **Historical snapshot, frozen 2026-05-26**; envelope-layer content consolidated into the Typed Standards Specification (ADR-0012)
+- [docs/architecture/civic-claim-vocabulary-draft-spec.md](docs/architecture/civic-claim-vocabulary-draft-spec.md) — **Historical snapshot, frozen 2026-05-26**; typed-claims-layer content consolidated into the specification (ADR-0012)
 - [docs/architecture/xanadu-doctrine.md](docs/architecture/xanadu-doctrine.md) — Project discipline gating spec growth
 - **[docs/architecture/open-questions.md](docs/architecture/open-questions.md)** — Open questions registry. Canonical home for unresolved decisions affecting the architecture and standards. Start here when deciding what's settled vs. what's still in flight.
 
@@ -122,6 +135,8 @@ See [examples/README.md](examples/README.md) for the full list.
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines — there are ways to help even if you don't write code.
+
+Two CI gates run on every PR and are worth knowing before you start: **skill-drift** (docs/skills/{base,local,web}.md are byte-compared against the copies embedded in socrata-mcp-server — regenerate with `node scripts/check-skill-drift.mjs --emit <dir>`, never hand-transcribe) and **dependency budgets** (`npm run check:budgets`).
 
 ## Glossary
 

@@ -1,5 +1,7 @@
 # Model Evaluation: Test Queries & Scoring Rubric
 
+*Research artifact from 2026-03-10. Retained as method-of-record; not a live decision.*
+
 Framework for systematically evaluating LLM performance on civic data queries via the Socrata MCP server.
 
 Created: 2026-03-10
