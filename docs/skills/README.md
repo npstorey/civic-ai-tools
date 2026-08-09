@@ -10,6 +10,7 @@ This directory contains the companion skill guidance for the MCP servers the civ
 | `web.md` | Socrata web overlay: aggressive date defaults, demo limits, token-conscious formatting, no cross-portal comparisons, local tools CTA |
 | `local.md` | Socrata local overlay: relaxed date defaults, full capabilities, cross-portal comparisons encouraged, extended analysis OK |
 | `data-commons.md` | Google Data Commons skill: two-tool workflow, DCID patterns, small-area coverage, aggregation-semantics risks, cross-source decision logic, attribution |
+| `boston.md` | Boston OpenContext skill: CKAN-vs-Socrata cheat sheet, Boston geographies (neighborhoods ≠ Census tracts, BPD districts, parcel IDs), resource-UUID citation. No embedded server copy — not drift-checked. |
 
 ## How overlays work
 
@@ -37,5 +38,6 @@ Clients can also explicitly request a modality by passing `modality: "web"` or `
 To add support for a new modality (e.g., Slack, mobile):
 
 1. Create a new overlay file (e.g., `slack.md`) in this directory.
-2. Add the corresponding skill file in `socrata-mcp-server/src/skills/`.
-3. Update the `GetPrompt` handler in the MCP server to compose with the new overlay.
+2. Add its name to `EMBEDDED_SKILLS` in `scripts/check-skill-drift.mjs`, so the new embedded copy is covered by the drift check.
+3. Render the embedded module with `node scripts/check-skill-drift.mjs --emit <dir>` and land the emitted file in `socrata-mcp-server/src/skills/` — do not transcribe by hand (see Governance above).
+4. Update the `GetPrompt` handler in the MCP server to compose with the new overlay.
