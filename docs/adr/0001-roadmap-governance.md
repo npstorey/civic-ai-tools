@@ -1,7 +1,7 @@
 # ADR-0001: Public-roadmap governance
 
-- **Status:** Accepted
-- **Date:** 2026-04-23
+- **Status:** Accepted (amended 2026-08-10 — see the Amendment section)
+- **Date:** 2026-04-23; amended 2026-08-10
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
@@ -56,3 +56,17 @@ Supporting artifacts in the same adoption:
 - civic#17 — umbrella governance issue closed by the roadmap's merge.
 - `docs/evidence-protocol-fork.md` — long-form fork analysis.
 - `civic-ai-tools-website/docs/design-principles.md` — companion UX + data-model principles (cited by number rather than re-derived).
+
+## Amendment — 2026-08-10: quarterly-snapshot / live-roadmap system (civic#140)
+
+The original decision adopted a single quarterly-versioned document (`2026.Qn.m`), refreshed once per quarter with the superseded version archived. Two quarters of operation surfaced the failure mode: the Q3 refresh missed its own self-declared date (2026-07-15) while nearly a full program of work shipped past it, leaving the public document stale for weeks — and the `/roadmap` page on civicaitools.org mirrors the file live (1-hour ISR), so the staleness was public. A calendar-gated document sits idle exactly when the project moves fastest. Decided at the civic#140 refresh; the design questions and their dispositions were recorded on that issue.
+
+**What changes:**
+
+1. **File shape.** `ROADMAP.md` in the hub-repo root becomes the **live document**, updated as work ships. Frozen quarterly snapshots are preserved at `docs/roadmap/archive/vYYYY.QN.md` (the archive location the original decision named but never instantiated), with a short README in `docs/roadmap/` explaining the live-vs-archive split. The superseded v2026.Q2.1 document is archived byte-identically as the first entry.
+2. **Versioning.** The live document carries a "Last updated" date and **no version number**; the `2026.Qn.m` patch scheme retires with it. Version identifiers (`vYYYY.QN`) attach only to snapshots, cut at quarter ends. The first snapshot under this system will be v2026.Q3 at quarter close.
+3. **Change governance.** Two tiers replace the single ceremony. Live-document edits — recording shipped work, moving items between horizons, factual corrections — flow through ordinary pull requests (branch protection already gates all changes). Snapshot cuts and **any change to a Section 3 trust commitment** retain the full ceremony: a roadmap-change issue via `.github/ISSUE_TEMPLATE/roadmap-change.md` and, where appropriate, an ADR.
+
+**What does not change:** the section structure and its numbered anchors (the roadmap-change template and the website renderer both key off them); vision pillars derived from shipped behavior; the commitment-certainty axis for Now / Next / Later; the durable Section 3 commitments (restatements of commitments 1–3 in the same refresh went through the civic#140 ceremony, not this amendment); the six-audience routing strip; and the ADR discipline itself.
+
+**Consequences revised:** the original "quarterly maintenance cost" consequence becomes a lighter continuous one — the maintainer keeps the live document current as part of ordinary shipping, and the quarterly obligation shrinks to cutting a snapshot. The original consequence that some changes "require an ADR" is unchanged for the commitment tier.
