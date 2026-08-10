@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-08-08
+Last updated: 2026-08-10
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -655,6 +655,22 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Current direction.** **Resolved: the CORS status endpoint; the parent-domain cookie rejected.** Cross-host session *status* only — an additive boolean `GET /api/session-status` on the app host (`{"signedIn":bool}`, never user data; pure `getToken` cookie decode, structurally incapable of Set-Cookie; exact-origin CORS echoing only the instance's configured marketing origin, credentialed, `Vary: Origin`, `no-store`; fully inert when topology names no marketing origin) plus a topology-aware allowed-origin predicate shared with the website#213 origin-gate fix. This round's scope is the session-aware *affordance*: the marketing header's "Sign in" swaps to "Open app →" post-hydration (fixed-box, CLS-safe; every probe failure degrades silently to "Sign in"). **The cookie-scope tradeoff, stated explicitly per the resolution criteria: the parent-domain cookie is rejected** — it would forfeit the CSRF cookie's `__Host-` prefix (spec-forbidden with a Domain attribute), make every subdomain session-carrying, and require explicit gating to keep single-host instances' scope from widening. A consequence accepted with that rejection: the credentialed probe rides the same-site subdomain GET (NextAuth's Lax cookie), so a cross-*site* marketing/app split degrades silently to the signed-out affordance — by design. The full session-aware apex home (product experience at the home address, returning-visitor routing) stays open on [website#215](https://github.com/npstorey/civic-ai-tools-website/issues/215).
 - **Resolution criteria.** Met: scoped in the v0.2 round-1 planning session; the cookie-scope tradeoff is stated above, in the anchor's G0 record, and in the shipped route's doc comment. Verified in production 2026-08-10 (cross-host smoke: the affordance renders; the endpoint's CORS matrix and the #213 origin gate behave as specified).
 - **Notes.** Related: [Q62](#q62--ask-default-presentation-answer-first-vs-side-by-side), [Q63](#q63--sign-in-entry-ux--onboarding-flow). Filed from website#191.
+
+### Q65 — Build composition as a publishable artifact: what is a harness at the experience layer?
+
+- **Status.** Open. Concept captured 2026-08-08; grounded 2026-08-10 by a fork-cost/instance-portability survey.
+- **Origin.** With the app's correctness spine fully configuration-driven (instance identity, drivers, topology, brand), a second implementation's remaining cost is content: skill guidance, source/portal rosters, jurisdiction dataset guidance, demonstration traces, marketing prose. A second implementation is emerging, making the question concrete.
+- **Stakes.** Whether "harness" extends beyond the domain library (`@typedstandards/civic-typed-harness`) to a publishable composition artifact — a manifest naming surfaces, guidance, tool/portal roster, dataset guidance, and admin parameterization — that an implementer selects or assembles, and can publish back for others to adopt.
+- **Current direction.** The first composition point is decided (owner, 2026-08-10): the skill-guidance/system-prompt path. The prompt composer is already composition-shaped; a guidance manifest would name the source roster, the cross-source routing preamble, per-source guidance provenance (endpoint/inline/fallback artifacts plus a sync policy), the jurisdiction-keyed guidance table, instance-identity interpolation slots, modality, and citation vocabulary. Constraint of record: guidance text is hashed into signed evidence packages, so a manifest change is evidence-visible — it belongs on the instance-identity side of the configuration line, not the chrome side. Gate: no composition machinery before a second real harness with a real owner needs it; the cheapest honest step is making the existing app consume one guidance manifest and observing whether a second composition materializes.
+- **Resolution criteria.** An ADR on the manifest's shape and residence (package, file, or registry), taken when a second implementation concretely needs it.
+
+### Q66 — Project glossary and controlled vocabulary for prose across the four repos
+
+- **Status.** Open. Proposed by the owner 2026-08-10 during the roadmap-refresh review.
+- **Origin.** Vocabulary decisions keep landing piecemeal and getting rediscovered mid-flight: the visibility-vocabulary migration ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md)), the design-system-association excision ([website#220](https://github.com/npstorey/civic-ai-tools-website/issues/220)), "fork" vs instance/install-first (decided in [ADR-0020](../adr/0020-instance-key-custody.md)'s terminology note, then missed by a 2026-08-10 roadmap draft until review), and the protocol-frozen anchors where renaming "evidence" was cost-classified (the 2026-08-02 pre-freeze naming audit). Each was re-derived instead of consulted.
+- **Stakes.** Documentation and surface-copy consistency across four repos; the boundary between protocol-frozen identifiers (which prose must not casually rename) and prose vocabulary (which should stay current); onboarding cost for external contributors who otherwise infer conventions from inconsistent examples.
+- **Current direction.** None committed. Natural shape: a short controlled vocabulary in the hub — defined terms, preferred terms, and an explicit do-not-use list with pointers to the deciding record — maintained by convention and the documentation-currency practice ([civic-ai-tools#138](https://github.com/npstorey/civic-ai-tools/issues/138)), not by tooling. Modeled on information-architecture practice (controlled vocabularies in the sense of Abby Covert's *How to Make Sense of Any Mess*).
+- **Resolution criteria.** Decide alongside civic-ai-tools#138's round, or when external contributors arrive — whichever comes first.
 
 ---
 
