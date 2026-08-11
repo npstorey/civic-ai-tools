@@ -1,6 +1,6 @@
 ---
 Status: Living document
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 Maintainer: [TK: leave as placeholder]
 ---
 
@@ -671,6 +671,15 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Stakes.** Documentation and surface-copy consistency across four repos; the boundary between protocol-frozen identifiers (which prose must not casually rename) and prose vocabulary (which should stay current); onboarding cost for external contributors who otherwise infer conventions from inconsistent examples.
 - **Current direction.** None committed. Natural shape: a short controlled vocabulary in the hub — defined terms, preferred terms, and an explicit do-not-use list with pointers to the deciding record — maintained by convention and the documentation-currency practice ([civic-ai-tools#138](https://github.com/npstorey/civic-ai-tools/issues/138)), not by tooling. Modeled on information-architecture practice (controlled vocabularies in the sense of Abby Covert's *How to Make Sense of Any Mess*).
 - **Resolution criteria.** Decide alongside civic-ai-tools#138's round, or when external contributors arrive — whichever comes first.
+
+### Q67 — First-run and onboarding experience for the gated app surface
+
+- **Status.** Open. Raised by the owner 2026-08-11 after the front-door v0.2 round-1 ship.
+- **Origin.** [Q63](#q63--sign-in-entry-ux--onboarding-flow) resolved the *affordance* half of sign-in entry, and [website#229](https://github.com/npstorey/civic-ai-tools-website/issues/229)'s G0 scoped a deliberately minimal first-run block — an orientation panel on `/ask` shown only to users who have never published ([website#239](https://github.com/npstorey/civic-ai-tools-website/issues/239)). That was chosen as a floor, explicitly not as a design.
+- **Stakes.** What an allowlisted first-time user should encounter, and whether the surface teaches what evidence publishing *is* before asking someone to do it. Bears on activation for the audiences the roadmap names — journalists, students, government data workers — who arrive without the project's vocabulary.
+- **Current direction.** None. The owner intends user research and/or a review of comparable tools' onboarding before committing to a design; designing from intuition is explicitly declined for now.
+- **Resolution criteria.** A research artifact (interviews, usability observation, and/or a best-practices review) recorded under `docs/research/`, then a design decision recorded here and implemented — likely inside the front-door v0.2 remainder ([website#215](https://github.com/npstorey/civic-ai-tools-website/issues/215)).
+- **Notes.** Deliberately unscoped. The research artifact is what answers this question, so it is not created in advance.
 
 ---
 
