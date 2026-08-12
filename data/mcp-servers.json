@@ -67,33 +67,6 @@
     ]
   },
   {
-    "id": "odp-mcp",
-    "name": "odp-mcp",
-    "description": "Socrata open data portals",
-    "repoUrl": "https://github.com/socrata/odp-mcp",
-    "transport": [
-      "stdio"
-    ],
-    "categories": [
-      "open-data-portals"
-    ],
-    "governmentLevel": [
-      "multi"
-    ],
-    "maintainer": "Socrata (Tyler Technologies)",
-    "status": "active",
-    "dateAdded": "2026-03-14",
-    "dataSources": [
-      "Socrata open data portals"
-    ],
-    "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Official Socrata MCP server. Lightweight, read-only tools.",
-    "dataPlatform": [
-      "socrata"
-    ]
-  },
-  {
     "id": "socrata-mcp",
     "name": "Socrata-MCP",
     "description": "Socrata open data portals",
@@ -135,15 +108,15 @@
       "multi"
     ],
     "maintainer": "srobbin",
-    "status": "active",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Socrata open data portals"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "apiKeyRequired": false,
-    "notes": "No API key required. ~10 stars, available via npx. Built by co-founder of Chi Hack Night.",
+    "notes": "No API key required. Available via npx. Built by co-founder of Chi Hack Night. No repository commits since 2025-04-09 (verified 2026-08-12).",
     "dataPlatform": [
       "socrata"
     ]
@@ -331,10 +304,11 @@
   {
     "id": "us-gov-open-data-mcp",
     "name": "us-gov-open-data-mcp",
-    "description": "36+ federal APIs (Census, EPA, NOAA, FDA, SEC, BLS, FRED, FEC, FBI, USDA, CDC, etc.)",
+    "description": "40+ federal APIs (Census, EPA, NOAA, FDA, SEC, BLS, FRED, FEC, FBI, USDA, CDC, etc.)",
     "repoUrl": "https://github.com/lzinga/us-gov-open-data-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "federal-government"
@@ -346,12 +320,12 @@
     "status": "active",
     "dateAdded": "2026-03-14",
     "dataSources": [
-      "36+ federal APIs (Census, EPA, NOAA, FDA, SEC, BLS, FRED, FEC, FBI, USDA, CDC, etc.)"
+      "40+ federal APIs (Census, EPA, NOAA, FDA, SEC, BLS, FRED, FEC, FBI, USDA, CDC, etc.)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "toolCount": 188,
-    "notes": "188+ tools. TypeScript SDK, caching, retry logic, selective module loading. 18 APIs need no key. Featured on Hacker News.",
+    "dateModified": "2026-08-12",
+    "toolCount": 300,
+    "notes": "300+ tools. TypeScript SDK, caching, retry logic, selective module loading. 20+ APIs need no key. Featured on Hacker News.",
     "priority": "tier1",
     "jurisdiction": "United States",
     "dataPlatform": [
@@ -432,14 +406,14 @@
       "federal"
     ],
     "maintainer": "melaodoidao",
-    "status": "active",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Data.gov"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Search packages, view datasets, list groups/tags from the federal open data portal.",
+    "dateModified": "2026-08-12",
+    "notes": "Search packages, view datasets, list groups/tags from the federal open data portal. No repository commits since 2025-04-09 (verified 2026-08-12).",
     "jurisdiction": "United States",
     "dataPlatform": [
       "ckan"
@@ -479,7 +453,8 @@
     "description": "SAM.gov + USAspending.gov + Tango",
     "repoUrl": "https://github.com/blencorp/capture-mcp-server",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "federal-government"
@@ -494,7 +469,7 @@
       "SAM.gov + USAspending.gov + Tango"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "toolCount": 15,
     "notes": "15 tools for government contracting. Returns both human-readable text and structured JSON.",
     "jurisdiction": "United States",
@@ -508,7 +483,8 @@
     "description": "Congress.gov (bills, votes, members, committees)",
     "repoUrl": "https://github.com/amurshak/congressMCP",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "legislation-legal"
@@ -524,7 +500,7 @@
       "Congress.gov (bills, votes, members, committees)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "6 tool suites, 113 functions. Free tier: 500 calls/month; Pro: $19/month. GitHub.",
     "jurisdiction": "United States",
     "dataPlatform": [
@@ -535,7 +511,7 @@
     "id": "congress-gov-mcp",
     "name": "congress-gov-mcp",
     "description": "Congress.gov API v3",
-    "repoUrl": "https://github.com/ashwinsundar/congress_gov_mcp",
+    "repoUrl": "https://github.com/AshwinSundar/congress_gov_mcp",
     "transport": [
       "stdio"
     ],
@@ -547,14 +523,14 @@
       "state"
     ],
     "maintainer": "AshwinSundar",
-    "status": "active",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Congress.gov API v3"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Bills, amendments, voting records, committee info, member details.",
+    "dateModified": "2026-08-12",
+    "notes": "Bills, amendments, voting records, committee info, member details. No repository commits since 2025-06-30 (verified 2026-08-12).",
     "jurisdiction": "United States",
     "dataPlatform": [
       "custom-api"
@@ -626,7 +602,8 @@
     "description": "CourtListener (3,352 U.S. courts)",
     "repoUrl": "https://github.com/blakeox/courtlistener-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "legislation-legal"
@@ -642,7 +619,7 @@
       "CourtListener (3,352 U.S. courts)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "toolCount": 20,
     "notes": "20+ tools. Opinions, dockets, judges, oral arguments, financial disclosures.",
     "jurisdiction": "United States",
@@ -654,7 +631,7 @@
     "id": "umbrella-terminal-mcp",
     "name": "umbrella-terminal-mcp",
     "description": "Colorado legislative intelligence",
-    "repoUrl": "https://glama.ai/mcp/servers/@TheBlackCompany/umbrella_terminal_mcp",
+    "repoUrl": "https://github.com/TheBlackCompany/umbrella_terminal_mcp",
     "transport": [
       "stdio"
     ],
@@ -672,7 +649,7 @@
       "Colorado legislative intelligence"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "toolCount": 67,
     "notes": "67 tools. Bills, statutes, rules, campaign finance. State-specific.",
     "jurisdiction": "United States",
@@ -883,7 +860,8 @@
     "description": "FRED (Federal Reserve Economic Data)",
     "repoUrl": "https://github.com/stefanoamorelli/fred-mcp-server",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "economic-financial"
@@ -898,7 +876,7 @@
       "FRED (Federal Reserve Economic Data)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "800,000+ economic data series. Categories, releases, sources.",
     "priority": "tier2",
     "jurisdiction": "United States",
@@ -912,7 +890,8 @@
     "description": "SEC EDGAR (13M+ filings)",
     "repoUrl": "https://github.com/stefanoamorelli/sec-edgar-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "economic-financial"
@@ -927,7 +906,7 @@
       "SEC EDGAR (13M+ filings)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "XBRL financials, company info. Docker image available.",
     "jurisdiction": "United States",
     "dataPlatform": [
@@ -1140,7 +1119,7 @@
     "id": "riksdag-regering-mcp",
     "name": "riksdag-regering-mcp",
     "description": "Swedish Parliament + Government",
-    "repoUrl": "https://github.com/isakskogstad/riksdag-regering-mcp",
+    "repoUrl": "https://github.com/isakskogstad/Riksdag-Regering-MCP",
     "transport": [
       "stdio"
     ],
@@ -1157,7 +1136,7 @@
       "Swedish Parliament + Government"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Open data from Swedish legislative and executive branches.",
     "jurisdiction": "Sweden",
     "dataPlatform": [
@@ -1225,8 +1204,8 @@
   {
     "id": "swedish-law-mcp",
     "name": "swedish-law-mcp",
-    "description": "Swedish, Danish, Finnish law",
-    "repoUrl": "https://github.com/Ansvar-Systems/swedish-law-mcp",
+    "description": "Swedish statutes and regulations",
+    "repoUrl": "https://github.com/Ansvar-Systems/Swedish-law-mcp",
     "transport": [
       "stdio"
     ],
@@ -1237,14 +1216,14 @@
       "international"
     ],
     "maintainer": "Ansvar-Systems",
-    "status": "active",
+    "status": "archived",
     "dateAdded": "2026-03-14",
     "dataSources": [
-      "Swedish, Danish, Finnish law"
+      "Swedish statutes and regulations"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Also Danish and Finnish law MCPs from the same maintainer.",
+    "dateModified": "2026-08-12",
+    "notes": "Archived by the maintainer (verified 2026-08-12); last commit 2026-07-07. The maintainer's Danish- and Finnish-law MCP servers are archived as well.",
     "jurisdiction": "Sweden",
     "dataPlatform": [
       "custom-api"
@@ -1256,7 +1235,8 @@
     "description": "e-Stat (Japan statistics)",
     "repoUrl": "https://github.com/ajtgjmdjp/estat-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "sse"
     ],
     "categories": [
       "international-government"
@@ -1271,7 +1251,7 @@
       "e-Stat (Japan statistics)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "3,000+ tables: population, economy, prices, labor, agriculture.",
     "jurisdiction": "Japan",
     "dataPlatform": [
@@ -1341,7 +1321,8 @@
     "description": "Malaysia data.gov.my",
     "repoUrl": "https://github.com/hithereiamaliff/mcp-datagovmy",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "international-government"
@@ -1356,7 +1337,7 @@
       "Malaysia data.gov.my"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Includes GTFS transit data tools.",
     "jurisdiction": "Malaysia",
     "dataPlatform": [
@@ -1378,14 +1359,14 @@
       "international"
     ],
     "maintainer": "keonho-kim",
-    "status": "active",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "South Korea DART (corporate disclosures)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Korean financial disclosures via OpenDart API.",
+    "dateModified": "2026-08-12",
+    "notes": "Korean financial disclosures via OpenDart API. No repository commits since 2025-06-22 (verified 2026-08-12).",
     "jurisdiction": "South Korea",
     "dataPlatform": [
       "custom-api"
@@ -1395,9 +1376,10 @@
     "id": "budgetkey-mcp",
     "name": "budgetkey-mcp",
     "description": "Israel budget transparency",
-    "repoUrl": "https://github.com/openbudget/budgetkey-mcp",
+    "repoUrl": "https://github.com/OpenBudget/budgetkey-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "international-government"
@@ -1405,14 +1387,14 @@
     "governmentLevel": [
       "international"
     ],
-    "maintainer": "openbudget",
+    "maintainer": "OpenBudget",
     "status": "active",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Israel budget transparency"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Israeli budget transparency data.",
     "jurisdiction": "Israel",
     "dataPlatform": [
@@ -1423,7 +1405,7 @@
     "id": "gov-ca-mcp",
     "name": "gov-ca-mcp",
     "description": "Government of Canada (250,000+ datasets)",
-    "repoUrl": "https://glama.ai/mcp/servers/@krunal16-c/gov-ca-mcp",
+    "repoUrl": "https://github.com/krunal16-c/gov-ca-mcp",
     "transport": [
       "stdio"
     ],
@@ -1440,7 +1422,7 @@
       "Government of Canada (250,000+ datasets)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Two servers: datasets and transportation (bridges, airports, cycling, transit, railways).",
     "jurisdiction": "Canada",
     "dataPlatform": [
@@ -1480,7 +1462,7 @@
     "id": "bcb-mcp",
     "name": "bcb-mcp",
     "description": "Brazil Central Bank",
-    "repoUrl": "https://lobehub.com/mcp/sidneybissoli-bcb-br-mcp",
+    "repoUrl": "https://github.com/SidneyBissoli/bcb-br-mcp",
     "transport": [
       "stdio"
     ],
@@ -1497,7 +1479,7 @@
       "Brazil Central Bank"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Selic, IPCA, exchange rates, GDP time series.",
     "jurisdiction": "Brazil",
     "dataPlatform": [
@@ -1507,7 +1489,7 @@
   {
     "id": "agrobr-mcp",
     "name": "agrobr-mcp",
-    "description": "Brazilian agriculture (19 sources)",
+    "description": "Brazilian agriculture (10 sources)",
     "repoUrl": "https://github.com/bruno-portfolio/agrobr-mcp",
     "transport": [
       "stdio"
@@ -1522,10 +1504,10 @@
     "status": "active",
     "dateAdded": "2026-03-14",
     "dataSources": [
-      "Brazilian agriculture (19 sources)"
+      "Brazilian agriculture (10 sources)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "CEPEA, CONAB, IBGE, INPE, B3. Prices, crop estimates, climate, deforestation.",
     "jurisdiction": "Brazil",
     "dataPlatform": [
@@ -1536,7 +1518,7 @@
     "id": "world-bank-data-mcp",
     "name": "world-bank-data-mcp",
     "description": "World Bank Data360",
-    "repoUrl": "https://github.com/llnormll/world-bank-data-mcp",
+    "repoUrl": "https://github.com/llnOrmll/world-bank-data-mcp",
     "transport": [
       "stdio"
     ],
@@ -1546,14 +1528,14 @@
     "governmentLevel": [
       "global"
     ],
-    "maintainer": "llnormll",
+    "maintainer": "llnOrmll",
     "status": "active",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "World Bank Data360"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "1,000+ indicators, 200+ countries. WDI, HNP, GDF, IDS datasets.",
     "jurisdiction": "Global",
     "dataPlatform": [
@@ -1575,14 +1557,14 @@
       "multi"
     ],
     "maintainer": "OpenDataMCP",
-    "status": "active",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Universal open data portals"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Universal framework aiming to connect any open data portal to any LLM via MCP. Starting with Switzerland.",
+    "dateModified": "2026-08-12",
+    "notes": "Universal framework aiming to connect any open data portal to any LLM via MCP. Starting with Switzerland. No repository commits since 2024-12-20 (verified 2026-08-12).",
     "dataPlatform": [
       "ckan"
     ]
@@ -1593,7 +1575,8 @@
     "description": "Any CKAN portal worldwide",
     "repoUrl": "https://github.com/ondata/ckan-mcp-server",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "framework-multi-portal",
@@ -1609,7 +1592,7 @@
       "Any CKAN portal worldwide"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Generic CKAN connector. Works with data.gov, data.gov.uk, data.europa.eu, and hundreds more. Docs.",
     "priority": "tier1",
     "dataPlatform": [
@@ -1679,7 +1662,8 @@
     "description": "GIS operations",
     "repoUrl": "https://github.com/mahdin75/gis-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "geospatial-gis"
@@ -1694,7 +1678,7 @@
       "GIS operations"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Shapely, PyProj, GeoPandas, Rasterio, PySAL. Geometry, coordinate transforms, spatial analysis.",
     "dataPlatform": [
       "custom-api"
@@ -1762,7 +1746,8 @@
     "description": "Open-Meteo (weather, climate)",
     "repoUrl": "https://github.com/cmer81/open-meteo-mcp",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "weather-environment"
@@ -1777,7 +1762,7 @@
       "Open-Meteo (weather, climate)"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "apiKeyRequired": false,
     "notes": "7-day forecasts, ERA5 historical data from 1940, air quality, marine, CMIP6 climate projections. No API key.",
     "dataPlatform": [
@@ -1790,7 +1775,8 @@
     "description": "20+ NASA APIs",
     "repoUrl": "https://github.com/ProgramComputer/NASA-MCP-server",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "civic-adjacent"
@@ -1805,7 +1791,7 @@
       "20+ NASA APIs"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "APOD, Mars Rover, EPIC earth imagery, NEO, EONET, DONKI, GIBS, POWER, JPL.",
     "dataPlatform": [
       "custom-api"
@@ -1817,7 +1803,8 @@
     "description": "USPTO Patents",
     "repoUrl": "https://github.com/riemannzeta/patent_mcp_server",
     "transport": [
-      "stdio"
+      "stdio",
+      "http"
     ],
     "categories": [
       "civic-adjacent"
@@ -1832,7 +1819,7 @@
       "USPTO Patents"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "Patent Public Search, PTAB, PatentsView, Office Action, Patent Litigation.",
     "dataPlatform": [
       "custom-api"
@@ -1842,7 +1829,7 @@
     "id": "mcp-nutrition-tools",
     "name": "mcp-nutrition-tools",
     "description": "USDA FoodData Central",
-    "repoUrl": "https://mcpservers.org/servers/zen-apps/mcp-nutrition-tools",
+    "repoUrl": "https://github.com/zen-apps/mcp-nutrition-tools",
     "transport": [
       "stdio"
     ],
@@ -1859,7 +1846,7 @@
       "USDA FoodData Central"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
+    "dateModified": "2026-08-12",
     "notes": "600,000+ foods. CC0 public domain.",
     "dataPlatform": [
       "custom-api"
@@ -1923,7 +1910,7 @@
     "id": "civicnet-mcp-server",
     "name": "civicnet-mcp-server",
     "description": "Federated civic infrastructure",
-    "repoUrl": "https://github.com/Publik-Works/civicnet-mcp-server",
+    "repoUrl": "https://github.com/CivikNet/civicnet-mcp-server",
     "transport": [
       "stdio"
     ],
@@ -1933,15 +1920,15 @@
     "governmentLevel": [
       "multi"
     ],
-    "maintainer": "Publik-Works",
-    "status": "active",
+    "maintainer": "CivikNet",
+    "status": "inactive",
     "dateAdded": "2026-03-14",
     "dataSources": [
       "Federated civic infrastructure"
     ],
     "verificationStatus": "community",
-    "dateModified": "2026-03-14",
-    "notes": "Federated civic infrastructure with equity principles.",
+    "dateModified": "2026-08-12",
+    "notes": "Federated civic infrastructure with equity principles. No repository commits since 2025-06-04 (verified 2026-08-12).",
     "dataPlatform": [
       "custom-api"
     ]

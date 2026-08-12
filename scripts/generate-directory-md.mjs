@@ -13,6 +13,15 @@ const OUT_PATH = join(ROOT, 'docs', 'mcp-servers.md');
 
 const entries = JSON.parse(readFileSync(JSON_PATH, 'utf-8'));
 
+// --- Survey currency -------------------------------------------------------
+// The date the directory's entries were last checked against their sources.
+// Bump this — and re-run the survey it names — together; a stale date on a
+// page presented as current curation is the defect this constant exists to
+// make visible (#137). Month name and ISO date are both emitted so the human
+// header and any machine reader agree.
+const SURVEY_MONTH = 'August 2026';
+const SURVEY_DATE = '2026-08-12';
+
 // --- Section definitions (order matters) ---
 
 const SECTIONS = [
@@ -236,7 +245,13 @@ parts.push('# Civic Data MCP Servers');
 parts.push('');
 parts.push("A directory of MCP servers for accessing civic and public data. Servers marked **Included** are pre-configured in this repo's setup.");
 parts.push('');
-parts.push('*Last surveyed: March 2026. Sources: GitHub, official MCP Registry, Glama, PulseMCP, mcpservers.org, mcp.so, Smithery, LobeHub, Playbooks.*');
+parts.push(`*Last surveyed: ${SURVEY_MONTH} (${SURVEY_DATE}). Sources: GitHub, official MCP Registry, Glama, PulseMCP, mcpservers.org, mcp.so, Smithery, LobeHub, Playbooks.*`);
+parts.push('');
+parts.push(
+  `**This is a point-in-time survey, not a live status feed.** Every entry below states what was true on ${SURVEY_DATE}; ` +
+    'projects are archived, renamed, and revived between surveys. Check the linked repository before relying on an entry, ' +
+    'and open an issue if you find one that has drifted.'
+);
 
 for (const section of SECTIONS) {
   const rendered = renderSection(section);
@@ -249,7 +264,7 @@ parts.push('---');
 parts.push('');
 parts.push('## Coverage Gaps');
 parts.push('');
-parts.push('The following civic data domains have **no or limited MCP server coverage** as of March 2026:');
+parts.push(`The following civic data domains have **no or limited MCP server coverage** as of ${SURVEY_MONTH}:`);
 parts.push('');
 parts.push('| Domain | Data Sources That Could Be Wrapped | Notes |');
 parts.push('|--------|-----------------------------------|-------|');
@@ -273,7 +288,7 @@ parts.push('1. **[ckan-mcp-server (ondata)](https://github.com/ondata/ckan-mcp-s
 parts.push('');
 parts.push('2. **[census-mcp (official)](https://github.com/uscensusbureau/us-census-bureau-data-api-mcp)** — Official Census Bureau server. ACS data is foundational for almost all civic analysis. Maintained by the agency itself.');
 parts.push('');
-parts.push('3. **[us-gov-open-data-mcp](https://github.com/lzinga/us-gov-open-data-mcp)** — 36+ APIs, 188+ tools. Covers EPA, NOAA, FDA, SEC, BLS, and more in a single server. Modular loading lets users enable only the APIs they need.');
+parts.push('3. **[us-gov-open-data-mcp](https://github.com/lzinga/us-gov-open-data-mcp)** — 40+ APIs, 300+ tools. Covers EPA, NOAA, FDA, SEC, BLS, and more in a single server. Modular loading lets users enable only the APIs they need.');
 parts.push('');
 parts.push('### Tier 2: High Value, More Specialized');
 parts.push('');
@@ -293,7 +308,17 @@ parts.push('9. **International data servers** — Spain (datos-gob-es), Sweden (
 parts.push('');
 parts.push('### Integration Notes');
 parts.push('');
-parts.push('- Most servers use **stdio transport only** — they work with Claude Code, Cursor, and VS Code Copilot out of the box. Only socrata-mcp-server and datagouv-mcp offer HTTP transport for web applications.');
+// Derived from the data rather than restated by hand: this sentence was
+// wrong before #137 (it named two servers when the data already listed
+// several), and a hand-maintained count goes stale the moment an entry
+// changes transport.
+const remoteCapable = entries.filter((e) => e.transport.some((t) => t !== 'stdio'));
+const stdioOnly = entries.length - remoteCapable.length;
+parts.push(
+  `- **${stdioOnly} of the ${entries.length} servers listed are stdio-only** — they work with Claude Code, Cursor, ` +
+    `and VS Code Copilot out of the box, but not with web applications. The other ${remoteCapable.length} document an ` +
+    'HTTP or SSE transport; see the Transport column above for which.'
+);
 parts.push('- Adding a new server to civic-ai-tools requires: (1) adding it to `claude_desktop_config.json`, (2) writing a skill guidance doc in `docs/skills/`, and (3) testing with representative queries.');
 parts.push("- The **us-gov-open-data-mcp** server's modular loading pattern is worth studying — it lets users enable only the APIs they need, avoiding tool overload.");
 parts.push('- **Two official U.S. federal agencies** (Census Bureau, GPO) and **two national governments** (France, India) now maintain MCP servers. This is a strong legitimacy signal for the ecosystem.');
