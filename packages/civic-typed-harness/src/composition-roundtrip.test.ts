@@ -308,6 +308,11 @@ function produceSignedPackage() {
   const sidecar = buildCommitmentView({
     packageHash: assembled.envelopeHash,
     packageUrl: 'https://packages.example.org/evidence/example.json',
+    // Fully disclosed view (no redactContentSurface; packageUrl/subjectTitle/
+    // subjectSummary are all present below) — ADR-0016 §A vocabulary: 'public',
+    // not 'sealed' (which pairs with a redacted view). produce-core 0.2.1
+    // (ADR-0024) throws when visibility is omitted instead of defaulting it.
+    visibility: 'public',
     captureMethod: 'chat-flow-stream',
     producerProfile: assembled.pkg.producerProfile,
     type: assembled.pkg.type,
