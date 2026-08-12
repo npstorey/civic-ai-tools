@@ -27,4 +27,4 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0021](0021-produce-core-extraction.md) | Producer-side core extraction (`@typedstandards/produce-core`) and the format/domain line (Q59) | Accepted (2026-07-31) |
 | [0022](0022-civic-typed-harness-packaging.md) | Civic-harness packaging — npm workspaces and the first package in the hub repo | Accepted (2026-08-01) |
 | [0023](0023-notebook-executor-driver.md) | Notebook executor as a driver interface — Vercel Sandbox default, local container-runner as the portable shape | Accepted (2026-08-05) |
-| [0024](0024-evidence-path-configuration.md) | Configuration that reaches signed output is absent-or-error, never defaulted | Proposed (2026-08-12) |
+| [0024](0024-evidence-path-configuration.md) | Configuration that reaches signed output is absent-or-error, never defaulted | Accepted (2026-08-12) |
