@@ -684,6 +684,15 @@ A future type-registry mechanism (Q37) governs how new sub-types get registered;
 - **Resolution criteria.** A research artifact (interviews, usability observation, and/or a best-practices review) recorded under `docs/research/`, then a design decision recorded here and implemented — likely inside the front-door v0.2 remainder ([website#215](https://github.com/npstorey/civic-ai-tools-website/issues/215)).
 - **Notes.** Deliberately unscoped. The research artifact is what answers this question, so it is not created in advance.
 
+### Q68 — Marketing-site extraction: should the reference deployment's marketing surface leave the app repo?
+
+- **Status.** Open — deliberately deferred. Raised by the owner 2026-08-13 during portability-program formation ([civic-ai-tools#148](https://github.com/npstorey/civic-ai-tools/issues/148)).
+- **Origin.** The #148 topology decision — instances ship only the app surfaces; the marketing group is the reference deployment's own ([website#259](https://github.com/npstorey/civic-ai-tools-website/issues/259)) — prompted the owner to ask whether the ideal end state is a repo split. Two directions were considered: extracting *the app* for the website repo to consume (rejected on mechanics — a Next.js App Router app does not compose as an npm dependency; consuming one means multi-zones/microfrontends machinery and a publish-and-bump cycle on every app change), and the inversion: extracting *the marketing site* into its own small repo, leaving the current repo as the app.
+- **Stakes.** Instance build weight (marketing pages compile into every instance build and are withheld at request time, not excluded at build) and repo clarity (the app repo becomes the product, unambiguously) — against a second deployment for the reference operator and one real coupling: the marketing home's hero is the live `QuerySurface` demo shared with `/ask`, which a standalone marketing repo loses (link out or embed cross-origin).
+- **Current direction.** Stay one-repo. The website#259 boundary sweep (2026-08-13) found the split already architecturally clean — zero import edges between route groups in either direction, a bare passthrough marketing layout, seven shared modules — and after #259's default flip a fresh clone with no topology config *is* the app, so the implementer-facing gain from extraction rounds to zero. Website#259 carries a liftability rider (no cross-group imports; marketing-only chrome stays in marketing layouts) that keeps this option open at near-zero cost.
+- **Resolution criteria.** Xanadu-gated on a real trigger: the marketing surface acquiring its own contribution or deploy cadence, an instance class that needs a slimmer build, or the `QuerySurface` coupling resolving naturally (e.g. the demo moving app-side with the marketing home linking to it). Then an ADR deciding extract-vs-stay on the trigger's facts.
+- **Notes.** The rejected extract-the-app direction is recorded here so it is not re-litigated: the layering instinct is right; the mechanics are wrong for Next.js.
+
 ---
 
 ## Resolution log
