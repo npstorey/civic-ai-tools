@@ -14,9 +14,10 @@
  *     fetched in CI from
  *     https://raw.githubusercontent.com/npstorey/socrata-mcp-server/main/src/skills/<name>.ts
  *
- * Only base/local/web are in scope: those are the three skills the server
- * embeds. docs/skills/{data-commons,boston}.md have no embedded copy in that
- * server, so there is nothing to drift against and they are not checked.
+ * Only base/local/web/web-reference-demo are in scope: those are the skills
+ * the server embeds. docs/skills/{data-commons,boston}.md have no embedded
+ * copy in that server, so there is nothing to drift against and they are not
+ * checked.
  *
  * CREDENTIAL-FREE: the fetch is an unauthenticated GET of a public raw file.
  * This script never reads an environment variable, never sends an Authorization
@@ -87,7 +88,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 
 /** Skills the socrata-mcp-server embeds. Everything else in docs/skills/ has no copy. */
-export const EMBEDDED_SKILLS = ['base', 'local', 'web'];
+export const EMBEDDED_SKILLS = ['base', 'local', 'web', 'web-reference-demo'];
 
 const DEFAULT_REPO = 'npstorey/socrata-mcp-server';
 const DEFAULT_REF = 'main';

@@ -50,6 +50,7 @@ test('exportNameFor maps a skill name to its embedded export', () => {
   assert.equal(exportNameFor('base'), 'BASE_SKILL');
   assert.equal(exportNameFor('local'), 'LOCAL_SKILL');
   assert.equal(exportNameFor('web'), 'WEB_SKILL');
+  assert.equal(exportNameFor('web-reference-demo'), 'WEB_REFERENCE_DEMO_SKILL');
   assert.equal(exportNameFor('data-commons'), 'DATA_COMMONS_SKILL');
 });
 
@@ -338,10 +339,10 @@ test('the checker never evaluates fetched source and reads no environment', () =
   assert.ok(!/Authorization|authorization/.test(code), 'no auth header');
 });
 
-test('scope: exactly the three skills the server embeds, and each .md exists', () => {
+test('scope: exactly the four skills the server embeds, and each .md exists', () => {
   // Guard against a rename making the check silently check nothing. This does
   // NOT assert the files are in sync — the live comparison is the CI step.
-  assert.deepEqual(EMBEDDED_SKILLS, ['base', 'local', 'web']);
+  assert.deepEqual(EMBEDDED_SKILLS, ['base', 'local', 'web', 'web-reference-demo']);
   for (const skill of EMBEDDED_SKILLS) {
     assert.ok(
       existsSync(join(repoRoot, 'docs', 'skills', `${skill}.md`)),

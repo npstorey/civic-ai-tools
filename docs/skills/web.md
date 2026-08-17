@@ -1,7 +1,7 @@
 # Socrata MCP Skill — Web Overlay
 
-> **Applies to:** Web demo (civicaitools.org) and other HTTP-connected clients.
-> **Use with:** the base guidance (loaded first, then this overlay).
+> **Applies to:** HTTP-connected web clients, on any deployment of the web app.
+> **Use with:** the base guidance (loaded first, then this overlay). A deployment may append its own posture overlay after this one declaring deployment-specific limits.
 
 ## Date Filter Enforcement
 
@@ -10,34 +10,27 @@
 If a user's question is open-ended (e.g., "What are the top complaints in NYC?"), default to the last 30 days and tell them:
 - That you scoped to the last 30 days for performance
 - They can ask for a different range
-- For all-time analysis, suggest using the local CLI tools
+- For all-time analysis, suggest using a local (stdio) client
 
-## Web Demo Limits
+## Deployment Limits
 
-This is a public demo with shared resources. Enforce these limits:
-
-- **Result sets**: Limit queries to 10,000 rows max. If more data is needed, suggest narrowing the date range or filters.
-- **Tool calls per response**: Keep to 5 or fewer tool calls. If a query would require more, simplify or break it into follow-up questions.
-- **Response length**: Keep responses concise and token-conscious. Prefer tables and bullet points over long prose. Aim for key findings, not exhaustive analysis.
-- **No cross-portal comparisons**: Do not compare data across multiple cities in a single response. Each city query consumes resources — suggest the user ask about one city at a time, or use the local CLI tools for multi-city analysis.
+Follow the limits your deployment declares; where none are declared, prefer conservative defaults appropriate to shared web environments — modest result sets, few tool calls per response, and concise output.
 
 ## Token-Conscious Formatting
 
 - Lead with the answer, then supporting data
 - Use compact tables rather than verbose explanations
-- Limit to 3–5 key findings per response
+- Keep to a small set of key findings per response
 - Skip the full "Methodology" section — include a brief "Data source" line instead
 - Omit the "Queries Used" table unless the user asks for it
 
-## Local Tools CTA
+## Suggesting a Local Client
 
-When a user hits a limit (complex multi-city query, long date range, deep analysis), suggest:
-
-> For more complex analysis — like cross-city comparisons, longer date ranges, or deeper dives — try the [Civic AI Tools CLI](https://github.com/npstorey/civic-ai-tools), which connects directly to these same data sources with no demo limits.
+When a user hits a limit (complex multi-city query, long date range, deep analysis), suggest a local (stdio) client for heavier analysis — local clients connect directly to the same data sources without web-environment constraints. Keep the suggestion neutral unless your deployment declares a specific alternative.
 
 ## Reproducible-Notebook Mode (Opt-In)
 
-The web demo exposes a user-toggleable "Reproducible notebook" mode on the chat input. When the user has selected it, the same analysis pipeline runs, but the final answer is rendered as an *executed* Jupyter notebook (Phase A discovery → Phase B notebook synthesis → Phase C sandbox execution → Phase D execution stamping). See [ADR-0005](https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0005-executed-notebook-architecture.md) for the architecture.
+The web app exposes a user-toggleable "Reproducible notebook" mode on the chat input. When the user has selected it, the same analysis pipeline runs, but the final answer is rendered as an *executed* Jupyter notebook (Phase A discovery → Phase B notebook synthesis → Phase C sandbox execution → Phase D execution stamping). See [ADR-0005](https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0005-executed-notebook-architecture.md) for the architecture.
 
 When the user is in reproducible-notebook mode, write your final answer as the body of a **rendering code cell** that the publisher's pipeline will place at the end of the notebook (before the appended comparison cell). The cell's outputs become section F of the A-G evidence envelope (per OES §9.1.4). Specifically:
 

@@ -136,7 +136,7 @@ This repo is an npm workspace. [packages/civic-typed-harness](packages/civic-typ
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines — there are ways to help even if you don't write code.
 
-Two CI gates run on every PR and are worth knowing before you start: **skill-drift** (docs/skills/{base,local,web}.md are byte-compared against the copies embedded in socrata-mcp-server — regenerate with `node scripts/check-skill-drift.mjs --emit <dir>`, never hand-transcribe) and **dependency budgets** (`npm run check:budgets`).
+Two CI gates run on every PR and are worth knowing before you start: **skill-drift** (docs/skills/{base,local,web,web-reference-demo}.md are byte-compared against the copies embedded in socrata-mcp-server — regenerate with `node scripts/check-skill-drift.mjs --emit <dir>`, never hand-transcribe) and **dependency budgets** (`npm run check:budgets`).
 
 ## Glossary
 
