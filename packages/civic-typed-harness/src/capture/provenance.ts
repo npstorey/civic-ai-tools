@@ -9,10 +9,12 @@
 //
 // Config-not-constants: the platform-agent identity, the source-agent
 // registry (server URLs), and the model-agent description are typed config
-// inputs; `CIVICAITOOLS_PROVENANCE_CONFIG` is the demo default and
-// reproduces the reference implementation's output byte-for-byte (property
-// insertion order is preserved throughout — the legacy hash chain's byte
-// contract).
+// inputs, and the config is REQUIRED — no deployment identity is ever
+// applied silently (ADR-0024 posture at the domain layer).
+// `CIVICAITOOLS_PROVENANCE_CONFIG` is the reference deployment's values,
+// which the reference app passes explicitly; with it, the builder reproduces
+// the reference implementation's output byte-for-byte (property insertion
+// order is preserved throughout — the legacy hash chain's byte contract).
 
 import {
   makeProvGraph,
@@ -78,18 +80,19 @@ export interface ProvenanceConfig {
    *  overrides when present (the skill is fetched from that source's MCP
    *  server). Default `socrata`. */
   skillSourceId?: string;
-  /** `dcterms:description` of the model agent. Default names the demo
-   *  deployment's model gateway. */
+  /** `dcterms:description` of the model agent. When unset, the model agent
+   *  carries no `dcterms:description` at all — the field is omitted from the
+   *  graph (honest omission), never filled with a fallback. */
   modelAgentDescription?: string;
 }
 
-/** Demo default: the civicaitools.org reference deployment. */
+/** The civicaitools.org reference deployment's values. Passed explicitly by
+ *  the reference app — never applied as a default. */
 export const CIVICAITOOLS_PROVENANCE_CONFIG: ProvenanceConfig = {
   platformAgent: CIVICAITOOLS_PLATFORM_AGENT,
   sourceRegistry: CIVIC_SOURCE_REGISTRY,
+  modelAgentDescription: 'Large language model via OpenRouter',
 };
-
-const DEFAULT_MODEL_AGENT_DESCRIPTION = 'Large language model via OpenRouter';
 
 // --- Helpers ---
 
@@ -117,7 +120,7 @@ function nanoToIso(nano: string): string {
 export function buildProvenanceGraph(
   trace: Record<string, unknown>,
   input: ProvenanceInput,
-  config: ProvenanceConfig = CIVICAITOOLS_PROVENANCE_CONFIG,
+  config: ProvenanceConfig,
 ): ProvGraph {
   const otel = trace as unknown as OTelTrace;
   const spans = otel?.resourceSpans?.[0]?.scopeSpans?.[0]?.spans || [];
@@ -127,8 +130,6 @@ export function buildProvenanceGraph(
   const registry = config.sourceRegistry;
   const fallbackSourceId = config.fallbackSourceId ?? FALLBACK_SOURCE_ID;
   const skillSourceId = config.skillSourceId ?? FALLBACK_SOURCE_ID;
-  const modelDescription =
-    config.modelAgentDescription ?? DEFAULT_MODEL_AGENT_DESCRIPTION;
 
   const graph: ProvNode[] = [];
 
@@ -174,14 +175,18 @@ export function buildProvenanceGraph(
 
   // --- Agents ---
 
-  // LLM model
+  // LLM model. The description is emitted only when the config supplies one —
+  // absent otherwise (honest omission, same idiom as deriveProducerProfile /
+  // deriveSummaryEmission in ../format/dathere.ts).
   const modelUrn = civicModelUrn(model);
   graph.push(
     makeAgentNode(
       modelUrn,
       {
         'dcterms:title': model,
-        'dcterms:description': modelDescription,
+        ...(config.modelAgentDescription
+          ? { 'dcterms:description': config.modelAgentDescription }
+          : {}),
       },
       ['prov:SoftwareAgent'],
     ),

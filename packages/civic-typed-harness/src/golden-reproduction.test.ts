@@ -50,6 +50,8 @@ import {
   buildDataSources,
   buildProvenanceGraph,
   deriveDatHereEnvelopeFields,
+  CIVICAITOOLS_PROVENANCE_CONFIG,
+  CIVICAITOOLS_ENVIRONMENT_CONFIG,
   ENVIRONMENT_EXTENSION_KEY,
   type ToolCallSummary,
 } from './index.ts';
@@ -181,20 +183,25 @@ function deriveCase(c: GoldenEnvelopeCase) {
   // to createdAt.
   const dataSources = buildDataSources(toolCalls, inspectable, portal, input.createdAt);
 
-  // PROV-O graph (harness capture group, demo-default config). BlobRef
-  // outputs contribute their ref hash instead of a rehash (packager.ts:377–383).
+  // PROV-O graph (harness capture group, reference config passed explicitly —
+  // 0.2.0 requires it). BlobRef outputs contribute their ref hash instead of
+  // a rehash (packager.ts:377–383).
   const outputIsBlob = isBlobRef(input.output);
-  const provenance = buildProvenanceGraph(inspectable, {
-    packageId: input.packageId,
-    promptHash: hash(input.prompt),
-    promptText: input.promptVisibility === 'full_text' ? input.prompt : undefined,
-    outputText: outputIsBlob ? undefined : (input.output as string),
-    outputHash: outputIsBlob
-      ? parseBlobRef((input.output as { ref: string }).ref).hash
-      : undefined,
-    model: input.cost.model,
-    portal,
-  });
+  const provenance = buildProvenanceGraph(
+    inspectable,
+    {
+      packageId: input.packageId,
+      promptHash: hash(input.prompt),
+      promptText: input.promptVisibility === 'full_text' ? input.prompt : undefined,
+      outputText: outputIsBlob ? undefined : (input.output as string),
+      outputHash: outputIsBlob
+        ? parseBlobRef((input.output as { ref: string }).ref).hash
+        : undefined,
+      model: input.cost.model,
+      portal,
+    },
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
 
   // datHere policy (harness format-extension group): producerProfile
   // auto-derivation, canonicalization-rule selection, summary gate,
@@ -206,7 +213,7 @@ function deriveCase(c: GoldenEnvelopeCase) {
     summary: input.summary,
     skillMcpServerUrl: skillMetadata.mcpServerUrl,
     extensions: rawCallerExtensions(input.extensions),
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
 
   // Assembly input: raw fields + harness-derived values ONLY — none of the
   // fixture input's carried derived fields flow through.

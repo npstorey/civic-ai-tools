@@ -8,9 +8,10 @@
 //     app's MCP registry itself stays app-side; this is the harness's civic
 //     DEFAULT — callers supply their own resolver to add or replace sources).
 //
-// Endpoint URLs name the demo deployment's data plane, so the registry is a
-// typed config input (config-not-constants, S2 brief §2) with the civic
-// values as the exported default map.
+// Endpoint URLs name a deployment's data plane, so the registry is a
+// REQUIRED typed config input (config-not-constants, S2 brief §2); the civic
+// demo map is exported as `CIVIC_SOURCE_REGISTRY` for explicit use, never
+// applied as a default.
 
 import type { DataSourceEntry } from '@typedstandards/produce-core';
 
@@ -38,7 +39,8 @@ export interface CivicSourceInfo {
  *  order for aggregate `dataSources` entries. */
 export type CivicSourceRegistry = Record<string, CivicSourceInfo>;
 
-/** The civic default registry — the three demo sources. */
+/** The civic reference registry — the three demo sources. Passed explicitly
+ *  by the reference app — never applied as a default. */
 export const CIVIC_SOURCE_REGISTRY: CivicSourceRegistry = {
   socrata: {
     displayName: 'Socrata',
@@ -70,7 +72,7 @@ export const FALLBACK_SOURCE_ID = 'socrata';
  *  than aggregate? Unknown ids are neither — they contribute no entry. */
 export function isDatasetKeyedSource(
   sourceId: string,
-  registry: CivicSourceRegistry = CIVIC_SOURCE_REGISTRY,
+  registry: CivicSourceRegistry,
 ): boolean {
   const info = registry[sourceId];
   return info !== undefined && info.aggregatePortalUrl === undefined;
@@ -112,7 +114,7 @@ export const civicToolSourceResolver: ToolSourceResolver = (toolName) =>
  *  packages have no `sourceId` on dataSources entries). */
 export function displayNameForSource(
   sourceId: string | undefined | null,
-  registry: CivicSourceRegistry = CIVIC_SOURCE_REGISTRY,
+  registry: CivicSourceRegistry,
 ): string {
   const id = sourceId || FALLBACK_SOURCE_ID;
   return (
@@ -130,7 +132,7 @@ export function displayNameForSource(
  *  letting callers render a fallback. */
 export function formatDataSourcesSummary(
   entries: DataSourceEntry[] | undefined,
-  registry: CivicSourceRegistry = CIVIC_SOURCE_REGISTRY,
+  registry: CivicSourceRegistry,
 ): string | null {
   if (!entries || entries.length === 0) return null;
   const seen = new Set<string>();

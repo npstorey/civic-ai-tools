@@ -14,18 +14,36 @@ The civic **domain harness** for [Typed Standards](../../docs/architecture/typed
 
 **The internal boundary is load-bearing:** no capture module defines vocabulary, and no format-extension module walks a trace — this sentence reserves a future split of the format-extension group into its own package (a civic extension *of Typed Standards*, distinct from the civic *harness* proper) as a mechanical move rather than a re-partition. The boundary is enforced by `src/purity.test.ts`.
 
-## Config, not constants
+## Config, not constants — and required, never defaulted
 
-Every value that names a deployment is a **typed config input**, with the civicaitools.org demo values exported as overridable defaults:
+Every value that names a deployment is a **required typed config input**. As of 0.2.0 the harness never applies a deployment identity on a caller's behalf: a call that omits the config **fails typecheck** ([ADR-0024](../../docs/adr/0024-evidence-path-configuration.md)'s posture at the domain layer — configuration that reaches signed output is absent-or-error, never defaulted; the removal of the 0.1.x defaults is [civic-ai-tools#153](https://github.com/npstorey/civic-ai-tools/issues/153)). The `CIVICAITOOLS_*` exports are the civicaitools.org **reference deployment's values** — the reference app passes them explicitly; any other instance supplies its own.
 
-| Value | Config type | Demo default export |
+| Identity-bearing input | Config type | Reference-value export |
 |---|---|---|
-| Platform-agent identity/URL | `PlatformAgentConfig` | `CIVICAITOOLS_PLATFORM_AGENT` |
+| Platform-agent identity/URL | `PlatformAgentConfig` (`ProvenanceConfig.platformAgent`) | `CIVICAITOOLS_PLATFORM_AGENT` |
 | MCP source registry (server URLs, catalog types, display names) | `CivicSourceRegistry` | `CIVIC_SOURCE_REGISTRY` |
-| Tool-name → source-id resolver | `ToolSourceResolver` | `civicToolSourceResolver` |
-| Environment-extension `host` | `DatHereEnvironmentConfig` | `CIVICAITOOLS_ENVIRONMENT_CONFIG` |
+| Tool-name → source-id resolver (a caller-supplied input, not a silent default) | `ToolSourceResolver` | `civicToolSourceResolver` |
+| Environment-extension `host` (lands under the envelope hash) | `DatHereEnvironmentConfig` | `CIVICAITOOLS_ENVIRONMENT_CONFIG` |
 | Trace `service.name` / scope identity | `TraceBuilderConfig` | `CIVICAITOOLS_TRACE_CONFIG` |
-| Provenance build (all of the above + model-agent description) | `ProvenanceConfig` | `CIVICAITOOLS_PROVENANCE_CONFIG` |
+| Model-agent `dcterms:description` | `ProvenanceConfig.modelAgentDescription` (optional field) | carried in `CIVICAITOOLS_PROVENANCE_CONFIG` |
+| Provenance build (platform agent + source registry + model-agent description) | `ProvenanceConfig` | `CIVICAITOOLS_PROVENANCE_CONFIG` |
+
+`modelAgentDescription` is the one **optional** field among these: when unset, the PROV model agent carries no `dcterms:description` at all — the field is omitted from the graph (honest absence), never filled with a fallback. The `now`/`randomBytes` fields on `TraceBuilderConfig` are operational fallbacks (runtime clock/CSPRNG), not identity, and keep their intra-config defaults.
+
+### Migrating from 0.1.x
+
+0.1.x applied the reference deployment's identity via silent default parameters; 0.2.0 removes every such default — the breaking change is the point: a bare call that would have embedded civicaitools.org's identity in the output now fails to compile. To reproduce 0.1.x behavior byte-for-byte, pass the exported reference configs explicitly:
+
+```ts
+// 0.1.x — compiled, and silently attributed output to the reference deployment:
+const graph = buildProvenanceGraph(trace, input);
+
+// 0.2.0 — the same output, byte-identical, with the identity stated:
+import { CIVICAITOOLS_PROVENANCE_CONFIG } from '@typedstandards/civic-typed-harness';
+const graph = buildProvenanceGraph(trace, input, CIVICAITOOLS_PROVENANCE_CONFIG);
+```
+
+Likewise: `buildDatHereEnvironment` / `deriveDatHereEnvelopeFields` take `CIVICAITOOLS_ENVIRONMENT_CONFIG`, `new TraceBuilder(...)` takes `CIVICAITOOLS_TRACE_CONFIG`, and `isDatasetKeyedSource` / `displayNameForSource` / `formatDataSourcesSummary` take `CIVIC_SOURCE_REGISTRY`. The acceptance condition is encoded in `src/required-config.assert.ts`: reintroducing any of the removed defaults fails `npm run typecheck`.
 
 ## Purity contract (harness-grade)
 
@@ -37,7 +55,7 @@ Runtime dependency: **`@typedstandards/produce-core` (`^0.2.0`) only.** The veri
 
 ## Byte-compatibility
 
-The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the demo default config, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Fixture-level byte-compat against produce-core's `reference-golden.json` (`src/golden-reproduction.test.ts`) and the produce→verify composition round-trip (`src/composition-roundtrip.test.ts`) landed in S2 P2 and run with the suite.
+The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the reference config passed explicitly, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Fixture-level byte-compat against produce-core's `reference-golden.json` (`src/golden-reproduction.test.ts`) and the produce→verify composition round-trip (`src/composition-roundtrip.test.ts`) landed in S2 P2 and run with the suite.
 
 ## Develop
 

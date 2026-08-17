@@ -5,8 +5,10 @@
 //     implements and @typedstandards/produce-core re-exports (0.2.0), removing
 //     the module's only `node:crypto` use — the harness is browser-safe.
 //   - The resource/scope identity constants (`service.name`, scope
-//     name/version, semconv version) are typed config inputs with the demo
-//     values as the exported default (config-not-constants, S2 brief §2).
+//     name/version, semconv version) are REQUIRED typed config inputs
+//     (config-not-constants, S2 brief §2); the reference deployment's values
+//     are exported as `CIVICAITOOLS_TRACE_CONFIG` for explicit use, never
+//     applied as a default.
 //
 // Clock + RNG are INHERENT to capture (span timestamps and ids are what
 // capture *is*): this module is the sanctioned exception to the package's
@@ -87,7 +89,9 @@ export type TraceRandomBytes = (byteLength: number) => Uint8Array;
 /**
  * TraceBuilder identity + determinism inputs. The identity strings name the
  * capturing service, so they are per-instance config (config-not-constants);
- * the demo values are `CIVICAITOOLS_TRACE_CONFIG` below.
+ * the reference deployment's values are `CIVICAITOOLS_TRACE_CONFIG` below.
+ * The identity fields are required; `now`/`randomBytes` are operational
+ * fallbacks, not identity, and default to the runtime's clock and CSPRNG.
  */
 export interface TraceBuilderConfig {
   /** OTel resource `service.name`. */
@@ -105,8 +109,8 @@ export interface TraceBuilderConfig {
   randomBytes?: TraceRandomBytes;
 }
 
-/** Demo default: the civicaitools.org reference deployment's capture
- *  identity. */
+/** The civicaitools.org reference deployment's capture identity. Passed
+ *  explicitly by the reference app — never applied as a default. */
 export const CIVICAITOOLS_TRACE_CONFIG: TraceBuilderConfig = {
   serviceName: 'civic-ai-tools-website',
   scopeName: 'civic-ai-tools-evidence',
@@ -130,7 +134,7 @@ export class TraceBuilder {
   private readonly now: TraceClock;
   private readonly randomBytes: TraceRandomBytes;
 
-  constructor(config: TraceBuilderConfig = CIVICAITOOLS_TRACE_CONFIG) {
+  constructor(config: TraceBuilderConfig) {
     this.config = config;
     this.now = config.now ?? Date.now;
     this.randomBytes = config.randomBytes ?? defaultRandomBytes;

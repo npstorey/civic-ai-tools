@@ -37,10 +37,10 @@ test('civic registry: three demo sources with reference coordinates', () => {
 });
 
 test('dataset-keyed split: socrata is dataset-keyed; DC and Boston are aggregate; unknown is neither', () => {
-  assert.equal(isDatasetKeyedSource('socrata'), true);
-  assert.equal(isDatasetKeyedSource('data-commons'), false);
-  assert.equal(isDatasetKeyedSource('boston-opencontext'), false);
-  assert.equal(isDatasetKeyedSource('eurostat'), false);
+  assert.equal(isDatasetKeyedSource('socrata', CIVIC_SOURCE_REGISTRY), true);
+  assert.equal(isDatasetKeyedSource('data-commons', CIVIC_SOURCE_REGISTRY), false);
+  assert.equal(isDatasetKeyedSource('boston-opencontext', CIVIC_SOURCE_REGISTRY), false);
+  assert.equal(isDatasetKeyedSource('eurostat', CIVIC_SOURCE_REGISTRY), false);
 });
 
 test('default resolver mirrors the demo MCP tool names', () => {
@@ -60,20 +60,20 @@ test('default resolver mirrors the demo MCP tool names', () => {
 // --- Display helpers (ported from the reference test suite) ---
 
 test('displayNameForSource maps known source ids to friendly names', () => {
-  assert.equal(displayNameForSource('socrata'), 'Socrata');
-  assert.equal(displayNameForSource('data-commons'), 'Data Commons');
-  assert.equal(displayNameForSource('boston-opencontext'), 'Boston OpenContext');
+  assert.equal(displayNameForSource('socrata', CIVIC_SOURCE_REGISTRY), 'Socrata');
+  assert.equal(displayNameForSource('data-commons', CIVIC_SOURCE_REGISTRY), 'Data Commons');
+  assert.equal(displayNameForSource('boston-opencontext', CIVIC_SOURCE_REGISTRY), 'Boston OpenContext');
 });
 
 test('displayNameForSource capitalises unknown ids so new sources render sensibly', () => {
-  assert.equal(displayNameForSource('boston-core'), 'Boston Core');
-  assert.equal(displayNameForSource('eurostat'), 'Eurostat');
+  assert.equal(displayNameForSource('boston-core', CIVIC_SOURCE_REGISTRY), 'Boston Core');
+  assert.equal(displayNameForSource('eurostat', CIVIC_SOURCE_REGISTRY), 'Eurostat');
 });
 
 test('displayNameForSource coerces missing sourceId to Socrata (pre-M9.3 packages)', () => {
-  assert.equal(displayNameForSource(undefined), 'Socrata');
-  assert.equal(displayNameForSource(null), 'Socrata');
-  assert.equal(displayNameForSource(''), 'Socrata');
+  assert.equal(displayNameForSource(undefined, CIVIC_SOURCE_REGISTRY), 'Socrata');
+  assert.equal(displayNameForSource(null, CIVIC_SOURCE_REGISTRY), 'Socrata');
+  assert.equal(displayNameForSource('', CIVIC_SOURCE_REGISTRY), 'Socrata');
 });
 
 test('displayNameForSource honors a caller-supplied registry', () => {
@@ -89,8 +89,8 @@ test('displayNameForSource honors a caller-supplied registry', () => {
 });
 
 test('formatDataSourcesSummary returns null for missing or empty arrays', () => {
-  assert.equal(formatDataSourcesSummary(undefined), null);
-  assert.equal(formatDataSourcesSummary([]), null);
+  assert.equal(formatDataSourcesSummary(undefined, CIVIC_SOURCE_REGISTRY), null);
+  assert.equal(formatDataSourcesSummary([], CIVIC_SOURCE_REGISTRY), null);
 });
 
 test('formatDataSourcesSummary renders single-source DC package without Socrata leakage', () => {
@@ -102,7 +102,7 @@ test('formatDataSourcesSummary renders single-source DC package without Socrata 
       accessTimestamp: NOW,
     },
   ];
-  assert.equal(formatDataSourcesSummary(entries), 'Data Commons');
+  assert.equal(formatDataSourcesSummary(entries, CIVIC_SOURCE_REGISTRY), 'Data Commons');
 });
 
 test('formatDataSourcesSummary dedupes multiple Socrata dataset entries into one name', () => {
@@ -124,7 +124,7 @@ test('formatDataSourcesSummary dedupes multiple Socrata dataset entries into one
       accessTimestamp: NOW,
     },
   ];
-  assert.equal(formatDataSourcesSummary(entries), 'Socrata');
+  assert.equal(formatDataSourcesSummary(entries, CIVIC_SOURCE_REGISTRY), 'Socrata');
 });
 
 test('formatDataSourcesSummary joins multi-source entries with a middle-dot separator', () => {
@@ -144,7 +144,7 @@ test('formatDataSourcesSummary joins multi-source entries with a middle-dot sepa
       accessTimestamp: NOW,
     },
   ];
-  assert.equal(formatDataSourcesSummary(entries), 'Socrata · Data Commons');
+  assert.equal(formatDataSourcesSummary(entries, CIVIC_SOURCE_REGISTRY), 'Socrata · Data Commons');
 });
 
 test('formatDataSourcesSummary renders a three-source analysis in active-source order', () => {
@@ -171,7 +171,7 @@ test('formatDataSourcesSummary renders a three-source analysis in active-source 
     },
   ];
   assert.equal(
-    formatDataSourcesSummary(entries),
+    formatDataSourcesSummary(entries, CIVIC_SOURCE_REGISTRY),
     'Socrata · Data Commons · Boston OpenContext',
   );
 });

@@ -12,6 +12,7 @@ import {
   DATHERE_CONTENT_PROFILE,
   ENVIRONMENT_EXTENSION_KEY,
   CIVICAITOOLS_ENVIRONMENT_HOST,
+  CIVICAITOOLS_ENVIRONMENT_CONFIG,
   deriveProducerProfile,
   selectContentCanonicalization,
   deriveSummaryEmission,
@@ -55,8 +56,12 @@ test('summary emission: only under the datHere profile, and only when non-empty'
   assert.equal(deriveSummaryEmission('datHere', ''), undefined);
 });
 
-test('environment extension: OES §9.1.1 field set, host from config (demo default)', () => {
-  const env = buildDatHereEnvironment('openai/gpt-4o', 'https://socrata-mcp.civicaitools.org');
+test('environment extension: OES §9.1.1 field set, host from config (reference config, passed explicitly)', () => {
+  const env = buildDatHereEnvironment(
+    'openai/gpt-4o',
+    'https://socrata-mcp.civicaitools.org',
+    CIVICAITOOLS_ENVIRONMENT_CONFIG,
+  );
   assert.deepEqual(env, {
     modelVersion: 'openai/gpt-4o',
     temperature: 0,
@@ -89,7 +94,7 @@ test('composite derivation: datHere input produces all four envelope fields', ()
     summary: 'Short summary.',
     skillMcpServerUrl: 'https://socrata-mcp.civicaitools.org',
     extensions: { 'org.civicaitools.notebook': { cells: [] } },
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
   assert.equal(fields.producerProfile, DATHERE_PRODUCER_PROFILE);
   assert.equal(fields.contentCanonicalization, DATHERE_AG_JUPYTER_CANONICALIZATION);
   assert.equal(fields.summary, 'Short summary.');
@@ -105,7 +110,7 @@ test('composite derivation: non-datHere input emits neither summary nor environm
   const fields = deriveDatHereEnvelopeFields({
     model: 'openai/gpt-4o',
     summary: 'Provided but not emitted.',
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
   assert.equal(fields.producerProfile, undefined);
   assert.equal(fields.contentCanonicalization, LEGACY_JSON_CANONICALIZATION);
   assert.equal(fields.summary, undefined);
@@ -144,7 +149,7 @@ function datHereAssembled(model = 'openai/gpt-4o', summary = 'Test summary.') {
     extensions: {
       'org.civicaitools.notebook': { nbformat: 4, nbformat_minor: 5, cells: [] },
     },
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
   return buildEnvelope(
     envelopeInput({
       cost: { model },
@@ -176,7 +181,7 @@ test('assembled non-datHere envelope emits neither summary nor environment exten
   const fields = deriveDatHereEnvelopeFields({
     model: 'openai/gpt-4o',
     summary: 'Provided but off-envelope.',
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
   const { pkg } = buildEnvelope(
     envelopeInput({ captureMethod: 'chat-flow-stream', ...fields }),
   );

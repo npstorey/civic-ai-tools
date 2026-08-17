@@ -1,6 +1,6 @@
 {
   "name": "@typedstandards/civic-typed-harness",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Civic-domain harness for Typed Standards evidence packages — the DOMAIN layer of the ADR-0021 format/domain line: civic PROV-O vocabulary and provenance builder, datHere envelope-policy derivations, and the capture machinery (trace builder, skill-metadata extraction, data-source population, adversarial rubric core). Derives; @typedstandards/produce-core assembles.",
   "license": "MIT",
   "author": "Nathan Storey",

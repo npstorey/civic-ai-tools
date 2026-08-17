@@ -3,6 +3,57 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.2.0 — 2026-08-17
+
+**Breaking: identity-bearing config is now required**
+([civic-ai-tools#153](https://github.com/npstorey/civic-ai-tools/issues/153) —
+the [ADR-0024](../../docs/adr/0024-evidence-path-configuration.md) posture at
+the domain layer: configuration that reaches signed output is absent-or-error,
+never defaulted). 0.1.0 applied the civicaitools.org reference deployment's
+identity via silently-applied default parameters; 0.2.0 removes every such
+default, so a bare call fails typecheck instead of attributing output to the
+reference deployment.
+
+- **Breaking — the config parameter is required in five API families:**
+  - `buildProvenanceGraph(trace, input, config)` — `ProvenanceConfig`
+    required (was defaulted to `CIVICAITOOLS_PROVENANCE_CONFIG`).
+  - `buildDatHereEnvironment(model, skillMcpServerUrl, config)` and
+    `deriveDatHereEnvelopeFields(input, config)` —
+    `DatHereEnvironmentConfig` required (was defaulted to
+    `CIVICAITOOLS_ENVIRONMENT_CONFIG`; the `host` field lands under the
+    envelope hash, so this default was the sharpest instance).
+  - `new TraceBuilder(config)` — `TraceBuilderConfig` required (was
+    defaulted to `CIVICAITOOLS_TRACE_CONFIG`). The intra-config
+    `now`/`randomBytes` operational fallbacks are unchanged — they are not
+    identity.
+  - `isDatasetKeyedSource(sourceId, registry)`,
+    `displayNameForSource(sourceId, registry)`,
+    `formatDataSourcesSummary(entries, registry)` — `CivicSourceRegistry`
+    required in all three (was defaulted to `CIVIC_SOURCE_REGISTRY`).
+- **Breaking — the model-agent description is omitted when unset.** The
+  module-private fallback description is deleted.
+  `ProvenanceConfig.modelAgentDescription` stays optional, but when unset the
+  PROV model agent now carries **no** `dcterms:description` field at all
+  (honest absence, not an empty string — ADR-0024 §B) instead of the fallback
+  text. `CIVICAITOOLS_PROVENANCE_CONFIG` now carries
+  `modelAgentDescription: 'Large language model via OpenRouter'`, so
+  reference-config output is byte-identical to 0.1.0.
+- **The reference-value exports remain.** `CIVICAITOOLS_PROVENANCE_CONFIG`,
+  `CIVICAITOOLS_ENVIRONMENT_CONFIG`, `CIVICAITOOLS_TRACE_CONFIG`, and
+  `CIVIC_SOURCE_REGISTRY` are still exported — they are the reference
+  deployment's values, which the reference app passes explicitly; they are no
+  longer applied on any caller's behalf.
+- **Migration:** pass the exported reference configs to reproduce 0.1.x
+  behavior byte-for-byte (see README §"Migrating from 0.1.x"). Golden
+  fixtures are unchanged; byte parity now comes from tests passing the
+  reference config explicitly, never from restored defaults.
+- **Enforcement:** `src/required-config.assert.ts` encodes the acceptance
+  condition — one `@ts-expect-error` bare call per changed signature —
+  so reintroducing a default parameter fails `npm run typecheck` and
+  `npm run build`.
+- Dependencies unchanged (`@typedstandards/produce-core` `^0.2.0` remains the
+  single runtime dependency).
+
 ## 0.1.0 — 2026-08-02
 
 Initial release: the civic **domain harness** for Typed Standards evidence

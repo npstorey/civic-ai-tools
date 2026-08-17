@@ -55,6 +55,8 @@ import {
 import {
   TraceBuilder,
   CIVICAITOOLS_TRACE_CONFIG,
+  CIVICAITOOLS_PROVENANCE_CONFIG,
+  CIVICAITOOLS_ENVIRONMENT_CONFIG,
   hash,
   extractSkillMetadata,
   buildDataSources,
@@ -209,7 +211,7 @@ function deriveAndAssemble() {
     outputText: OUTPUT,
     model: MODEL,
     portal: PORTAL,
-  });
+  }, CIVICAITOOLS_PROVENANCE_CONFIG);
 
   const fields = deriveDatHereEnvelopeFields({
     model: MODEL,
@@ -223,7 +225,7 @@ function deriveAndAssemble() {
     extensions: {
       'org.civicaitools.notebook': { nbformat: 4, nbformat_minor: 5, cells: [], metadata: {} },
     },
-  });
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
 
   const input: EnvelopeInput = {
     packageId: PACKAGE_ID,

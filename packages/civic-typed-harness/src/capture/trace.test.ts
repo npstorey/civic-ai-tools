@@ -165,8 +165,8 @@ test('attribute typing: numbers → intValue strings, booleans → boolValue', (
   assert.deepEqual(byKey['model'], { stringValue: 'openai/gpt-4o' });
 });
 
-test('default construction (no injected clock/RNG) still produces well-formed ids', () => {
-  const tb = new TraceBuilder();
+test('reference config without injected clock/RNG still produces well-formed ids (operational fallbacks)', () => {
+  const tb = new TraceBuilder(CIVICAITOOLS_TRACE_CONFIG);
   assert.match(tb.traceId, /^[0-9a-f]{32}$/);
   assert.match(tb.rootSpanId, /^[0-9a-f]{16}$/);
 });

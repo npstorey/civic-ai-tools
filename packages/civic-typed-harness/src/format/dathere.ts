@@ -33,9 +33,10 @@ export const DATHERE_PRODUCER_PROFILE = 'ai-assisted-analysis/datHere';
 /** Reverse-DNS key of the auto-emitted environment extension. */
 export const ENVIRONMENT_EXTENSION_KEY = 'org.civicaitools.environment';
 
-/** Demo default for the environment extension's `host` field: the
- *  civicaitools.org reference deployment. Config-not-constants — every other
- *  instance supplies its own via `DatHereEnvironmentConfig`. */
+/** The civicaitools.org reference deployment's value for the environment
+ *  extension's `host` field. Config-not-constants — every instance supplies
+ *  its own via `DatHereEnvironmentConfig`; the `host` lands under the
+ *  envelope hash, so it is never applied silently. */
 export const CIVICAITOOLS_ENVIRONMENT_HOST = 'civicaitools.org';
 
 /** Per-instance configuration for the environment extension. */
@@ -44,7 +45,8 @@ export interface DatHereEnvironmentConfig {
   host: string;
 }
 
-/** The civicaitools.org demo default. */
+/** The civicaitools.org reference deployment's values. Passed explicitly by
+ *  the reference app — never applied as a default. */
 export const CIVICAITOOLS_ENVIRONMENT_CONFIG: DatHereEnvironmentConfig = {
   host: CIVICAITOOLS_ENVIRONMENT_HOST,
 };
@@ -108,7 +110,7 @@ export function deriveSummaryEmission(
 export function buildDatHereEnvironment(
   model: string,
   skillMcpServerUrl: string | undefined,
-  config: DatHereEnvironmentConfig = CIVICAITOOLS_ENVIRONMENT_CONFIG,
+  config: DatHereEnvironmentConfig,
 ): Record<string, unknown> {
   const mcpServers: Array<{ url: string; name?: string }> = [];
   if (skillMcpServerUrl) {
@@ -158,7 +160,7 @@ export interface DatHereEnvelopeFields {
  */
 export function deriveDatHereEnvelopeFields(
   input: DatHerePolicyInput,
-  config: DatHereEnvironmentConfig = CIVICAITOOLS_ENVIRONMENT_CONFIG,
+  config: DatHereEnvironmentConfig,
 ): DatHereEnvelopeFields {
   const extensions: Record<string, unknown> = { ...(input.extensions ?? {}) };
   if (input.contentProfile === DATHERE_CONTENT_PROFILE) {

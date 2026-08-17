@@ -50,7 +50,7 @@ export default [
         {
           name: 'process',
           message:
-            'No environment reads — every instance-naming value (platform agent, server URLs, environment host, trace service.name) is a typed config input with the demo values as exported defaults.',
+            'No environment reads — every instance-naming value (platform agent, server URLs, environment host, trace service.name) is a required typed config input; the reference deployment values are exported for explicit use, never applied as defaults.',
         },
         {
           name: 'Buffer',

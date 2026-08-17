@@ -97,7 +97,7 @@ test('no environment reads anywhere in shipped source', () => {
     const code = readFileSync(file, 'utf8');
     assert.ok(
       !ENV_RE.test(code),
-      `${rel(file)} reads process.env — instance values are typed config inputs with exported demo defaults.`,
+      `${rel(file)} reads process.env — instance values are required typed config inputs; the reference values are exported for explicit use, never applied as defaults.`,
     );
   }
 });

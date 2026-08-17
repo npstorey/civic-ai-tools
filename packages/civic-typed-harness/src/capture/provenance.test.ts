@@ -1,18 +1,24 @@
 // Provenance-builder tests: (1) byte parity against golden output captured
 // from the reference implementation (civic-ai-tools-website
 // src/lib/evidence/provenance.ts, 2026-08-01) — the port must reproduce the
-// reference graph BYTE-FOR-BYTE with the demo default config, because the
-// legacy envelope chain hashes JSON.stringify output; (2) the M9.3
-// agent-pruning behavior ported from the reference test suite; (3) config
-// injection — the platform agent, source registry, and model description are
-// per-instance inputs.
+// reference graph BYTE-FOR-BYTE with the reference config passed explicitly
+// (0.2.0: config is required, never defaulted), because the legacy envelope
+// chain hashes JSON.stringify output; (2) the M9.3 agent-pruning behavior
+// ported from the reference test suite; (3) config injection — the platform
+// agent, source registry, and model description are per-instance inputs;
+// (4) honest omission — a config without modelAgentDescription emits a model
+// agent with no description field at all.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { buildProvenanceGraph, type ProvenanceConfig } from './provenance.ts';
+import {
+  buildProvenanceGraph,
+  CIVICAITOOLS_PROVENANCE_CONFIG,
+  type ProvenanceConfig,
+} from './provenance.ts';
 
 const FIXTURE = JSON.parse(
   readFileSync(
@@ -24,7 +30,11 @@ const FIXTURE = JSON.parse(
 // --- Byte parity against the reference implementation ---
 
 test('golden parity: multi-source trace reproduces the reference graph byte-for-byte', () => {
-  const graph = buildProvenanceGraph(FIXTURE.trace, FIXTURE.provenanceInput);
+  const graph = buildProvenanceGraph(
+    FIXTURE.trace,
+    FIXTURE.provenanceInput,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
   assert.equal(
     JSON.stringify(graph),
     JSON.stringify(FIXTURE.provenanceGraph),
@@ -42,6 +52,7 @@ test('golden parity: empty trace + pre-computed outputHash reproduces the refere
       model: 'anthropic/claude-3-5-sonnet',
       portal: 'data.cityofnewyork.us',
     },
+    CIVICAITOOLS_PROVENANCE_CONFIG,
   );
   assert.equal(JSON.stringify(graph), JSON.stringify(FIXTURE.provenanceGraphMinimal));
 });
@@ -114,13 +125,13 @@ function mcpAgents(graph: Array<{ '@id': string; [k: string]: unknown }>): strin
 
 test('Data-Commons-only analysis emits only the data-commons MCP agent', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('data-commons', 'get_observations', 'span-1')]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:data-commons']);
 });
 
 test('Socrata-only analysis emits only the socrata MCP agent', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('socrata', 'get_data', 'span-1')]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:socrata']);
 });
 
@@ -130,7 +141,7 @@ test('Multi-source analysis emits both MCP agents', () => {
     toolSpan('socrata', 'get_data', 'span-1'),
     toolSpan('data-commons', 'get_observations', 'span-2'),
   ]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const agents = mcpAgents(graph['@graph']);
   assert.equal(agents.length, 2);
   assert.ok(agents.includes('urn:civic-evidence:mcp-server:socrata'));
@@ -139,7 +150,7 @@ test('Multi-source analysis emits both MCP agents', () => {
 
 test('Boston OpenContext only analysis emits only the boston-opencontext MCP agent with correct title', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('boston-opencontext', 'ckan__search_datasets', 'span-1')]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:boston-opencontext']);
 
   const bostonAgentNode = graph['@graph'].find(
@@ -158,7 +169,7 @@ test('Three-source analysis emits all three MCP agents, no stray sources', () =>
     toolSpan('data-commons', 'get_observations', 'span-2'),
     toolSpan('boston-opencontext', 'ckan__aggregate_data', 'span-3'),
   ]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const agents = mcpAgents(graph['@graph']);
   assert.equal(agents.length, 3);
   assert.ok(agents.includes('urn:civic-evidence:mcp-server:socrata'));
@@ -168,7 +179,7 @@ test('Three-source analysis emits all three MCP agents, no stray sources', () =>
 
 test('Skill fetched but no tool calls emits no MCP agent', () => {
   const trace = traceOf([skillSpan('skill-hash')]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), []);
 });
 
@@ -185,7 +196,7 @@ test('Pre-M9.1 Socrata span without mcp.source attribute still emits the socrata
     }),
   };
   const trace = traceOf([skillSpan('skill-hash'), legacyToolSpan]);
-  const graph = buildProvenanceGraph(trace, BASE_INPUT);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:socrata']);
 });
 
@@ -259,8 +270,8 @@ test('config injection: model agent description is a config input', () => {
   assert.equal(model!['dcterms:description'], 'Large language model via a self-hosted gateway');
 });
 
-test('default config: demo platform agent and OpenRouter description are the defaults', () => {
-  const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT);
+test('reference config: demo platform agent and OpenRouter description come from the exported config, passed explicitly', () => {
+  const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const platform = graph['@graph'].find(
     (n) => n['@id'] === 'urn:civic-evidence:platform:civic-ai-tools',
   );
@@ -269,4 +280,21 @@ test('default config: demo platform agent and OpenRouter description are the def
   assert.equal(platform!['civic:url'], 'https://civicaitools.org');
   const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-evidence:model:'));
   assert.equal(model!['dcterms:description'], 'Large language model via OpenRouter');
+});
+
+test('honest omission: config without modelAgentDescription emits a model agent with no description field', () => {
+  const config: ProvenanceConfig = {
+    platformAgent: CIVICAITOOLS_PROVENANCE_CONFIG.platformAgent,
+    sourceRegistry: CIVICAITOOLS_PROVENANCE_CONFIG.sourceRegistry,
+    // modelAgentDescription deliberately unset.
+  };
+  const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, config);
+  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-evidence:model:'));
+  assert.ok(model, 'model agent node should be on the graph');
+  assert.equal(model!['dcterms:title'], BASE_INPUT.model);
+  // The field is ABSENT — not empty string, not a fallback value.
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(model, 'dcterms:description'),
+    'model agent must carry no dcterms:description when the config supplies none',
+  );
 });
