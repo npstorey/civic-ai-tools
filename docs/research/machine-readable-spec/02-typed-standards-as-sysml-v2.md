@@ -2,7 +2,7 @@
 
 *A formalization study: re-expressing the Typed Standards Specification (v0.1.x) in the 2023+ KerML-based textual notation of SysML v2*
 
-**Companion to:** `docs/architecture/typed-standards-specification.md` (normative for package shape) and the parallel SHACL formalization. This document is descriptive, not normative — it models the spec; it does not amend it.
+**Companion to:** `docs/architecture/typed-standards-specification.md` (normative for package shape) and the parallel SHACL formalization. This document is descriptive, not normative — it models the spec; it does not amend it. Where this prose and the shipped `sysml/typed-standards.sysml` differ, **the shipped model is the reference rendition**; a doc/artifact alignment pass (2026-08-18, from the formalization-review findings) replaced an earlier `verify X by Y` shorthand with the artifact's `verification def` form throughout the listings, matched the BuildState metadata casing, and restated the `nodeId` derivation as the artifact's deliberately-unbound derived attribute. The artifact still carries a few enrichments (doc strings, inline citations) the excerpts here abridge.
 
 > **Revision note (adversarial-review pass).** This revision fixes SysML v2 textual-notation syntax errors flagged by review (`syntaxValid: false`): metadata annotations now use the prefix `metadata` / `#` form rather than an `@…;` body statement; redefinitions use the single canonical `:>>` (or `redefines`) form with retyping/re-bounding in one clause; state-machine transitions use the `transition … first … accept … if … then …` shape with the source named by `first`; requirement obligations that were English prose inside `require constraint { … }` are moved to `doc` strings (KerML constraint bodies are boolean expressions, not prose); requirement decomposition uses nested `requirement` usages rather than a non-existent `includes` keyword; `interface def`s declare ends and are *used* (not defined) with `connect`; and short-name (`<'…'>`) and declared-name references are made consistent. Substantively, values not present in the spec have been removed or relabeled as explicitly open modeling choices (see the call-outs in §1.3 and §10.3): the `signer.bindingTier` enum now matches the spec's registry vocabulary; the `captureMethod` hyphenated label-strings are carried as string-valued constants with a note explaining why they are not enum identifiers; an invented "deprecated 2026-04-28" annotation on `claude-code-self-report` has been removed; and `ZIPCodeTabulationArea` is spelled as the spec spells it.
 
@@ -193,7 +193,7 @@ package Envelope {
 
 Two modeling notes the spec forces:
 
-- **`nodeId` is derived, not stored.** The spec is explicit (§6.2, glossary): `nodeId` ≡ the envelope hash, by construction, not a separately-stored field. SysML expresses this as a `derived` attribute computed by a `calc`, not a stored `attribute` (§3.4 below). This faithfully prevents the model from implying that an implementation persists a `nodeId` independent of the hash.
+- **`nodeId` is derived, not stored.** The spec is explicit (§6.2, glossary): `nodeId` ≡ the envelope hash, by construction, not a separately-stored field. SysML expresses this as a `derived` attribute left deliberately unbound — the derivation is stated in its doc comment, and the hash computation itself (`Verification::computeEnvelopeHash`, a `calc def` signature per §3.4 below) is out-of-band, matching the shipped model. This faithfully prevents the model from implying that an implementation persists a `nodeId` independent of the hash.
 - **Best-effort proofs → `0..1`.** Signing, timestamping, and Rekor inclusion are best-effort (§8.3.1, §8.3.2): on failure the column persists null. The structural primitive therefore types `timestamp` and `rekorInclusionProof` at `0..1`, and the *signed-package conformance* requirement (not the structure) demands them — modeled in §8 below.
 
 ### 3.3 The structural primitive `SignedNode`
@@ -217,8 +217,11 @@ package Envelope {
         ref item metadata             : Metadata[1];
 
         // --- nodeId is DERIVED, not stored (C-nodeId-derived) ---
-        derived attribute nodeId : Primitives::HexDigest[1]
-            = Verification::computeEnvelopeHash(self);
+        derived attribute nodeId : Primitives::HexDigest[1];
+            // nodeId IS the envelope hash by construction (ADR-0009 §3):
+            // computed out-of-band at verify time
+            // (Verification::computeEnvelopeHash), never stored. Left
+            // unbound — the computation is out-of-band.
     }
 }
 ```
@@ -365,32 +368,32 @@ This is exactly the kind of structural distinction redefinition exists for: the 
 ```sysml
 package Taxonomy {
     // content/analysis/v1 — BUILT. Carries the §8.1 EvidencePackage payload.
-    #BuildState::built
+    #BuildState::Built
     part def AnalysisNode :> ContentNode {
         attribute redefines type default "content/analysis/v1";
         ref item payload : ContentAnalysis::EvidencePackage[1];
     }
 
     // content/claim/v1 — RESERVED (Q5). Carries a typed-claim JSON-LD payload (§8.11).
-    #BuildState::reserved
+    #BuildState::Reserved
     part def ClaimNode :> ContentNode {
         attribute redefines type default "content/claim/v1";
         ref item payload : TypedClaims::ClaimDocument[1];
     }
 
-    #BuildState::reserved part def QuestionNode :> ContentNode {
+    #BuildState::Reserved part def QuestionNode :> ContentNode {
         attribute redefines type default "content/question/v1"; }   // payload undefined in-spec
-    #BuildState::reserved part def EvidenceNode :> ContentNode {
+    #BuildState::Reserved part def EvidenceNode :> ContentNode {
         attribute redefines type default "content/evidence/v1"; }   // payload undefined in-spec
 
     // Host / tool self-declarations — RESERVED (Q22). NOT a peer family (§7.4).
-    #BuildState::reserved part def HostNode :> ContentNode {
+    #BuildState::Reserved part def HostNode :> ContentNode {
         attribute redefines type default "content/host/v1"; }
-    #BuildState::reserved part def HostPolicyNode :> ContentNode {
+    #BuildState::Reserved part def HostPolicyNode :> ContentNode {
         attribute redefines type default "content/hostPolicy/v1"; }
-    #BuildState::reserved part def HostTermsOfUseNode :> ContentNode {
+    #BuildState::Reserved part def HostTermsOfUseNode :> ContentNode {
         attribute redefines type default "content/hostTermsOfUse/v1"; }
-    #BuildState::reserved part def ToolNode :> ContentNode {
+    #BuildState::Reserved part def ToolNode :> ContentNode {
         attribute redefines type default "content/tool/v1"; }
 }
 ```
@@ -404,21 +407,21 @@ package Taxonomy {
     import ScalarValues::*;
 
     // ---- Lifecycle relations (publisher-only) ----
-    #BuildState::ratified
+    #BuildState::Ratified
     part def WithdrawsNode :> AttestationNode {
         attribute redefines type default "attestation/withdraws/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute reason      : String[1];               // required, non-empty (C-WITHDRAWS-REASON)
         attribute effectiveAt : Primitives::Iso8601[0..1]; // defaults to envelope timestamp
     }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def ReinstatesNode :> AttestationNode {
         attribute redefines type default "attestation/reinstates/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute priorWithdrawalNodeId : Primitives::HexDigest[1];  // immediately-prior withdrawal
         attribute reason : String[0..1];
     }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def SupersedesNode :> AttestationNode {
         attribute redefines type default "attestation/supersedes/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
@@ -429,13 +432,13 @@ package Taxonomy {
     // the prior revision (targetNodeId) stays a valid point-in-time snapshot. Single-
     // parent / linear lineage at v0.1; the diff between two revisions is a derivable
     // human view, not a signed object.
-    #BuildState::ratified
+    #BuildState::Ratified
     part def RevisesNode :> AttestationNode {
         attribute redefines type default "attestation/revises/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute successorNodeId : Primitives::HexDigest[1];        // this revision (child)
     }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def PublishesNode :> AttestationNode {
         attribute redefines type default "attestation/publishes/v1";
         // publisher-only OR delegated-publisher (Q20) — delegated predicate not yet formalizable.
@@ -445,7 +448,7 @@ package Taxonomy {
     }
 
     // ---- Reference / location / derivation (any-with-binding) ----
-    #BuildState::ratified
+    #BuildState::Ratified
     part def LocatedAtNode :> AttestationNode {
         attribute redefines type default "attestation/locatedAt/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
@@ -457,7 +460,7 @@ package Taxonomy {
         attribute contentLength     : Integer[0..1];
         attribute availability      : String[0..1];            // (unspecified)
     }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def WasDerivedFromNode :> AttestationNode {
         attribute redefines type default "attestation/wasDerivedFrom/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
@@ -465,53 +468,53 @@ package Taxonomy {
         // derivationMethod MUST carry a ts:AnalyticalDerivation (classification-laundering guard).
         ref item derivationMethod : TypedClaims::AnalyticalDerivation[1];
     }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def AnswersQuestionNode :> AttestationNode {
         attribute redefines type default "attestation/answersQuestion/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def SupportedByNode :> AttestationNode {
         attribute redefines type default "attestation/supportedBy/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def OpposedByNode :> AttestationNode {
         attribute redefines type default "attestation/opposedBy/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
 
     // ---- Claim-to-claim ----
-    #BuildState::ratified
+    #BuildState::Ratified
     part def CorroboratesNode :> AttestationNode {
         attribute redefines type default "attestation/corroborates/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         attribute scope     : String[1];   // (unspecified)
         attribute reasoning : String[0..1]; }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def ContradictsNode :> AttestationNode {
         attribute redefines type default "attestation/contradicts/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         attribute scope     : String[1];   // (unspecified)
         attribute reasoning : String[0..1]; }
-    #BuildState::ratified
+    #BuildState::Ratified
     part def EndorsesNode :> AttestationNode {
         attribute redefines type default "attestation/endorses/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute scope : String[1]; }      // (unspecified)
 
     // ---- Authority-bearing (specific-role-required) ----
-    #BuildState::ratified
+    #BuildState::Ratified
     part def CertifiesNode :> AttestationNode {
         attribute redefines type default "attestation/certifies/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute certificationScheme : String[1];  // (unspecified)
         attribute validityWindow      : String[1]; } // temporal range (unspecified)
-    #BuildState::ratified
+    #BuildState::Ratified
     part def EvaluatesNode :> AttestationNode {
         attribute redefines type default "attestation/evaluates/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute methodology   : String[1];  // (unspecified) — Q26
         attribute scoringRubric : String[1];  // (unspecified)
         ref item  results       : String[1]; } // (unspecified)
-    #BuildState::ratified
+    #BuildState::Ratified
     part def ConformsNode :> AttestationNode {
         attribute redefines type default "attestation/conforms/v1";
         // §8.12.1: self-attestation OR specific-role-required (third-party)
@@ -531,7 +534,7 @@ package TypedClaims {
     import Primitives::*;
     import ScalarValues::*;
 
-    // §8.11 specified, not built (Q5) — applied at definition level below via #BuildState::specified.
+    // §8.11 specified, not built (Q5) — applied at definition level below via #BuildState::Specified.
 
     // §8.11 supporting shapes ------------------------------------------
     item def TemporalInterval {                              // time:Interval w/ begin+end
@@ -655,13 +658,13 @@ The closed enums (`TrendDirection`, `ComparisonRel`) are the one place SysML's e
 
 ### 5.1 Build state as `metadata def`
 
-The green/yellow/orange build-state coloring is a cross-cutting annotation, exactly what `metadata def` is for. Defining it once lets every definition carry a `#BuildState::built` (etc.) prefix annotation.
+The green/yellow/orange build-state coloring is a cross-cutting annotation, exactly what `metadata def` is for. Defining it once lets every definition carry a `#BuildState::Built` (etc.) prefix annotation.
 
 ```sysml
 package BuildState {
     enum def Level { built; partial; reserved; ratified; specified; }
     metadata def State :> Metadata::ModelMetadata { attribute level : Level; }
-    // Convenience annotations used as prefixes throughout: #BuildState::built, etc.
+    // Convenience annotations used as prefixes throughout: #BuildState::Built, etc.
     metadata built     : State { :>> level = Level::built;     }
     metadata partial   : State { :>> level = Level::partial;   }
     metadata reserved  : State { :>> level = Level::reserved;  }
@@ -720,7 +723,7 @@ package CaptureAndProfiles {
             attribute redefines payload.metadata.contentProfile default ContentProfile::'default';
         }
         // §8.7 — contentProfile == "datHere"; producerProfile = ai-assisted-analysis/datHere.
-        #BuildState::built
+        #BuildState::Built
         variant part datHereProfile : AnalysisNode {
             attribute redefines payload.metadata.contentProfile default ContentProfile::datHere;
             // req6: summary REQUIRED + non-empty (C-SUMMARY-CONDITIONAL).
@@ -1207,8 +1210,11 @@ package Conformance {
         doc /* SHOULD-level: best-effort RFC 3161 timestamp and Rekor inclusion. */
         require constraint { (pkg.timestamp != null) and (pkg.rekorInclusionProof != null) }
     }
-    verify CarryTimestampAndRekor by Verification::CheckTimestamp;
-    verify CarryTimestampAndRekor by Verification::CheckRekorInclusion;  // #7, #8
+    verification def <'V-tsa-rekor'> VerifyCarryTimestampAndRekor {
+        objective { verify requirement : CarryTimestampAndRekor; }
+        perform action checkTs    : Verification::CheckTimestamp;        // #7
+        perform action checkRekor : Verification::CheckRekorInclusion;   // #8
+    }
 
     // §8.3.3 / §10.3 — full TSA cert-chain + RFC 6962 inclusion against PINNED anchors.
     requirement def <'R-pinned-anchors'> ValidateAgainstPinnedAnchors {
@@ -1218,8 +1224,11 @@ package Conformance {
               Rekor P-256 log key + signed checkpoint. */
         require constraint : ValidatesPinnedAnchors { in impl = ver; }
     }
-    verify ValidateAgainstPinnedAnchors by Verification::CheckTimestamp;
-    verify ValidateAgainstPinnedAnchors by Verification::CheckRekorInclusion;
+    verification def <'V-pinned-anchors'> VerifyValidateAgainstPinnedAnchors {
+        objective { verify requirement : ValidateAgainstPinnedAnchors; }
+        perform action checkTs    : Verification::CheckTimestamp;
+        perform action checkRekor : Verification::CheckRekorInclusion;
+    }
 
     // §8.1.1 / ADR-0016 §B / §10.1 — vcsRef is an attested self-declaration; verify-on-fetch
     // outcomes are informative signals, never hard failures.
@@ -1276,7 +1285,10 @@ package Conformance {
               "ai-assisted-analysis/datHere". */
         require constraint : ProfileConsistencyShape;
     }
-    verify ProfileConsistency by Verification::ValidateStructure;   // ProfileConsistencyShape assertion
+    verification def <'V-profile-consistency'> VerifyProfileConsistency {
+        objective { verify requirement : ProfileConsistency; }
+        perform action validate : Verification::ValidateStructure;       // ProfileConsistencyShape assertion
+    }
 
     // §8.7 — summary REQUIRED under datHere.
     requirement def <'R-summary-datHere'> SummaryRequiredUnderDatHere {
@@ -1643,80 +1655,80 @@ package Taxonomy {
     }
 
     // ---- content/* sub-types ----
-    #BuildState::built part def AnalysisNode :> ContentNode {
+    #BuildState::Built part def AnalysisNode :> ContentNode {
         attribute redefines type default "content/analysis/v1";
         ref item payload : ContentAnalysis::EvidencePackage[1]; }
-    #BuildState::reserved part def ClaimNode :> ContentNode {
+    #BuildState::Reserved part def ClaimNode :> ContentNode {
         attribute redefines type default "content/claim/v1";
         ref item payload : TypedClaims::ClaimDocument[1]; }
-    #BuildState::reserved part def QuestionNode :> ContentNode { attribute redefines type default "content/question/v1"; }
-    #BuildState::reserved part def EvidenceNode :> ContentNode { attribute redefines type default "content/evidence/v1"; }
-    #BuildState::reserved part def HostNode :> ContentNode { attribute redefines type default "content/host/v1"; }
-    #BuildState::reserved part def HostPolicyNode :> ContentNode { attribute redefines type default "content/hostPolicy/v1"; }
-    #BuildState::reserved part def HostTermsOfUseNode :> ContentNode { attribute redefines type default "content/hostTermsOfUse/v1"; }
-    #BuildState::reserved part def ToolNode :> ContentNode { attribute redefines type default "content/tool/v1"; }
+    #BuildState::Reserved part def QuestionNode :> ContentNode { attribute redefines type default "content/question/v1"; }
+    #BuildState::Reserved part def EvidenceNode :> ContentNode { attribute redefines type default "content/evidence/v1"; }
+    #BuildState::Reserved part def HostNode :> ContentNode { attribute redefines type default "content/host/v1"; }
+    #BuildState::Reserved part def HostPolicyNode :> ContentNode { attribute redefines type default "content/hostPolicy/v1"; }
+    #BuildState::Reserved part def HostTermsOfUseNode :> ContentNode { attribute redefines type default "content/hostTermsOfUse/v1"; }
+    #BuildState::Reserved part def ToolNode :> ContentNode { attribute redefines type default "content/tool/v1"; }
 
     // ---- attestation/* sub-types (§8.12.1 ratified table, 16 rows incl. revises) ----
-    #BuildState::ratified part def WithdrawsNode :> AttestationNode {
+    #BuildState::Ratified part def WithdrawsNode :> AttestationNode {
         attribute redefines type default "attestation/withdraws/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute reason : String[1]; attribute effectiveAt : Primitives::Iso8601[0..1]; }
-    #BuildState::ratified part def ReinstatesNode :> AttestationNode {
+    #BuildState::Ratified part def ReinstatesNode :> AttestationNode {
         attribute redefines type default "attestation/reinstates/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute priorWithdrawalNodeId : Primitives::HexDigest[1]; attribute reason : String[0..1]; }
-    #BuildState::ratified part def SupersedesNode :> AttestationNode {
+    #BuildState::Ratified part def SupersedesNode :> AttestationNode {
         attribute redefines type default "attestation/supersedes/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute successorNodeId : Primitives::HexDigest[1]; }
-    #BuildState::ratified part def RevisesNode :> AttestationNode {           // §8.10.5 / ADR-0016 §C — neutral succession, NO deprecation signal
+    #BuildState::Ratified part def RevisesNode :> AttestationNode {           // §8.10.5 / ADR-0016 §C — neutral succession, NO deprecation signal
         attribute redefines type default "attestation/revises/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute successorNodeId : Primitives::HexDigest[1]; }               // targetNodeId = prior revision (single-parent, linear at v0.1)
-    #BuildState::ratified part def PublishesNode :> AttestationNode {
+    #BuildState::Ratified part def PublishesNode :> AttestationNode {
         attribute redefines type default "attestation/publishes/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;   // OR delegated (Q20)
         attribute publicationHost : String[1]; attribute releasedAt : Primitives::Iso8601[1]; }
-    #BuildState::ratified part def LocatedAtNode :> AttestationNode {
+    #BuildState::Ratified part def LocatedAtNode :> AttestationNode {
         attribute redefines type default "attestation/locatedAt/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         attribute uri : Primitives::UriString[1]; attribute targetContentHash : Primitives::ContentHash[1];  // Q48 resolved 2026-08-03
         attribute contentLength : Integer[0..1]; attribute availability : String[0..1]; }
-    #BuildState::ratified part def WasDerivedFromNode :> AttestationNode {
+    #BuildState::Ratified part def WasDerivedFromNode :> AttestationNode {
         attribute redefines type default "attestation/wasDerivedFrom/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         ref item derivationMethod : TypedClaims::AnalyticalDerivation[1]; }   // launder guard (conditional)
-    #BuildState::ratified part def AnswersQuestionNode :> AttestationNode {
+    #BuildState::Ratified part def AnswersQuestionNode :> AttestationNode {
         attribute redefines type default "attestation/answersQuestion/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
-    #BuildState::ratified part def SupportedByNode :> AttestationNode {
+    #BuildState::Ratified part def SupportedByNode :> AttestationNode {
         attribute redefines type default "attestation/supportedBy/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
-    #BuildState::ratified part def OpposedByNode :> AttestationNode {
+    #BuildState::Ratified part def OpposedByNode :> AttestationNode {
         attribute redefines type default "attestation/opposedBy/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding; }
-    #BuildState::ratified part def CorroboratesNode :> AttestationNode {
+    #BuildState::Ratified part def CorroboratesNode :> AttestationNode {
         attribute redefines type default "attestation/corroborates/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         attribute scope : String[1]; attribute reasoning : String[0..1]; }
-    #BuildState::ratified part def ContradictsNode :> AttestationNode {
+    #BuildState::Ratified part def ContradictsNode :> AttestationNode {
         attribute redefines type default "attestation/contradicts/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
         attribute scope : String[1]; attribute reasoning : String[0..1]; }
-    #BuildState::ratified part def EndorsesNode :> AttestationNode {
+    #BuildState::Ratified part def EndorsesNode :> AttestationNode {
         attribute redefines type default "attestation/endorses/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute scope : String[1]; }
-    #BuildState::ratified part def CertifiesNode :> AttestationNode {
+    #BuildState::Ratified part def CertifiesNode :> AttestationNode {
         attribute redefines type default "attestation/certifies/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute certificationScheme : String[1]; attribute validityWindow : String[1]; }
-    #BuildState::ratified part def EvaluatesNode :> AttestationNode {
+    #BuildState::Ratified part def EvaluatesNode :> AttestationNode {
         attribute redefines type default "attestation/evaluates/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         attribute methodology : String[1]; attribute scoringRubric : String[1];
         ref item results : String[1]; }
-    #BuildState::ratified part def ConformsNode :> AttestationNode {
+    #BuildState::Ratified part def ConformsNode :> AttestationNode {
         attribute redefines type default "attestation/conforms/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
         assert constraint { (authorizationRule == AuthorizationRule::self_attestation)
@@ -1798,7 +1810,7 @@ package CaptureAndProfiles {
     variation part def AnalysisNodeVariant :> AnalysisNode {        // §8.7 datHere variation
         variant part defaultProfile : AnalysisNode {
             attribute redefines payload.metadata.contentProfile default ContentProfile::'default'; }
-        #BuildState::built
+        #BuildState::Built
         variant part datHereProfile : AnalysisNode {
             attribute redefines payload.metadata.contentProfile default ContentProfile::datHere;
             attribute redefines payload.summary : String[1];
@@ -1992,26 +2004,29 @@ package Conformance {
 
     requirement def <'R-sign-ed25519ph'> SignWithEd25519ph { subject pkg : Envelope::SignedNode;
         require constraint { pkg.sig.algorithm == "Ed25519ph" } }
-    requirement signWithEd25519phReq : SignWithEd25519ph; satisfy signWithEd25519phReq by signedNodeRef;  verify SignWithEd25519ph by Verification::CheckSignature;
+    requirement signWithEd25519phReq : SignWithEd25519ph; satisfy signWithEd25519phReq by signedNodeRef;
+    verification def VerifySignEd25519ph { objective { verify requirement : SignWithEd25519ph; } perform action check : Verification::CheckSignature; }
 
     requirement def <'R-signingKeyId-eq-kid'> SigningKeyIdEqualsKid { subject pkg : Envelope::SignedNode;
         require constraint { pkg.metadata.signingKeyId == pkg.sig.kid } }
-    requirement signingKeyIdEqualsKidReq : SigningKeyIdEqualsKid; satisfy signingKeyIdEqualsKidReq by signedNodeRef;  verify SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;
+    requirement signingKeyIdEqualsKidReq : SigningKeyIdEqualsKid; satisfy signingKeyIdEqualsKidReq by signedNodeRef;
+    verification def VerifySigningKeyIdEqualsKid { objective { verify requirement : SigningKeyIdEqualsKid; } perform action check : Verification::CheckSigningKeyIdConsistency; }
 
     requirement def <'R-signer-crosscheck'> SignerIdentityCrossCheck { subject pkg : Envelope::SignedNode;
         assume constraint { pkg.signer != null }
         doc /* sig.kid resolved via registry signerIdentity == signer.identifier; mismatch => REJECT (#14, out-of-band join). */
         require constraint { pkg.signer.identifier == pkg.signer.identifier } }
-    requirement signerIdentityCrossCheckReq : SignerIdentityCrossCheck; satisfy signerIdentityCrossCheckReq by signedNodeRef;  verify SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;
+    requirement signerIdentityCrossCheckReq : SignerIdentityCrossCheck; satisfy signerIdentityCrossCheckReq by signedNodeRef;
+    verification def VerifySignerIdentityCrossCheck { objective { verify requirement : SignerIdentityCrossCheck; } perform action check : Verification::CrossCheckSignerIdentity; }
 
     requirement def <'R-tsa-rekor'> CarryTimestampAndRekor { subject pkg : Envelope::SignedNode;   // SHOULD
         require constraint { (pkg.timestamp != null) and (pkg.rekorInclusionProof != null) } }
-    verify CarryTimestampAndRekor by Verification::CheckTimestamp;  verify CarryTimestampAndRekor by Verification::CheckRekorInclusion;
+    verification def VerifyCarryTimestampAndRekor { objective { verify requirement : CarryTimestampAndRekor; } perform action checkTs : Verification::CheckTimestamp; perform action checkRekor : Verification::CheckRekorInclusion; }
 
     requirement def <'R-pinned-anchors'> ValidateAgainstPinnedAnchors { subject ver : Implementation;
         doc /* RFC 3161 leaf -> pinned FreeTSA root; RFC 6962 inclusion -> pinned Rekor key. */
         require constraint : ValidatesPinnedAnchors { in impl = ver; } }
-    verify ValidateAgainstPinnedAnchors by Verification::CheckTimestamp;  verify ValidateAgainstPinnedAnchors by Verification::CheckRekorInclusion;
+    verification def VerifyValidateAgainstPinnedAnchors { objective { verify requirement : ValidateAgainstPinnedAnchors; } perform action checkTs : Verification::CheckTimestamp; perform action checkRekor : Verification::CheckRekorInclusion; }
 
     requirement def <'R-vcsRef-informative'> VcsRefVerifyOnFetchInformative { subject ver : Implementation;
         doc /* §8.1.1 / ADR-0016 §B / §10.1 — signature covers the vcsRef ASSERTION, not the fact;
@@ -2024,7 +2039,7 @@ package Conformance {
             (node istype Taxonomy::ContentNode implies size(node.targetNodeId) == 0)
             and (node istype Taxonomy::AttestationNode implies size(node.targetNodeId) >= 1) } }
     requirement familyDiscriminatorReq : FamilyDiscriminator; satisfy familyDiscriminatorReq by contentNodeRef;  satisfy familyDiscriminatorReq by attestationNodeRef;
-    verify FamilyDiscriminator by Verification::ValidateStructure;
+    verification def VerifyFamilyDiscriminator { objective { verify requirement : FamilyDiscriminator; } perform action validate : Verification::ValidateStructure; }
 
     requirement def <'R-captureMethod-vocab'> CaptureMethodVocabularyConformance { subject pkg : Envelope::SignedNode;
         assume constraint : ProfileConsistencyShape;
@@ -2036,7 +2051,7 @@ package Conformance {
     requirement def <'R-profile-consistency'> ProfileConsistency { subject pkg : ContentAnalysis::EvidencePackage;
         doc /* (contentProfile == "datHere") iff producerProfile starts with "ai-assisted-analysis/datHere". */
         require constraint : ProfileConsistencyShape; }
-    verify ProfileConsistency by Verification::ValidateStructure;
+    verification def VerifyProfileConsistency { objective { verify requirement : ProfileConsistency; } perform action validate : Verification::ValidateStructure; }
 
     requirement def <'R-summary-datHere'> SummaryRequiredUnderDatHere { subject pkg : ContentAnalysis::EvidencePackage;
         assume constraint { pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
@@ -2051,7 +2066,8 @@ package Conformance {
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq { subject ver : Implementation;
         doc /* A withdraws from P does not invalidate another party's locatedAt; surface both. */
         require constraint : SurfacesRetention { in impl = ver; } }
-    requirement retentionAsymmetryReqUsage : RetentionAsymmetryReq; satisfy retentionAsymmetryReqUsage by implementationRef;  verify RetentionAsymmetryReq by Verification::CheckLifecycleState;
+    requirement retentionAsymmetryReqUsage : RetentionAsymmetryReq; satisfy retentionAsymmetryReqUsage by implementationRef;
+    verification def VerifyRetentionAsymmetry { objective { verify requirement : RetentionAsymmetryReq; } perform action check : Verification::CheckLifecycleState; }
 
     requirement def <'R-no-silent-delete'> NoSilentDeletion { subject impl : Implementation;
         doc /* No removal of withdrawn nodes except via audited administrative action. */
@@ -2074,7 +2090,8 @@ package Conformance {
         requirement retention          : RetentionAsymmetryReq;
         requirement noTruthScoring     : NoAutomatedTruthScoring;
     }
-    requirement conformantVerifierReq : ConformantVerifier; satisfy conformantVerifierReq by implementationRef;  verify ConformantVerifier by Verification::VerifyNodeFull;
+    requirement conformantVerifierReq : ConformantVerifier; satisfy conformantVerifierReq by implementationRef;
+    verification def VerifyConformantVerifierCase { objective { verify requirement : ConformantVerifier; } perform action full : Verification::VerifyNodeFull; }
 }
 ```
 

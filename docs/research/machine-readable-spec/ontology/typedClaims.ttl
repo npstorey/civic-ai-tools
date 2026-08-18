@@ -20,6 +20,24 @@
 # is recorded so it is known, not worked; reconciliation is deferred to an
 # adoption round.
 #
+# Datatype reconciliation (2026-08-18, resolving the formalization-review
+# finding): fractional-valued properties (level, lowerBound, upperBound,
+# absoluteChange, percentChange, totalsTo, strength) range over
+# union(xsd:decimal, xsd:double), matching the shapes' decimal-or-double
+# choice so a reasoner honoring these ranges and the JSON-LD double parse
+# of Appendix B agree; ts:byteRange aligned to the shapes' two-integer
+# multiset reading (see its comment).
+#
+# Assembly position (registry Q41), made deliberate per the formalization
+# review: this draft reuses established ontologies wherever a suitable term
+# exists — PROV-O (derivation/attribution), OWL-Time (temporal scope),
+# GeoSPARQL (geographic scope), RDF Data Cube (metric/dataset structure),
+# Schema.org, SKOS, Dublin Core Terms — and extends only where the spec's
+# §8.11 semantics have no established home. That reuse is a position on
+# Q41's core-vs-natural-extension-vs-institutional-adapter question, held
+# as a candidate input for the Q41 ADR to ratify or revise, not a
+# resolution of it.
+#
 # Companion: docs/research/machine-readable-spec/shapes/typed-standards.shacl.ttl — validation shapes
 # across the envelope AND typed-claims layers (its section E carries the
 # SHACL-prescribed §8.11 claim shapes). This file carries the typed-claims
@@ -366,18 +384,23 @@ ts:method a owl:ObjectProperty ;
 ts:level a owl:DatatypeProperty ;
     rdfs:label "level"@en ;
     rdfs:domain ts:ConfidenceStatement ;
-    rdfs:range xsd:decimal ;
+    # Fractional ranges are union(xsd:decimal, xsd:double) throughout — aligned
+    # 2026-08-18 with the shapes' decimal-or-double widening (JSON-LD 1.1
+    # parses fractions as double), resolving the review finding that a
+    # reasoner honoring decimal-only ranges would make Appendix B
+    # range-inconsistent.
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] ;
     rdfs:comment "Confidence level (e.g. 0.95)."@en .
 
 ts:lowerBound a owl:DatatypeProperty ;
     rdfs:label "lower bound"@en ;
     rdfs:domain ts:ConfidenceStatement ;
-    rdfs:range xsd:decimal .
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] .
 
 ts:upperBound a owl:DatatypeProperty ;
     rdfs:label "upper bound"@en ;
     rdfs:domain ts:ConfidenceStatement ;
-    rdfs:range xsd:decimal .
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] .
 
 ts:methodReference a owl:DatatypeProperty ;
     rdfs:label "method reference"@en ;
@@ -419,7 +442,7 @@ ts:outputFile a owl:DatatypeProperty ;
 ts:byteRange a owl:DatatypeProperty ;
     rdfs:label "byte range"@en ;
     rdfs:domain ts:SourceOutputSpan ;
-    rdfs:comment "Two-element [start, end] byte offsets into the output file. Modeled as an rdf:List in RDF; a JSON array in JSON-LD."@en .
+    rdfs:comment "Two-element [start, end] byte offsets into the output file. Reconciled 2026-08-18 with the shapes' reading: validated as a two-value multiset of integers (a bare JSON array in JSON-LD 1.1), with the caveat that RDF multisets lose [start, end] order — the shapes' documented Core limitation. An rdf:List (@list container) representation would preserve order but is not what the shapes validate; choosing it is deferred to the Q10/Q41 adoption round, where the published JSON-LD context settles the container."@en .
 
 ##############################################################################
 # Properties — claim-subtype specifics  (§8.11.5)
@@ -452,12 +475,12 @@ ts:magnitude a owl:ObjectProperty ;
 ts:absoluteChange a owl:DatatypeProperty ;
     rdfs:label "absolute change"@en ;
     rdfs:domain ts:Magnitude ;
-    rdfs:range xsd:decimal .
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] .
 
 ts:percentChange a owl:DatatypeProperty ;
     rdfs:label "percent change"@en ;
     rdfs:domain ts:Magnitude ;
-    rdfs:range xsd:decimal .
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] .
 
 ts:unit a owl:ObjectProperty ;
     rdfs:label "unit"@en ;
@@ -497,7 +520,7 @@ ts:components a owl:ObjectProperty ;
 ts:totalsTo a owl:DatatypeProperty ;
     rdfs:label "totals to"@en ;
     rdfs:domain ts:CompositionClaim ;
-    rdfs:range xsd:decimal ;
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] ;
     rdfs:comment "What the components sum to: 1.0 for proportions, total dollars for budgets, etc."@en .
 
 ts:metricA a owl:ObjectProperty ;
@@ -516,7 +539,7 @@ ts:relationshipType a owl:ObjectProperty ;
 ts:strength a owl:DatatypeProperty ;
     rdfs:label "strength"@en ;
     rdfs:domain ts:RelationshipClaim ;
-    rdfs:range xsd:decimal .
+    rdfs:range [ a rdfs:Datatype ; owl:unionOf ( xsd:decimal xsd:double ) ] .
 
 ts:assertion a owl:DatatypeProperty ;
     rdfs:label "assertion"@en ;
