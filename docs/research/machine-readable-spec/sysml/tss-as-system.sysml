@@ -1,13 +1,13 @@
 // ============================================================================
 //  The Typed Standards Specification as a system of interest
 //
-//  Source view : research/05-typed-standards-spec-architecture-views.md
+//  Source view : docs/research/machine-readable-spec/05-typed-standards-spec-architecture-views.md
 //                (needs / functional / logical views + traceability, zooming
 //                into the Typed Standards Spec component of 04)
-//  Parent view : research/sysml/system-of-interest.sysml (the whole
+//  Parent view : docs/research/machine-readable-spec/sysml/system-of-interest.sysml (the whole
 //                civic-ai-tools system, from 04) — this file refines its
 //                SpecCorpus component and traces onto its Needs
-//  Detail model: research/sysml/typed-standards.sysml (the spec's normative
+//  Detail model: docs/research/machine-readable-spec/sysml/typed-standards.sysml (the spec's normative
 //                content as structure / behavior / requirements)
 //  Reconciled  : 2026-08-18, with its source view 05, against the spec's
 //                2026-08-03 revision (the v0.1.4 reconciliation) and the
@@ -32,7 +32,7 @@ package TypedStandardsAsSystem {
     doc /* The Typed Standards Specification treated as its own system of
          interest — stakeholders, needs, functions, logical components, and
          their traceability, transcribed from
-         research/05-typed-standards-spec-architecture-views.md (exploratory
+         docs/research/machine-readable-spec/05-typed-standards-spec-architecture-views.md (exploratory
          sketch; where it and the spec disagree, the spec governs). One of
          the parallel research views: this file answers to 05, which answers
          to the spec (typed-standards-specification.md; the leave-behind

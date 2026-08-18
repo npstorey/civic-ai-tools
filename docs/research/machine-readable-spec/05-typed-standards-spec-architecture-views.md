@@ -6,10 +6,10 @@ and decomposes it recursively into its own needs, functions, and logical compone
 Derived from the consolidated formal model ([`00`](./00-formal-model.md)), the SHACL and
 SysML framings ([`01`](./01-typed-standards-as-shacl.md), [`02`](./02-typed-standards-as-sysml-v2.md)),
 their comparison ([`03`](./03-formalism-comparison.md)), and validated against the spec
-itself, [`docs/architecture/typed-standards-specification.md`](../docs/architecture/typed-standards-specification.md)
+itself, [`docs/architecture/typed-standards-specification.md`](../../architecture/typed-standards-specification.md)
 (re-checked 2026-08-18 against the v0.1.4 reconciliation revision). An earlier pass
 validated against the leave-behind summary
-([`typed-standards-summary.md`](../docs/architecture/typed-standards-summary.md)), which
+([`typed-standards-summary.md`](../../architecture/typed-standards-summary.md)), which
 now carries a "Companion, not authority" banner — last updated 2026-05-26; the spec has
 moved since and governs — so the summary is no longer this document's validation target.
 Where this sketch and the spec disagree, the spec governs. This document and the
@@ -166,7 +166,7 @@ directly: the §8.8.1 commitment view's required/optional marks reflect its
 commitment-view builder, and the §8.1.2 placement note cites its envelope builder.
 Hence the schema and behavior edges to it.
 
-The exploratory study artifacts in this `research/` bundle (dashed) are **views over the
+The exploratory study artifacts in this bundle (`docs/research/machine-readable-spec/`, dashed) are **views over the
 same spec content** — split out of the diagram above so the formalized-by fan-in stays
 legible. Every dashed edge reads "formalized by"; the labeled edge carries the SysML
 model's behavior-coverage boundary.

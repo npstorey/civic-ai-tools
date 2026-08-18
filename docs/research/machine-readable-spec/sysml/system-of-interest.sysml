@@ -1,11 +1,11 @@
 // ============================================================================
 //  System of interest — civic-ai-tools and its immediate ecosystem
 //
-//  Source view : research/04-architecture-views.md (needs / functional /
+//  Source view : docs/research/machine-readable-spec/04-architecture-views.md (needs / functional /
 //                logical views + cross-layer traceability)
-//  Refined by  : research/sysml/tss-as-system.sysml (the Typed Standards
+//  Refined by  : docs/research/machine-readable-spec/sysml/tss-as-system.sysml (the Typed Standards
 //                Spec component decomposed as its own system, from 05)
-//  Detail model: research/sysml/typed-standards.sysml (the spec's normative
+//  Detail model: docs/research/machine-readable-spec/sysml/typed-standards.sysml (the spec's normative
 //                content as structure / behavior / requirements)
 //  Reconciled  : 2026-08-18 against spec v0.1.4 and ADR-0019..0024 (package
 //                topology: npm workspace + civic-typed-harness; the two
@@ -23,7 +23,7 @@
 package SystemOfInterest {
     doc /* The civic-ai-tools system as a whole — stakeholders, needs,
          functions, logical components, and their traceability, transcribed
-         from research/04-architecture-views.md (exploratory sketch, not a
+         from docs/research/machine-readable-spec/04-architecture-views.md (exploratory sketch, not a
          decided spec). One of the parallel research views: this file answers
          to 04, which answers to the README, end-state-vision.md, and the ADR
          corpus. Solid edges of 04's traceability view are modeled as satisfy

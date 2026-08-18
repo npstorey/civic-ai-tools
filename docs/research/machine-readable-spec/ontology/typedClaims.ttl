@@ -20,7 +20,7 @@
 # is recorded so it is known, not worked; reconciliation is deferred to an
 # adoption round.
 #
-# Companion: research/shapes/typed-standards.shacl.ttl — validation shapes
+# Companion: docs/research/machine-readable-spec/shapes/typed-standards.shacl.ttl — validation shapes
 # across the envelope AND typed-claims layers (its section E carries the
 # SHACL-prescribed §8.11 claim shapes). This file carries the typed-claims
 # layer's OWL semantics — class hierarchy and property definitions — rather

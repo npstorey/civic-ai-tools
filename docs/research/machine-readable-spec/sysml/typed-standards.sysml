@@ -2,10 +2,10 @@
 //  Typed Standards Specification v0.1.x — SysML v2 model
 //
 //  Normative source : docs/architecture/typed-standards-specification.md
-//  Companion prose  : research/02-typed-standards-as-sysml-v2.md (formalization
-//                     study), research/05-typed-standards-spec-architecture-views.md
+//  Companion prose  : docs/research/machine-readable-spec/02-typed-standards-as-sysml-v2.md (formalization
+//                     study), docs/research/machine-readable-spec/05-typed-standards-spec-architecture-views.md
 //                     (needs / functional / logical views)
-//  Sibling view     : research/shapes/typed-standards.shacl.ttl (instance-level
+//  Sibling view     : docs/research/machine-readable-spec/shapes/typed-standards.shacl.ttl (instance-level
 //                     graph-shape validation — SHACL's authoritative territory)
 //
 //  Package map
@@ -34,7 +34,8 @@ package TypedStandards {
 
          Normative source: docs/architecture/typed-standards-specification.md.
          Descriptive model; the spec text is normative. One of the parallel
-         research views over the spec (research/00-05); each view answers to
+         research views over the spec (00-05 in this bundle,
+         docs/research/machine-readable-spec/); each view answers to
          the spec, not to the other views.
 
          Modeling boundaries:
