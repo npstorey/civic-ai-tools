@@ -6,6 +6,8 @@
 
 > **Revision note (adversarial-review pass).** This revision fixes SysML v2 textual-notation syntax errors flagged by review (`syntaxValid: false`): metadata annotations now use the prefix `metadata` / `#` form rather than an `@…;` body statement; redefinitions use the single canonical `:>>` (or `redefines`) form with retyping/re-bounding in one clause; state-machine transitions use the `transition … first … accept … if … then …` shape with the source named by `first`; requirement obligations that were English prose inside `require constraint { … }` are moved to `doc` strings (KerML constraint bodies are boolean expressions, not prose); requirement decomposition uses nested `requirement` usages rather than a non-existent `includes` keyword; `interface def`s declare ends and are *used* (not defined) with `connect`; and short-name (`<'…'>`) and declared-name references are made consistent. Substantively, values not present in the spec have been removed or relabeled as explicitly open modeling choices (see the call-outs in §1.3 and §10.3): the `signer.bindingTier` enum now matches the spec's registry vocabulary; the `captureMethod` hyphenated label-strings are carried as string-valued constants with a note explaining why they are not enum identifiers; an invented "deprecated 2026-04-28" annotation on `claude-code-self-report` has been removed; and `ZIPCodeTabulationArea` is spelled as the spec spells it.
 
+> **Revision note (2026-08-18 reconciliation pass).** Reconciled against the spec's v0.1.4 revision (2026-08-03, Appendix G) and the post-baseline ADR corpus. The attestation taxonomy gains `attestation/revises/v1` — the ratified §8.12.1 table now has 16 sub-types; `revises` is neutral version succession, deliberately distinct from `supersedes`' corrective replacement (§8.10.5, ADR-0016 §C). The §6 state machines are rebuilt on §8.10.6's orthogonal dimensions: visibility is `sealed` / `public` (state labels renamed from `committed` / `published` per ADR-0016 §A — the verbs "publish"/"seal" and the `attestation/publishes/v1` relationship are unchanged, and the legacy labels remain accepted input aliases, never emitted); lifecycle status (`active` / `withdrawn` / `superseded`) is its own machine; and ADR-0020 §B's signing-status axis (`unsigned` → `signed`) is modeled as a third orthogonal machine — an unsigned node reaches neither `sealed` nor `public`. The envelope model gains the optional attested `vcsRef` self-declaration (§8.1.1, ADR-0016 §B) and a matching verify-on-fetch conformance entry; the `attestation/locatedAt/v1` payload fingerprint is now `targetContentHash` (Q48 resolved 2026-08-03); the `metadata.contentProfile` placement this model chose is now ratified spec text (§8.1.2 placement note, 2026-08-03 — no wire change); and the `claude-code-self-report` deprecation is now spec-stated (§8.6 marks it legacy, deprecated as of 2026-04-28, retained in the vocabulary), so the annotation the earlier pass removed as unsupported returns with a spec citation.
+
 ---
 
 ## 1. Thesis — what SysML v2 formalizes well, and where it is the wrong tool
@@ -24,13 +26,13 @@ The notation is textual, has a normative abstract syntax, supports model-level e
 
 ### 1.2 What surface of Typed Standards SysML v2 formalizes *well*
 
-The Typed Standards Specification is, structurally, four things at once: (a) a **data schema** (the evidence package, the cryptographic envelope, the attestation payloads), (b) a **behavior specification** (the §9.2 ordered verification check list, the publisher pipeline), (c) a **set of lifecycle state machines** (publication / withdrawal / reinstatement / supersession; key activation / deprecation / revocation; notebook provenance), and (d) a **normative-requirements corpus** (the MUST / SHOULD / MAY clauses of §9, §8.x, §5.1).
+The Typed Standards Specification is, structurally, four things at once: (a) a **data schema** (the evidence package, the cryptographic envelope, the attestation payloads), (b) a **behavior specification** (the §9.2 ordered verification check list, the publisher pipeline), (c) a **set of lifecycle state machines** (the §8.10.6 orthogonal dimensions — visibility `sealed` → `public`, lifecycle status `active` / `withdrawn` / `superseded`, plus ADR-0020's signing-status axis `unsigned` → `signed`; location; key activation / deprecation / revocation; notebook provenance), and (d) a **normative-requirements corpus** (the MUST / SHOULD / MAY clauses of §9, §8.x, §5.1).
 
 SysML v2 is a strong fit for (b), (c), and (d), and an *adequate-but-secondary* fit for (a):
 
 - **System structure (a).** `part def` / `item def` / `attribute def` with typed attributes and explicit multiplicities capture the envelope, package, and payload shapes faithfully — including the family taxonomy via `:>` and the conditional presence of `targetNodeId` via redefinition. This is good but not the *unique* strength; SHACL and JSON Schema also do schema. SysML adds value here only because the same model also carries behavior and requirements.
 - **Behavior (b).** The §9.2 check list is an *ordered procedure with control flow, branch outcomes, and delegation to external systems*. `action def` with `first … then …` succession and delegation to external `part`s expresses this directly — including the modeling of crypto/log steps as actions *delegated to external system parts* (the TSA, Rekor, the publisher's trust registry). SHACL cannot model an ordered procedure at all.
-- **Lifecycle state machines (c).** `state def` with `entry`/`do`/`exit` and `transition … first … accept … if … then …` is the natural home for §8.10's append-only lifecycle, §8.3.3's key-status lifecycle, and §8.7.4's notebook-provenance axis — including the *derived-view* nature of the state (current status computed from the latest signer-matched attestation) and the **retention-asymmetry** property (a withdrawal that does not retract a third party's `locatedAt`).
+- **Lifecycle state machines (c).** `state def` with `entry`/`do`/`exit` and `transition … first … accept … if … then …` is the natural home for §8.10's append-only lifecycle, §8.3.3's key-status lifecycle, and §8.7.4's notebook-provenance axis — including the *derived-view* nature of the state (current status computed from the latest signer-matched attestation), the **retention-asymmetry** property (a withdrawal that does not retract a third party's `locatedAt`), and §8.10.6's insistence that visibility, lifecycle status, and (per ADR-0020) signing status are *separate orthogonal dimensions* — each gets its own machine, so the orthogonality is structural rather than asserted.
 - **Requirements traceability (d).** `requirement def` with `subject`, `assume constraint`, `require constraint`, plus `satisfy` / `verify` edges, captures §9's conformance clauses *as first-class model elements wired to the structures and behaviors that discharge them*. This is the surface SysML v2 formalizes best and the one no other formalism in this project's stack reaches: SHACL shapes are themselves the constraints, but they have no separate notion of "this requirement is satisfied by that structural element and verified by that check action."
 
 ### 1.3 What SysML v2 is *poor* at — and why both formalizations are needed
@@ -80,7 +82,7 @@ package TypedStandards {
     package TypedClaims;         // §8.11 ts: vocabulary (specified, not built; Q5)
     package CaptureAndProfiles;  // captureMethod + content/producer profiles
     package Infrastructure;      // trust registry, TSA, Rekor, BlobRef, pinned anchors
-    package Lifecycle;           // §8.10 state machines: publication/withdrawal/location/keys
+    package Lifecycle;           // §8.10/§8.10.6 state machines: visibility/lifecycle-status/signing/location/keys
     package Verification;        // §9.2 ordered check list as behavior
     package Conformance;         // §9 requirement def blocks + satisfy/verify traceability
 
@@ -117,7 +119,7 @@ package Primitives {
 
     // §8.1.5 — four-field content-addressable reference.
     item def BlobRef {
-        attribute ref         : String[1];   // "blob:sha256:<64-hex>"
+        attribute 'ref'       : String[1];   // "blob:sha256:<64-hex>" ('ref' is a SysML keyword; quoted in declaration)
         attribute url         : UriString[1]; // HTTPS, no auth
         attribute contentType : String[1];    // MIME; distinct from QEC contentType
         attribute size        : Integer[1];   // fetched byte length MUST equal
@@ -127,7 +129,7 @@ package Primitives {
 
 ### 3.2 The cryptographic envelope — `sig`, signer, timestamp, Rekor
 
-Section 8.3 of the spec specifies the signature envelope (`sig`), the identity claim (`signer`), the RFC 3161 timestamp, and the Rekor inclusion proof. These are `item def`s (they are data carried *inside* a signed node, not standalone parts).
+Section 8.3 of the spec specifies the signature envelope (`sig`), the identity claim (`signer`), the RFC 3161 timestamp, and the Rekor inclusion proof; §8.1.1 adds the optional attested `vcsRef` self-declaration (ADR-0016 §B). These are `item def`s (they are data carried *inside* a signed node, not standalone parts).
 
 ```sysml
 package Envelope {
@@ -158,6 +160,19 @@ package Envelope {
         attribute checkpoint     : Base64[1];           // transparency-dev Go signed-note
     }
 
+    // §8.1.1 / ADR-0016 §B — optional attested VCS self-declaration, covered by the
+    // envelope hash + signature ("the signature attests the *assertion*, not the *fact*").
+    // Verify-on-fetch is out-of-band; a mismatch or unreachable revision is INFORMATIVE,
+    // not a hard failure (mirrors locatedAt, §8.10.2); the weight a consumer places on an
+    // unverified vcsRef is captureMethod-contextualized (§8.6). §10.1 names the matching
+    // false-VCS-binding adversary.
+    item def VcsRef {
+        attribute repoUrl   : UriString[1];
+        attribute commitSha : HexDigest[1];             // full immutable revision object id
+        attribute path      : String[0..1];             // source artifact within the repository
+        attribute 'ref'     : String[0..1];             // branch/tag — mutable pointer, informative only
+    }
+
     // §8.1.2 — metadata carries the signature-covered labels.
     item def Metadata {
         attribute schemaVersion : String[1] default "0.1.0";
@@ -165,11 +180,12 @@ package Envelope {
         attribute createdAt     : Iso8601[1];
         attribute signingKeyId  : String[1];            // == sig.kid (C-signingKeyId-eq-kid)
         attribute captureMethod : CaptureAndProfiles::CaptureMethodLabel[1];  // §8.6, signature-covered
-        // QEC set; required for content/analysis/v1. Set semantics, >=1 member.
-        attribute contentType   : ContentAnalysis::QecContentType[1..*];
-        // NOTE (open modeling choice; see §10.3 item 1): the spec lists contentProfile as a
-        // top-level field (§8.1.1) yet references metadata.contentProfile (§8.2/§8.7). Modeled
-        // here on Metadata to match the more-cited access path; NOT presented as the settled home.
+        // QEC set (§7.5 framing); not part of the §8.1.2 required field set. Set semantics.
+        attribute contentType   : ContentAnalysis::QecContentType[0..*];
+        // RATIFIED 2026-08-03 (§8.1.2 placement note; formerly the open modeling choice in
+        // §10.3 item 1): contentProfile lives inside metadata — the grandfathered legacy
+        // alias of the top-level producerProfile successor axis. This model documented the
+        // wire correctly; the spec text moved to match it. No wire change.
         attribute contentProfile : CaptureAndProfiles::ContentProfile[0..1];
     }
 }
@@ -191,7 +207,7 @@ package Envelope {
         // --- identity & integrity ---
         attribute type                    : Primitives::UriString[1];  // family + sub-type; first segment decides family
         attribute contentHash             : Primitives::ContentHash[1]; // multihash, sha256 default
-        attribute contentCanonicalization : Primitives::UriString[1];   // names off-log content rule
+        attribute contentCanonicalization : Primitives::UriString[0..1]; // names off-log content rule; RECOMMENDED (v0.1) — pre-v0.1 omits, rule inferred from profile (§8.1.1)
 
         // --- cryptographic envelope ---
         ref item sig                  : SignatureEnvelope[1];
@@ -282,6 +298,9 @@ package ContentAnalysis {
         attribute  trace        : String[0..1];     // OTel-shaped object OR BlobRef
         ref item   traceBlob    : BlobRef[0..1];
         attribute  summary      : String[0..1];     // REQUIRED under datHere (§8.7)
+        // §8.1.1 top-level envelope field; metadata.contentProfile is its grandfathered
+        // legacy alias — consistency invariant discharged by R-profile-consistency (§8).
+        attribute  producerProfile : CaptureAndProfiles::ProducerProfile[0..1];
         ref item   provenance   : String[0..1];     // PROV-O JSON-LD graph
         ref item   extensions   : ExtensionsMap[0..1]; // reverse-DNS-keyed
     }
@@ -310,8 +329,9 @@ package Taxonomy {
         pseudonymous; github; orcid; did_web; notarized; platform; legacy_embedded;
     }
 
-    // §8.12 per-sub-type authorization.
-    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required; }
+    // §8.12 per-sub-type authorization. 'self_attestation' appears only on
+    // attestation/conforms/v1 (§8.12.1: self-attestation OR specific-role-required).
+    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required; self_attestation; }
 
     // The abstract primitive carries an OPTIONAL targetNodeId so each family can re-bound it.
     abstract part def TypedNode :> SignedNode {
@@ -322,6 +342,8 @@ package Taxonomy {
     abstract part def ContentNode :> TypedNode {
         // C-content-no-target: re-bound to multiplicity 0 (forbidden).
         attribute redefines targetNodeId : Primitives::HexDigest[0];
+        // §8.1.1 / ADR-0016 §B — optional attested content-family self-declaration.
+        ref item vcsRef : VcsRef[0..1];
     }
 
     // §7.4 — attestation/* : assertion about another node. targetNodeId REQUIRED >=1.
@@ -375,7 +397,7 @@ package Taxonomy {
 
 ### 4.3 `attestation/*` sub-types and their payloads
 
-The 15-member Q36-ratified table (§8.12.1) becomes 15 specializations of `AttestationNode`, each fixing its `type`, `authorizationRule`, and adding the per-sub-type payload fields. Where the spec gives a field name but no datatype, the model uses a `String`-typed feature and annotates `// (unspecified)` rather than inventing a type — directly honoring the spec's silence.
+The 16-row ratified table (§8.12.1 — the Q36-ratified fifteen plus `attestation/revises/v1`, minted per ADR-0016 §C) becomes 16 specializations of `AttestationNode`, each fixing its `type`, `authorizationRule`, and adding the per-sub-type payload fields. Where the spec gives a field name but no datatype, the model uses a `String`-typed feature and annotates `// (unspecified)` rather than inventing a type — directly honoring the spec's silence.
 
 ```sysml
 package Taxonomy {
@@ -402,6 +424,17 @@ package Taxonomy {
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute successorNodeId : Primitives::HexDigest[1];        // new node
     }
+    // §8.10.5 / ADR-0016 §C — NEUTRAL VERSION SUCCESSION, deliberately distinct from
+    // SupersedesNode's corrective replacement: revises carries NO deprecation signal;
+    // the prior revision (targetNodeId) stays a valid point-in-time snapshot. Single-
+    // parent / linear lineage at v0.1; the diff between two revisions is a derivable
+    // human view, not a signed object.
+    #BuildState::ratified
+    part def RevisesNode :> AttestationNode {
+        attribute redefines type default "attestation/revises/v1";
+        attribute redefines authorizationRule default AuthorizationRule::publisher_only;
+        attribute successorNodeId : Primitives::HexDigest[1];        // this revision (child)
+    }
     #BuildState::ratified
     part def PublishesNode :> AttestationNode {
         attribute redefines type default "attestation/publishes/v1";
@@ -416,10 +449,13 @@ package Taxonomy {
     part def LocatedAtNode :> AttestationNode {
         attribute redefines type default "attestation/locatedAt/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
-        attribute uri           : Primitives::UriString[1];
-        attribute contentHash   : Primitives::ContentHash[1];  // SHOULD match target; mismatch informative
-        attribute contentLength : Integer[0..1];
-        attribute availability  : String[0..1];                // (unspecified)
+        attribute uri               : Primitives::UriString[1];
+        // Ratified name targetContentHash (Q48 resolved 2026-08-03; §8.10.2): the TARGET's
+        // fingerprint as hosted at uri — the structural primitive claims contentHash for the
+        // node's OWN off-log fingerprint. SHOULD match the target; mismatch is informative drift.
+        attribute targetContentHash : Primitives::ContentHash[1];
+        attribute contentLength     : Integer[0..1];
+        attribute availability      : String[0..1];            // (unspecified)
     }
     #BuildState::ratified
     part def WasDerivedFromNode :> AttestationNode {
@@ -478,8 +514,10 @@ package Taxonomy {
     #BuildState::ratified
     part def ConformsNode :> AttestationNode {
         attribute redefines type default "attestation/conforms/v1";
-        // self-attestation OR specific-role-required (third-party)
+        // §8.12.1: self-attestation OR specific-role-required (third-party)
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
+        assert constraint { (authorizationRule == AuthorizationRule::self_attestation)
+                         or (authorizationRule == AuthorizationRule::specific_role_required) }
         attribute standardId : Primitives::UriString[1]; }
 }
 ```
@@ -649,9 +687,11 @@ package CaptureAndProfiles {
         attribute chatFlowStream         : CaptureMethodLabel default "chat-flow-stream";
         attribute claudeCodeJsonlReadback : CaptureMethodLabel default "claude-code-jsonl-readback";
         attribute claudeCodeSelfReport    : CaptureMethodLabel default "claude-code-self-report";
-        // NOTE: the spec lists all three as the v0.1 vocabulary with no deprecation. No
-        // "deprecated" annotation is asserted here (an earlier draft invented a 2026-04-28
-        // deprecation that the spec does not state).
+        // NOTE: all three remain in the v0.1 vocabulary. §8.6 now states the status of
+        // claude-code-self-report in-spec: legacy, deprecated as of 2026-04-28, retained
+        // as a vocabulary value so pre-discipline packages can be labeled truthfully
+        // rather than silently re-described. (An earlier pass removed this annotation
+        // as unsupported; the current spec text supports it.)
     }
 
     // §8.1.1 / §8.7 — content shape axis. 'default' is a reserved word; quoted in declaration.
@@ -700,7 +740,9 @@ The **profile-consistency invariant** (`contentProfile == 'datHere'` iff `produc
 
 Section 8.10 is the surface SysML v2 models *best*. The spec is emphatic that lifecycle "status" is a **derived-view projection over an append-only signed-attestation chain**, not a destructive in-place mutation, and that "current status" is the latest signer-matched attestation in envelope-timestamp order (ties by `nodeId` lexicographic). SysML's `state def` models the *projection* — the states a verifier reports — while the transitions are *triggered by the arrival of signed attestation nodes*, with guards encoding the authorization rules. The append-only substrate is preserved by the `accept` (event) semantics: a transition fires on accepting an attestation, never by mutating prior state.
 
-### 6.1 Content-node lifecycle (publication / withdrawal / reinstatement / supersession)
+Since ADR-0016, §8.10.6 makes the dimensional structure explicit — three orthogonal dimensions of a content node's disposition: **visibility** (`sealed` / `public` — is the content disclosed?), **lifecycle status** (`active` / `withdrawn` / `superseded` — the publisher's standing), and **host display** (host policy — deliberately *not* modeled here: it is a host property, not a node property). ADR-0020 §B adds a **signing-status axis** (`unsigned` → `signed`) orthogonal to all of them. Each protocol dimension is its own `state def` below, which makes the orthogonality structural: `withdrawn` cannot be misread as a visibility value when it lives in a different machine.
+
+### 6.1 Content-node dimensions: visibility, lifecycle status, signing status
 
 ```sysml
 package Lifecycle {
@@ -716,64 +758,108 @@ package Lifecycle {
     calc def hasBinding { in att : AttestationNode; return : Boolean; }
     calc def isDistinctCopyPair { in loc : LocatedAtNode; return : Boolean; }
 
-    // §8.10 — the verifier-reported lifecycle status of a content node.
-    // States are a DERIVED VIEW; transitions fire on accepting signed attestation nodes.
-    state def ContentNodeLifecycle {
-        entry; then committed;
+    // ADR-0020 — the out-of-band signing event (trust-registry-listed key
+    // configured; package Ed25519ph-signed). Not an attestation node.
+    item def KeyConfigured;
 
-        state committed;
-        state published;
+    // §8.10.6 / ADR-0016 §A — VISIBILITY: is the content disclosed?
+    // State labels renamed committed -> sealed, published -> public (labels only:
+    // "Publish"/"Seal" remain the verbs, attestation/publishes/v1 the relationship,
+    // the cryptographic "commitment" noun is unaffected). The legacy labels remain
+    // accepted INPUT ALIASES indefinitely and are never emitted. 'public' is quoted
+    // throughout: it is a SysML visibility keyword.
+    state def ContentNodeVisibility {
+        entry; then sealed;
+
+        state sealed;      // signed + RFC 3161-timestamped + Rekor-logged; content not disclosed
+        state 'public';    // publishes + locatedAt asserted; content disclosed
+
+        // sealed -> public : accept a publishes attestation (publisher-only OR delegated).
+        transition sealed_to_public
+            first sealed
+            accept pub : PublishesNode
+            if signerMatchesTarget(pub) or isDelegatedPublisher(pub)   // Q20: delegated predicate
+            then 'public';
+
+        // No reverse transition: visibility records ASSERTED DISCLOSURE. A withdrawal
+        // moves lifecycle status, never visibility — a withdrawn-formerly-public node
+        // is 'public' + withdrawn (§8.10.6, §8.10.3). A publisher cannot un-disclose
+        // content already on the public log and on other hosts.
+    }
+
+    // §8.10.6 — LIFECYCLE STATUS: the publisher's current standing, a DERIVED VIEW
+    // over the append-only signed attestation chain (§8.10.1); reinstate -> active.
+    state def ContentNodeLifecycleStatus {
+        entry; then active;
+
+        state active;
         state withdrawn;
         state superseded;
 
-        // committed -> published : accept a publishes attestation (publisher-only OR delegated).
-        transition committed_to_published
-            first committed
-            accept pub : PublishesNode
-            if signerMatchesTarget(pub) or isDelegatedPublisher(pub)   // Q20: delegated predicate
-            then published;
-
-        // published -> withdrawn : accept a withdraws attestation (publisher-only, reason non-empty).
-        transition published_to_withdrawn
-            first published
+        // active -> withdrawn : accept a withdraws attestation (publisher-only, reason non-empty).
+        transition active_to_withdrawn
+            first active
             accept w : WithdrawsNode
             if signerMatchesTarget(w) and isNonEmpty(w.reason)
             then withdrawn;
 
-        // withdrawn -> published : accept a reinstates attestation referencing the prior withdrawal.
-        transition withdrawn_to_reinstated
+        // withdrawn -> active : accept a reinstates attestation referencing the prior withdrawal.
+        transition withdrawn_to_active
             first withdrawn
             accept r : ReinstatesNode
             if signerMatchesTarget(r) and pointsAtPriorWithdrawal(r.priorWithdrawalNodeId)
-            then published;
+            then active;
 
-        // published -> superseded : accept a supersedes attestation (publisher-only).
-        transition published_to_superseded
-            first published
+        // active -> superseded : accept a supersedes attestation (publisher-only).
+        transition active_to_superseded
+            first active
             accept s : SupersedesNode
             if signerMatchesTarget(s)
             then superseded;
 
-        // Multi-cycle (published -> withdrawn -> published -> ...) re-uses the two transitions
-        // above; there is no cycle counter and no per-cycle structural change (§8.10.1).
+        // withdrawn -> superseded : §8.10.1 permits withdraw/supersede "at any time".
+        transition withdrawn_to_superseded
+            first withdrawn
+            accept sw : SupersedesNode
+            if signerMatchesTarget(sw)
+            then superseded;
+
+        // Multi-cycle (active -> withdrawn -> active -> ...) re-uses the two transitions
+        // above; no cycle counter, no per-cycle structural change (§8.10.1).
+        // attestation/revises/v1 fires NO transition here: revision succession is
+        // lineage (§8.10.5), not a standing change — the prior revision stays active.
+    }
+
+    // ADR-0020 §B — SIGNING STATUS: unsigned -> signed, orthogonal to visibility
+    // (the same discipline that keeps withdrawn out of the visibility values).
+    // An unsigned node reaches NEITHER sealed NOR 'public': sealed is *defined* as
+    // signed + RFC 3161-timestamped + Rekor-logged, so unsigned is the pre-commitment
+    // condition, confined to local produce-and-inspect (ADR-0020 §C).
+    state def SigningStatus {
+        entry; then unsigned;
+        state unsigned;
+        state signed;
+        transition unsigned_to_signed first unsigned accept k : KeyConfigured then signed;
     }
 }
 ```
 
-Two spec properties are visible directly in this machine:
+Three spec properties are visible directly in these machines:
 
-- **Multi-cycle without a counter.** `published → withdrawn → published → withdrawn → …` re-uses the same two transitions; there is no cycle-count attribute and no per-cycle structural change, matching §8.10.1's "no cycle counter, no DB-shape mutation per cycle, no spec-level cycle limit."
+- **Multi-cycle without a counter.** `active → withdrawn → active → withdrawn → …` re-uses the same two transitions; there is no cycle-count attribute and no per-cycle structural change, matching §8.10.1's "no cycle counter, no DB-shape mutation per cycle, no spec-level cycle limit."
 - **Status derivation, not mutation.** Because transitions `accept` attestation events rather than write a status column, the `state def` is the *view*; the underlying chain is append-only. The "latest signer-matched attestation in envelope-timestamp order (ties by `nodeId` lexicographic)" rule is the *interpreter* that drives `accept` ordering — modeled below as a verification action (§7), not as state.
+- **Orthogonality is structural.** `withdrawn` lives in the lifecycle-status machine, not the visibility machine, so the retention-asymmetry disposition — `public` + `withdrawn` — is representable *by construction*; folding `withdrawn` into visibility would make it unrepresentable, which is exactly §8.10.6's argument for keeping the dimensions apart. The signing-status axis gates entry the same way: only a signed node has a visibility state at all, so "unsigned but sealed" is likewise unrepresentable (ADR-0020 §C).
 
-### 6.2 Visibility / location and the retention-asymmetry property
+### 6.2 Location and the retention-asymmetry property
 
-Location is an *orthogonal* axis: a content node may be at zero, one, or many locations independent of its lifecycle status. The retention-asymmetry property (§8.10.3) is the spec's most distinctive normative behavior — a publisher's withdrawal removes *the publisher's own* status label but does **not** retract a third party's `locatedAt`. SysML models visibility as a second `state def` running in parallel, and the asymmetry as a `constraint def` over the two parallel states.
+Location is a further axis: a content node may be at zero, one, or many locations independent of its lifecycle status — and §8.10.6 derives the *visibility* state from exactly this surface (presence of `attestation/publishes/v1` + `attestation/locatedAt/v1`; the zero-`locatedAt` case is the `sealed` base case). The retention-asymmetry property (§8.10.3) is the spec's most distinctive normative behavior — a publisher's withdrawal removes *the publisher's own* status label but does **not** retract a third party's `locatedAt`: the withdrawn-formerly-public node is `public` + `withdrawn`. SysML models location as its own `state def` running in parallel, and the asymmetry as a `constraint def` over the parallel machines.
 
 ```sysml
 package Lifecycle {
-    // §8.10.2 — location axis, orthogonal to lifecycle status.
-    state def ContentNodeVisibility {
-        entry; then noPublicLocation;   // zero locatedAt = valid private/draft/enterprise base case
+    // §8.10.2 — location axis, orthogonal to lifecycle status; the surface the
+    // visibility dimension derives from (§8.10.6).
+    state def ContentNodeLocation {
+        entry; then noPublicLocation;   // zero locatedAt = valid private/draft/enterprise (sealed) base case
 
         state noPublicLocation;
         state located;
@@ -794,8 +880,9 @@ package Lifecycle {
             then located;
     }
 
-    // §8.10.3 — retention asymmetry as a constraint over the two parallel states.
-    // A withdraws from P does NOT retract a locatedAt signed by backup-host B.
+    // §8.10.3 — retention asymmetry as a constraint over the parallel machines.
+    // A withdraws from P does NOT retract a locatedAt signed by backup-host B;
+    // the node's disposition is 'public' + withdrawn (§8.10.6), never erased.
     constraint def RetentionAsymmetry {
         in withdraw  : WithdrawsNode;
         in backupLoc : LocatedAtNode;
@@ -813,7 +900,7 @@ The `RetentionAsymmetry` `constraint def` is what makes the spec's civic-account
 
 ### 6.3 Trust-registry key lifecycle and notebook provenance
 
-Two further state machines fall straight out of the spec. The key lifecycle (§8.3.3) drives the §9.2 check-5 verdict; the notebook-provenance axis (§8.7.4) is the third orthogonal axis (HOW authored) and gates the conditional presence of the execution extension.
+Two further state machines fall straight out of the spec. The key lifecycle (§8.3.3) drives the §9.2 check-5 verdict; the notebook-provenance axis (§8.7.4) is a further axis orthogonal to `captureMethod` and `contentProfile` (HOW authored) and gates the conditional presence of the execution extension.
 
 ```sysml
 package Lifecycle {
@@ -968,7 +1055,7 @@ package Verification {
     // SHACL-expressible structural constraints (§6.1 of the formal model).
     // SysML records these as constraint def SIGNATURES; SHACL EXECUTES them over instances.
     constraint def FamilyMembership;              // exactly one family, consistent w/ type-URI segment
-    constraint def QecSetWellFormed;              // contentType non-empty; untyped not co-occurring
+    constraint def QecSetWellFormed;              // §7.5: untyped not co-occurring with typed values
     constraint def ProfileConsistencyShape;       // datHere iff producerProfile starts ai-assisted-analysis/datHere
     constraint def RequiredFieldsPresent;         // type, contentHash{sha256}, sig{...}, metadata, captureMethod
     constraint def TargetNodeIdRule;              // required on attestation/*, forbidden on content/*
@@ -1036,6 +1123,7 @@ package Conformance {
     constraint def HonorsLegacyColumns    { in impl : Implementation; }
     constraint def SurfacesRetention      { in impl : Implementation; }
     constraint def PerformsEveryCheck     { in impl : Implementation; }
+    constraint def TreatsVcsRefAsSignal   { in impl : Implementation; }
 }
 ```
 
@@ -1115,6 +1203,20 @@ package Conformance {
     }
     verify ValidateAgainstPinnedAnchors by Verification::CheckTimestamp;
     verify ValidateAgainstPinnedAnchors by Verification::CheckRekorInclusion;
+
+    // §8.1.1 / ADR-0016 §B / §10.1 — vcsRef is an attested self-declaration; verify-on-fetch
+    // outcomes are informative signals, never hard failures.
+    requirement def <'R-vcsRef-informative'> VcsRefVerifyOnFetchInformative {
+        subject ver : Implementation;
+        doc /* The signature covers the vcsRef assertion (part of the envelope hash), not
+              the fact asserted. A verifier MAY resolve repoUrl + commitSha and check the
+              artifact at path against the node's contentHash; a mismatch or unreachable
+              revision is surfaced as an informative signal, never a hard failure (mirrors
+              locatedAt, §8.10.2). The weight a consumer places on an UNVERIFIED vcsRef is
+              captureMethod-contextualized (§8.6; §10.1 false-VCS-binding adversary). */
+        require constraint : TreatsVcsRefAsSignal { in impl = ver; }
+    }
+    satisfy VcsRefVerifyOnFetchInformative by Envelope::VcsRef;   // the attested structure
 }
 ```
 
@@ -1177,7 +1279,7 @@ package Conformance {
               and SHOULD be RFC 3161-timestamped + Rekor-included. */
         require constraint { size(att.targetNodeId) >= 1 }
     }
-    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycle;
+    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycleStatus;
 
     // §8.10.3 — retention asymmetry: withdrawal bounded to the publisher's own pointer/label.
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq {
@@ -1252,6 +1354,11 @@ package Infrastructure {
     import ScalarValues::*;
 
     enum def KeyStatus { active; deprecated; revoked; }
+    // The TRUST-REGISTRY-ENTRY identity surface — one side of §9.2 check #14, joined
+    // against the envelope's signer claim. The §8.8.1 naming note (ratified 2026-08-03)
+    // disambiguates three signerIdentity surfaces; the commitment view's informational
+    // signerIdentity block (never the verification subject) belongs to the unmodeled
+    // §8.8 cross-host surface, not to this item def.
     item def SignerIdentity {
         attribute bindingTier : String[1];   // registry example value: "platform" (§8.3.3)
         attribute identifier  : String[1];
@@ -1338,7 +1445,7 @@ package Infrastructure {
 }
 ```
 
-That `VerificationSystem` *deliberately omits* a `typedstandards.org` part is the SysML encoding of `C-no-central-authority-in-verify` / `R-ver-no-index-query` (§7.3, §8.13): the model makes the absence structural and reviewable, where prose can only assert it. The `?inline=1` self-contained bundle (the offline-verifiability case, §9.4) is the configuration in which `VerificationContext` carries `registry`/`tsaAnchor`/`rekorAnchor`/`attestationGraph` inline and *no* interfaces fire — a second `VerificationSystem` variant with zero external `interface` usages, which is exactly the "fully offline, zero-network" property the Q15 harness demonstrates.
+That `VerificationSystem` *deliberately omits* a `typedstandards.org` part is the SysML encoding of `C-no-central-authority-in-verify` / `R-ver-no-index-query` (§7.3, §8.13): the model makes the absence structural and reviewable, where prose can only assert it. The `?inline=1` self-contained bundle (the offline-verifiability case, §9.4; its served commitment-view field shape was ratified into §8.8.1 on 2026-08-03) is the configuration in which `VerificationContext` carries `registry`/`tsaAnchor`/`rekorAnchor`/`attestationGraph` inline and *no* interfaces fire — a second `VerificationSystem` variant with zero external `interface` usages, which is exactly the "fully offline, zero-network" property the Q15 harness demonstrates. The commitment view itself (§8.8) remains deliberately unmodeled here, per the coverage boundary this study set from the start.
 
 ---
 
@@ -1351,8 +1458,8 @@ That `VerificationSystem` *deliberately omits* a `typedstandards.org` part is th
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | §9.2 ordered 15-check procedure                         | `action def VerifyNode` with `first…then…`                                                     | SHACL validates a graph; it has no notion of*order*, *control flow*, or *branch outcomes* (non-fatal vs REJECT vs degrade).                                               |
 | Malformed-vs-integrity split (two parallel verdict axes) | `action def VerifyNodeFull` fork into `VerifyNode` ∥ `ValidateStructure`                        | SHACL*is* the structural validation; it cannot model that it runs *alongside* the crypto pipeline and that outcomes are reported as separate axes.                        |
-| §8.10 lifecycle / visibility / key state machines       | `state def` with `accept`/`if`/`then` transitions over append-only attestation events            | SHACL has no temporal/transition semantics; it cannot express "current status = latest signer-matched attestation" or multi-cycle without a counter.                      |
-| Retention asymmetry (withdrawal ≠ global erasure)       | `constraint def RetentionAsymmetry` over the two parallel states                                 | SHACL can check the signer-difference predicate on instances but cannot model the*behavioral consequence* (the surface-both obligation).                                  |
+| §8.10 / §8.10.6 visibility, lifecycle-status, signing-status, location, key state machines | `state def` with `accept`/`if`/`then` transitions over append-only attestation events            | SHACL has no temporal/transition semantics; it cannot express "current status = latest signer-matched attestation," multi-cycle without a counter, or dimension orthogonality as machine separation. |
+| Retention asymmetry (withdrawal ≠ global erasure)       | `constraint def RetentionAsymmetry` over the parallel machines                                   | SHACL can check the signer-difference predicate on instances but cannot model the*behavioral consequence* (the surface-both obligation).                                  |
 | System context / decentralization invariant              | `part def` + `interface def` + interface usages, with `typedstandards.org` deliberately *absent* | SHACL has no model of*system parts* or *who-talks-to-whom*; the "index not in the verification path" invariant is unexpressible.                                          |
 | Delegation of crypto/log checks to external systems      | `action def` with opaque body delegated to external `part def` (TSA, Rekor, registry)            | SHACL cannot represent "this check is performed by an external party"; out-of-band checks are simply`expressibleInShacl=false` with no positive model.                    |
 | Conformance requirements + traceability                  | `requirement def` + `subject`/`assume`/`require` + `satisfy`/`verify`/ nested requirements       | SHACL shapes*are* constraints; there is no separate requirement object, no subject, and no traceability edge linking a MUST to the structure/behavior that discharges it. |
@@ -1369,7 +1476,7 @@ That `VerificationSystem` *deliberately omits* a `typedstandards.org` part is th
 
 Formalization forces decisions the prose left implicit. The following are recorded as *ambiguities to resolve against the reference implementation or a future ADR* — not as model choices that override the spec:
 
-1. **`contentProfile` placement.** §8.1.1 lists `contentProfile` as a *top-level* field; §8.2 / §8.7 reference `metadata.contentProfile`. The model places it on `Metadata` (the more frequently cited access path) but flags the divergence in-line; a SysML `redefines` cannot live in two homes, so this must be pinned before the structural model is authoritative. Modeled, not asserted as settled.
+1. **`contentProfile` placement.** *Resolved 2026-08-03.* Earlier spec revisions listed `contentProfile` as a *top-level* field while §8.2 / §8.7 referenced `metadata.contentProfile`; this model placed it on `Metadata` and flagged the divergence in-line. The spec's v0.1.4 revision ratified exactly that placement (§8.1.2 placement note — "the formalization collaborator's formal model documents the wire correctly"; no wire change): `contentProfile` lives inside `metadata` as the grandfathered legacy alias, with the top-level `producerProfile` as the successor axis. Kept in this list as a record of an ambiguity the modeling exercise surfaced and the spec then pinned.
 2. **`output`/`trace`/`skillText` string-or-BlobRef.** The spec types these as `string | BlobRef`. SysML has no union type; the model uses paired `0..1` attributes (`output` + `outputBlob`) with an implied exclusivity constraint, or a `variation`. This is a modeling workaround, not a spec fact — the underlying choice is genuinely a union and a future schema should say which carrier is present.
 3. **Delegated-publisher predicate (Q20).** `isDelegatedPublisher` is a `calc def` with no body because the spec says the mechanics are "a future ADR" and "not yet formalizable beyond permitted in principle." The lifecycle guard depends on a predicate the spec cannot yet define — the model marks this honestly rather than inventing an authorization rule.
 4. **`(unspecified)` attestation payload fields.** `scope`, `availability`, `certificationScheme`, `validityWindow`, `methodology`, `scoringRubric`, `results` are typed as `String` placeholders with `// (unspecified)` comments. The spec gives field *names* without datatypes; the model does not invent types.
@@ -1429,7 +1536,7 @@ package Primitives {
         attribute blake3   : HexDigest[0..1];
     }
     item def BlobRef {                                           // §8.1.5
-        attribute ref         : String[1];                       // blob:sha256:<64-hex>
+        attribute 'ref'       : String[1];                       // blob:sha256:<64-hex> (quoted: SysML keyword)
         attribute url         : UriString[1];
         attribute contentType : String[1];
         attribute size        : Integer[1];
@@ -1459,20 +1566,26 @@ package Envelope {
         attribute inclusionProof : Base64[1];
         attribute checkpoint     : Base64[1];
     }
+    item def VcsRef {                                            // §8.1.1 / ADR-0016 §B — attested; verify-on-fetch informative
+        attribute repoUrl   : UriString[1];
+        attribute commitSha : HexDigest[1];
+        attribute path      : String[0..1];
+        attribute 'ref'     : String[0..1];                      // mutable pointer, informative only
+    }
     item def Metadata {                                          // §8.1.2
         attribute schemaVersion  : String[1] default "0.1.0";
         attribute packageId      : String[1];
         attribute createdAt      : Iso8601[1];
         attribute signingKeyId   : String[1];
         attribute captureMethod  : CaptureAndProfiles::CaptureMethodLabel[1];
-        attribute contentType    : ContentAnalysis::QecContentType[1..*];
-        attribute contentProfile : CaptureAndProfiles::ContentProfile[0..1];  // placement open — §10.3(1)
+        attribute contentType    : ContentAnalysis::QecContentType[0..*];  // §7.5 framing; not in the §8.1.2 required set
+        attribute contentProfile : CaptureAndProfiles::ContentProfile[0..1];  // metadata placement ratified 2026-08-03 (§8.1.2 note)
     }
 
     abstract part def SignedNode {                              // §6.2, §7.1, §7.4
         attribute type                    : Primitives::UriString[1];
         attribute contentHash             : Primitives::ContentHash[1];
-        attribute contentCanonicalization : Primitives::UriString[1];
+        attribute contentCanonicalization : Primitives::UriString[0..1];  // recommended (v0.1), §8.1.1
         ref item sig                  : SignatureEnvelope[1];
         ref item signer               : Signer[0..1];
         ref item timestamp            : Rfc3161Timestamp[0..1];
@@ -1490,13 +1603,15 @@ package Taxonomy {
     enum def BindingTier {                                      // §8.5 informative ladder + registry value
         pseudonymous; github; orcid; did_web; notarized; platform; legacy_embedded;
     }
-    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required; }
+    enum def AuthorizationRule { publisher_only; any_with_binding; specific_role_required;
+                                 self_attestation; }    // self_attestation: conforms/v1 only (§8.12.1)
 
     abstract part def TypedNode :> SignedNode {
         attribute targetNodeId : Primitives::HexDigest[0..*];
     }
     abstract part def ContentNode :> TypedNode {               // §7.4 no targetNodeId
         attribute redefines targetNodeId : Primitives::HexDigest[0];
+        ref item vcsRef : VcsRef[0..1];                        // §8.1.1 / ADR-0016 §B content-family self-declaration
     }
     abstract part def AttestationNode :> TypedNode {           // §7.4 >=1 targetNodeId
         attribute redefines targetNodeId : Primitives::HexDigest[1..*];
@@ -1517,7 +1632,7 @@ package Taxonomy {
     #BuildState::reserved part def HostTermsOfUseNode :> ContentNode { attribute redefines type default "content/hostTermsOfUse/v1"; }
     #BuildState::reserved part def ToolNode :> ContentNode { attribute redefines type default "content/tool/v1"; }
 
-    // ---- attestation/* sub-types (Q36 ratified table) ----
+    // ---- attestation/* sub-types (§8.12.1 ratified table, 16 rows incl. revises) ----
     #BuildState::ratified part def WithdrawsNode :> AttestationNode {
         attribute redefines type default "attestation/withdraws/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
@@ -1530,6 +1645,10 @@ package Taxonomy {
         attribute redefines type default "attestation/supersedes/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;
         attribute successorNodeId : Primitives::HexDigest[1]; }
+    #BuildState::ratified part def RevisesNode :> AttestationNode {           // §8.10.5 / ADR-0016 §C — neutral succession, NO deprecation signal
+        attribute redefines type default "attestation/revises/v1";
+        attribute redefines authorizationRule default AuthorizationRule::publisher_only;
+        attribute successorNodeId : Primitives::HexDigest[1]; }               // targetNodeId = prior revision (single-parent, linear at v0.1)
     #BuildState::ratified part def PublishesNode :> AttestationNode {
         attribute redefines type default "attestation/publishes/v1";
         attribute redefines authorizationRule default AuthorizationRule::publisher_only;   // OR delegated (Q20)
@@ -1537,7 +1656,7 @@ package Taxonomy {
     #BuildState::ratified part def LocatedAtNode :> AttestationNode {
         attribute redefines type default "attestation/locatedAt/v1";
         attribute redefines authorizationRule default AuthorizationRule::any_with_binding;
-        attribute uri : Primitives::UriString[1]; attribute contentHash : Primitives::ContentHash[1];
+        attribute uri : Primitives::UriString[1]; attribute targetContentHash : Primitives::ContentHash[1];  // Q48 resolved 2026-08-03
         attribute contentLength : Integer[0..1]; attribute availability : String[0..1]; }
     #BuildState::ratified part def WasDerivedFromNode :> AttestationNode {
         attribute redefines type default "attestation/wasDerivedFrom/v1";
@@ -1576,6 +1695,8 @@ package Taxonomy {
     #BuildState::ratified part def ConformsNode :> AttestationNode {
         attribute redefines type default "attestation/conforms/v1";
         attribute redefines authorizationRule default AuthorizationRule::specific_role_required;
+        assert constraint { (authorizationRule == AuthorizationRule::self_attestation)
+                         or (authorizationRule == AuthorizationRule::specific_role_required) }  // §8.12.1
         attribute standardId : Primitives::UriString[1]; }
 }
 
@@ -1601,6 +1722,7 @@ package ContentAnalysis {
         attribute output : String[0..1]; ref item outputBlob : BlobRef[0..1];
         attribute trace : String[0..1]; ref item traceBlob : BlobRef[0..1];
         attribute summary : String[0..1];                     // REQUIRED under datHere
+        attribute producerProfile : CaptureAndProfiles::ProducerProfile[0..1];  // §8.1.1 top-level; consistency w/ metadata.contentProfile
         ref item provenance : String[0..1]; ref item extensions : ExtensionsMap[0..1]; }
 }
 
@@ -1645,7 +1767,7 @@ package CaptureAndProfiles {
     package AiAssistedCaptureVocabulary {                          // hyphenated literals, NOT enum ids (§1.3)
         attribute chatFlowStream          : CaptureMethodLabel default "chat-flow-stream";
         attribute claudeCodeJsonlReadback : CaptureMethodLabel default "claude-code-jsonl-readback";
-        attribute claudeCodeSelfReport    : CaptureMethodLabel default "claude-code-self-report";
+        attribute claudeCodeSelfReport    : CaptureMethodLabel default "claude-code-self-report";  // legacy; deprecated 2026-04-28, retained (§8.6)
     }
     enum def ContentProfile { 'default'; datHere; }
     attribute def ProducerProfile :> String;
@@ -1665,6 +1787,7 @@ package Infrastructure {
     import Primitives::*; import ScalarValues::*;
     enum def KeyStatus { active; deprecated; revoked; }
     item def SignerIdentity { attribute bindingTier : String[1]; attribute identifier : String[1]; attribute displayName : String[1]; }
+        // registry-entry surface of the §8.8.1 naming note; one side of check #14 (the other is the envelope signer claim)
     item def TrustRegistryEntry { attribute kid : String[1]; attribute publicKey : Base64[1];
         ref item signerIdentity : SignerIdentity[0..1]; attribute status : KeyStatus[1];
         attribute activatedAt : String[1]; attribute deprecatedAt : String[1]; attribute revokedAt : String[1]; }
@@ -1694,7 +1817,7 @@ package Infrastructure {
     }
 }
 
-// ============================ LIFECYCLE STATE MACHINES (§8.10, §8.3.3, §8.7.4) ============================
+// ============================ LIFECYCLE STATE MACHINES (§8.10, §8.10.6, §8.3.3, §8.7.4; ADR-0020) ============================
 package Lifecycle {
     import Taxonomy::*; import ScalarValues::*;
     calc def signerMatchesTarget { in att : AttestationNode; return : Boolean; }
@@ -1703,24 +1826,34 @@ package Lifecycle {
     calc def isNonEmpty { in s : String; return : Boolean; }
     calc def hasBinding { in att : AttestationNode; return : Boolean; }
     calc def isDistinctCopyPair { in loc : LocatedAtNode; return : Boolean; }
+    item def KeyConfigured;                                   // ADR-0020 out-of-band signing event (key configured; package signed)
 
-    state def ContentNodeLifecycle {                          // §8.10.1 derived-view over append-only chain
-        entry; then committed; state committed; state published; state withdrawn; state superseded;
-        transition committed_to_published first committed accept pub : PublishesNode
-            if signerMatchesTarget(pub) or isDelegatedPublisher(pub) then published;
-        transition published_to_withdrawn first published accept w : WithdrawsNode
+    state def ContentNodeVisibility {                         // §8.10.6 / ADR-0016 §A: sealed / public ('public' is a SysML keyword);
+        entry; then sealed; state sealed; state 'public';     // legacy labels committed/published accepted as input aliases, never emitted
+        transition sealed_to_public first sealed accept pub : PublishesNode
+            if signerMatchesTarget(pub) or isDelegatedPublisher(pub) then 'public';
+    }                                                         // no reverse transition: withdrawal moves lifecycle status, never visibility
+    state def ContentNodeLifecycleStatus {                    // §8.10.6 / §8.10.1 derived view over the append-only chain;
+        entry; then active; state active; state withdrawn; state superseded;  // revises fires NO transition (lineage, §8.10.5)
+        transition active_to_withdrawn first active accept w : WithdrawsNode
             if signerMatchesTarget(w) and isNonEmpty(w.reason) then withdrawn;
-        transition withdrawn_to_reinstated first withdrawn accept r : ReinstatesNode
-            if signerMatchesTarget(r) and pointsAtPriorWithdrawal(r.priorWithdrawalNodeId) then published;
-        transition published_to_superseded first published accept s : SupersedesNode
+        transition withdrawn_to_active first withdrawn accept r : ReinstatesNode
+            if signerMatchesTarget(r) and pointsAtPriorWithdrawal(r.priorWithdrawalNodeId) then active;
+        transition active_to_superseded first active accept s : SupersedesNode
             if signerMatchesTarget(s) then superseded;
+        transition withdrawn_to_superseded first withdrawn accept sw : SupersedesNode
+            if signerMatchesTarget(sw) then superseded;
     }
-    state def ContentNodeVisibility {                         // §8.10.2 orthogonal location axis
+    state def SigningStatus {                                 // ADR-0020 §B orthogonal axis; unsigned reaches neither sealed nor 'public'
+        entry; then unsigned; state unsigned; state signed;
+        transition unsigned_to_signed first unsigned accept k : KeyConfigured then signed;
+    }
+    state def ContentNodeLocation {                           // §8.10.2 location axis; the surface visibility derives from (§8.10.6)
         entry; then noPublicLocation; state noPublicLocation; state located;
         transition to_located first noPublicLocation accept loc : LocatedAtNode if hasBinding(loc) then located;
         transition additional_copy first located accept loc2 : LocatedAtNode if hasBinding(loc2) and isDistinctCopyPair(loc2) then located;
     }
-    constraint def RetentionAsymmetry {                      // §8.10.3
+    constraint def RetentionAsymmetry {                      // §8.10.3 — disposition is 'public' + withdrawn, never global erasure
         in withdraw : WithdrawsNode; in backupLoc : LocatedAtNode; in backupIndependentlyVerifiable : Boolean;
         require constraint { (withdraw.signer.identifier != backupLoc.signer.identifier) implies backupIndependentlyVerifiable }
     }
@@ -1813,6 +1946,7 @@ package Conformance {
     constraint def HonorsLegacyColumns { in impl : Implementation; }
     constraint def SurfacesRetention { in impl : Implementation; }
     constraint def PerformsEveryCheck { in impl : Implementation; }
+    constraint def TreatsVcsRefAsSignal { in impl : Implementation; }
     constraint def CheckCaptureMethodVocabPredicate { in pkg : Envelope::SignedNode; }
 
     requirement def <'R-preamble-carry'> CarryNormativePreamble { subject surface : ProductSurface;
@@ -1846,6 +1980,12 @@ package Conformance {
         require constraint : ValidatesPinnedAnchors { in impl = ver; } }
     verify ValidateAgainstPinnedAnchors by Verification::CheckTimestamp;  verify ValidateAgainstPinnedAnchors by Verification::CheckRekorInclusion;
 
+    requirement def <'R-vcsRef-informative'> VcsRefVerifyOnFetchInformative { subject ver : Implementation;
+        doc /* §8.1.1 / ADR-0016 §B / §10.1 — signature covers the vcsRef ASSERTION, not the fact;
+              verify-on-fetch MAY; mismatch/unreachable is informative, never a hard failure. */
+        require constraint : TreatsVcsRefAsSignal { in impl = ver; } }
+    satisfy VcsRefVerifyOnFetchInformative by Envelope::VcsRef;
+
     requirement def <'R-family-discriminator'> FamilyDiscriminator { subject node : Taxonomy::TypedNode;
         require constraint {
             (node istype Taxonomy::ContentNode implies size(node.targetNodeId) == 0)
@@ -1873,7 +2013,7 @@ package Conformance {
     requirement def <'R-lifecycle-by-nodeId'> LifecycleByNodeId { subject att : Taxonomy::AttestationNode;
         doc /* References target by nodeId; Ed25519ph-signed (SHOULD timestamp+Rekor). */
         require constraint { size(att.targetNodeId) >= 1 } }
-    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycle;
+    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycleStatus;
 
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq { subject ver : Implementation;
         doc /* A withdraws from P does not invalidate another party's locatedAt; surface both. */

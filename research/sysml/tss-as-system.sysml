@@ -9,6 +9,9 @@
 //                SpecCorpus component and traces onto its Needs
 //  Detail model: research/sysml/typed-standards.sysml (the spec's normative
 //                content as structure / behavior / requirements)
+//  Reconciled  : 2026-08-18, with its source view 05, against the spec's
+//                2026-08-03 revision (the v0.1.4 reconciliation) and the
+//                ADR corpus through ADR-0024
 //
 //  Naming note: this file name uses "tss" for brevity; the spec itself
 //  reserves no "TSS" abbreviation (§6.3 disambiguates it from RFC 3161
@@ -32,7 +35,9 @@ package TypedStandardsAsSystem {
          research/05-typed-standards-spec-architecture-views.md (exploratory
          sketch; where it and the spec disagree, the spec governs). One of
          the parallel research views: this file answers to 05, which answers
-         to the spec and typed-standards-summary.md.
+         to the spec (typed-standards-specification.md; the leave-behind
+         typed-standards-summary.md is a companion, not the authority — its
+         own banner, added after its 2026-05-26 snapshot, defers to the spec).
 
          Solid edges of 05 §4 are modeled as satisfy relationships and
          performed actions; dotted (supporting) edges are carried in doc
@@ -168,7 +173,15 @@ package TypedStandardsAsSystem {
         }
         action def ManageLifecycleAndVisibility {
             doc /* TF7 — manage lifecycle and visibility: withdraw /
-                 reinstate / supersede / locate; retention asymmetry (§8.10).
+                 reinstate / supersede / revise / locate; retention asymmetry
+                 (§8.10). Visibility (sealed / public — the ADR-0016 state
+                 labels; the legacy values committed / published remain
+                 accepted input aliases, never emitted), lifecycle status
+                 (active / withdrawn / superseded), and host display are
+                 orthogonal dimensions (§8.10.6). Revision lineage is the
+                 §8.10.5 attestation/revises/v1 chain — neutral succession,
+                 the prior revision staying a valid point-in-time snapshot,
+                 distinct from supersedes (corrective replacement).
                  Attests via TF4's typed nodes (dotted edge in 05 §2). */
         }
         action def GovernConformance {
@@ -212,15 +225,18 @@ package TypedStandardsAsSystem {
         }
         part def BehaviorSpec {
             doc /* §9.2 verification flow, publisher pipeline, cross-host
-                 publication (§8.8-§8.9). Detail model: Verification package
+                 publication (§8.8-§8.9; the §8.8.1 commitment view's served
+                 shape — redaction rule and ?inline=1 serialization included
+                 — ratified 2026-08-03). Detail model: Verification package
                  — which covers the §9.2 verify flow ONLY; the publisher
                  pipeline and cross-host publication remain prose-only
                  (05 §3/§5 coverage boundary). */
         }
         part def LifecycleMachines {
-            doc /* Content-node lifecycle, visibility / location,
-                 trust-registry keys, notebook provenance (§8.10, §8.3.3,
-                 §8.7.4). Detail model: Lifecycle package. */
+            doc /* Content-node lifecycle, revision lineage (§8.10.5),
+                 visibility / location, trust-registry keys, notebook
+                 provenance (§8.10, §8.3.3, §8.7.4). Detail model: Lifecycle
+                 package. */
         }
         part def ProfilesAndVocabularies {
             doc /* captureMethod (open core, per-profile closed), producer
@@ -250,6 +266,14 @@ package TypedStandardsAsSystem {
         part def VerifyCore {
             doc /* verify-core — the reference verifier library. External
                  anchor: supplies properties the spec can only reference. */
+        }
+        part def ProduceCore {
+            doc /* produce-core — the reference producer core, published
+                 beside verify-core (ADR-0021). External anchor: the spec
+                 cites its shipped shapes directly — the §8.8.1 commitment
+                 view's required/optional marks reflect its commitment-view
+                 builder, and the §8.1.2 placement note cites its envelope
+                 builder. */
         }
         part def RekorAndTsa {
             doc /* Rekor log + RFC 3161 TSA. External anchor. */
@@ -323,6 +347,7 @@ package TypedStandardsAsSystem {
 
             // External anchors — outside the normative content, referenced by it.
             part verifyCore : VerifyCore;
+            part produceCore : ProduceCore;
             part rekorTsa : RekorAndTsa;
             part trustRegistries : PublisherTrustRegistries;
 

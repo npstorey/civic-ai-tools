@@ -2,7 +2,9 @@
 
 Status: exploratory sketch (research surface, not a decided spec). Three arch-framework-style
 views of the repository and its immediate ecosystem, grounded in the README,
-`docs/architecture/end-state-vision.md`, and the ADR corpus.
+`docs/architecture/end-state-vision.md`, and the ADR corpus. Produced 2026-06-24;
+reconciled 2026-08-18 against the spec's v0.1.4 revision and the ADR corpus through
+ADR-0024 (see the reconciliation notes under §3).
 
 ## 1. Needs architecture — who needs what, and why
 
@@ -47,9 +49,10 @@ flowchart TB
         CC["Claude Code / Copilot / Cursor"]
     end
 
-    subgraph ThisRepo["civic-ai-tools (this repo)"]
+    subgraph ThisRepo["civic-ai-tools (this repo — npm workspace)"]
         CFG["MCP configs<br/>.mcp.json, .cursor, .codex"]:::thisRepo
         SKILL["publish-evidence skill<br/>+ opengov skill docs"]:::thisRepo
+        HARNESS["@typedstandards/civic-typed-harness<br/>packages/civic-typed-harness:<br/>format-extension + capture + rubric"]:::thisRepo
         SPEC["Typed Standards Spec<br/>ADRs, open-questions registry,<br/>doctrine docs"]:::thisRepo
     end
 
@@ -59,20 +62,58 @@ flowchart TB
     end
 
     subgraph Ecosystem["Companion components"]
-        WEB["civic-ai-tools-website<br/>evidence registry + publish API"]
-        TS["typedstandards.org<br/>verify-core + client verifier"]
+        WEB["civic-ai-tools-website<br/>reference application: evidence registry<br/>+ publish API (instance-deployable;<br/>DB / BLOB / EXECUTOR driver seams)"]
+        subgraph TSRepo["typedstandards monorepo + typedstandards.org"]
+            PC["@typedstandards/produce-core"]
+            VC["@typedstandards/verify-core<br/>+ client-side verifier"]
+        end
         TRUST["Sigstore Rekor + RFC 3161 TSA<br/>(signing / timestamp infra)"]
     end
 
     CC --> CFG --> SOC & DC
     CC --> SKILL --> WEB
     WEB --> TRUST
-    TS -.verifies.-> WEB
-    SPEC -.specifies.-> WEB & TS & SKILL
+    HARNESS -- "depends on —<br/>the format/domain line" --> PC
+    PC -- "depends on" --> VC
+    VC -.verifies.-> WEB
+    SPEC -.specifies.-> WEB & PC & VC & HARNESS & SKILL
 
     classDef thisRepo fill:#1f6feb,stroke:#0d419d,color:#ffffff
     style ThisRepo fill:#dbeafe,stroke:#1f6feb,color:#0d419d
 ```
+
+Reconciliation notes (2026-08-18). When this view was produced (2026-06-24) the repo
+carried no code; the topology above now reflects the ADR-0019–0024 delta:
+
+- **This repo is an npm workspace** shipping `@typedstandards/civic-typed-harness`
+  (`packages/civic-typed-harness`; ADR-0022) — the DOMAIN side of ADR-0021's
+  format/domain line, held in two module groups plus a small third (format-extension
+  `src/format/`, capture `src/capture/`, and the adversarial rubric core — ADR-0022 §C's
+  boundary, reserved for a possible future split). Whether "harness" extends
+  further, to an experience-layer composition artifact (a guidance manifest), is open
+  as Q65.
+- **The typedstandards repo publishes two cores**: `@typedstandards/verify-core` and,
+  since 2026-08-01, `@typedstandards/produce-core` (ADR-0021; Q59 resolved via its
+  option (a)). The producer/verifier stack is civic-typed-harness → produce-core →
+  verify-core: the format/domain line runs between the harness and produce-core ("the
+  harness derives, the core assembles"), and produce-core depends on verify-core so
+  producer and verifier share one canonicalization/hash chain by construction.
+- **The reference application is instance-first** (ADR-0019, refined by ADR-0020 —
+  Q56's instance case, resolved; the spoke case stays open): open-source,
+  demo-hostable, no hosted service; each instance is its own publisher, with
+  per-instance Ed25519 keys and a per-instance trust registry at its own well-known
+  path, plus an intentional unsigned dev tier — a signing status (`unsigned` →
+  `signed`) orthogonal to visibility, under which an unsigned package can reach
+  neither `sealed` nor `public`. Its portability seams are env-selected driver pairs —
+  `DB_DRIVER`, `BLOB_DRIVER`, `EXECUTOR_DRIVER` (ADR-0023) — and its evidence-path
+  configuration is absent-or-error, never defaulted (ADR-0024; the harness's
+  identity-bearing config became required parameters in harness 0.2.0). Instances ship
+  only the app surfaces; the marketing group is the reference deployment's own
+  (extraction deferred, Q68).
+- **Two adoption layers** (ADR-0019 Decision 6): the forkable/instance-deployable
+  application and the importable packages. N4's open-standards interop is served by
+  both — governance (F6) plus format compatibility resting on a pinned dependency
+  rather than discipline (ADR-0021).
 
 ## Cross-layer traceability
 
@@ -102,6 +143,8 @@ flowchart LR
         CFG["MCP configs"]:::thisRepo
         SOC["socrata-mcp-server /<br/>Data Commons MCP"]
         SKILL["publish-evidence skill<br/>+ opengov skill docs"]:::thisRepo
+        HARNESS["civic-typed-harness"]:::thisRepo
+        PC["produce-core<br/>(typedstandards monorepo)"]
         WEB["evidence registry<br/>(civic-ai-tools-website)"]
         TS["verify-core +<br/>typedstandards.org verifier"]
         TRUST["Rekor + RFC 3161 TSA"]
@@ -128,6 +171,8 @@ flowchart LR
     F2 --> SOC
     F2 -.-> SKILL
     F3 --> SKILL
+    F3 --> HARNESS
+    F3 --> PC
     F3 --> TRUST
     F4 --> SKILL
     F4 --> WEB
@@ -141,7 +186,12 @@ flowchart LR
     classDef thisRepo fill:#1f6feb,stroke:#0d419d,color:#ffffff
 ```
 
-Reading notes: F2's dotted edge to the skill docs reflects that reproducibility starts in
+Reading notes: F3's two package-layer components are new with the 2026-08-18
+reconciliation — the harness carries the civic derivations and capture machinery while
+produce-core, its sole runtime dependency, carries envelope/attestation assembly and
+the Ed25519ph signing mechanism ("the harness derives, the core assembles",
+ADR-0021/0022); the skill and the reference application orchestrate above that stack.
+F2's dotted edge to the skill docs reflects that reproducibility starts in
 the analysis itself (queries recorded, no hallucinated data — the opengov skill's rules);
 N3's dotted edge to F4 reflects that the registry makes evidence citable while durability
 comes from F3/F5's timestamp and transparency-log steps; N4's dotted edges mark F3–F5 as
@@ -157,10 +207,12 @@ constraint flows from the spec to the functions (it specifies F3's package shape
 | Need | Function(s) | Logical component(s) |
 | --- | --- | --- |
 | N1 plain-English data access | F1, F2 | MCP configs, socrata-mcp-server, Data Commons MCP |
-| N2 trustworthy AI analysis | F3, F4, F5 | publish-evidence skill, evidence registry, verifier, Rekor/TSA |
+| N2 trustworthy AI analysis | F3, F4, F5 | publish-evidence skill, civic-typed-harness + produce-core, evidence registry, verifier, Rekor/TSA |
 | N3 durable citable evidence | F3, F5 | Rekor transparency log, RFC 3161 timestamps (Zenodo DOI designed) |
-| N4 open-standards interop | F6 | Typed Standards Spec, ADRs, open-questions registry |
+| N4 open-standards interop | F6 | Typed Standards Spec, ADRs, open-questions registry; the importable package stack (verify-core ← produce-core ← civic-typed-harness) as the pinned-dependency interop path (ADR-0019 Decision 6, ADR-0021) |
 
-Note: the runnable artifacts in this repo are the MCP configs and the publish-evidence
-skill; the spec/ADR corpus is the repo's main payload, with the registry and verifier
-implemented in the companion repos.
+Note: the runnable artifacts in this repo are the MCP configs, the publish-evidence
+skill, and — since ADR-0022 — the `@typedstandards/civic-typed-harness` package under
+`packages/` (the repo is an npm workspace, with PR-gating CI: workflow checks,
+dependency budget, skill drift); the spec/ADR corpus remains the repo's main payload,
+with the registry and verifier implemented in the companion repos.

@@ -3,6 +3,8 @@
 > **Companion to** the consolidated formal model and `docs/architecture/typed-standards-specification.md` (v0.1.x). This document re-expresses the formalization-ready model as W3C SHACL ([Shapes Constraint Language](https://www.w3.org/TR/shacl/)) shapes. It is the RDF-native sibling of the SysML v2 behavioral re-expression: where SysML captures the verifier's *behavior* (the §9.2 check sequence as activities, the state machines of §5), SHACL captures the *instance-data conformance* surface — what a well-formed signed node and a well-formed typed claim must structurally look like. The two formalizations are complementary and deliberately non-overlapping at the boundary the spec itself draws: graph-shape validation vs. cryptographic / behavioral verification.
 >
 > **Conformance-tier note (read first).** Not every shape in this document is SHACL **Core**. The consolidated graph in the final section is partitioned into three tiers and is *loadable as Core* with the single SHACL-SPARQL shape (`tsh:SigningKeyIdConsistencyShape`) clearly isolated and labeled. Where a constraint needs SHACL-SPARQL or an out-of-band check, it is named as such and **not** presented as Core. The `syntaxValid` claim in earlier drafts was overstated; this revision corrects it — see §6.2 and §8.2.
+>
+> **Reconciliation note (2026-08-18).** Updated against the spec's 2026-08-03 revision (the v0.1.4 reconciliation): the §8.12.1 table now ratifies **16** attestation sub-types (`attestation/revises/v1` added — shaped in §4.2 / consolidated section D); the `attestation/locatedAt/v1` payload fingerprint is ratified as **`targetContentHash`** (Q48 resolved); the envelope gains the optional **`vcsRef`** self-declaration (§3.1); the §8.8.1 **commitment view**'s served shape is ratified and shaped in §3.4 — including the **`sealed`** / **`public`** visibility value set (legacy input aliases `committed` / `published` accepted, never emitted); and the `metadata.contentProfile` placement this formalization already modeled is ratified, with `producerProfile` moving to its ratified top-level position (§8.3 #5).
 
 ---
 
@@ -18,7 +20,7 @@ The decisive property for this exercise: **SHACL validates the *shape* of a grap
 
 SHACL formalizes the **instance-data conformance** of two layers of the standard, and only those two:
 
-1. **The cryptographic envelope as a data structure (§8.1, §8.3).** The presence, datatype, cardinality, and value-set membership of every field of a signed node — `type`, `contentHash`, `contentCanonicalization`, `sig{publicKey,algorithm,kid}`, `signer`, `metadata`, `captureMethod`, `timestamp`, `rekorInclusionProof` — is a pure graph-shape question, *once the JSON envelope is interpreted as RDF* (the `tsx:` fiction; see §2 and §8.2). SHACL expresses it natively under that interpretation. Crucially, SHACL validates that the *fields are well-formed*, never that the *signature is mathematically valid* — that distinction is the spine of §6 below.
+1. **The cryptographic envelope as a data structure (§8.1, §8.3).** The presence, datatype, cardinality, and value-set membership of every field of a signed node — `type`, `contentHash`, `contentCanonicalization`, `sig{publicKey,algorithm,kid}`, `signer`, `vcsRef`, `metadata`, `captureMethod`, `timestamp`, `rekorInclusionProof` — is a pure graph-shape question, *once the JSON envelope is interpreted as RDF* (the `tsx:` fiction; see §2 and §8.2). SHACL expresses it natively under that interpretation. Crucially, SHACL validates that the *fields are well-formed*, never that the *signature is mathematically valid* — that distinction is the spine of §6 below.
 
 2. **The typed-claims layer (§8.11).** This is where SHACL is not merely *applicable* but *prescribed*. §8.11.3 condition 3 reads: "Every top-level claim object validates against the SHACL shapes published with the Typed Standards Claim Vocabulary." §8.11.6 step 5 requires every domain extension to "publish SHACL shapes for validation." TC-R10 in the conformance catalog restates it as a MUST. The typed-claims layer is an *RDF graph* (JSON-LD 1.1) against an *RDF vocabulary* (`ts:`); SHACL is its native validation technology. **This document's shapes graph is therefore a candidate concrete realization of the "published SHACL shapes" the spec repeatedly references but does not itself ship.**
 
@@ -41,7 +43,7 @@ SHACL cannot express, and this document does not pretend it can, the following �
 
 The typed-claims layer is bound to a single normative RDF vocabulary URI: `ts:` → `https://typedstandards.org/ns/ts#` (§8.11.4; reserved as an identifier in §12.2). SHACL shapes *target* RDF classes and properties in that namespace (`sh:targetClass ts:Claim`, `sh:path ts:scope`). SHACL is therefore the validation companion to the vocabulary, and the two ship together: §8.11.3 conditions the conformance of a `content/claim/v1` node on the claim payload's `@context` including exactly this URI **and** on validation against "the SHACL shapes published with" it.
 
-The open question this most directly touches is **Q10 — OWL-ontology promotion of the typed-claims layer.** Today `ts:` is a *controlled vocabulary* (a flat set of class and property URIs with informal English definitions in §8.11.4–§8.11.5). Q10's recorded decision is "promote," but "the exact OWL axioms / class semantics are not yet fixed." This matters for a SHACL formalization in a specific, non-cosmetic way:
+The open question this most directly touches is **Q10 — OWL-ontology promotion of the typed-claims layer.** Today `ts:` is a *controlled vocabulary* (a flat set of class and property URIs with informal English definitions in §8.11.4–§8.11.5). Q10's recorded decision is "promote," but "the exact OWL axioms / class semantics are not yet fixed." (Registry status 2026-08-18: the Q10 entry additionally carries a 2026-07-01 reopen flag gating promotion on a concrete adopter- or reasoner-driven need, and records this bundle's own ontology draft — `research/ontology/typedClaims.ttl` — as the candidate artifact, with formalization-review positions on record; nothing resolved.) This matters for a SHACL formalization in a specific, non-cosmetic way:
 
 - **SHACL and OWL answer different questions.** OWL is for *entailment* (a reasoner infers new triples: `ts:TrendClaim rdfs:subClassOf ts:Claim` lets a reasoner conclude every `TrendClaim` *is a* `Claim`). SHACL is for *validation* under a closed-world, constraint-checking reading (does this instance carry the required properties?). The spec's requirements are overwhelmingly *constraint* requirements ("MUST carry an explicit scope," "confidence MUST reference a method," "direction is a closed enum"). These are SHACL's job, not OWL's.
 - **Where promotion to OWL changes the SHACL shapes.** If Q10 promotes `ts:Claim`'s subclasses to *defined* OWL classes (e.g. `ts:TrendClaim ≡ ts:Claim ⊓ ∃ts:direction`), a SHACL processor running *with* an OWL-RL pre-materialization step would see inferred `rdf:type` triples and could validate sub-type shapes by `sh:targetClass` without the instance explicitly declaring `@type: ts:TrendClaim`. Until promotion fixes those axioms, this document targets sub-type shapes by the *explicit* `@type` the spec's worked example carries (Appendix B declares `"@type": "ts:TrendClaim"` directly). Where I rely on explicit typing rather than entailment, I flag it, because the choice is contingent on Q10.
@@ -99,7 +101,7 @@ This section shapes the **structural primitive** (`SignedNode`, §3.1 of the mod
 
 Every signed node carries the structural-primitive fields. The shape below encodes §3.1's field table and the corresponding constraints C-type-required-v01 (4.2), C-contentHash-sha256-required (4.3 C11), C-sig-algorithm (C21 — `sh:hasValue "Ed25519ph"`), C-contentCanon-uris (C20 — `sh:in` the reserved URI set), C-captureMethod-required-signed (C49). I model `nodeId` as `sh:maxCount 1` but flag it as *derived*: the spec is explicit that `nodeId ≡ envelopeHash` **by construction** and is not separately stored, so a faithful shape should *not* require it as stored data — `sh:minCount 0`.
 
-**The `type`-as-IRI fix.** The spec's `type` value is the string token `content/analysis/v1`. Earlier drafts wrote `sh:nodeKind sh:IRI` *and* an anchored `^(content|attestation)/…` pattern *and* compared against a relative `<content/analysis/v1>` with **no `@base`** — three constraints that cannot all hold: with no base, `<content/analysis/v1>` is an invalid/relative IRI; with a base, it resolves to `https://…/content/analysis/v1`, after which `^content/…` never matches. This revision fixes it by declaring `@base` (§2) so that the `type` IRI is the **absolute** `tst:`-namespaced form, and the pattern matches the **absolute** lexical form (`^https://typedstandards\.org/ns/envelope-type/(content|attestation)/[A-Za-z]+/v[0-9]+$`). All `sh:hasValue` / `sh:in` operands for `type` are likewise the absolute `tst:` IRIs. The two constraints are now mutually satisfiable.
+**The `type`-as-IRI fix.** The spec's `type` value is the string token `content/analysis/v1`. Earlier drafts wrote `sh:nodeKind sh:IRI` *and* an anchored `^(content|attestation)/…` pattern *and* compared against a relative `<content/analysis/v1>` with **no `@base`** — three constraints that cannot all hold: with no base, `<content/analysis/v1>` is an invalid/relative IRI; with a base, it resolves to `https://…/content/analysis/v1`, after which `^content/…` never matches. This revision fixes it by declaring `@base` (§2) so that the `type` IRI is the **absolute** `tst:`-namespaced form, and the pattern matches the **absolute** lexical form (`^https://typedstandards\.org/ns/envelope-type/(content|attestation)/[A-Za-z]+/v[0-9]+$`). All `sh:hasValue` / `sh:in` operands for `type` are likewise the absolute `tst:` IRIs — written in the Turtle as prefixed names with the slashes escaped (`tst:content\/analysis\/v1`), since Turtle forbids an unescaped `/` in a prefixed-name local part; the escaped form resolves to the same absolute IRI (the standalone shapes graph uses full `<…>` IRIs for the same operands). The two constraints are now mutually satisfiable.
 
 ```ttl
 tsh:SignatureEnvelopeShape
@@ -150,6 +152,36 @@ tsh:ContentHashShape
         sh:path tsx:blake3 ;
         sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ; sh:maxCount 1 ;
     ] .
+
+# vcsRef — OPTIONAL attested content-family self-declaration (§8.1.1; ADR-0016 §B; new in the
+# spec's 2026-08-03 revision). repoUrl + commitSha are required-IF-PRESENT — exactly the semantics
+# a nested node shape gives: the vcsRef property itself is 0..1 on tsh:SignedNodeShape, and a
+# present vcsRef object must satisfy this shape. The signature attests the ASSERTION, not the
+# FACT: verification is OUT OF BAND verify-on-fetch (resolve repoUrl+commitSha, compare the
+# artifact at path against the node's contentHash); a mismatch or unreachable revision is
+# INFORMATIVE, not a hard failure, mirroring locatedAt (§8.10.2); the weight a consumer places on
+# an unverified vcsRef is captureMethod-contextualized (§8.6). §10.1's false-VCS-binding adversary
+# row is the threat-model counterpart — none of that is graph-shape, and none is encoded here.
+tsh:VcsRefShape
+    a sh:NodeShape ;
+    rdfs:label "vcsRef — version-control self-declaration (§8.1.1 / ADR-0016 §B)" ;
+    sh:closed false ;
+    sh:property [
+        sh:path tsx:repoUrl ;
+        sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:message "vcsRef.repoUrl is required when vcsRef is present." ;
+    ] ;
+    sh:property [
+        sh:path tsx:commitSha ;
+        # "The full, immutable revision object id" — the spec fixes NO lexical form (ADR-0016 §B:
+        # "VCS" = version-control system, not git-specific), so no sh:pattern here (§8.3 discipline:
+        # no invented lexical constraints for fields the spec leaves untyped).
+        sh:datatype xsd:string ;
+        sh:minCount 1 ; sh:maxCount 1 ;
+        sh:message "vcsRef.commitSha is required when vcsRef is present (full revision object id)." ;
+    ] ;
+    sh:property [ sh:path tsx:path ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:ref  ; sh:datatype xsd:string ; sh:maxCount 1 ] .   # mutable pointer, informative only
 
 tsh:SignedNodeShape
     a sh:NodeShape ;
@@ -210,6 +242,23 @@ tsh:SignedNodeShape
         sh:message "signer is RECOMMENDED in v0.1; absence is a warning, not a violation." ;
     ] ;
 
+    # producerProfile — OPTIONAL TOP-LEVEL envelope field (§8.1.1): <profile-type>/<profile-subtype>.
+    # Its grandfathered legacy alias metadata.contentProfile lives inside metadata (§8.1.2) — see
+    # tsh:PackageMetadataShape and the ratified-placement note there.
+    sh:property [
+        sh:path tsx:producerProfile ;
+        sh:datatype xsd:string ; sh:maxCount 1 ;
+        sh:message "producerProfile, when present, is a <profile-type>/<profile-subtype> string (§8.1.1)." ;
+    ] ;
+
+    # vcsRef — OPTIONAL (§8.1.1; ADR-0016 §B); required-if-present sub-fields via tsh:VcsRefShape.
+    # Verify-on-fetch is OUT OF BAND; mismatch/unreachable is informative, not a hard failure.
+    sh:property [
+        sh:path tsx:vcsRef ;
+        sh:node tsh:VcsRefShape ;
+        sh:minCount 0 ; sh:maxCount 1 ;
+    ] ;
+
     # metadata — required; nested PackageMetadata
     sh:property [
         sh:path tsx:metadata ;
@@ -251,8 +300,9 @@ tsh:SignerShape
         sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
         sh:message "signer.bindingTier is a required string; the §8.5 ladder is informative + extensible (Q3-open), so the value set is NOT closed." ;
     ] ;
-    # Advisory, NON-VIOLATING ladder hint (sh:Info). Includes the §8.5 ladder values AND the
-    # spec-attested registry values 'platform' (§8.3.3) and 'legacy_embedded' (§8.3.3). Surfaces
+    # Advisory, NON-VIOLATING ladder hint (sh:Info). Includes the ladder tokens the §6.2 glossary's
+    # `signer` entry enumerates (pseudonymous/oauth/orcid/did-web/notarized, per the §8.5 ladder) AND
+    # the spec-attested registry values 'platform' (§8.3.3) and 'legacy_embedded' (§8.3.3). Surfaces
     # an unfamiliar tier as informational, never as a failure. No invented tokens.
     sh:property [
         sh:path tsx:bindingTier ;
@@ -306,19 +356,15 @@ tsh:PackageMetadataShape
         sh:in ( "chat-flow-stream" "claude-code-jsonl-readback" "claude-code-self-report" ) ;
         sh:message "captureMethod is required and (for the ai-assisted-analysis profile) MUST be one of the three v0.1 values." ;
     ] ;
-    # contentProfile / producerProfile — BOTH top-level per §8.1.1 (they appear on PackageMetadata
-    # because metadata IS the top-level object carrying schemaVersion/packageId/captureMethod et al.).
-    # See §8.3 ambiguity #5: the spec table places both at top level; we root them here, consistently.
+    # contentProfile — metadata.contentProfile, placement RATIFIED (spec §8.1.2 placement note,
+    # 2026-08-03): the spec text moved to match the shipped wire this formalization already rooted
+    # here. producerProfile is the TOP-LEVEL successor axis (§8.1.1) and lives on tsh:SignedNodeShape,
+    # NOT here; metadata.contentProfile is retained as its grandfathered legacy alias. See §8.3 #5.
     sh:property [
         sh:path tsx:contentProfile ;
         sh:datatype xsd:string ; sh:maxCount 1 ;
         sh:in ( "default" "datHere" ) ;
-        sh:message "contentProfile, when present, is one of {default, datHere} (§8.1.1)." ;
-    ] ;
-    sh:property [
-        sh:path tsx:producerProfile ;
-        sh:datatype xsd:string ; sh:maxCount 1 ;
-        sh:message "producerProfile, when present, is a <profile-type>/<profile-subtype> string (§8.1.1)." ;
+        sh:message "metadata.contentProfile, when present, is one of {default, datHere} (§8.1.2)." ;
     ] ;
     # contentType — QEC set; see §4.3 below for the set-membership + untyped-mutex shape.
     sh:property [
@@ -407,7 +453,7 @@ tsh:ContentAnalysisV1Shape
     sh:targetClass tsx:SignedNode ;
     sh:or (
         # branch 1: not an analysis node → vacuously conforms (skip)
-        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:content/analysis/v1 ] ] ]
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:content\/analysis\/v1 ] ] ]
         # branch 2: analysis node → must satisfy SignedNode + the package required fields
         [ sh:and ( tsh:SignedNodeShape ) ;
           sh:property [ sh:path tsx:prompt ;        sh:node tsh:PromptShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -432,7 +478,7 @@ tsh:ContentAnalysisV1Shape
 
 ### 3.3 `extensions` keys and the datHere conditional fields
 
-C-EXTENSIONS-KEYS (C73) requires reverse-DNS keys; C-SUMMARY-CONDITIONAL (C71) and C-NOTEBOOK-DATHERE-REQ (C76) make `summary` and `org.civicaitools.notebook` required *only* under `contentProfile == datHere`. Per §8.1.1 the `contentProfile` field is **top-level** (carried on the metadata object alongside `schemaVersion`, `captureMethod`, etc.); the conditional roots its discriminator there consistently. The conditional is expressible with the `sh:not`/`sh:or` "if-then" idiom: *if* `metadata.contentProfile = datHere`, *then* the field is required.
+C-EXTENSIONS-KEYS (C73) requires reverse-DNS keys; C-SUMMARY-CONDITIONAL (C71) and C-NOTEBOOK-DATHERE-REQ (C76) make `summary` and `org.civicaitools.notebook` required *only* under `contentProfile == datHere`. Per the ratified placement (§8.1.2 placement note, 2026-08-03) the `contentProfile` field lives **inside `metadata`** (alongside `schemaVersion`, `captureMethod`, `signingKeyId`); the conditional roots its discriminator there consistently — the rooting this formalization already used, now spec-ratified. The conditional is expressible with the `sh:not`/`sh:or` "if-then" idiom: *if* `metadata.contentProfile = datHere`, *then* the field is required.
 
 ```ttl
 tsh:DatHereConditionalShape
@@ -448,7 +494,99 @@ tsh:DatHereConditionalShape
     sh:message "Under contentProfile=datHere, summary and org.civicaitools.notebook are required (§8.7.1)." .
 ```
 
-> The `provenance → execution` conditional (execution extension present iff `notebook.provenance == executed`, C-8.7.4-1..2) follows the same `sh:or(sh:not …)` two-branch idiom and appears in the consolidated graph. The `contentProfile ⟺ producerProfile` biconditional (C-profile-consistency-invariant, C55) needs *both directions* and is written as an `sh:and` of two implications there. Both `contentProfile` and `producerProfile` live on the metadata (top-level) object per §8.1.1; the biconditional roots `contentProfile` via the `( tsx:metadata tsx:contentProfile )` path and `producerProfile` via `( tsx:metadata tsx:producerProfile )` — same level, no path inconsistency.
+> The `provenance → execution` conditional (execution extension present iff `notebook.provenance == executed`, C-8.7.4-1..2) follows the same `sh:or(sh:not …)` two-branch idiom and appears in the consolidated graph. The `contentProfile ⟺ producerProfile` biconditional (C-profile-consistency-invariant, C55) needs *both directions* and is written as an `sh:and` of two implications there. Per the ratified placement (§8.1.2 placement note, 2026-08-03), the biconditional roots `contentProfile` via the `( tsx:metadata tsx:contentProfile )` sequence path and `producerProfile` directly at `tsx:producerProfile` (a top-level envelope field, §8.1.1): `metadata.contentProfile === "datHere"` iff `producerProfile.startsWith("ai-assisted-analysis/datHere")`.
+
+### 3.4 The §8.8.1 commitment view (served shape, ratified 2026-08-03)
+
+The commitment view is the cross-host publication surface (§8.8): the field set a published artifact carries so any reader can verify the package against the publisher's trust registry independently of the originating host. It is a **served host view, not a signed node** — it *mirrors* signed fields but is not itself an envelope — so, like the envelope, it is validated here only under the `tsx:` fiction (§2, §8.2). The spec's 2026-08-03 revision ratified the served shape (codebase-wins, zero wire change); the shape below encodes the ratified required/conditional/optional marks.
+
+Three ratified points shape the encoding:
+
+1. **`visibility` is required, with values `sealed` / `public`** (ADR-0016 §A; §8.10.6). The legacy values `committed` / `published` are **accepted input aliases** (`committed` → `sealed`, `published` → `public`; consumers SHOULD accept them, conformant producers never emit them). **Idiom chosen for the aliases:** two stacked property constraints on the same path — a **Violation-tier `sh:in`** over the four-value *accepted-input* set (anything else is a hard violation) plus a **Warning-tier `sh:in`** over the two-value *canonical* set (a legacy alias conforms at the first but fires the second as a non-fatal warning). This mirrors the spec's accept-on-input / never-emit split exactly: acceptance is Core-conformant, emission-canonicality surfaces as `sh:Warning`. The same JSON key name `visibility` also appears on the `prompt` object with an unrelated value set (`full_text` / `hash_only`, §8.1.3) — different focus node, no shape interaction. Note also that `withdrawn` is *not* a visibility value: lifecycle status is its own dimension (§8.10.6), carried informationally under `lifecycle.status`.
+2. **`signer` vs. `signerIdentity`** (the §8.8.1 naming note): `signer` is the §8.5-shaped identity claim mirrored from the package — **the subject of §9.2 check #14** — and reuses `tsh:SignerShape`; `signerIdentity` is an optional *informational* provider-identity block that **MUST NOT be used as the signature subject**. The shape keeps `signerIdentity` presence-only so no constraint could be misread as making it verification-relevant.
+3. **Conditional and nullable marks**: `packageUrl`, `subjectTitle`, `subjectSummary` are conditional — the **redaction rule** for sealed-visibility records omits all three, while the proof-side fields are served unredacted ("they ARE the commitment") — and `captureMethod` is wire-nullable (`string|null`; explicit `null` marks pre-discipline records). The redaction conditional and the null/absent distinction are not Core-encodable (the RDF interpretation collapses explicit JSON `null` into absence), so those fields are shaped as optional with the conditions documented, and `captureMethod` presence is expected at `sh:Warning`.
+
+One dimension the other framings model does not surface here as a value space of its own: ADR-0020 §B's **signing-status axis** (`unsigned` → `signed`, orthogonal to visibility) is a *producer-side* dimension, and the shapes meet it only as the conditional `signature` object — §8.8.1 marks `signature` omitted when a package is unsigned (a best-effort-signing legacy), while under ADR-0020 §C a newly produced unsigned package reaches neither `sealed` nor `public` and so acquires no served view at all. An instance-data validator has nothing more to check; the axis itself lives in the SysML framing's state machines (`02` §5) and the formal model (`00` §5).
+
+```ttl
+tsh:CommitmentViewSignatureShape
+    a sh:NodeShape ;
+    rdfs:label "commitment-view signature — §8.3.1-shaped, carried verbatim (§8.8.1)" ;
+    sh:closed false ;
+    # algorithm is LOAD-BEARING (an independent verifier dispatches Ed25519 vs Ed25519ph on it) but
+    # algorithm/kid MAY be absent on packages signed via older paths — hence 0..1 here, unlike the
+    # stricter tsh:SignatureEnvelopeShape for the package envelope itself.
+    sh:property [ sh:path tsx:signature ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:publicKey ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:algorithm ; sh:maxCount 1 ; sh:in ( "Ed25519ph" "Ed25519" ) ] ;
+    sh:property [ sh:path tsx:kid ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+tsh:LifecycleSummaryShape
+    a sh:NodeShape ;
+    rdfs:label "lifecycle — INFORMATIONAL summary (§8.8.1); authoritative state = the signed chain (§8.10)" ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:status ; sh:in ( "active" "withdrawn" ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:withdrawnAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:withdrawnReason ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:reinstatedAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:reinstatedReason ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+tsh:CommitmentViewShape
+    a sh:NodeShape ;
+    rdfs:label "commitment view — §8.8.1 served shape (ratified 2026-08-03)" ;
+    sh:targetClass tsx:CommitmentView ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:evidenceProtocolVersion ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:packageHash ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                  sh:minCount 1 ; sh:maxCount 1 ] ;
+    # packageUrl — CONDITIONAL: omitted when unknown AND on redacted (sealed-visibility) views.
+    sh:property [ sh:path tsx:packageUrl ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # visibility — REQUIRED; sealed/public canonical, committed/published legacy input aliases.
+    sh:property [ sh:path tsx:visibility ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( "sealed" "public" "committed" "published" ) ;
+                  sh:message "visibility MUST be sealed/public (or a legacy input alias committed/published)." ] ;
+    sh:property [ sh:path tsx:visibility ; sh:severity sh:Warning ;
+                  sh:in ( "sealed" "public" ) ;
+                  sh:message "Legacy visibility alias (committed→sealed, published→public): accepted as input, never emitted." ] ;
+    # captureMethod — REQUIRED but WIRE-NULLABLE (string|null; explicit null = pre-discipline record).
+    # The RDF interpretation cannot distinguish explicit null from absence → presence at sh:Warning.
+    sh:property [ sh:path tsx:captureMethod ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:captureMethod ; sh:minCount 1 ; sh:severity sh:Warning ;
+                  sh:message "captureMethod expected (string|null on the wire)." ] ;
+    sh:property [ sh:path tsx:contentProfile ; sh:in ( "default" "datHere" ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:producerProfile ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:type ; sh:nodeKind sh:IRI ; sh:maxCount 1 ;
+                  sh:pattern "^https://typedstandards\\.org/ns/envelope-type/(content|attestation)/[A-Za-z]+/v[0-9]+$" ] ;
+    # signer — the §8.5-shaped identity claim mirrored from the package: the §9.2 CHECK-#14 SUBJECT.
+    sh:property [ sh:path tsx:signer ; sh:node tsh:SignerShape ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentCanonicalization ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # signature — CONDITIONAL: omitted when the package is unsigned (§8.3.1 best-effort signing).
+    sh:property [ sh:path tsx:signature ; sh:node tsh:CommitmentViewSignatureShape ; sh:maxCount 1 ] ;
+    # signerIdentity — INFORMATIONAL provider block; MUST NOT be used as the signature subject
+    # (that is `signer` above). Presence-only, deliberately unconstrained.
+    sh:property [ sh:path tsx:signerIdentity ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rfc3161Timestamp ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorEntryId ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorInclusionProof ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorEntryBody ; sh:datatype xsd:string ; sh:maxCount 1 ] ;   # offline Merkle inclusion (§9.4)
+    sh:property [ sh:path tsx:lifecycle ; sh:node tsh:LifecycleSummaryShape ; sh:maxCount 1 ] ;
+    # lifecycleAttestations — signed lifecycle envelopes inline (embed form; the check-#10 chain).
+    # attestations — NON-LIFECYCLE entries only (§8.9). Both presence-optional; member verification
+    # is the attestation shapes' + the crypto verifier's job, not this view shape's.
+    sh:property [ sh:path tsx:lifecycleAttestations ] ;
+    sh:property [ sh:path tsx:attestations ] ;
+    sh:property [ sh:path tsx:trustRegistryUrl ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "trustRegistryUrl is required; per-publisher configuration, never a constant." ] ;
+    sh:property [ sh:path tsx:trustRegistryUrlLegacy ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # subjectTitle / subjectSummary — CONDITIONAL + WIRE-NULLABLE; omitted on redacted sealed-visibility views.
+    sh:property [ sh:path tsx:subjectTitle ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:subjectSummary ; sh:maxCount 1 ] .
+    # REDACTION RULE (sealed-visibility records): a redacted view omits packageUrl, subjectTitle,
+    # subjectSummary; the proof-side fields are served UNREDACTED — they ARE the commitment. The
+    # ?inline=1 self-contained serialization adds `package` + `trustRegistry` and verifies with zero
+    # network access (§9.4). Neither conditional is Core-encodable without a redaction marker.
+```
 
 ---
 
@@ -507,7 +645,7 @@ tsh:AttestationWithdrawsV1Shape
     rdfs:label "attestation/withdraws/v1 (§8.12.1)" ;
     sh:targetClass tsx:SignedNode ;
     sh:or (
-        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/withdraws/v1 ] ] ]
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/withdraws\/v1 ] ] ]
         [ sh:and ( tsh:AttestationNodeShape ) ;
           sh:property [ sh:path tsx:reason ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
                         sh:minLength 1 ;                # C-WITHDRAWS-REASON: non-empty
@@ -515,26 +653,33 @@ tsh:AttestationWithdrawsV1Shape
           sh:property [ sh:path tsx:effectiveAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ]   # defaults to envelope timestamp
     ) .
 
-# Worked sub-type: locatedAt — any-with-binding; uri + contentHash required (§8.12.1).
-# The 'contentHash SHOULD match target's; mismatch is informative' note is a CROSS-NODE Info check
-# (out of band; SHACL cannot compare to the target). The PRESENCE of contentHash stays a Violation-
-# severity required field — severity Info is NOT placed on the presence constraint (issue fix).
+# Worked sub-type: locatedAt — any-with-binding; uri + targetContentHash required (§8.12.1).
+# PAYLOAD-NAME RATIFICATION (Q48, resolved 2026-08-03): the target-fingerprint payload field is
+# targetContentHash, NOT contentHash — sub-type payload fields live flat at the canonical-JSON top
+# level, and the structural primitive already claims contentHash for the attestation node's OWN
+# off-log fingerprint (§8.2, §8.10.2); same disambiguation pattern as targetNodeId. Under the
+# pre-Q48 name this RDF interpretation had the very collision the spec resolved: the payload key
+# collided with the envelope's own required tsx:contentHash (maxCount 1) on the same focus node.
+# The 'targetContentHash SHOULD match the target's contentHash; mismatch is informative' note is a
+# CROSS-NODE Info check (out of band; SHACL cannot compare to the target). The PRESENCE of
+# targetContentHash stays a Violation-severity required field — severity Info is NOT placed on the
+# presence constraint (issue fix).
 tsh:AttestationLocatedAtV1Shape
     a sh:NodeShape ;
     rdfs:label "attestation/locatedAt/v1 (§8.12.1)" ;
     sh:targetClass tsx:SignedNode ;
     sh:or (
-        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/locatedAt/v1 ] ] ]
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/locatedAt\/v1 ] ] ]
         [ sh:and ( tsh:AttestationNodeShape ) ;
           sh:property [ sh:path tsx:uri ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
-          sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ;
-                        sh:message "locatedAt.contentHash is required and must be a well-formed multihash (§8.12.1)." ] ;
+          sh:property [ sh:path tsx:targetContentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                        sh:message "locatedAt.targetContentHash is required and must be a well-formed multihash (§8.10.2, §8.12.1; Q48-resolved)." ] ;
           sh:property [ sh:path tsx:contentLength ; sh:datatype xsd:integer ; sh:maxCount 1 ] ;    # optional
           sh:property [ sh:path tsx:availability ; sh:maxCount 1 ] ]                                # optional; enum unspecified (§8)
     ) .
-    # NOTE: the 'contentHash SHOULD match the target node's contentHash; mismatch = informative content
-    # drift' semantics is a CROSS-NODE comparison → out of band (the target may not be in the graph).
-    # It is documented as §6-adjacent (cross-node), NOT encoded as an Info severity on the presence constraint.
+    # NOTE: the 'targetContentHash SHOULD match the target node's contentHash; mismatch = informative
+    # content drift' semantics is a CROSS-NODE comparison → out of band (the target may not be in the
+    # graph). It is documented as §6-adjacent (cross-node), NOT encoded as an Info severity on the presence constraint.
 
 # Worked sub-type: wasDerivedFrom — derivationMethod required; classification-laundering guard CONDITIONAL.
 tsh:AttestationWasDerivedFromV1Shape
@@ -542,7 +687,7 @@ tsh:AttestationWasDerivedFromV1Shape
     rdfs:label "attestation/wasDerivedFrom/v1 (§8.12.1)" ;
     sh:targetClass tsx:SignedNode ;
     sh:or (
-        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/wasDerivedFrom/v1 ] ] ]
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/wasDerivedFrom\/v1 ] ] ]
         [ sh:and ( tsh:AttestationNodeShape ) ;
           sh:property [ sh:path tsx:derivationMethod ; sh:minCount 1 ; sh:maxCount 1 ;
                         sh:message "wasDerivedFrom MUST carry derivationMethod." ] ]
@@ -553,6 +698,8 @@ tsh:AttestationWasDerivedFromV1Shape
 ```
 
 > The remaining attestation sub-types follow the identical *implicit-class-target + `sh:or` type discriminator + `sh:and ( tsh:AttestationNodeShape )`* pattern, with each sub-type's required payload fields from the §8.12.1 table. They are all written out in the consolidated graph and are now genuinely **activated** (no longer dead shapes). Several payload fields the spec names but does not type (`scope`, `availability`, `certificationScheme`, `validityWindow`, `methodology`, `scoringRubric`, `results`, `standardId`) are shaped as *presence-only* (`sh:minCount 1`, no `sh:datatype`) and the datatype gap is flagged in §8 rather than invented.
+>
+> **The ratified table now has 16 sub-types (2026-08-03).** `attestation/revises/v1` was minted per ADR-0016 §C (§8.10.5, §8.12.1): payload `targetNodeId` (the prior revision) + `successorNodeId` (this revision), authorization `publisher-only`, single-parent/linear lineage at v0.1. Its shape (`tsh:AttestationRevisesV1Shape`, consolidated graph section D) is *structurally identical* to the supersedes shape under a different `type` IRI — an instructive SHACL boundary case: the load-bearing distinction between **neutral version succession** (`revises` — no deprecation signal; the prior revision remains a valid point-in-time snapshot) and **corrective replacement** (`supersedes` — a deprecation signal) is *semantic*, carried entirely by the `type` value, invisible to any graph-shape constraint. And per §8.10.5 the diff between two revisions is a **derivable human view, not a signed object** — so no shape exists for it, correctly.
 
 ### 4.3 The QEC sub-ontology
 
@@ -611,7 +758,7 @@ tsh:ClaimShape
     sh:property [
         sh:path ts:subject ;
         sh:nodeKind sh:BlankNodeOrIRI ;     # 'a metric/indicator/observable' — IRI or typed node
-        sh:minCount 1 ; sh:maxCount 1 ;     # TC-C19: exactly one  (see §8.3 #1 — Appendix-B subject/metric gap)
+        sh:minCount 1 ; sh:maxCount 1 ;     # TC-C19: exactly one (Appendix-B subject gap closed 2026-08-03 — §8.3 #1)
         sh:message "ts:subject MUST be exactly one URI/node." ;
     ] ;
     sh:property [
@@ -857,7 +1004,7 @@ The §9.2 sequence is 15 numbered checks plus the additional structural validati
 | 7 | **Timestamp validity** (RFC 3161 token; X.509 chain to pinned FreeTSA root) | **No (out of band)** | Cert-chain walking + token signature. SHACL validates the token *field is present*. **Needs:** out-of-band X.509 validation. |
 | 8 | **Transparency-log inclusion** (RFC 6962 Merkle inclusion vs pinned Rekor key) | **No (out of band)** | Merkle-proof verification. SHACL validates the Rekor entry *field is present*. **Needs:** out-of-band RFC 6962 verify. |
 | 9 | **BlobRef integrity** (fetch HTTPS; recompute SHA-256; confirm size) | **No (out of band)** | Network fetch + hash. SHACL validates BlobRef *shape* (`tsh:BlobRefShape`: `ref` pattern, `url`, `size` required; `contentType` optional). **Needs:** out-of-band fetch+hash. |
-| 10 | **Lifecycle state** (chain of signer-matched lifecycle attestations; verify each sig+timestamp) | **Mixed (SHACL-SPARQL + out of band)** | **SHACL-able (Core):** each lifecycle node is `attestation/{withdraws,reinstates,supersedes,publishes}/v1` (now actually targeted, §4.2). **SHACL-SPARQL:** `targetNodeId`→nodeId reference resolution across a loaded graph, signer-matching by `signer.identifier` equality across nodes, `priorWithdrawalNodeId` pointing at a withdrawal of the same target, and *envelope-timestamp ordering* (`ORDER BY`). **Out of band:** per-attestation *signature*+*timestamp* verification (checks 2/7 again). **Needs:** out-of-band per-node crypto; SPARQL for ordering/joins. |
+| 10 | **Lifecycle state** (chain of signer-matched lifecycle attestations; verify each sig+timestamp) | **Mixed (SHACL-SPARQL + out of band)** | **SHACL-able (Core):** each lifecycle node is `attestation/{withdraws,reinstates,supersedes,publishes}/v1` (now actually targeted, §4.2; `attestation/revises/v1` is lifecycle-family too — lineage per §8.10.5 — but records neutral version succession rather than driving status). **SHACL-SPARQL:** `targetNodeId`→nodeId reference resolution across a loaded graph, signer-matching by `signer.identifier` equality across nodes, `priorWithdrawalNodeId` pointing at a withdrawal of the same target, and *envelope-timestamp ordering* (`ORDER BY`). **Out of band:** per-attestation *signature*+*timestamp* verification (checks 2/7 again). **Needs:** out-of-band per-node crypto; SPARQL for ordering/joins. |
 | 11 | **captureMethod label** (read `metadata.captureMethod`; render) | **SHACL-Core** | Field read/presence. `tsh:PackageMetadataShape` requires it and enforces the ai-assisted-analysis `sh:in`. Integrity comes from check #2; *reading* the label is a graph op. |
 | 12 | **`type` resolution** (known v0.1 sub-type; unknown → `unknown_type`, **non-fatal**) | **SHACL-Core** | `sh:pattern` (absolute `tst:` form) + (optionally) `sh:in` over the known sub-type IRIs. Non-fatal outcome modeled as `sh:severity sh:Warning`/`sh:Info` rather than `sh:Violation`. |
 | 13 | **nodeId cross-check** (recompute envelope hash; a referencing `targetNodeId` resolves here) | **Mixed (SHACL-SPARQL + out of band)** | **SHACL-SPARQL:** `targetNodeId` *resolving to a known node's nodeId* within a loaded graph (reference resolution is a join). **Out of band:** the *authoritative nodeId derivation* (envelope-hash recompute). Unresolvable → `unknown_target_node` (**non-fatal**). |
@@ -868,7 +1015,7 @@ The §9.2 sequence is 15 numbered checks plus the additional structural validati
 
 ### 6.1 The cleanly-SHACL structural validations
 
-The model's §6.1 lists pure-graph-shape validations layered alongside §9.2; every one is already encoded above or in the consolidated graph: family membership (`tsh:FamilyDiscriminatorShape`), QEC set (`tsh:QecContentTypeShape`), profile consistency (`tsh:ProfileConsistencyShape`, consolidated graph), required structural fields (`tsh:SignedNodeShape`), `targetNodeId` rule (in the family discriminator + `tsh:ContentAnalysisV1Shape`), `type`-IRI pattern, BlobRef shape (`tsh:BlobRefShape`), prompt visibility (`tsh:PromptShape`), extensions reverse-DNS keys, datHere presence reqs (`tsh:DatHereConditionalShape`), provenance→execution conditional, attestation-entry sub-type discriminators (now actually targeted, §4.2), CommitmentView field set, and typed-claim shape validation (§5). Reference-resolution within a loaded graph (`nodeId` ↔ `targetNodeId`) is a join and sits at the SHACL-SPARQL tier (see #10/#13), not Core.
+The model's §6.1 lists pure-graph-shape validations layered alongside §9.2; every one is already encoded above or in the consolidated graph: family membership (`tsh:FamilyDiscriminatorShape`), QEC set (`tsh:QecContentTypeShape`), profile consistency (`tsh:ProfileConsistencyShape`, consolidated graph), required structural fields (`tsh:SignedNodeShape`), `targetNodeId` rule (in the family discriminator + `tsh:ContentAnalysisV1Shape`), `type`-IRI pattern, BlobRef shape (`tsh:BlobRefShape`), prompt visibility (`tsh:PromptShape`), extensions reverse-DNS keys, datHere presence reqs (`tsh:DatHereConditionalShape`), provenance→execution conditional, attestation-entry sub-type discriminators (now actually targeted, §4.2), the §8.8.1 CommitmentView field set (`tsh:CommitmentViewShape`, §3.4 — served shape ratified 2026-08-03, incl. the `sealed`/`public` visibility value set), and typed-claim shape validation (§5). Reference-resolution within a loaded graph (`nodeId` ↔ `targetNodeId`) is a join and sits at the SHACL-SPARQL tier (see #10/#13), not Core.
 
 ### 6.2 The intra-graph `signingKeyId` consistency check (#6) — SHACL-SPARQL, not Core
 
@@ -920,11 +1067,8 @@ Appendix B is a `ts:TrendClaim` for noise complaints in Bushwick North, 2024 vs 
     a ts:TrendClaim ;
     dcterms:identifier "claim-001" ;
     dcterms:description "Noise complaints rose materially in Bushwick North between 2024 and 2025." ;
-    ts:metric [
-        a schema:Thing ;
-        schema:name "311 noise complaint count"
-    ] ;          # @id ex:complaint-count in JSON-LD; modeled as the metric node
-    ts:subject ex:complaint-count ;     # the claim's subject metric (see §7.3 / §8.3 #1 note)
+    ts:metric ex:complaint-count ;      # JSON-LD nests { "@id": "ex:complaint-count", "schema:name": ... }; the name triple lands on the metric node below
+    ts:subject ex:complaint-count ;     # core-required; carried by Appendix B since the 2026-08-03 correction (§8.3 #1) — the SAME metric IRI ts:metric names
     ts:scope [
         a ts:Scope ;
         ts:geographicScope [
@@ -977,6 +1121,11 @@ Appendix B is a `ts:TrendClaim` for noise complaints in Bushwick North, 2024 vs 
         ]
     ] ;
     ts:limitations "Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records)." .
+
+# The metric node Appendix B's ts:metric object names inline ({ "@id", "schema:name" }); it carries
+# no @type in the published JSON-LD, so no rdf:type triple is emitted for it here.
+ex:complaint-count
+    schema:name "311 noise complaint count" .
 ```
 
 **Validation against the §5 shapes — conformance report:** Running `tsh:TrendClaimShape` (which `sh:and`s `tsh:ClaimShape`) over this instance produces **`sh:conforms = true`**:
@@ -984,7 +1133,7 @@ Appendix B is a `ts:TrendClaim` for noise complaints in Bushwick North, 2024 vs 
 - `tsh:ClaimShape`: `dcterms:identifier` present (1), `ts:subject` present (1 IRI), `ts:scope` validates `tsh:ScopeShape` (both `ts:geographicScope` and `ts:temporalScope` present — and even if a component were absent, those are now Q14-contingent `sh:Warning`, not `sh:Violation`), `ts:confidence` validates `tsh:ConfidenceStatementShape` (`ts:method` is an IRI; `level`/`lowerBound`/`upperBound` accepted as decimal-or-double), `prov:wasDerivedFrom` present (≥1), `ts:derivedVia` validates `tsh:AnalyticalDerivationShape` (`traceReference`, `translationModel`, `translationPrompt`, `sourceOutputSpan` with a 2-integer `byteRange`). The description-iff-`NotApplicable` rule is satisfied vacuously: method is `ts:FrequentistInterval`, so the `sh:not` branch holds.
 - `tsh:TrendClaimShape`: `ts:metric` (1), `ts:baselinePeriod` + `ts:comparisonPeriod` (each a valid `time:Interval`), `ts:direction = ts:Increase` ∈ the closed enum `{ts:Increase, ts:Decrease, ts:NoSignificantChange}`, `ts:magnitude` validates `tsh:MagnitudeShape` (`percentChange` accepted as decimal-or-double).
 
-> **One reconciliation, flagged (§8.3 #1).** Appendix B's JSON-LD gives `ts:metric` an `@id` (`ex:complaint-count`) *and* a nested `schema:name`, but the §8.11.4 core `ts:Claim` table also requires `ts:subject` ("what the claim is about, typically a metric") on *every* `ts:Claim`. Appendix B does **not** carry an explicit `ts:subject` property — it carries `ts:metric` (a `ts:TrendClaim` addition) instead. This is a **spec ambiguity**: either (a) `ts:subject` is satisfied-by/aliased-to `ts:metric` for metric-bearing subtypes, or (b) Appendix B is under-specified against its own core. To validate Appendix B *as written* I added `ts:subject ex:complaint-count` (the most charitable reading — the metric *is* the subject); a strict reading of `tsh:ClaimShape` against the *literal* Appendix B JSON would report a `ts:subject` `minCount` violation. I do not silently resolve this in the shapes; §8 records it as a gap the spec must close.
+> **One reconciliation, now closed (§8.3 #1; spec correction 2026-08-03).** Earlier revisions of Appendix B gave `ts:metric` an `@id` (`ex:complaint-count`) *and* a nested `schema:name` but carried **no** explicit `ts:subject` — despite the §8.11.4 core `ts:Claim` table requiring `ts:subject` ("what the claim is about, typically a metric") on *every* `ts:Claim` — so a strict `tsh:ClaimShape` reported a `minCount` violation against the spec's own example. This document flagged the gap and validated the most charitable reading by adding `ts:subject ex:complaint-count` (the metric *is* the subject). The spec's 2026-08-03 revision closed the gap in exactly that direction: Appendix B now carries `"ts:subject": {"@id": "ex:complaint-count"}` alongside the TrendClaim-specific `ts:metric`, with the correction credited to this formalization's validation pass. The Turtle above therefore now matches Appendix B *as published*; `tsh:ClaimShape`'s `ts:subject minCount 1` is no longer contingent.
 
 ### 7.2 A deliberately-invalid variant and the SHACL violation
 
@@ -1060,7 +1209,7 @@ The report says the *shape* is wrong. It says nothing about whether the *valid* 
 ### 8.1 What SHACL captures cleanly
 
 - **The typed-claims layer (§8.11) — a near-perfect fit.** This is the layer the spec *designed for SHACL*: §8.11.3 condition 3 and §8.11.6 step 5 *require* SHACL shapes. Required-property presence, datatype constraints (with the decimal-or-double widening for JSON-LD-parsed numbers), the two closed enums (`ts:direction`, `ts:relation`), explicit-scope-required, method-derived-confidence (as "method must be an IRI, not a literal"), the `byteRange`-is-two-integers constraint, the description-iff-`NotApplicable` conditional — all are idiomatic SHACL Core. The worked example validates and the invalid variant produces precise, correct violations.
-- **Envelope *field* well-formedness (§8.1, §8.3).** Presence/datatype/cardinality of every structural-primitive field; the `Ed25519ph` const (`sh:hasValue`); the reserved canonicalization-URI set (`sh:in`); the captureMethod vocabulary (ai-assisted-analysis profile); the BlobRef shape (`ref`/`url`/`size` required, `contentType` optional, per the §8.1.5 MUST steps) with its `blob:sha256:<hex>` pattern; the prompt-visibility conditional; the `type`-as-absolute-IRI pattern. Clean.
+- **Envelope *field* well-formedness (§8.1, §8.3).** Presence/datatype/cardinality of every structural-primitive field; the `Ed25519ph` const (`sh:hasValue`); the reserved canonicalization-URI set (`sh:in`); the captureMethod vocabulary (ai-assisted-analysis profile); the BlobRef shape (`ref`/`url`/`size` required, `contentType` optional, per the §8.1.5 MUST steps) with its `blob:sha256:<hex>` pattern; the prompt-visibility conditional; the `vcsRef` required-if-present nesting (§3.1); the §8.8.1 commitment-view field set with the `sealed`/`public` visibility value set and its Warning-tier legacy-alias idiom (§3.4); the `type`-as-absolute-IRI pattern. Clean.
 - **The two-family taxonomy (§7.4) — `sh:xone` is the perfect operator.** Disjoint families, discriminated by `type`-IRI prefix and `targetNodeId` presence, is *precisely* an exclusive-or, and `sh:xone` enforces the disjointness `sh:or` would miss.
 - **The QEC `untyped`-mutex (§7.5).** `sh:not` of co-occurrence captures "untyped is mutually exclusive with typed values" exactly.
 - **Specialization without inheritance, *with* targeting.** SHACL's lack of class inheritance is *not* a problem here: `sh:and ( BaseShape )` + additional `sh:property` expresses sub-type specialization cleanly, and the implicit-class-target + `sh:or` type-discriminator pattern actually **activates** each sub-type shape so its payload constraints fire (the earlier draft's dead-shape bug is fixed in §4.2).
@@ -1082,11 +1231,11 @@ The report says the *shape* is wrong. It says nothing about whether the *valid* 
 
 These are places where I could not write a faithful shape because the spec is silent or internally inconsistent — recorded here rather than resolved by invention (the model's discipline: "where the spec is silent, say so").
 
-1. **`ts:subject` vs. `ts:metric` in Appendix B (§7.1 above).** The §8.11.4 core table requires `ts:subject` on every `ts:Claim`, but the Appendix B worked example carries `ts:metric` and no `ts:subject`. A strict `tsh:ClaimShape` reports a `minCount` violation against the spec's own example. The spec must say whether `ts:metric` satisfies `ts:subject` for metric-bearing subtypes (alias/subproperty), or whether Appendix B is under-specified. **Until resolved, `tsh:ClaimShape`'s `ts:subject minCount 1` is contingent.**
+1. **`ts:subject` vs. `ts:metric` in Appendix B — RESOLVED by spec correction (2026-08-03).** The §8.11.4 core table requires `ts:subject` on every `ts:Claim`, but Appendix B's earlier revisions carried `ts:metric` and no `ts:subject`, so a strict `tsh:ClaimShape` reported a `minCount` violation against the spec's own example — the gap this entry recorded. The spec's 2026-08-03 revision added the core-required `ts:subject` to Appendix B (same metric URI as the TrendClaim's `ts:metric`), crediting this formalization's validation pass for surfacing the omission. `tsh:ClaimShape`'s `ts:subject minCount 1` is no longer contingent; see §7.1.
 2. **`ts:Magnitude` and `ts:Component` field shapes (§5.2/§5.3).** The model marks both **under-specified** — the example uses `ts:percentChange`/`ts:absoluteChange` but the spec states *no required fields*. I shaped `tsh:MagnitudeShape` as presence-optional/typed-if-present and wrote *no* `minCount` for either field, and did *not* write a "components sum to `ts:totalsTo`" constraint (the spec does *not* mandate the sum). A faithful *required-field* shape is impossible without the spec naming required fields.
 3. **`content/question/v1` and `content/evidence/v1` payloads.** Reserved name-only (Q5); the spec defines *no* payload fields. No faithful shape can be written; I shaped only `content/claim/v1`.
 4. **Several attestation payload datatypes (`scope`, `availability`, `certificationScheme`, `validityWindow`, `methodology`, `scoringRubric`, `results`, `standardId`).** Named in §8.12.1 with no datatype. Shaped as presence-only (and now actually targeted/enforced per §4.2); no invented datatypes.
-5. **`contentProfile` / `producerProfile` placement.** Resolved against the §8.1.1 normative field table: **both** are listed as **top-level** fields on the package object. This revision roots both at the metadata (top-level) object consistently — `( tsx:metadata tsx:contentProfile )` and `( tsx:metadata tsx:producerProfile )` — fixing the earlier internal inconsistency that routed `contentProfile` through metadata but `producerProfile` at a different level. (§8.7/datHere prose's informal `metadata.contentProfile` reference is consistent with this rooting.)
+5. **`contentProfile` / `producerProfile` placement — RESOLVED by spec ratification (2026-08-03).** The spec's §8.1.2 placement note now ratifies what the shipped wire always carried: `contentProfile` lives **inside `metadata`** (`metadata.contentProfile`, retained as the grandfathered legacy alias) and `producerProfile` is a **top-level** envelope field (§8.1.1) — the spec text moved to match the wire, crediting the formal model for documenting it correctly. This revision (2026-08-18) aligns the shapes accordingly: `contentProfile` stays rooted at `( tsx:metadata tsx:contentProfile )`; `producerProfile` moves to a direct `tsx:producerProfile` property on `tsh:SignedNodeShape`; the C55 biconditional (`tsh:ProfileConsistencyShape`) roots each side at its ratified level. No longer an ambiguity.
 6. **Scope nullability (Q14).** Whether **both** scope components and **both** interval endpoints are mandatory is the open question Q14 (cited in §8.11.4). This revision marks those four `sh:minCount 1` constraints `sh:Warning` and Q14-contingent rather than asserting a `sh:Violation` the spec cannot yet justify; they revert to `sh:Violation` if Q14 resolves to "stay required."
 7. **OWL axioms (Q10).** Whether sub-type shapes should be *targeted by entailment* (`ts:TrendClaim rdfs:subClassOf ts:Claim` + a reasoner) or by *explicit `@type`* is contingent on the unfixed Q10 axioms. I target by explicit `@type` (matching Appendix B) and flag every place this matters.
 8. **`bindingTier` value set (Q3).** The §8.5 ladder is **informative** prose and **extensible**, and the non-GitHub tiers are explicitly Q3-open. The spec's own data uses values beyond the ladder (`platform`, `legacy_embedded`, §8.3.3). I therefore do **not** close the `bindingTier` enum; presence + string type is required, with a non-violating `sh:Info` ladder-membership hint that includes the spec-attested values. (The earlier draft both invented coinages and closed the enum, omitting `platform`/`legacy_embedded` — fixed.)
@@ -1094,6 +1243,8 @@ These are places where I could not write a faithful shape because the spec is si
 ### 8.4 Bottom line
 
 SHACL is the **correct and spec-mandated** validation technology for the typed-claims layer and a **clean-by-translation** fit for envelope field well-formedness. It is **not** — and the spec never asks it to be — a substitute for the cryptographic verifier: the eight out-of-band §9.2 checks (hash, signature, timestamp, Rekor, registry) carry the actual trust, and SHACL validates only that the *fields those checks operate on* are present and well-shaped. A handful of in-graph checks (`signingKeyId` equality #6, identifier uniqueness, lifecycle ordering/joins) sit at the **SHACL-SPARQL** tier, not Core, and are labeled as such. The honest architecture is **layered**: JSON Schema or a normative JSON-LD context for the envelope, SHACL for the `ts:` claim layer (this document's shapes graph), and an out-of-band crypto verifier (`@typedstandards/verify-core`) for integrity — with SHACL owning exactly the instance-data-conformance slice and nothing it cannot honestly hold. OWL promotion (Q10) would sit *beneath* the SHACL layer as an entailment regime, not displace it.
+
+> **Registry note (2026-08-18).** The registry's Q41 entry now records **shape-specification positions** from a formalization review (positions on record, nothing resolved): SHACL's more interesting use is *declaring admissible graph shapes* — a gate for data ingestion and a reference point for transformation output — rather than "verification," with validity in the tamper-evidence sense staying outside SHACL's scope ("the spec's data schema maps to SHACL; everything else maps to SysML"); the maintainer's recorded decision is to punt the SHACL step in the verifier core — keep the output shape JSON, translating JSON → JSON-LD at the point SHACL validation is needed — with SHACL-as-spec-self-consistency-checking affirmed as the interim use. That is the boundary this document already draws (§1.3, §6, and the layering above); its framing is unchanged, and the promotion triggers recorded in `research/03-formalism-comparison.md` stand as the SHACL-path record.
 
 ---
 
@@ -1144,12 +1295,25 @@ tsh:ContentHashShape a sh:NodeShape ;
     sh:property [ sh:path tsx:sha3-256 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ; sh:maxCount 1 ] ;
     sh:property [ sh:path tsx:blake3 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ; sh:maxCount 1 ] .
 
+# vcsRef — optional attested content-family self-declaration (§8.1.1; ADR-0016 §B). repoUrl +
+# commitSha required-if-present. Verify-on-fetch is OUT OF BAND; mismatch/unreachable is
+# INFORMATIVE, not a hard failure (mirrors locatedAt §8.10.2); weight is captureMethod-contextualized.
+tsh:VcsRefShape a sh:NodeShape ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:repoUrl ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "vcsRef.repoUrl required when vcsRef is present." ] ;
+    sh:property [ sh:path tsx:commitSha ; sh:datatype xsd:string ;   # no lexical pattern: not git-specific (ADR-0016 §B)
+                  sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "vcsRef.commitSha required when vcsRef is present (full revision object id)." ] ;
+    sh:property [ sh:path tsx:path ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:ref ; sh:datatype xsd:string ; sh:maxCount 1 ] .   # mutable pointer, informative only
+
 tsh:SignerShape a sh:NodeShape ;
     sh:closed false ;
     # bindingTier: required string; NOT a closed enum (ladder informative + extensible, Q3-open).
     sh:property [ sh:path tsx:bindingTier ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "bindingTier required string; §8.5 ladder informative + extensible (Q3-open)." ] ;
-    # advisory NON-VIOLATING ladder hint; includes spec-attested 'platform' + 'legacy_embedded' (§8.3.3).
+    # advisory NON-VIOLATING ladder hint; §6.2 signer-glossary tokens + 'platform'/'legacy_embedded' (§8.3.3).
     sh:property [ sh:path tsx:bindingTier ; sh:severity sh:Info ;
                   sh:in ( "pseudonymous" "oauth" "orcid" "did-web" "notarized" "platform" "legacy_embedded" ) ;
                   sh:message "bindingTier outside spec-attested set; permitted (extensible), surfaced as Info." ] ;
@@ -1166,9 +1330,10 @@ tsh:PackageMetadataShape a sh:NodeShape ;
     sh:property [ sh:path tsx:captureMethod ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:in ( "chat-flow-stream" "claude-code-jsonl-readback" "claude-code-self-report" ) ;
                   sh:message "captureMethod required; ai-assisted-analysis v0.1 vocabulary." ] ;
+    # metadata.contentProfile — placement RATIFIED (§8.1.2 placement note, 2026-08-03); grandfathered
+    # legacy alias of the TOP-LEVEL producerProfile (which lives on tsh:SignedNodeShape, not here).
     sh:property [ sh:path tsx:contentProfile ; sh:datatype xsd:string ; sh:maxCount 1 ;
                   sh:in ( "default" "datHere" ) ] ;
-    sh:property [ sh:path tsx:producerProfile ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
     sh:property [ sh:path tsx:contentType ; sh:minCount 1 ;
                   sh:or ( [ sh:in ( "claim" "question" "evidence" ) ] [ sh:in ( "untyped" ) ] ) ] .
 
@@ -1188,6 +1353,10 @@ tsh:SignedNodeShape a sh:NodeShape ;
     sh:property [ sh:path tsx:sig ; sh:node tsh:SignatureEnvelopeShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
     sh:property [ sh:path tsx:signer ; sh:node tsh:SignerShape ; sh:minCount 0 ; sh:maxCount 1 ;
                   sh:severity sh:Warning ; sh:message "signer RECOMMENDED in v0.1." ] ;
+    # producerProfile — optional TOP-LEVEL field (§8.1.1); legacy alias = metadata.contentProfile (§8.1.2).
+    sh:property [ sh:path tsx:producerProfile ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    # vcsRef — optional (§8.1.1; ADR-0016 §B); verify-on-fetch OUT OF BAND, mismatch informative.
+    sh:property [ sh:path tsx:vcsRef ; sh:node tsh:VcsRefShape ; sh:minCount 0 ; sh:maxCount 1 ] ;
     sh:property [ sh:path tsx:metadata ; sh:node tsh:PackageMetadataShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
     sh:property [ sh:path tsx:timestamp ; sh:minCount 0 ; sh:maxCount 1 ; sh:severity sh:Warning ;
                   sh:message "RFC 3161 timestamp SHOULD be present; validity = check #7, out of band." ] ;
@@ -1219,23 +1388,24 @@ tsh:QecContentTypeShape a sh:NodeShape ;
                         sh:qualifiedMinCount 1 ] ] ) ] ;
     sh:message "contentType non-empty; 'untyped' mutually exclusive with claim/question/evidence." .
 
-# contentProfile <=> producerProfile biconditional (C55). BOTH live on metadata (top-level, §8.1.1).
+# contentProfile <=> producerProfile biconditional (C55). contentProfile at metadata.contentProfile
+# (ratified placement §8.1.2); producerProfile a TOP-LEVEL envelope field (§8.1.1).
 tsh:ProfileConsistencyShape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
     sh:and (
-        # metadata.contentProfile=datHere -> metadata.producerProfile starts ai-assisted-analysis/datHere
+        # metadata.contentProfile=datHere -> top-level producerProfile starts ai-assisted-analysis/datHere
         [ sh:or (
             [ sh:not [ sh:property [ sh:path ( tsx:metadata tsx:contentProfile ) ; sh:hasValue "datHere" ] ] ]
-            [ sh:property [ sh:path ( tsx:metadata tsx:producerProfile ) ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ) ]
-        # metadata.producerProfile starts ai-assisted-analysis/datHere -> metadata.contentProfile=datHere
+            [ sh:property [ sh:path tsx:producerProfile ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ) ]
+        # top-level producerProfile starts ai-assisted-analysis/datHere -> metadata.contentProfile=datHere
         [ sh:or (
-            [ sh:not [ sh:property [ sh:path ( tsx:metadata tsx:producerProfile ) ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ]
+            [ sh:not [ sh:property [ sh:path tsx:producerProfile ; sh:pattern "^ai-assisted-analysis/datHere" ] ] ]
             [ sh:property [ sh:path ( tsx:metadata tsx:contentProfile ) ; sh:hasValue "datHere" ] ] ) ]
     ) ;
-    sh:message "contentProfile=datHere IFF producerProfile starts ai-assisted-analysis/datHere (both top-level, §8.1.1)." .
+    sh:message "metadata.contentProfile=datHere IFF top-level producerProfile starts ai-assisted-analysis/datHere (§8.1.1/§8.1.2)." .
 
 #################################################################
-# C. content/analysis/v1 PACKAGE (§8.1) + sub-objects  [SHACL-Core]
+# C. content/analysis/v1 PACKAGE (§8.1) + sub-objects, and the §8.8.1 COMMITMENT VIEW  [SHACL-Core]
 #################################################################
 
 tsh:PromptShape a sh:NodeShape ;
@@ -1273,7 +1443,7 @@ tsh:BlobRefShape a sh:NodeShape ;
 tsh:ContentAnalysisV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
     sh:or (
-        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:content/analysis/v1 ] ] ]   # skip if not analysis
+        [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:content\/analysis\/v1 ] ] ]   # skip if not analysis
         [ sh:and ( tsh:SignedNodeShape ) ;
           sh:property [ sh:path tsx:prompt ; sh:node tsh:PromptShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
           sh:property [ sh:path tsx:cost ; sh:node tsh:CostShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -1288,7 +1458,7 @@ tsh:ContentAnalysisV1Shape a sh:NodeShape ;
     ) ;
     sh:message "content/analysis/v1 required-field conformance (§8.1.1)." .
 
-# datHere conditional presence (req 6 summary, req 4 notebook ext). metadata.contentProfile (top-level).
+# datHere conditional presence (req 6 summary, req 4 notebook ext). metadata.contentProfile (§8.1.2 ratified placement).
 tsh:DatHereConditionalShape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
     sh:or (
@@ -1298,8 +1468,83 @@ tsh:DatHereConditionalShape a sh:NodeShape ;
     ) ;
     sh:message "Under contentProfile=datHere: summary and org.civicaitools.notebook required (§8.7.1)." .
 
+# ---- §8.8.1 COMMITMENT VIEW (served shape RATIFIED 2026-08-03; codebase-wins, zero wire change).
+#      A SERVED HOST VIEW, not a signed node — validated under the same tsx: fiction (§2/§8.2).
+#      tsx:visibility here is the NODE-visibility state (sealed/public), distinct from
+#      prompt.visibility (full_text/hash_only, §8.1.3) — same JSON key, different focus node.
+
+tsh:CommitmentViewSignatureShape a sh:NodeShape ;
+    sh:closed false ;
+    # §8.3.1-shaped, carried verbatim; algorithm is load-bearing (Ed25519 vs Ed25519ph dispatch) but
+    # algorithm/kid MAY be absent on older signing paths — hence 0..1, unlike tsh:SignatureEnvelopeShape.
+    sh:property [ sh:path tsx:signature ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:publicKey ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:algorithm ; sh:maxCount 1 ; sh:in ( "Ed25519ph" "Ed25519" ) ] ;
+    sh:property [ sh:path tsx:kid ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+tsh:LifecycleSummaryShape a sh:NodeShape ;
+    sh:closed false ;
+    # INFORMATIONAL only — authoritative lifecycle state is the signed attestation chain (§8.10).
+    sh:property [ sh:path tsx:status ; sh:in ( "active" "withdrawn" ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:withdrawnAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:withdrawnReason ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:reinstatedAt ; sh:datatype xsd:dateTime ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:reinstatedReason ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+tsh:CommitmentViewShape a sh:NodeShape ;
+    sh:targetClass tsx:CommitmentView ;
+    sh:closed false ;
+    sh:property [ sh:path tsx:evidenceProtocolVersion ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:packageHash ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                  sh:minCount 1 ; sh:maxCount 1 ] ;
+    # packageUrl — CONDITIONAL: omitted when unknown AND on redacted (sealed-visibility) views.
+    sh:property [ sh:path tsx:packageUrl ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # visibility — REQUIRED; sealed/public canonical (ADR-0016 §A); committed/published are legacy
+    # INPUT ALIASES (accepted, never emitted): Violation-tier sh:in admits all four; Warning-tier
+    # sh:in flags a legacy alias non-fatally. See §3.4 for the idiom rationale.
+    sh:property [ sh:path tsx:visibility ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:in ( "sealed" "public" "committed" "published" ) ;
+                  sh:message "visibility MUST be sealed/public (or legacy input alias committed/published)." ] ;
+    sh:property [ sh:path tsx:visibility ; sh:severity sh:Warning ; sh:in ( "sealed" "public" ) ;
+                  sh:message "Legacy visibility alias (committed→sealed, published→public): accepted as input, never emitted." ] ;
+    # captureMethod — REQUIRED but WIRE-NULLABLE (string|null; explicit null = pre-discipline record);
+    # RDF cannot distinguish explicit null from absence → presence at sh:Warning.
+    sh:property [ sh:path tsx:captureMethod ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:captureMethod ; sh:minCount 1 ; sh:severity sh:Warning ;
+                  sh:message "captureMethod expected (string|null on the wire)." ] ;
+    sh:property [ sh:path tsx:contentProfile ; sh:in ( "default" "datHere" ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:producerProfile ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:type ; sh:nodeKind sh:IRI ; sh:maxCount 1 ;
+                  sh:pattern "^https://typedstandards\\.org/ns/envelope-type/(content|attestation)/[A-Za-z]+/v[0-9]+$" ] ;
+    # signer — §8.5-shaped claim mirrored from the package: THE §9.2 CHECK-#14 SUBJECT.
+    sh:property [ sh:path tsx:signer ; sh:node tsh:SignerShape ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:contentCanonicalization ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # signature — CONDITIONAL: omitted when the package is unsigned (§8.3.1 best-effort signing).
+    sh:property [ sh:path tsx:signature ; sh:node tsh:CommitmentViewSignatureShape ; sh:maxCount 1 ] ;
+    # signerIdentity — INFORMATIONAL; MUST NOT be the signature subject (that is `signer` above).
+    sh:property [ sh:path tsx:signerIdentity ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rfc3161Timestamp ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorEntryId ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorInclusionProof ; sh:datatype xsd:string ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:rekorEntryBody ; sh:datatype xsd:string ; sh:maxCount 1 ] ;   # offline Merkle inclusion (§9.4)
+    sh:property [ sh:path tsx:lifecycle ; sh:node tsh:LifecycleSummaryShape ; sh:maxCount 1 ] ;
+    # lifecycleAttestations = signed lifecycle envelopes inline (embed form; check-#10 chain);
+    # attestations = NON-LIFECYCLE entries only (§8.9). Presence-optional.
+    sh:property [ sh:path tsx:lifecycleAttestations ] ;
+    sh:property [ sh:path tsx:attestations ] ;
+    sh:property [ sh:path tsx:trustRegistryUrl ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "trustRegistryUrl required; per-publisher configuration, never a constant." ] ;
+    sh:property [ sh:path tsx:trustRegistryUrlLegacy ; sh:nodeKind sh:IRI ; sh:maxCount 1 ] ;
+    # subjectTitle / subjectSummary — CONDITIONAL + WIRE-NULLABLE; omitted on redacted sealed views.
+    sh:property [ sh:path tsx:subjectTitle ; sh:maxCount 1 ] ;
+    sh:property [ sh:path tsx:subjectSummary ; sh:maxCount 1 ] .
+    # REDACTION RULE (sealed-visibility records): redacted view omits packageUrl/subjectTitle/
+    # subjectSummary; proof-side fields served UNREDACTED — they ARE the commitment. ?inline=1 adds
+    # `package` + `trustRegistry` and verifies with zero network access (§9.4). Not Core-encodable.
+
 #################################################################
-# D. attestation/* FAMILY (§8.12) — base + ALL sub-types, EACH ACTUALLY TARGETED  [SHACL-Core]
+# D. attestation/* FAMILY (§8.12) — base + ALL 16 RATIFIED sub-types, EACH ACTUALLY TARGETED  [SHACL-Core]
 #    Pattern: implicit-class target + sh:or type discriminator + sh:and ( base ). No dead shapes.
 #################################################################
 
@@ -1316,7 +1561,7 @@ tsh:AttestationNodeShape a sh:NodeShape ;
 
 tsh:AttestationWithdrawsV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/withdraws/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/withdraws\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:reason ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ; sh:minLength 1 ;
                             sh:message "withdraws.reason required, non-empty." ] ;
@@ -1324,7 +1569,7 @@ tsh:AttestationWithdrawsV1Shape a sh:NodeShape ;
 
 tsh:AttestationReinstatesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/reinstates/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/reinstates\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:priorWithdrawalNodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
                             sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -1332,34 +1577,49 @@ tsh:AttestationReinstatesV1Shape a sh:NodeShape ;
 
 tsh:AttestationSupersedesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/supersedes/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/supersedes\/v1 ] ] ]
+            [ sh:and ( tsh:AttestationNodeShape ) ;
+              sh:property [ sh:path tsx:successorNodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
+                            sh:minCount 1 ; sh:maxCount 1 ] ] ) .
+
+# revises — NEUTRAL VERSION SUCCESSION (minted 2026-08-03, ADR-0016 §C; §8.10.5; publisher-only;
+# single-parent/linear at v0.1). targetNodeId = prior revision, successorNodeId = this revision.
+# Structurally identical to supersedes — the succession-vs-correction distinction (no deprecation
+# signal vs deprecation signal) is SEMANTIC, carried by the type IRI, invisible to graph shape.
+# The between-revisions diff is a DERIVABLE HUMAN VIEW, not a signed object — no shape for it.
+tsh:AttestationRevisesV1Shape a sh:NodeShape ;
+    sh:targetClass tsx:SignedNode ;
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/revises\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:successorNodeId ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ;
                             sh:minCount 1 ; sh:maxCount 1 ] ] ) .
 
 tsh:AttestationPublishesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/publishes/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/publishes\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:publicationHost ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
               sh:property [ sh:path tsx:releasedAt ; sh:datatype xsd:dateTime ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .
 
 tsh:AttestationLocatedAtV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/locatedAt/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/locatedAt\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:uri ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
-              # contentHash presence is a REQUIRED field at default (Violation) severity — NOT demoted to Info.
-              sh:property [ sh:path tsx:contentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ;
-                            sh:message "locatedAt.contentHash required; well-formed multihash (§8.12.1)." ] ;
+              # payload fingerprint = targetContentHash (Q48-resolved 2026-08-03; the structural primitive
+              # claims contentHash for the node's OWN fingerprint). Presence is REQUIRED at default
+              # (Violation) severity — NOT demoted to Info.
+              sh:property [ sh:path tsx:targetContentHash ; sh:node tsh:ContentHashShape ; sh:minCount 1 ; sh:maxCount 1 ;
+                            sh:message "locatedAt.targetContentHash required; well-formed multihash (§8.10.2, §8.12.1)." ] ;
               sh:property [ sh:path tsx:contentLength ; sh:datatype xsd:integer ; sh:maxCount 1 ] ;
               sh:property [ sh:path tsx:availability ; sh:maxCount 1 ] ] ) .
-    # The 'contentHash SHOULD match target's; mismatch = informative drift' semantics is a CROSS-NODE
-    # comparison → out of band (§6, target may be absent). NOT encoded as Info on the presence constraint.
+    # The 'targetContentHash SHOULD match target's contentHash; mismatch = informative drift' semantics
+    # is a CROSS-NODE comparison → out of band (§6, target may be absent). NOT encoded as Info on the
+    # presence constraint.
 
 tsh:AttestationWasDerivedFromV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/wasDerivedFrom/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/wasDerivedFrom\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:derivationMethod ; sh:minCount 1 ; sh:maxCount 1 ;
                             sh:message "wasDerivedFrom MUST carry derivationMethod." ] ] ) .
@@ -1369,49 +1629,49 @@ tsh:AttestationWasDerivedFromV1Shape a sh:NodeShape ;
 
 tsh:AttestationCorroboratesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/corroborates/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/corroborates\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ;     # datatype unspecified (§8.3)
               sh:property [ sh:path tsx:reasoning ; sh:datatype xsd:string ; sh:maxCount 1 ] ] ) .   # optional
 
 tsh:AttestationContradictsV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/contradicts/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/contradicts\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ;
               sh:property [ sh:path tsx:reasoning ; sh:datatype xsd:string ; sh:maxCount 1 ] ] ) .
 
 tsh:AttestationEndorsesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/endorses/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/endorses\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:scope ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .
 
 tsh:AttestationAnswersQuestionV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/answersQuestion/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/answersQuestion\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (question) beyond base
 
 tsh:AttestationSupportedByV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/supportedBy/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/supportedBy\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (evidence) beyond base
 
 tsh:AttestationOpposedByV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/opposedBy/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/opposedBy\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ] ) .    # only targetNodeId (evidence) beyond base
 
 tsh:AttestationCertifiesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/certifies/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/certifies\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:certificationScheme ; sh:minCount 1 ; sh:maxCount 1 ] ;   # unspecified type
               sh:property [ sh:path tsx:validityWindow ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .     # unspecified type
 
 tsh:AttestationEvaluatesV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/evaluates/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/evaluates\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:methodology ; sh:minCount 1 ; sh:maxCount 1 ] ;            # unspecified type
               sh:property [ sh:path tsx:scoringRubric ; sh:minCount 1 ; sh:maxCount 1 ] ;          # unspecified type
@@ -1419,7 +1679,7 @@ tsh:AttestationEvaluatesV1Shape a sh:NodeShape ;
 
 tsh:AttestationConformsV1Shape a sh:NodeShape ;
     sh:targetClass tsx:SignedNode ;
-    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation/conforms/v1 ] ] ]
+    sh:or ( [ sh:not [ sh:property [ sh:path tsx:type ; sh:hasValue tst:attestation\/conforms\/v1 ] ] ]
             [ sh:and ( tsh:AttestationNodeShape ) ;
               sh:property [ sh:path tsx:standardId ; sh:minCount 1 ; sh:maxCount 1 ] ] ) .         # unspecified type
 
@@ -1489,7 +1749,7 @@ tsh:ClaimShape a sh:NodeShape ;
     sh:property [ sh:path dcterms:identifier ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "Every claim MUST carry dcterms:identifier (unique within package — uniqueness = SPARQL tier)." ] ;
     sh:property [ sh:path ts:subject ; sh:nodeKind sh:BlankNodeOrIRI ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:message "ts:subject exactly one (NOTE: Appendix B ambiguity vs ts:metric — §8.3 #1)." ] ;
+                  sh:message "ts:subject exactly one (core-required; Appendix-B gap closed 2026-08-03 — §8.3 #1)." ] ;
     sh:property [ sh:path ts:scope ; sh:node tsh:ScopeShape ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "Explicit ts:Scope required (implicit scope non-conforming)." ] ;
     sh:property [ sh:path ts:confidence ; sh:node tsh:ConfidenceStatementShape ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -1580,11 +1840,12 @@ tsh:SigningKeyIdConsistencyShape a sh:NodeShape ;
 # G. OUT-OF-BAND and further SHACL-SPARQL-tier checks (documented, NOT enforceable in Core):
 #   OUT OF BAND: §9.2 #1 envelope-hash recompute · #2 Ed25519ph signature · #4 content-hash recompute ·
 #     #5 trust-registry verdict · #7 RFC 3161 X.509 chain · #8 RFC 6962 Rekor inclusion ·
-#     #9 BlobRef fetch+rehash · #14 signer<->kid registry cross-check.
+#     #9 BlobRef fetch+rehash · #14 signer<->kid registry cross-check ·
+#     vcsRef verify-on-fetch (§8.1.1/ADR-0016 §B; mismatch/unreachable INFORMATIVE, not a hard failure).
 #   SHACL-SPARQL tier (beyond Core, in addition to F): dcterms:identifier package-uniqueness (TC-C2);
 #     nodeId<->targetNodeId reference-resolution joins (#10/#13); lifecycle-chain timestamp ordering (#10);
-#     wasDerivedFrom laundering-guard cross-node condition (refinement (a)/TC-C9); locatedAt.contentHash
-#     SHOULD-match-target cross-node comparison.
+#     wasDerivedFrom laundering-guard cross-node condition (refinement (a)/TC-C9); locatedAt.targetContentHash
+#     SHOULD-match-target's-contentHash cross-node comparison (Q48-resolved naming).
 #   Out of SHACL entirely: falsifiability-by-construction (per-TYPE meta-property, §8.11.2 principle 5);
 #     @context-array membership (TC-C18; consumed at JSON-LD parse time, not a graph triple);
 #     ts:byteRange start<=end ORDERING (RDF multiset loses array order; needs rdf:List+sh:order or SPARQL).

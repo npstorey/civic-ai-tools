@@ -8,8 +8,24 @@
 # no promotion. This file is a mechanical derivation of the §8.11 tables so
 # that the ontology candidate exists and can be criticized.
 #
-# Companion: research/shapes/typed-standards.shacl.ttl (validation shapes for
-# the envelope layer). This file covers the typed-claims layer semantics.
+# Reconciled 2026-08-18 against the spec's 2026-08-03 revision (the v0.1.4
+# reconciliation; spec Appendix G). The registry's Q10 entry now records this
+# file as the candidate artifact for the ontology question, with recorded
+# (unresolved) positions from a formalization review — positions, nothing
+# resolved: intent to adopt after a further round of review; the goal of a
+# minimum ontology extensible to different domains; and a namespace-
+# coordination fact — this draft uses https://typedstandards.org/ns/ts#
+# while the shipped civic harness emits urn:civic-evidence: identifiers plus
+# the https://civicaitools.org/ns/evidence/ vocabulary URI. That divergence
+# is recorded so it is known, not worked; reconciliation is deferred to an
+# adoption round.
+#
+# Companion: research/shapes/typed-standards.shacl.ttl — validation shapes
+# across the envelope AND typed-claims layers (its section E carries the
+# SHACL-prescribed §8.11 claim shapes). This file carries the typed-claims
+# layer's OWL semantics — class hierarchy and property definitions — rather
+# than instance validation; the two overlap at §8.11 on purpose, shapes
+# validating what these classes declare.
 ##############################################################################
 
 @prefix ts:      <https://typedstandards.org/ns/ts#> .
@@ -40,6 +56,7 @@ temporal entities, geometries, and multidimensional observations are reused
 from PROV-O, OWL-Time, GeoSPARQL, and RDF Data Cube respectively."""@en ;
     dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
     owl:versionInfo "0.1.0-research-draft" ;
+    dcterms:modified "2026-08-18"^^xsd:date ;
     rdfs:seeAlso <https://github.com/npstorey/civic-ai-tools/blob/main/docs/architecture/typed-standards-specification.md> ;
     rdfs:comment "Research draft. Non-normative. Publication gated on open-questions registry Q10."@en .
 
@@ -253,6 +270,10 @@ ts:ApproximatelyEqual a ts:ComparisonRelation ; rdfs:label "Approximately equal"
 ##############################################################################
 # Properties — required on every ts:Claim  (§8.11.4)
 # (dcterms:identifier and prov:wasDerivedFrom are reused, not redeclared.)
+# ts:subject is core-required per the §8.11.4 required-properties table, as
+# declared here throughout; the spec's Appendix B worked example was
+# corrected 2026-08-03 to carry it (an omission surfaced by this bundle's
+# validation pass).
 ##############################################################################
 
 ts:subject a owl:ObjectProperty ;
@@ -298,7 +319,18 @@ ts:supersedes a owl:ObjectProperty ;
     rdfs:label "supersedes"@en ;
     rdfs:domain ts:Claim ;
     rdfs:range ts:Claim ;
-    rdfs:comment "A previous claim this one replaces. Also expressible as attestation/supersedes/v1."@en .
+    rdfs:comment "A previous claim this one replaces — corrective replacement: a deprecation signal that consumers should stop relying on the superseded claim. Contrast ts:revises (neutral version succession, no deprecation signal); conflating the two would mislabel every routine revision as a correction (spec §8.10.5, §8.12.1). Also expressible as attestation/supersedes/v1."@en .
+
+# ts:revises mirrors attestation/revises/v1, minted 2026-08-03 into the
+# ratified §8.12.1 sub-type table (ADR-0016 §C). The §8.11.4 optional-
+# properties table predates that minting and lists only ts:supersedes; this
+# property extends the same claim-level "also expressible as" pattern to the
+# new sub-type (2026-08-18 reconciliation).
+ts:revises a owl:ObjectProperty ;
+    rdfs:label "revises"@en ;
+    rdfs:domain ts:Claim ;
+    rdfs:range ts:Claim ;
+    rdfs:comment "A previous claim this one revises — neutral version succession: the next version in a lineage, carrying no deprecation signal; the prior claim remains a valid point-in-time snapshot. Contrast ts:supersedes (corrective replacement). Lineage is single-parent/linear at v0.1, and the diff between two revisions is a derivable human view, not a signed object (spec §8.10.5). Also expressible as attestation/revises/v1."@en .
 
 ts:limitations a owl:DatatypeProperty ;
     rdfs:label "limitations"@en ;

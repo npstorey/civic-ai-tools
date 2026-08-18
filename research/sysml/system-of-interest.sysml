@@ -7,6 +7,9 @@
 //                Spec component decomposed as its own system, from 05)
 //  Detail model: research/sysml/typed-standards.sysml (the spec's normative
 //                content as structure / behavior / requirements)
+//  Reconciled  : 2026-08-18 against spec v0.1.4 and ADR-0019..0024 (package
+//                topology: npm workspace + civic-typed-harness; the two
+//                typedstandards cores; instance-first reference application)
 //
 //  Package map (all nested under SystemOfInterest)
 //    Stakeholders   who holds the needs (04 §1)
@@ -93,7 +96,10 @@ package SystemOfInterest {
         action def PackageAsSignedEvidence {
             doc /* F3 — package analysis as signed evidence: hash, sign,
                  timestamp. Constrained by the Typed Standards Spec (package
-                 shape). */
+                 shape). At the package layer this function is carried by
+                 the civic-typed-harness -> produce-core stack: the harness
+                 derives (civic vocabulary, datHere policy, capture), the
+                 core assembles and signs (ADR-0021 / ADR-0022). */
         }
         action def PublishToRegistry {
             doc /* F4 — publish to the evidence registry. Constrained by the
@@ -150,6 +156,23 @@ package SystemOfInterest {
                  the analysis itself (queries recorded, no hallucinated
                  data). */
         }
+        part def CivicTypedHarness {
+            doc /* THIS REPO — packages/civic-typed-harness, published to
+                 npm as @typedstandards/civic-typed-harness (ADR-0022; the
+                 repo is an npm workspace and this is its first package).
+                 The DOMAIN side of ADR-0021's format/domain line, in two
+                 module groups plus a small third (ADR-0022 §C's boundary,
+                 reserved for a possible future split):
+                 format-extension (src/format/ — the civic
+                 vocabulary and id scheme, datHere derivations), capture
+                 (src/capture/ — trace builder, skill-metadata extraction,
+                 data-source population, provenance builder), and the
+                 adversarial rubric core. Config-not-constants: every
+                 deployment-naming value is a typed config input, and
+                 identity-bearing config is required — absent-or-error,
+                 never defaulted (ADR-0024; harness 0.2.0). Sole runtime
+                 dependency: @typedstandards/produce-core. */
+        }
         part def SpecCorpus {
             doc /* THIS REPO — Typed Standards Spec, ADRs, open-questions
                  registry, doctrine docs. The repo's main payload. Decomposed
@@ -166,12 +189,37 @@ package SystemOfInterest {
 
         // ---- companion components ---------------------------------------------
         part def EvidenceRegistryWebsite {
-            doc /* civic-ai-tools-website — evidence registry + publish API
-                 at civicaitools.org. */
+            doc /* civic-ai-tools-website — the reference application:
+                 evidence registry + publish API, demonstrated at
+                 civicaitools.org (the project's own demo instance).
+                 Instance-first posture (ADR-0019/0020; Q56's instance case
+                 resolved, the spoke case open): open-source, demo-hostable,
+                 no hosted service; each instance is its own publisher —
+                 per-instance Ed25519 keys + per-instance trust registry at
+                 its own well-known path, with an intentional unsigned dev
+                 tier (a signing status, unsigned -> signed, orthogonal to
+                 visibility; an unsigned package can reach neither sealed
+                 nor public). Portability seams: DB_DRIVER, BLOB_DRIVER,
+                 EXECUTOR_DRIVER (ADR-0023). Evidence-path configuration is
+                 absent-or-error, never defaulted (ADR-0024). */
+        }
+        part def ProducerCore {
+            doc /* @typedstandards/produce-core — the format-neutral,
+                 I/O-free producer core published from the typedstandards
+                 monorepo beside verify-core (ADR-0021; Q59 resolved via
+                 option (a), 2026-08-01): envelope + attestation assembly,
+                 the Ed25519ph signing mechanism (caller-supplied key per
+                 ADR-0020), pure RFC 3161 / Rekor codecs, the spec §8.8.1
+                 commitment-view builder, generic PROV-O types. Depends on
+                 verify-core so producer and verifier share one
+                 canonicalization/hash chain by construction. */
         }
         part def VerifierStack {
-            doc /* typedstandards.org — verify-core library + the standalone
-                 client-side verifier. */
+            doc /* typedstandards.org — the @typedstandards/verify-core
+                 library + the standalone client-side verifier. The
+                 typedstandards monorepo now publishes both cores
+                 (verify-core and produce-core, ADR-0021); this part is its
+                 verify half. */
         }
         part def SigningInfra {
             doc /* Sigstore Rekor + RFC 3161 TSA — signing / timestamp
@@ -217,6 +265,12 @@ package SystemOfInterest {
                 perform action packageEvidence : PackageAsSignedEvidence; // F3
                 perform action publish         : PublishToRegistry;      // F4
             }
+            part harness : CivicTypedHarness {
+                perform action packageEvidence : PackageAsSignedEvidence; // F3 (domain derivations + capture)
+            }
+            part producerCore : ProducerCore {
+                perform action packageEvidence : PackageAsSignedEvidence; // F3 (format assembly + signing mechanism)
+            }
             part registry : EvidenceRegistryWebsite {
                 perform action publish : PublishToRegistry;              // F4
             }
@@ -229,7 +283,8 @@ package SystemOfInterest {
             }
             part specCorpus : SpecCorpus {
                 doc /* F6; additionally specifies/constrains the registry,
-                     the verifier stack, and the skill (04 §3 dotted
+                     the producer stack (harness + produce-core), the
+                     verifier stack, and the skill (04 §3 dotted
                      specifies edges), and constrains F3-F5 (04 cross-layer
                      view). */
                 perform action govern : GovernTheStandard;               // F6
@@ -242,6 +297,8 @@ package SystemOfInterest {
             connect aiClient to publishSkill;
             connect publishSkill to registry;
             connect registry to signingInfra;
+            connect harness to producerCore;                             // "depends on" — ADR-0021's format/domain line
+            connect producerCore to verifier;                            // "depends on" — one shared canonicalization/hash chain
             connect verifier to registry;                                // dotted "verifies" in 04
         }
     }
@@ -280,7 +337,11 @@ package SystemOfInterest {
 
         // N4 open-standards interop -> F6 govern
         // (dotted supporting: F3-F5 — the functions the open standard
-        // disciplines).
+        // disciplines; since ADR-0021/0022 the interop also rests on the
+        // importable package stack — verify-core <- produce-core <-
+        // civic-typed-harness — a pinned dependency rather than
+        // discipline, the package half of ADR-0019 Decision 6's two
+        // adoption layers).
         satisfy n4 by mission.govern;
     }
 }

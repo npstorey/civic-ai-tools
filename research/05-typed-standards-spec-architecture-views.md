@@ -5,8 +5,13 @@ Standards Spec** logical component from [`04-architecture-views.md`](./04-archit
 and decomposes it recursively into its own needs, functions, and logical components.
 Derived from the consolidated formal model ([`00`](./00-formal-model.md)), the SHACL and
 SysML framings ([`01`](./01-typed-standards-as-shacl.md), [`02`](./02-typed-standards-as-sysml-v2.md)),
-their comparison ([`03`](./03-formalism-comparison.md)), and validated against
-[`docs/architecture/typed-standards-summary.md`](../docs/architecture/typed-standards-summary.md).
+their comparison ([`03`](./03-formalism-comparison.md)), and validated against the spec
+itself, [`docs/architecture/typed-standards-specification.md`](../docs/architecture/typed-standards-specification.md)
+(re-checked 2026-08-18 against the v0.1.4 reconciliation revision). An earlier pass
+validated against the leave-behind summary
+([`typed-standards-summary.md`](../docs/architecture/typed-standards-summary.md)), which
+now carries a "Companion, not authority" banner — last updated 2026-05-26; the spec has
+moved since and governs — so the summary is no longer this document's validation target.
 Where this sketch and the spec disagree, the spec governs. This document and the
 formalization artifacts ([`00`](./00-formal-model.md), [`02`](./02-typed-standards-as-sysml-v2.md),
 [`shapes/`](./shapes/), [`sysml/`](./sysml/)) are parallel **views over the same
@@ -15,7 +20,8 @@ views render the same content differently, §5 calls it out.
 
 ## 1. Needs — what the standard exists to satisfy
 
-From the summary's problem statement, envisioned end users, and normative preamble.
+From the spec's problem statement (§5.2) and normative preamble (§5.1), plus the
+summary's illustrative end-user sketches (the spec carries no equivalent section).
 These are **component-level** needs and users: [`04`](./04-architecture-views.md)'s
 N1–N4 are the needs of the system as a whole (and its system-level users — civic
 technologists, government workers, verifiers at large); TN1–TN6 below are their
@@ -78,7 +84,8 @@ process-based trust (TN1), the capture-method declaration (TN4), and the
 signals-not-truth discipline (TN5). N3's dotted edge to TN2 reflects that durability
 without a central authority is part of what makes evidence citable long-term. **N1 has
 no trace** — data access is upstream of the standard, which only sees an analysis once
-it is being packaged (consistent with the spec×functions "no trace" note in `04`).
+it is being packaged (consistent with `04`'s spec×functions trace, where the spec's
+edges — F6 solid, F3–F5 `constrained by` — never reach F1 query or F2 analyze).
 
 ## 2. Functional — what the standard specifies how to do
 
@@ -95,7 +102,7 @@ flowchart TB
     TF4["TF4 type nodes<br/>(content/* vs attestation/*,<br/>QEC, typed claims)"]
     TF5["TF5 declare production process<br/>(captureMethod, producer +<br/>content profiles)"]
     TF6["TF6 verify<br/>(§9.2 ordered checks +<br/>structural validation)"]
-    TF7["TF7 manage lifecycle & visibility<br/>(withdraw / reinstate / supersede /<br/>locate; retention asymmetry)"]
+    TF7["TF7 manage lifecycle & visibility<br/>(withdraw / reinstate / supersede /<br/>revise / locate; retention asymmetry)"]
     TF8["TF8 govern conformance<br/>(MUST/SHOULD/MAY corpus,<br/>preamble, open questions, ADRs)"]
 
     TF1 --> TF2 --> TF3
@@ -121,7 +128,7 @@ flowchart LR
 
     subgraph Spec["Normative spec content"]
         SCHEMA["Data schema<br/>SignedNode envelope, EvidencePackage,<br/>attestation payloads, typed-claims<br/>vocabulary (§6–8)"]:::spec
-        LIFE["Lifecycle state machines<br/>content-node lifecycle, visibility /<br/>location, trust-registry keys,<br/>notebook provenance (§8.10)"]:::spec
+        LIFE["Lifecycle state machines<br/>content-node lifecycle, revision<br/>lineage, visibility / location,<br/>trust-registry keys,<br/>notebook provenance (§8.10)"]:::spec
         PROF["Profiles & vocabularies<br/>captureMethod (open core,<br/>per-profile closed), producer profile,<br/>datHere content profile (§8.6–8.7)"]:::spec
         BEHAV["Behavior spec<br/>§9.2 verification flow,<br/>publisher pipeline,<br/>cross-host publication (§8.8–8.9)"]:::spec
         REQ["Requirements corpus<br/>normative preamble (§5.1),<br/>MUST/SHOULD/MAY of §5, §8, §9"]:::spec
@@ -130,6 +137,7 @@ flowchart LR
     subgraph Ext["External anchors (out-of-band)"]
         TREG["publisher .well-known<br/>trust registries"]
         VC["verify-core<br/>(reference verifier)"]
+        PC["produce-core<br/>(reference producer core)"]
         REK["Rekor log + RFC 3161 TSA"]
     end
 
@@ -142,12 +150,21 @@ flowchart LR
 
     SCHEMA --> TREG
     SCHEMA --> VC
+    SCHEMA --> PC
     BEHAV --> VC
+    BEHAV --> PC
     BEHAV --> REK
     REQ --> VC
 
     classDef spec fill:#1f6feb,stroke:#0d419d,color:#ffffff
 ```
+
+Reading note on the anchors: since the spec's v0.1.4 reconciliation the reference
+libraries are two — `verify-core` (the §9.2 reference verifier) and, published beside
+it, `produce-core` (ADR-0021) — and the spec cites the producer core's shipped shapes
+directly: the §8.8.1 commitment view's required/optional marks reflect its
+commitment-view builder, and the §8.1.2 placement note cites its envelope builder.
+Hence the schema and behavior edges to it.
 
 The exploratory study artifacts in this `research/` bundle (dashed) are **views over the
 same spec content** — split out of the diagram above so the formalized-by fan-in stays
@@ -209,7 +226,7 @@ flowchart LR
 
     subgraph Components["Logical components"]
         SCHEMA["Data schema<br/>(§6–8)"]:::spec
-        EXT["External anchors<br/>(verify-core, Rekor/TSA,<br/>trust registries)"]
+        EXT["External anchors<br/>(verify-core, produce-core,<br/>Rekor/TSA, trust registries)"]
         PROF["Profiles &<br/>vocabularies (§8.6–8.7)"]:::spec
         BEHAV["Behavior spec<br/>(§9.2, §8.8–8.9)"]:::spec
         REQ["Requirements corpus<br/>(§5.1, §5, §8, §9)"]:::spec
@@ -252,12 +269,19 @@ stays evidenced); TF2/TF3/TF6's dotted edges to the external anchors mark the ha
 boundary — trust registries, the TSA, and Rekor supply the properties the spec can only
 reference, and the §9.2 checks (TF6) delegate their cryptographic steps there; TF6's
 dotted edge to the requirements corpus reflects that the conformant-verifier requirement
-tree governs how the checks report.
+tree governs how the checks report. TF7 spans the spec's three deliberately orthogonal
+dimensions (§8.10.6) — visibility (`sealed` / `public`, the ADR-0016 state labels; the
+legacy values `committed` / `published` remain accepted input aliases, never emitted),
+lifecycle status (`active` / `withdrawn` / `superseded`, derived from the signed
+attestation chain), and host display (host policy) — plus the §8.10.5 revision-lineage
+chain, where `revises` (neutral succession; the prior revision stays a valid
+point-in-time snapshot) stays distinct from `supersedes` (corrective replacement).
 
 ## 5. Verification & validation notes
 
 Checked against the source documents; discrepancies would flow back into this sketch,
-never the other way (`00 §status`: the spec is the single source of truth).
+never the other way (per the bundle README's Status section: the spec remains the
+single source of truth).
 
 - **Four-aspect functional grouping** (`03 §1`): data schema / behavior / lifecycle state
   machines / requirements corpus — TF1–TF5 land in schema, TF6 in behavior, TF7 in
@@ -272,20 +296,27 @@ never the other way (`00 §status`: the spec is the single source of truth).
   A green SHACL report plus a traced SysML model still do not constitute verification.
 - **Study-artifact placement** (`README`, `03 §5`): SHACL formalizes instance conformance
   of schema; SysML formalizes structure, the §9.2 verification flow (plus its
-  SHACL-targetable structural validations), the four lifecycle machines, and
+  SHACL-targetable structural validations), the lifecycle state machines, and
   requirements traceability. The other behaviors the spec defines — the publisher
-  pipeline (§9.1) and cross-host publication (§8.8–§8.9) — remain prose-only; the
-  model marks the §8.8 self-contained bundle as deliberately unmodeled. Both artifacts
-  are exploratory, Xanadu-gated on named promotion triggers (Q16/Q5 for SHACL; an MBSE
+  pipeline (§9.1) and cross-host publication (§8.8–§8.9; the §8.8.1 commitment view's
+  served shape, redaction rule and `?inline=1` serialization included, was ratified
+  2026-08-03) — remain prose-only; the model marks the §8.8 self-contained bundle as
+  deliberately unmodeled. Both artifacts are exploratory, Xanadu-gated on named
+  promotion triggers (Q16/Q5 for SHACL, both still open as of 2026-08-18; an MBSE
   adopter or second verifier for SysML). Rendered dashed accordingly.
-- **Against `typed-standards-summary.md`**: TN1 ≙ "The problem" (production process as
-  the unit of attestation); TN2 ≙ "no central authority" (Envelope bullet) and
-  "Deliberately silent about: Topology"; TN3 ≙ "What it enables" (commit-now-publish-
-  later, share-without-hosting); TN4 ≙ "Capture-method discipline"; TN5 ≙ "The normative
-  preamble" and "Deliberately silent about: Truth"; TN6 ≙ "Relationship to adjacent
-  standards". The four user sketches map onto the summary's "Envisioned end users".
-  Build states honored: envelope/captureMethod/datHere built; typed-node ontology and
-  typed claims specified-not-built (Q5); registry and non-GitHub identity tiers reserved.
+- **Against the spec** (re-validated 2026-08-18; the original pass validated against
+  `typed-standards-summary.md`, which now carries a "Companion, not authority" banner —
+  last updated 2026-05-26; the spec governs): TN1 ≙ §5.2 (production process as the unit
+  of attestation); TN2 ≙ §5.3's envelope commitment — package + publisher domain +
+  public infrastructure suffice, no central authority — and "Deliberately silent about:
+  Topology"; TN3 ≙ the §8.3.2 existed-by-time proofs plus the §8.10.2 zero-`locatedAt`
+  sealed base case (the seal-now-publish-later and share-without-hosting patterns);
+  TN4 ≙ §8.6 capture-method discipline; TN5 ≙ the §5.1 normative preamble and
+  "Deliberately silent about: Truth"; TN6 ≙ §5.5 relationship to adjacent standards.
+  The four user sketches still map onto the summary's illustrative "Envisioned end
+  users" (the spec carries no equivalent section). Build states honored:
+  envelope/captureMethod/datHere built; typed-node ontology and typed claims
+  specified-not-built (Q5, still open); registry and non-GitHub identity tiers reserved.
 - **Not shown** (deliberate, per Xanadu): reserved surfaces — hosts as typeable subjects,
   Human/Hybrid/Sandbox producer profiles, the typedstandards.org indexing registry,
   federation substrates — appear in neither the functional nor the logical view because
