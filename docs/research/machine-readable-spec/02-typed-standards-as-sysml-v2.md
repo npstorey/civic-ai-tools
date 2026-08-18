@@ -762,6 +762,12 @@ package Lifecycle {
     // configured; package Ed25519ph-signed). Not an attestation node.
     item def KeyConfigured;
 
+    // §8.3.3 — the registry operator's out-of-band key-status events
+    // (registry document edits, not attestation nodes); typed so the
+    // TrustRegistryKeyLifecycle accept payloads resolve to declared item defs.
+    item def DeprecateKey;
+    item def RevokeKey;
+
     // §8.10.6 / ADR-0016 §A — VISIBILITY: is the content disclosed?
     // State labels renamed committed -> sealed, published -> public (labels only:
     // "Publish"/"Seal" remain the verbs, attestation/publishes/v1 the relationship,
@@ -911,9 +917,9 @@ package Lifecycle {
         state deprecated;
         state revoked;
 
-        transition active_to_deprecated     first active     accept deprecate then deprecated;
-        transition active_to_revoked         first active     accept revoke    then revoked;
-        transition deprecated_to_revoked     first deprecated accept revoke    then revoked;
+        transition active_to_deprecated     first active     accept d : DeprecateKey  then deprecated;
+        transition active_to_revoked         first active     accept rv : RevokeKey    then revoked;
+        transition deprecated_to_revoked     first deprecated accept rv2 : RevokeKey   then revoked;
         // deprecated: signed-before remains trusted; signed-after not. revoked: never trusted.
     }
 
@@ -1101,7 +1107,7 @@ This fork is precisely what no SHACL formalization can express: SHACL *is* `Vali
 
 ## 8. Conformance as requirement definitions with traceability
 
-Section 9's MUST/SHOULD/MAY clauses become `requirement def` blocks with a `subject`, `assume constraint` (preconditions), and `require constraint` (the obligation). `satisfy` edges wire a requirement to the structural element that discharges it; `verify` edges wire it to the check action that confirms it. This is the surface SysML formalizes uniquely well (§1.2). Every requirement below is drawn verbatim-in-substance from the spec; none is invented.
+Section 9's MUST/SHOULD/MAY clauses become `requirement def` blocks with a `subject`, `assume constraint` (preconditions), and `require constraint` (the obligation). Each requirement def gets a requirement *usage* beside its `satisfy` statement, and the satisfy's by-referent binds the requirement's **subject** — so it must be a feature usage conforming to the subject's type (the stand-ins declared below); the structural element that *discharges* the obligation is named in the trailing comment on each satisfy. `verify` legs ride verification defs whose objective verifies the requirement and whose performed action is the §9.2 check. *(Idiom corrected 2026-08-18: an earlier revision satisfied requirement defs directly by definitions, which SysML v2's satisfy semantics do not permit — both ends must be features, the rule the sibling view models already followed.)* This is the surface SysML formalizes uniquely well (§1.2). Every requirement below is drawn verbatim-in-substance from the spec; none is invented.
 
 KerML constraint bodies are boolean expressions, not English. Where an obligation is genuinely prose (a MUST NOT about implementation behavior with no intra-graph predicate), the prose lives in a `doc` comment and the `require constraint` references a named, typed predicate `constraint def` whose enforcement is out of model scope — the same honest boundary used in §7. Predicate signatures used below are declared once here:
 
@@ -1124,6 +1130,13 @@ package Conformance {
     constraint def SurfacesRetention      { in impl : Implementation; }
     constraint def PerformsEveryCheck     { in impl : Implementation; }
     constraint def TreatsVcsRefAsSignal   { in impl : Implementation; }
+
+    // Subject stand-ins — the satisfy referents used throughout §8.
+    part implementationRef  : Implementation;                    // a publisher/verifier implementation
+    item signedNodeRef      : Envelope::SignedNode;              // a conformant signed node
+    item evidencePackageRef : ContentAnalysis::EvidencePackage;  // a content/analysis/v1 package
+    part contentNodeRef     : Taxonomy::ContentNode;
+    part attestationNodeRef : Taxonomy::AttestationNode;
 }
 ```
 
@@ -1148,7 +1161,8 @@ package Conformance {
         require constraint : NoTruthScoring { in impl = impl; }
     }
     // Discharged by the verifier's refusal to emit a composite truth verdict (Verdict carries axes, not truth).
-    satisfy NoAutomatedTruthScoring by Verification::Verdict;
+    requirement noAutomatedTruthScoringReq : NoAutomatedTruthScoring;
+    satisfy noAutomatedTruthScoringReq by implementationRef;
 }
 ```
 
@@ -1162,7 +1176,8 @@ package Conformance {
         doc /* Signature is Ed25519ph over the UTF-8 bytes of the envelope-hash hex string. */
         require constraint { pkg.sig.algorithm == "Ed25519ph" }
     }
-    satisfy SignWithEd25519ph by Envelope::SignatureEnvelope;     // structure that carries the signature
+    requirement signWithEd25519phReq : SignWithEd25519ph;
+    satisfy signWithEd25519phReq by signedNodeRef;                // discharged by Envelope::SignatureEnvelope
     verify  SignWithEd25519ph by Verification::CheckSignature;    // check #2 confirms it
 
     // §8.3.1 / §8.1.2 — metadata.signingKeyId MUST equal the envelope kid.
@@ -1170,7 +1185,8 @@ package Conformance {
         subject pkg : Envelope::SignedNode;
         require constraint { pkg.metadata.signingKeyId == pkg.sig.kid }   // intra-graph (SHACL sh:equals)
     }
-    satisfy SigningKeyIdEqualsKid by Envelope::Metadata;
+    requirement signingKeyIdEqualsKidReq : SigningKeyIdEqualsKid;
+    satisfy signingKeyIdEqualsKidReq by signedNodeRef;            // discharged by Envelope::Metadata (signingKeyId)
     verify  SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;  // check #6
 
     // §8.3.1 / §9.2 #14 — signer <-> kid cross-check; REJECT on mismatch.
@@ -1181,7 +1197,8 @@ package Conformance {
               identity that pkg.signer.identifier claims; mismatch => REJECT. */
         require constraint { pkg.signer.identifier == pkg.signer.identifier }  // signature predicate; join is out-of-band (#14)
     }
-    satisfy SignerIdentityCrossCheck by Envelope::Signer;
+    requirement signerIdentityCrossCheckReq : SignerIdentityCrossCheck;
+    satisfy signerIdentityCrossCheckReq by signedNodeRef;         // discharged by Envelope::Signer + the trust-registry entry
     verify  SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;  // check #14
 
     // §8.3.2 — SHOULD carry RFC 3161 timestamp + Rekor inclusion (best-effort).
@@ -1216,7 +1233,8 @@ package Conformance {
               captureMethod-contextualized (§8.6; §10.1 false-VCS-binding adversary). */
         require constraint : TreatsVcsRefAsSignal { in impl = ver; }
     }
-    satisfy VcsRefVerifyOnFetchInformative by Envelope::VcsRef;   // the attested structure
+    requirement vcsRefVerifyOnFetchReq : VcsRefVerifyOnFetchInformative;
+    satisfy vcsRefVerifyOnFetchReq by implementationRef;          // the attested structure is Envelope::VcsRef
 }
 ```
 
@@ -1232,8 +1250,9 @@ package Conformance {
             and (node istype Taxonomy::AttestationNode implies size(node.targetNodeId) >= 1)
         }
     }
-    satisfy FamilyDiscriminator by Taxonomy::ContentNode;
-    satisfy FamilyDiscriminator by Taxonomy::AttestationNode;       // redefinition
+    requirement familyDiscriminatorReq : FamilyDiscriminator;
+    satisfy familyDiscriminatorReq by contentNodeRef;
+    satisfy familyDiscriminatorReq by attestationNodeRef;
     verify  FamilyDiscriminator by Verification::ValidateStructure; // TargetNodeIdRule
 
     // §8.6 / §9.2 #15 — captureMethod in the producerProfile's vocabulary; REJECT on unknown.
@@ -1246,7 +1265,8 @@ package Conformance {
         require constraint : CheckCaptureMethodVocabPredicate { in pkg = pkg; }
     }
     constraint def CheckCaptureMethodVocabPredicate { in pkg : Envelope::SignedNode; }
-    satisfy CaptureMethodVocabularyConformance by CaptureAndProfiles::AiAssistedCaptureVocabulary;
+    requirement captureMethodVocabularyReq : CaptureMethodVocabularyConformance;
+    satisfy captureMethodVocabularyReq by signedNodeRef;          // vocabulary: CaptureAndProfiles::AiAssistedCaptureVocabulary constants
     verify  CaptureMethodVocabularyConformance by Verification::CheckCaptureMethodVocabulary;  // #15
 
     // §8.1.1 / §8.6 — contentProfile/producerProfile consistency invariant.
@@ -1264,7 +1284,8 @@ package Conformance {
         assume constraint { pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
         require constraint { (pkg.summary != null) and (size(pkg.summary) > 0) }
     }
-    satisfy SummaryRequiredUnderDatHere by CaptureAndProfiles::AnalysisNodeVariant::datHereProfile;
+    requirement summaryRequiredUnderDatHereReq : SummaryRequiredUnderDatHere;
+    satisfy summaryRequiredUnderDatHereReq by evidencePackageRef; // discharged by AnalysisNodeVariant::datHereProfile's tightening
 }
 ```
 
@@ -1279,7 +1300,8 @@ package Conformance {
               and SHOULD be RFC 3161-timestamped + Rekor-included. */
         require constraint { size(att.targetNodeId) >= 1 }
     }
-    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycleStatus;
+    requirement lifecycleByNodeIdReq : LifecycleByNodeId;
+    satisfy lifecycleByNodeIdReq by attestationNodeRef;           // the derived chain: Lifecycle::ContentNodeLifecycleStatus
 
     // §8.10.3 — retention asymmetry: withdrawal bounded to the publisher's own pointer/label.
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq {
@@ -1288,7 +1310,8 @@ package Conformance {
               when both exist the verifier surfaces BOTH (not global erasure). */
         require constraint : SurfacesRetention { in impl = ver; }
     }
-    satisfy RetentionAsymmetryReq by Lifecycle::RetentionAsymmetry;      // the constraint def
+    requirement retentionAsymmetryReqUsage : RetentionAsymmetryReq;
+    satisfy retentionAsymmetryReqUsage by implementationRef;      // constraint: Lifecycle::RetentionAsymmetry
     verify  RetentionAsymmetryReq by Verification::CheckLifecycleState;  // check #10
 
     // §8.10.3 — MUST NOT silently delete withdrawn nodes.
@@ -1334,7 +1357,8 @@ package Conformance {
     }
     // Traceability: the umbrella requirement is verified by the full verify behavior.
     verify  ConformantVerifier by Verification::VerifyNodeFull;
-    satisfy ConformantVerifier by Verification::VerifyNode;
+    requirement conformantVerifierReq : ConformantVerifier;
+    satisfy conformantVerifierReq by implementationRef;           // realized by Verification::VerifyNode / VerifyNodeFull
 }
 ```
 
@@ -1827,6 +1851,7 @@ package Lifecycle {
     calc def hasBinding { in att : AttestationNode; return : Boolean; }
     calc def isDistinctCopyPair { in loc : LocatedAtNode; return : Boolean; }
     item def KeyConfigured;                                   // ADR-0020 out-of-band signing event (key configured; package signed)
+    item def DeprecateKey; item def RevokeKey;                // §8.3.3 registry-operator key-status events (registry edits, not attestation nodes)
 
     state def ContentNodeVisibility {                         // §8.10.6 / ADR-0016 §A: sealed / public ('public' is a SysML keyword);
         entry; then sealed; state sealed; state 'public';     // legacy labels committed/published accepted as input aliases, never emitted
@@ -1859,9 +1884,9 @@ package Lifecycle {
     }
     state def TrustRegistryKeyLifecycle {                    // §8.3.3
         entry; then active; state active; state deprecated; state revoked;
-        transition active_to_deprecated first active accept deprecate then deprecated;
-        transition active_to_revoked     first active accept revoke then revoked;
-        transition deprecated_to_revoked first deprecated accept revoke then revoked;
+        transition active_to_deprecated first active accept d : DeprecateKey then deprecated;
+        transition active_to_revoked     first active accept rv : RevokeKey  then revoked;
+        transition deprecated_to_revoked first deprecated accept rv2 : RevokeKey then revoked;
     }
     state def NotebookProvenance { entry; state skeleton; state executed; }  // §8.7.4
 }
@@ -1949,27 +1974,35 @@ package Conformance {
     constraint def TreatsVcsRefAsSignal { in impl : Implementation; }
     constraint def CheckCaptureMethodVocabPredicate { in pkg : Envelope::SignedNode; }
 
+    // Subject stand-ins — the satisfy referents below (a satisfy binds the
+    // requirement's subject, so its by-referent must conform to the subject type).
+    part implementationRef  : Implementation;
+    item signedNodeRef      : Envelope::SignedNode;
+    item evidencePackageRef : ContentAnalysis::EvidencePackage;
+    part contentNodeRef     : Taxonomy::ContentNode;
+    part attestationNodeRef : Taxonomy::AttestationNode;
+
     requirement def <'R-preamble-carry'> CarryNormativePreamble { subject surface : ProductSurface;
         doc /* §5.1 four-line preamble surfaced before readers form conclusions. */
         require constraint : CarriesPreamble { in surface = surface; } }
     requirement def <'R-no-automated-truth-scoring'> NoAutomatedTruthScoring { subject impl : Implementation;
         doc /* No platform-issued correctness / rank-by-trust verdicts. */
         require constraint : NoTruthScoring { in impl = impl; } }
-    satisfy NoAutomatedTruthScoring by Verification::Verdict;
+    requirement noAutomatedTruthScoringReq : NoAutomatedTruthScoring; satisfy noAutomatedTruthScoringReq by implementationRef;
 
     requirement def <'R-sign-ed25519ph'> SignWithEd25519ph { subject pkg : Envelope::SignedNode;
         require constraint { pkg.sig.algorithm == "Ed25519ph" } }
-    satisfy SignWithEd25519ph by Envelope::SignatureEnvelope;  verify SignWithEd25519ph by Verification::CheckSignature;
+    requirement signWithEd25519phReq : SignWithEd25519ph; satisfy signWithEd25519phReq by signedNodeRef;  verify SignWithEd25519ph by Verification::CheckSignature;
 
     requirement def <'R-signingKeyId-eq-kid'> SigningKeyIdEqualsKid { subject pkg : Envelope::SignedNode;
         require constraint { pkg.metadata.signingKeyId == pkg.sig.kid } }
-    satisfy SigningKeyIdEqualsKid by Envelope::Metadata;  verify SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;
+    requirement signingKeyIdEqualsKidReq : SigningKeyIdEqualsKid; satisfy signingKeyIdEqualsKidReq by signedNodeRef;  verify SigningKeyIdEqualsKid by Verification::CheckSigningKeyIdConsistency;
 
     requirement def <'R-signer-crosscheck'> SignerIdentityCrossCheck { subject pkg : Envelope::SignedNode;
         assume constraint { pkg.signer != null }
         doc /* sig.kid resolved via registry signerIdentity == signer.identifier; mismatch => REJECT (#14, out-of-band join). */
         require constraint { pkg.signer.identifier == pkg.signer.identifier } }
-    satisfy SignerIdentityCrossCheck by Envelope::Signer;  verify SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;
+    requirement signerIdentityCrossCheckReq : SignerIdentityCrossCheck; satisfy signerIdentityCrossCheckReq by signedNodeRef;  verify SignerIdentityCrossCheck by Verification::CrossCheckSignerIdentity;
 
     requirement def <'R-tsa-rekor'> CarryTimestampAndRekor { subject pkg : Envelope::SignedNode;   // SHOULD
         require constraint { (pkg.timestamp != null) and (pkg.rekorInclusionProof != null) } }
@@ -1984,20 +2017,20 @@ package Conformance {
         doc /* §8.1.1 / ADR-0016 §B / §10.1 — signature covers the vcsRef ASSERTION, not the fact;
               verify-on-fetch MAY; mismatch/unreachable is informative, never a hard failure. */
         require constraint : TreatsVcsRefAsSignal { in impl = ver; } }
-    satisfy VcsRefVerifyOnFetchInformative by Envelope::VcsRef;
+    requirement vcsRefVerifyOnFetchReq : VcsRefVerifyOnFetchInformative; satisfy vcsRefVerifyOnFetchReq by implementationRef;
 
     requirement def <'R-family-discriminator'> FamilyDiscriminator { subject node : Taxonomy::TypedNode;
         require constraint {
             (node istype Taxonomy::ContentNode implies size(node.targetNodeId) == 0)
             and (node istype Taxonomy::AttestationNode implies size(node.targetNodeId) >= 1) } }
-    satisfy FamilyDiscriminator by Taxonomy::ContentNode;  satisfy FamilyDiscriminator by Taxonomy::AttestationNode;
+    requirement familyDiscriminatorReq : FamilyDiscriminator; satisfy familyDiscriminatorReq by contentNodeRef;  satisfy familyDiscriminatorReq by attestationNodeRef;
     verify FamilyDiscriminator by Verification::ValidateStructure;
 
     requirement def <'R-captureMethod-vocab'> CaptureMethodVocabularyConformance { subject pkg : Envelope::SignedNode;
         assume constraint : ProfileConsistencyShape;
         doc /* captureMethod in the resolved producerProfile vocabulary (ai-assisted-analysis v0.1 set). */
         require constraint : CheckCaptureMethodVocabPredicate { in pkg = pkg; } }
-    satisfy CaptureMethodVocabularyConformance by CaptureAndProfiles::AiAssistedCaptureVocabulary;
+    requirement captureMethodVocabularyReq : CaptureMethodVocabularyConformance; satisfy captureMethodVocabularyReq by signedNodeRef;
     verify  CaptureMethodVocabularyConformance by Verification::CheckCaptureMethodVocabulary;
 
     requirement def <'R-profile-consistency'> ProfileConsistency { subject pkg : ContentAnalysis::EvidencePackage;
@@ -2008,17 +2041,17 @@ package Conformance {
     requirement def <'R-summary-datHere'> SummaryRequiredUnderDatHere { subject pkg : ContentAnalysis::EvidencePackage;
         assume constraint { pkg.metadata.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
         require constraint { (pkg.summary != null) and (size(pkg.summary) > 0) } }
-    satisfy SummaryRequiredUnderDatHere by CaptureAndProfiles::AnalysisNodeVariant::datHereProfile;
+    requirement summaryRequiredUnderDatHereReq : SummaryRequiredUnderDatHere; satisfy summaryRequiredUnderDatHereReq by evidencePackageRef;
 
     requirement def <'R-lifecycle-by-nodeId'> LifecycleByNodeId { subject att : Taxonomy::AttestationNode;
         doc /* References target by nodeId; Ed25519ph-signed (SHOULD timestamp+Rekor). */
         require constraint { size(att.targetNodeId) >= 1 } }
-    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycleStatus;
+    requirement lifecycleByNodeIdReq : LifecycleByNodeId; satisfy lifecycleByNodeIdReq by attestationNodeRef;
 
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq { subject ver : Implementation;
         doc /* A withdraws from P does not invalidate another party's locatedAt; surface both. */
         require constraint : SurfacesRetention { in impl = ver; } }
-    satisfy RetentionAsymmetryReq by Lifecycle::RetentionAsymmetry;  verify RetentionAsymmetryReq by Verification::CheckLifecycleState;
+    requirement retentionAsymmetryReqUsage : RetentionAsymmetryReq; satisfy retentionAsymmetryReqUsage by implementationRef;  verify RetentionAsymmetryReq by Verification::CheckLifecycleState;
 
     requirement def <'R-no-silent-delete'> NoSilentDeletion { subject impl : Implementation;
         doc /* No removal of withdrawn nodes except via audited administrative action. */
@@ -2041,7 +2074,7 @@ package Conformance {
         requirement retention          : RetentionAsymmetryReq;
         requirement noTruthScoring     : NoAutomatedTruthScoring;
     }
-    satisfy ConformantVerifier by Verification::VerifyNode;  verify ConformantVerifier by Verification::VerifyNodeFull;
+    requirement conformantVerifierReq : ConformantVerifier; satisfy conformantVerifierReq by implementationRef;  verify ConformantVerifier by Verification::VerifyNodeFull;
 }
 ```
 

@@ -311,7 +311,7 @@ package SystemOfInterest {
         private import SystemOfInterest::Architecture::*;
 
         // The needs instantiated as requirement usages over the reference
-        // configuration (satisfy must reference a requirement usage, and its
+        // configuration (a satisfy must reference a requirement usage, and its
         // by-referent must be a feature — here, mission subactions).
         requirement n1 : PlainEnglishDataAccess;
         requirement n2 : TrustworthyAiAnalysis;

@@ -68,13 +68,15 @@ package TypedStandards {
            are written out): block comments lex as nested, so the sequence
            inside a doc body opens another nesting level.
 
-         Known analyzer residue (SySide warnings, not errors): feature chains
-         through requirement subjects and transition accept payloads (e.g.
-         pkg.sig.algorithm, w.reason), bare accept event names (deprecate,
-         revoke), the library actions start/done, and package-level satisfy
-         statements whose referent is a definition rather than a feature
-         usage may report unresolved references in current tooling; they
-         follow the SysML v2 grammar and are kept as written. */
+         Known analyzer residue (SySide): feature chains through requirement
+         subjects and transition accept payloads (e.g. pkg.sig.algorithm,
+         w.reason) and the library actions start/done may report unresolved
+         references in current tooling; they follow the SysML v2 grammar
+         and are kept as written. Two former residue classes were resolved
+         2026-08-18 so the model analyzes error-free: accept events are
+         typed item defs (DeprecateKey, RevokeKey), and satisfy statements
+         are stated over requirement usages with feature-usage referents —
+         the SysML v2 rule the sibling view models already followed. */
 }
 
 // ============================================================================
@@ -803,6 +805,11 @@ package Lifecycle {
         // key is configured and the package is Ed25519ph-signed. Not an
         // attestation node; the producer-side act that precedes the signed
         // lifecycle entirely.
+    item def DeprecateKey;
+    item def RevokeKey;
+        // §8.3.3 — the registry operator's out-of-band key-status events
+        // (registry document edits, not attestation nodes); typed so the
+        // TrustRegistryKeyLifecycle accept payloads resolve to declared item defs.
 
     // §8.10.6 (ADR-0016 §A.1): visibility, lifecycle status, and host display
     // are three ORTHOGONAL dimensions of a content node's disposition; ADR-0020
@@ -900,9 +907,9 @@ package Lifecycle {
              deprecatedAt; revoked keys are never trusted regardless of when. */
         entry; then active;
         state active; state deprecated; state revoked;
-        transition active_to_deprecated first active accept deprecate then deprecated;
-        transition active_to_revoked     first active accept revoke     then revoked;
-        transition deprecated_to_revoked first deprecated accept revoke then revoked;
+        transition active_to_deprecated first active accept d : DeprecateKey then deprecated;
+        transition active_to_revoked     first active accept rv : RevokeKey  then revoked;
+        transition deprecated_to_revoked first deprecated accept rv2 : RevokeKey then revoked;
     }
 
     state def NotebookProvenance {
@@ -1074,11 +1081,22 @@ package Conformance {
     constraint def TreatsVcsRefAsSignal   { in impl : Implementation; }
     constraint def CheckCaptureMethodVocabPredicate { in pkg : Envelope::SignedNode; }
 
-    // Traceability pattern: `satisfy R by <structure>` names the model element
-    // that discharges the requirement; a verification def carries the verify
-    // leg (standalone `verify X by Y;` is not in the SysML v2 grammar) —
-    // its objective verifies the requirement, its performed action is the
-    // §9.2 check that discharges it.
+    // Traceability pattern: each requirement def gets a requirement USAGE
+    // beside its satisfy statement. A satisfy's by-referent binds the
+    // requirement's SUBJECT, so it must be a feature usage conforming to
+    // the subject's type (the stand-ins below); the model element whose
+    // structure discharges the obligation is named in the trailing comment
+    // on each satisfy and in the companion doc's traceability table. A
+    // verification def carries the verify leg (standalone `verify X by Y;`
+    // is not in the SysML v2 grammar) — its objective verifies the
+    // requirement, its performed action is the §9.2 check that discharges it.
+
+    // Subject stand-ins — the satisfy referents below.
+    part implementationRef  : Implementation;                    // a publisher/verifier implementation
+    item signedNodeRef      : Envelope::SignedNode;              // a conformant signed node
+    item evidencePackageRef : ContentAnalysis::EvidencePackage;  // a content/analysis/v1 package
+    part contentNodeRef     : Taxonomy::ContentNode;
+    part attestationNodeRef : Taxonomy::AttestationNode;
 
     requirement def <'R-preamble-carry'> CarryNormativePreamble {
         doc /* §5.1 — the four-line normative preamble surfaced before readers
@@ -1092,13 +1110,15 @@ package Conformance {
         subject impl : Implementation;
         require constraint : NoTruthScoring { in impl = impl; }
     }
-    satisfy NoAutomatedTruthScoring by Verification::Verdict;
+    requirement noAutomatedTruthScoringReq : NoAutomatedTruthScoring;
+    satisfy noAutomatedTruthScoringReq by implementationRef;     // discharged by Verification::Verdict's value set (no truth-score member)
 
     requirement def <'R-sign-ed25519ph'> SignWithEd25519ph {     // §8.3.1
         subject pkg : Envelope::SignedNode;
         require constraint { pkg.sig.algorithm == "Ed25519ph" }
     }
-    satisfy SignWithEd25519ph by Envelope::SignatureEnvelope;
+    requirement signWithEd25519phReq : SignWithEd25519ph;
+    satisfy signWithEd25519phReq by signedNodeRef;               // discharged by Envelope::SignatureEnvelope
     verification def <'V-sign-ed25519ph'> VerifySignEd25519ph {
         objective { verify requirement : SignWithEd25519ph; }
         perform action check : Verification::CheckSignature;
@@ -1108,7 +1128,8 @@ package Conformance {
         subject pkg : Envelope::SignedNode;
         require constraint { pkg.'metadata'.signingKeyId == pkg.sig.kid }
     }
-    satisfy SigningKeyIdEqualsKid by Envelope::Metadata;
+    requirement signingKeyIdEqualsKidReq : SigningKeyIdEqualsKid;
+    satisfy signingKeyIdEqualsKidReq by signedNodeRef;           // discharged by Envelope::Metadata (signingKeyId)
     verification def <'V-signingKeyId'> VerifySigningKeyIdEqualsKid {
         objective { verify requirement : SigningKeyIdEqualsKid; }
         perform action check : Verification::CheckSigningKeyIdConsistency;
@@ -1130,7 +1151,8 @@ package Conformance {
         assume constraint { pkg.signer != null }
         require constraint { pkg.signer.identifier == registryIdentityForKid(pkg, registry) }
     }
-    satisfy SignerIdentityCrossCheck by Envelope::Signer;
+    requirement signerIdentityCrossCheckReq : SignerIdentityCrossCheck;
+    satisfy signerIdentityCrossCheckReq by signedNodeRef;        // discharged by Envelope::Signer + the trust-registry entry
     verification def <'V-signer-crosscheck'> VerifySignerIdentityCrossCheck {
         objective { verify requirement : SignerIdentityCrossCheck; }
         perform action check : Verification::CrossCheckSignerIdentity;
@@ -1170,7 +1192,8 @@ package Conformance {
         subject ver : Implementation;
         require constraint : TreatsVcsRefAsSignal { in impl = ver; }
     }
-    satisfy VcsRefVerifyOnFetchInformative by Envelope::VcsRef;   // the attested structure
+    requirement vcsRefVerifyOnFetchReq : VcsRefVerifyOnFetchInformative;
+    satisfy vcsRefVerifyOnFetchReq by implementationRef;         // the attested structure is Envelope::VcsRef
 
     requirement def <'R-family-discriminator'> FamilyDiscriminator {  // §7.4
         subject node : Taxonomy::TypedNode;
@@ -1179,8 +1202,9 @@ package Conformance {
             and (node istype Taxonomy::AttestationNode implies size(node.targetNodeId) >= 1)
         }
     }
-    satisfy FamilyDiscriminator by Taxonomy::ContentNode;
-    satisfy FamilyDiscriminator by Taxonomy::AttestationNode;
+    requirement familyDiscriminatorReq : FamilyDiscriminator;
+    satisfy familyDiscriminatorReq by contentNodeRef;
+    satisfy familyDiscriminatorReq by attestationNodeRef;
     verification def <'V-family'> VerifyFamilyDiscriminator {
         objective { verify requirement : FamilyDiscriminator; }
         perform action validate : Verification::ValidateStructure;
@@ -1194,7 +1218,8 @@ package Conformance {
         assume constraint : ProfileConsistencyShape;
         require constraint : CheckCaptureMethodVocabPredicate { in pkg = pkg; }
     }
-    satisfy CaptureMethodVocabularyConformance by CaptureAndProfiles::AiAssistedCaptureVocabulary;
+    requirement captureMethodVocabularyReq : CaptureMethodVocabularyConformance;
+    satisfy captureMethodVocabularyReq by signedNodeRef;         // vocabulary: CaptureAndProfiles::AiAssistedCaptureVocabulary constants
     verification def <'V-captureMethod-vocab'> VerifyCaptureMethodVocabulary {
         objective { verify requirement : CaptureMethodVocabularyConformance; }
         perform action check : Verification::CheckCaptureMethodVocabulary;
@@ -1216,7 +1241,8 @@ package Conformance {
         assume constraint { pkg.'metadata'.contentProfile == CaptureAndProfiles::ContentProfile::datHere }
         require constraint { (pkg.summary != null) and (size(pkg.summary) > 0) }
     }
-    satisfy SummaryRequiredUnderDatHere by CaptureAndProfiles::AnalysisNodeVariant::datHereProfile;
+    requirement summaryRequiredUnderDatHereReq : SummaryRequiredUnderDatHere;
+    satisfy summaryRequiredUnderDatHereReq by evidencePackageRef; // discharged by AnalysisNodeVariant::datHereProfile's tightening
 
     requirement def <'R-lifecycle-by-nodeId'> LifecycleByNodeId {
         doc /* §8.10.1 — lifecycle events are separately-signed attestation
@@ -1225,7 +1251,8 @@ package Conformance {
         subject att : Taxonomy::AttestationNode;
         require constraint { size(att.targetNodeId) >= 1 }
     }
-    satisfy LifecycleByNodeId by Lifecycle::ContentNodeLifecycleStatus;
+    requirement lifecycleByNodeIdReq : LifecycleByNodeId;
+    satisfy lifecycleByNodeIdReq by attestationNodeRef;          // the derived chain: Lifecycle::ContentNodeLifecycleStatus
 
     requirement def <'R-retention-asymmetry'> RetentionAsymmetryReq {
         doc /* §8.10.3 — P's withdrawal does not invalidate another party's
@@ -1234,7 +1261,8 @@ package Conformance {
         subject ver : Implementation;
         require constraint : SurfacesRetention { in impl = ver; }
     }
-    satisfy RetentionAsymmetryReq by Lifecycle::RetentionAsymmetry;
+    requirement retentionAsymmetryReqUsage : RetentionAsymmetryReq;
+    satisfy retentionAsymmetryReqUsage by implementationRef;     // constraint: Lifecycle::RetentionAsymmetry
     verification def <'V-retention'> VerifyRetentionAsymmetry {
         objective { verify requirement : RetentionAsymmetryReq; }
         perform action check : Verification::CheckLifecycleState;
@@ -1269,7 +1297,8 @@ package Conformance {
         requirement retention         : RetentionAsymmetryReq;
         requirement noTruthScoring    : NoAutomatedTruthScoring;
     }
-    satisfy ConformantVerifier by Verification::VerifyNode;
+    requirement conformantVerifierReq : ConformantVerifier;
+    satisfy conformantVerifierReq by implementationRef;          // realized by Verification::VerifyNode / VerifyNodeFull
     verification def <'V-conformant-verifier'> VerifyConformantVerifierCase {
         objective { verify requirement : ConformantVerifier; }
         perform action full : Verification::VerifyNodeFull;

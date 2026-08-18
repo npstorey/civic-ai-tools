@@ -364,7 +364,7 @@ package TypedStandardsAsSystem {
         private import TypedStandardsAsSystem::Needs::*;
         private import TypedStandardsAsSystem::Architecture::*;
 
-        // The needs instantiated as requirement usages (satisfy must
+        // The needs instantiated as requirement usages (a satisfy must
         // reference a requirement usage; its by-referent must be a feature).
         requirement tn1 : ProcessBasedTrust;
         requirement tn2 : NoCentralAuthority;
