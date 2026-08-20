@@ -8,9 +8,9 @@ Civic AI Tools connects AI assistants (GitHub Copilot, Cursor, Claude Code) to p
 
 **Built for** civic technologists, government workers, journalists, and students exploring public data with AI.
 
-Civic AI Tools sits at one layer of a broader landscape where open data meets AI: projects in this space address making data discoverable to AI, making AI mediation legible to humans, feeding signal back to data publishers, and orchestrating AI across civic-data domains. This project focuses on the second layer — evidence packages that make AI analyses inspectable, reproducible, and cryptographically verifiable. See [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) for the wider landscape.
+Civic AI Tools sits at one layer of a broader landscape where open data meets AI: projects in this space address making data discoverable to AI, making AI mediation legible to humans, feeding signal back to data publishers, and orchestrating AI across civic-data domains. This project focuses on the second layer — record packages that make AI analyses inspectable, reproducible, and cryptographically verifiable. See [docs/research/landscape-analysis.md](docs/research/landscape-analysis.md) for the wider landscape.
 
-> **Integrating against the evidence registry?** The reference implementation and its integration contract live in [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) — start at [`docs/api/evidence-publish.md`](https://github.com/npstorey/civic-ai-tools-website/blob/main/docs/api/evidence-publish.md). This repo holds the protocol decisions (ADRs, the open-questions registry) and the Typed Standards Specification the contract cites.
+> **Integrating against the record registry?** The reference implementation and its integration contract live in [civic-ai-tools-website](https://github.com/npstorey/civic-ai-tools-website) — start at [`docs/api/evidence-publish.md`](https://github.com/npstorey/civic-ai-tools-website/blob/main/docs/api/evidence-publish.md). This repo holds the protocol decisions (ADRs, the open-questions registry) and the Typed Standards Specification the contract cites.
 
 > **Reviewing the standard?** The Typed Standards Specification is [`docs/architecture/typed-standards-specification.md`](docs/architecture/typed-standards-specification.md) (v0.1 Working Draft, CC BY 4.0); the short version is [`typed-standards-summary.md`](docs/architecture/typed-standards-summary.md). Reviewers should start at [`docs/community-review/v0.1-rfc-reviewer-orientation.md`](docs/community-review/v0.1-rfc-reviewer-orientation.md) — a one-page reading guide.
 
@@ -102,7 +102,7 @@ This repo is an npm workspace. [packages/civic-typed-harness](packages/civic-typ
 
 ### Getting started
 - [docs/setup.md](docs/setup.md) — Setup, tool-specific instructions, and troubleshooting
-- [docs/publish-evidence.md](docs/publish-evidence.md) — Publishing analyses from Claude Code to the evidence registry
+- [docs/publish-record.md](docs/publish-record.md) — Publishing analyses from Claude Code to the record registry
 
 ### Data and skills
 - [docs/mcp-servers.md](docs/mcp-servers.md) — Directory of civic data MCP servers
