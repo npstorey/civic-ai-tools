@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.3.0 — 2026-08-20
 
 **Settlement-era civic vocabulary + produce-core 0.3.0**
 ([civic-ai-tools#160](https://github.com/npstorey/civic-ai-tools/issues/160) —
