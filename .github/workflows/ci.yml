@@ -98,3 +98,17 @@ jobs:
       # quietly, on the principle that a check which cannot run has not passed.
       - name: Skill-drift check
         run: npm run check:skill-drift
+
+      # The publish-record skill's tests (45 of them) ran only by hand until
+      # this step — the gap recorded at civic-ai-tools#160 G5. They are
+      # hermetic: every server response is stubbed, two of those stubs raise on
+      # any call that reaches the network, no credential or token is read, and
+      # nothing outside a TemporaryDirectory is written. ubuntu-latest ships a
+      # python3, so this needs no setup-python step — which also keeps the
+      # workflow's action list at checkout + setup-node, as the charter above
+      # requires. `python3 --version` is echoed so the log records which
+      # interpreter the result came from.
+      - name: Test (publish-record skill, python)
+        run: |
+          python3 --version
+          python3 .claude/skills/publish-record/test_publish.py
