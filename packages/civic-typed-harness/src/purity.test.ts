@@ -10,8 +10,9 @@
 //      timestamps and ids are what capture *is* — and both are injectable.
 //   4. Internal module boundary (structure-for-the-future):
 //      - format-extension and rubric modules never import from capture;
-//      - capture modules never DEFINE civic vocabulary (the `urn:` scheme,
-//        the civic namespace, the datHere profile string live in format/);
+//      - capture modules never DEFINE civic vocabulary (the `urn:` scheme in
+//        EITHER era, the civic namespace in either era, and the datHere
+//        profile string all live in format/);
 //      - format-extension modules never WALK a trace.
 // Test files are exempt: they legitimately use node:test / node:fs / node:crypto.
 
@@ -141,9 +142,18 @@ test('boundary: format-extension and rubric modules never import from capture', 
 });
 
 test('boundary: capture modules define no civic vocabulary (terms live in format/)', () => {
+  // BOTH ERAS are barred (spec Appendix J). The invariant this test defends is
+  // "vocabulary literals live only in format/vocabulary.ts" — not "the
+  // prior-era strings are gone". After the 2026-08-19 settlement the prior-era
+  // terms are still real, exported vocabulary (they are frozen inside signed
+  // records and must stay reproducible), so a capture module could redefine
+  // EITHER era and break the boundary the same way. Listing only the era of
+  // the day would let the other one through.
   const VOCAB_LITERALS = [
-    'urn:civic-evidence', // the id scheme
-    'civicaitools.org/ns/evidence', // the civic: namespace
+    'urn:civic-record', // the id scheme, settlement era
+    'urn:civic-evidence', // the id scheme, prior era
+    'civicaitools.org/ns/civic', // the civic: namespace, settlement era
+    'civicaitools.org/ns/evidence', // the civic: namespace, prior era
     'ai-assisted-analysis/datHere', // the datHere producer profile
   ];
   for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'))) {

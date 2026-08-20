@@ -34,12 +34,9 @@ import {
 import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
 import {
-  makeCivicProvContext,
-  civicUrn,
-  civicModelUrn,
-  civicSourceAgentUrn,
-  civicPlatformUrn,
+  CIVIC_VOCABULARY,
   CIVICAITOOLS_PLATFORM_AGENT,
+  type CivicVocabulary,
   type PlatformAgentConfig,
 } from '../format/vocabulary.ts';
 import {
@@ -69,7 +66,7 @@ export interface ProvenanceInput {
 
 /** Instance configuration for the graph build (config-not-constants). */
 export interface ProvenanceConfig {
-  /** Platform-agent identity — the deployment publishing the evidence. */
+  /** Platform-agent identity — the deployment publishing the record. */
   platformAgent: PlatformAgentConfig;
   /** Source registry supplying agent titles and MCP server URLs. */
   sourceRegistry: CivicSourceRegistry;
@@ -84,6 +81,15 @@ export interface ProvenanceConfig {
    *  carries no `dcterms:description` at all — the field is omitted from the
    *  graph (honest omission), never filled with a fallback. */
   modelAgentDescription?: string;
+  /** Vocabulary era to emit (spec Appendix J). Defaults to the settlement-era
+   *  `CIVIC_VOCABULARY` — the only value a new emission may use. Supply
+   *  `PRIOR_ERA_CIVIC_VOCABULARY` ONLY to reproduce or verify a record signed
+   *  before the 2026-08-19 settlement, whose identifiers are frozen under the
+   *  hash it was signed with. Unlike the other fields here this is not
+   *  deployment identity, so it is defaulted rather than required: emitting
+   *  the current vocabulary is never the silent-attribution hazard ADR-0024
+   *  guards against. */
+  vocabulary?: CivicVocabulary;
 }
 
 /** The civicaitools.org reference deployment's values. Passed explicitly by
@@ -130,6 +136,10 @@ export function buildProvenanceGraph(
   const registry = config.sourceRegistry;
   const fallbackSourceId = config.fallbackSourceId ?? FALLBACK_SOURCE_ID;
   const skillSourceId = config.skillSourceId ?? FALLBACK_SOURCE_ID;
+  // Vocabulary era — settlement-era unless a prior-era reproduction asks
+  // otherwise. Every id and the `@context` below route through it, so a graph
+  // never mixes eras.
+  const vocab = config.vocabulary ?? CIVIC_VOCABULARY;
 
   const graph: ProvNode[] = [];
 
@@ -137,7 +147,7 @@ export function buildProvenanceGraph(
 
   // User prompt
   graph.push(
-    makeEntityNode(civicUrn(packageId, 'prompt', promptHash), {
+    makeEntityNode(vocab.urn(packageId, 'prompt', promptHash), {
       'civic:contentHash': `sha256:${promptHash}`,
       'dcterms:description': 'User query prompt',
       ...(promptText ? { 'prov:value': promptText } : {}),
@@ -155,7 +165,7 @@ export function buildProvenanceGraph(
   if (skillHash) {
     graph.push(
       makeEntityNode(
-        civicUrn(packageId, 'skill', skillHash),
+        vocab.urn(packageId, 'skill', skillHash),
         {
           'civic:contentHash': `sha256:${skillHash}`,
           'dcterms:description': 'Composed MCP skill guidance (system prompt)',
@@ -167,7 +177,7 @@ export function buildProvenanceGraph(
 
   // Final output
   graph.push(
-    makeEntityNode(civicUrn(packageId, 'output', outputHash), {
+    makeEntityNode(vocab.urn(packageId, 'output', outputHash), {
       'civic:contentHash': `sha256:${outputHash}`,
       'dcterms:description': 'AI-generated analysis output',
     }),
@@ -178,7 +188,7 @@ export function buildProvenanceGraph(
   // LLM model. The description is emitted only when the config supplies one —
   // absent otherwise (honest omission, same idiom as deriveProducerProfile /
   // deriveSummaryEmission in ../format/dathere.ts).
-  const modelUrn = civicModelUrn(model);
+  const modelUrn = vocab.modelUrn(model);
   graph.push(
     makeAgentNode(
       modelUrn,
@@ -193,7 +203,7 @@ export function buildProvenanceGraph(
   );
 
   // MCP server agents — one per distinct data source that appears in the
-  // trace. Tool spans carry `mcp.source`; evidence records captured before
+  // trace. Tool spans carry `mcp.source`; records captured before
   // source tagging have no source attribute, so they fall back to the
   // configured fallback source (socrata — the only source at the time) for
   // backwards compatibility. Agent coordinates come from the source registry;
@@ -202,7 +212,7 @@ export function buildProvenanceGraph(
   const sourceAgentMap: Record<string, { urn: string; title: string; serverUrl: string }> = {};
   for (const [id, info] of Object.entries(registry)) {
     sourceAgentMap[id] = {
-      urn: civicSourceAgentUrn(id),
+      urn: vocab.sourceAgentUrn(id),
       title: info.agentTitle,
       serverUrl:
         id === skillSourceId ? skillServerUrl || info.serverUrl : info.serverUrl,
@@ -217,7 +227,7 @@ export function buildProvenanceGraph(
 
   for (const sourceId of sourcesInTrace) {
     const meta = sourceAgentMap[sourceId] ?? {
-      urn: civicSourceAgentUrn(encodeURIComponent(sourceId)),
+      urn: vocab.sourceAgentUrn(encodeURIComponent(sourceId)),
       title: `${sourceId} MCP Server`,
       serverUrl: sourceId,
     };
@@ -242,14 +252,14 @@ export function buildProvenanceGraph(
     return (
       sourceAgentMap[id]?.urn
       ?? sourceAgentMap[fallbackSourceId]?.urn
-      ?? civicSourceAgentUrn(encodeURIComponent(id))
+      ?? vocab.sourceAgentUrn(encodeURIComponent(id))
     );
   }
 
   // Platform
   graph.push(
     makeAgentNode(
-      civicPlatformUrn(config.platformAgent.id),
+      vocab.platformUrn(config.platformAgent.id),
       {
         'dcterms:title': config.platformAgent.title,
         'civic:url': config.platformAgent.url,
@@ -265,12 +275,12 @@ export function buildProvenanceGraph(
   const inferenceUrns: string[] = [];
 
   for (const span of inferenceSpans) {
-    const spanUrn = civicUrn(packageId, 'inference', span.spanId);
+    const spanUrn = vocab.urn(packageId, 'inference', span.spanId);
     inferenceUrns.push(spanUrn);
 
-    const used: ProvNodeRef[] = [provRef(civicUrn(packageId, 'prompt', promptHash))];
+    const used: ProvNodeRef[] = [provRef(vocab.urn(packageId, 'prompt', promptHash))];
     if (skillHash) {
-      used.push(provRef(civicUrn(packageId, 'skill', skillHash)));
+      used.push(provRef(vocab.urn(packageId, 'skill', skillHash)));
     }
 
     const promptTokens = getAttr(span.attributes, 'gen_ai.response.prompt_tokens');
@@ -297,7 +307,7 @@ export function buildProvenanceGraph(
   const dataResponseUrns: string[] = [];
 
   for (const span of toolSpans) {
-    const toolCallUrn = civicUrn(packageId, 'tool-call', span.spanId);
+    const toolCallUrn = vocab.urn(packageId, 'tool-call', span.spanId);
     const argsStr = getAttr(span.attributes, 'tool.arguments') || '{}';
     const queryHash = hash(argsStr);
     const responseHash = getAttr(span.attributes, 'tool.response_hash');
@@ -316,7 +326,7 @@ export function buildProvenanceGraph(
       .filter(is => Number(is.endTimeUnixNano || '0') <= toolStart)
       .sort((a, b) => Number(b.endTimeUnixNano || '0') - Number(a.endTimeUnixNano || '0'))[0];
 
-    const queryUrn = civicUrn(packageId, 'query', queryHash);
+    const queryUrn = vocab.urn(packageId, 'query', queryHash);
     graph.push(
       makeEntityNode(queryUrn, {
         'civic:contentHash': `sha256:${queryHash}`,
@@ -324,14 +334,14 @@ export function buildProvenanceGraph(
         'civic:operationType': opType,
         'dcterms:description': `MCP tool arguments (${opType})`,
         ...(precedingInference
-          ? provWasGeneratedBy(civicUrn(packageId, 'inference', precedingInference.spanId))
+          ? provWasGeneratedBy(vocab.urn(packageId, 'inference', precedingInference.spanId))
           : {}),
       }),
     );
 
     // Data response entity
     if (responseHash) {
-      const dataUrn = civicUrn(packageId, 'data', responseHash);
+      const dataUrn = vocab.urn(packageId, 'data', responseHash);
       dataResponseUrns.push(dataUrn);
 
       // Description varies by source — dataset-keyed sources (Socrata) have
@@ -396,8 +406,8 @@ export function buildProvenanceGraph(
 
   if (generatorSpan) {
     const generatorUrn = synthesisSpan
-      ? civicUrn(packageId, 'synthesis', synthesisSpan.spanId)
-      : civicUrn(packageId, 'inference', generatorSpan.spanId);
+      ? vocab.urn(packageId, 'synthesis', synthesisSpan.spanId)
+      : vocab.urn(packageId, 'inference', generatorSpan.spanId);
 
     // Add synthesis activity if it exists
     if (synthesisSpan) {
@@ -417,7 +427,7 @@ export function buildProvenanceGraph(
 
     // Output wasGeneratedBy
     graph.push(
-      makeEntityNode(civicUrn(packageId, 'output', outputHash), {
+      makeEntityNode(vocab.urn(packageId, 'output', outputHash), {
         ...provWasGeneratedBy(generatorUrn),
         ...(dataResponseUrns.length > 0
           ? provWasDerivedFrom(dataResponseUrns)
@@ -444,11 +454,11 @@ export function buildProvenanceGraph(
         'prov:qualifiedAssociation': {
           '@type': 'prov:Association',
           'prov:agent': provRef(modelUrn),
-          'prov:hadPlan': provRef(civicUrn(packageId, 'skill', skillHash)),
+          'prov:hadPlan': provRef(vocab.urn(packageId, 'skill', skillHash)),
         },
       }),
     );
   }
 
-  return makeProvGraph(makeCivicProvContext(), graph);
+  return makeProvGraph(vocab.context(), graph);
 }
