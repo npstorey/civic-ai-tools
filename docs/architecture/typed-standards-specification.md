@@ -1,9 +1,9 @@
 ---
 Status: v0.1 Working Draft — open for external review (review window to be scheduled)
 Spec name: Typed Standards Specification
-Version: v0.1
+Version: v0.1.5 (patch revision of the v0.1 Working Draft; tag: `v0.1.5-typed-standards-spec`)
 License: CC BY 4.0
-Last updated: 2026-08-03
+Last updated: 2026-08-19
 Maintainer: Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 Canonical URL: [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 ---
@@ -20,12 +20,12 @@ This document consolidates the project's standards work — formerly the Open Ev
 
 **Status:** v0.1 Working Draft — open for external review (review window to be scheduled)
 **Spec name:** Typed Standards Specification
-**Version:** v0.1
+**Version:** v0.1.5 (patch revision of the v0.1 Working Draft; tag: `v0.1.5-typed-standards-spec`)
 **License:** CC BY 4.0 (see §3; canonical citation form in Appendix A)
 **Maintainer:** Nathan Storey (current; see reviewer-orientation document for stewardship and contact details)
 **Canonical URL:** [TK: typedstandards.org/specs/v0.1/ once typedstandards.org is registered and the spec is published there]
 
-This document is an open-for-external-review working draft of the Typed Standards Specification. The substantive specification stabilized through the G1-G4 MVP cohort; this document consolidates the prior OES + CCV drafts under a single umbrella. The v0.1 designation reflects that the specification is open for substantive external feedback; review-window dates and a comment-deadline are populated once initial conversations with reviewer organizations have set expectations. Until then, the specification lives at HEAD of `main`; reviewers cite against the consolidation-commit tag (`v0.2-typed-standards-rfc`) for stable reference.
+This document is an open-for-external-review working draft of the Typed Standards Specification. The substantive specification stabilized through the G1-G4 MVP cohort; this document consolidates the prior OES + CCV drafts under a single umbrella. The v0.1 designation reflects that the specification is open for substantive external feedback; review-window dates and a comment-deadline are populated once initial conversations with reviewer organizations have set expectations. Until then, the specification lives at HEAD of `main`. Reviewers and integrators embedding a version identifier cite against the **current patch-revision tag** (`v0.1.5-typed-standards-spec`), which names the precise revision of this document; the consolidation-milestone tag (`v0.2-typed-standards-rfc`) remains for citing the consolidation milestone itself, not the current text. The document's own Version line (above and in the title block) carries the same patch version and tag name, so an integrator embedding a version identifier from the document itself gets the precise revision rather than the coarse draft number.
 
 Conformance language follows [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) keywords (MUST, MUST NOT, SHOULD, MAY) when applied to normative requirements. Every normative requirement in this document corresponds either to a check enforced in the reference implementation at `civic-ai-tools-website` code today or to a settled Architectural Decision Record in `civic-ai-tools/docs/adr/`. Where neither holds, the section is labeled with a callout pointing at the relevant open question in [`open-questions.md`](open-questions.md).
 
@@ -68,7 +68,7 @@ Citation conventions for this specification appear in Appendix A.
  - 7.4 Two-family taxonomy — one structural primitive, content/* and attestation/*
  - 7.5 The QEC sub-ontology within content/*
 8. Normative specification
- - 8.1 Evidence package structure
+ - 8.1 Record package structure
  - 8.2 Canonical JSON, envelope hash, content hash
  - 8.3 Cryptographic envelope
  - 8.4 Trace capture
@@ -99,6 +99,7 @@ Citation conventions for this specification appear in Appendix A.
  - G. Revision history
  - H. Related documents
  - I. Acknowledgments
+ - J. Vocabulary settlement (Q50/Q66): old→new mapping and dual-era rules
 
 ---
 
@@ -196,7 +197,7 @@ Conformance language follows [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) 
 
 Terms below are used with the meanings given. **Normative** terms have specific meaning when used in conformance language; **informative** terms are used descriptively.
 
-- **Evidence package** *(normative)*: A signed node in the system, carrying the structural-primitive fields plus sub-type-specific payload fields. Today's reference implementation produces `content/analysis/v1` nodes (the default content sub-type — legacy and `datHere` shapes both map to it); the broader concept is "signed node." Identified by its envelope hash (see `nodeId`) and stored at a content-addressable URL. See §8.1 for structure.
+- **Record package** *(normative)*: A signed node in the system, carrying the structural-primitive fields plus sub-type-specific payload fields. Today's reference implementation produces `content/analysis/v1` nodes (the default content sub-type — legacy and `datHere` shapes both map to it); the broader concept is "signed node." Identified by its envelope hash (see `nodeId`) and stored at a content-addressable URL. See §8.1 for structure. Named "evidence package" before the 2026-08-19 vocabulary settlement (Appendix J): the prior-era name remains valid wherever it is frozen inside already-published records and documentation, and is distinct from the retained epistemic sense of "evidence" (the QEC role — `content/evidence/v1`, the `contentType` value `"evidence"`; see §6.3).
 - **Signed node** *(normative)*: Any conformant signed object in the system — a `content/*` node (standalone assertion; no `targetNodeId`) or an `attestation/*` node (assertion about another node; `targetNodeId` required).
 - **`type`** *(normative)*: The URI declaring a signed node's family + sub-type. Required v0.1; pre-v0.1 packages are interpreted as `content/analysis/v1` by construction. Form: `content/<noun>/v<N>` or `attestation/<verb>/v<N>`.
 - **`content/*` namespace** *(normative)*: The top-level type family for **standalone assertions** — nodes whose payloads do NOT carry `targetNodeId`. Sub-types include `content/analysis/v1` (built; default for AI-Assisted Analysis Producer Profile output), `content/claim/v1`, `content/question/v1`, `content/evidence/v1`, `content/host/v1`, `content/hostPolicy/v1`, `content/hostTermsOfUse/v1`, `content/tool/v1` (reserved name-only).
@@ -208,7 +209,7 @@ Terms below are used with the meanings given. **Normative** terms have specific 
 - **Content canonicalization** *(normative)*: The URI naming the rule by which off-log content reduces to bytes that `contentHash` fingerprints. Carried as the top-level `contentCanonicalization` field on the canonical JSON; covered by the envelope hash and the platform signature. v0.1 reserved URIs: `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter content profile) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default content profile).
 - **Signed envelope** *(normative)*: The envelope-hash hex string, signed with Ed25519ph by a key in the trust registry. The envelope JSON object stored alongside the package also carries `publicKey`, `algorithm`, and `kid` fields for verifier convenience; signature math binds only the hash bytes. The envelope hash is computed over the JCS canonicalization of the unsigned envelope; pre-v0.1 packages used `JSON.stringify` insertion-order canonicalization, and verifiers handle them under that legacy rule.
 - **Trust registry** *(normative)*: The JSON document at `${baseUrl}/.well-known/typed-publisher.json` that lists authorized signing keys with lifecycle metadata. Reference implementations SHOULD also serve the same JSON at the legacy path `${baseUrl}/.well-known/evidence-public-keys.json` for backwards-compatibility with pre-v0.1 fetchers. See §8.3.3.
-- **`kid` (key identifier)** *(normative)*: A stable string identifying a signing key (e.g. `platform:evidence-2026-04`), present in both the signed envelope and the trust registry. The `kid` is part of the canonical package JSON via `metadata.signingKeyId`, so it is covered by the envelope hash and therefore by the platform signature.
+- **`kid` (key identifier)** *(normative)*: A stable string identifying a signing key (e.g. `platform:evidence-2026-04`), present in both the signed envelope and the trust registry. The `kid` is part of the canonical package JSON via `metadata.signingKeyId`, so it is covered by the envelope hash and therefore by the platform signature. The example is the reference implementation's live kid, which is **exempt-frozen** under the 2026-08-19 vocabulary settlement (Appendix J): it appears inside every already-signed envelope, so it is never renamed; the next key rotation names its key under the new vocabulary, and no rotation is forced.
 - **BlobRef** *(normative)*: A four-field JSON object `{ ref, url, contentType, size }` that names a content-addressable Vercel Blob (or equivalent content-addressable storage) in place of inline content for selected fields. See §8.1.5.
 - **`captureMethod`** *(normative)*: The label identifying *how* the package's content was captured — the integrity-of-pipeline property. The field is required, signed, and tamper-evident. Its **value space is open at the core level**; the vocabulary of valid values is declared by the package's `producerProfile`'s guidance bundle. For the `ai-assisted-analysis` Producer Profile, the v0.1 vocabulary is `chat-flow-stream`, `claude-code-jsonl-readback`, `claude-code-self-report` — the three values originally enumerated in core by ADR-0003 and relocated to this profile's guidance bundle. See §8.6.
 - **`contentProfile`** *(normative)*: The label identifying *what shape* the package's content is in — the content-shape property. Orthogonal to `captureMethod`. Values: `"default"` (legacy shape; absence treated as default) or `"datHere"` (A-G envelope content profile per §8.7). Carried inside the `metadata` object (`metadata.contentProfile`, §8.1.2). See §8.1 and §8.7.
@@ -227,6 +228,13 @@ A broader vocabulary covering the surrounding architectural standards (PROV-O, C
 **Prefix choice — relationship to RFC 3161 timestamping.** This specification uses RFC 3161 trusted timestamps as a cryptographic-envelope component (§8.3.2). The shorthand "TSS" is sometimes used in the timestamping literature for "Time-Stamping Server" or "Time-Stamping Service" — a different concept (an external service that issues `TimeStampToken`s) from "Typed Standards." This specification reserves "Typed Standards" and the `ts:` prefix for the project itself, and uses the spelled-out terms "Time-Stamping Authority (TSA)" and "TimeStampToken (TST)" per RFC 3161 §1 for the timestamping subsystem to keep the two concepts unambiguous. The `tss:` prefix was considered and rejected on these grounds.
 
 **`contentProfile` — one name, two documented senses.** In the §8.1.2 `metadata` field table and §8.7, `contentProfile` is the package **field** naming the content *shape* (`"default"` | `"datHere"`). In the §7.1 architecture diagram, "Content profiles" names the typed-content **carrier axis** (the Typed Claims / Typed Evidence / Typed Questions profiles). The two are related but not the same thing, and the collision is known and deliberate: [ADR-0006](../adr/0006-producer-profile-architecture.md) records the clean split — `contentProfile` reserved for typed-content carriers, `producerProfile` for the production-shape axis — as **deferred**, because renaming the live field is a breaking change tied to the [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec) version bump. Until that bump, read `contentProfile` (code font, the field) in the shape sense, and "content profiles" (prose, the axis) in the carrier sense.
+
+**"Evidence" — two roles; one excised, one retained (the 2026-08-19 vocabulary settlement, Q50/Q66).** The word "evidence" historically played two unrelated roles in this specification and its surrounding infrastructure, and the vocabulary settlement recorded in Appendix J separates them on principle:
+
+- **As the artifact / infrastructure brand** — the package noun ("evidence package"), the reference implementation's route segments, environment-variable prefix, wire version key, exported type and function names, OAuth scope, skill name, and sidecar filename — the word **overclaims**. A signed record under this specification shows *how* an answer was produced; it does not show that the answer is correct, and "evidence" in the brand position invites exactly the corroboration-equals-truth reading the §5.1 normative preamble exists to prevent. This role is **excised**: the artifact is a **record package**, and the infrastructure surfaces migrate to `record`/`records` vocabulary under the per-surface migration classes in Appendix J. Prior-era names remain valid per the dual-era rules there — nothing already published, linked, or signed stops resolving.
+- **As the epistemic role in the typed-claims triad** — Question / Evidence / Claim (`content/evidence/v1`; the `contentType` value `"evidence"`; the `supportedBy` / `opposedBy` relations whose targets are evidence nodes) — the word is **precise and retained**. Content serving as *evidence for a claim* is the legitimate, Discourse-Graphs-derived use (§7.5), and it is unaffected by the settlement.
+
+The unqualified word "evidence" in this specification therefore always means the epistemic QEC role. The prior-era artifact-brand usages survive only where they are frozen (inside signed artifacts, published URLs, and historical records) and are enumerated, with their migration classes, in Appendix J.
 
 ---
 
@@ -405,9 +413,9 @@ flowchart LR
 
 ## 8. Normative specification
 
-### 8.1 Evidence package structure
+### 8.1 Record package structure
 
-A conformant evidence package is a single JSON object whose canonical-JSON serialization is the input to the SHA-256 envelope hash.
+A conformant record package is a single JSON object whose canonical-JSON serialization is the input to the SHA-256 envelope hash.
 
 The field table in §8.1.1 mixes two kinds of fields: the **structural-primitive fields** shared by every signed node per §7.4 (`type`, `contentHash`, `contentCanonicalization`, `signer`, plus the envelope-side `sig` object of §8.3.1 and the derived `nodeId`) and the **payload fields** specific to `content/analysis/v1` (`prompt`, `queries`, `dataSources`, `cost`, `skillMetadata`, `output`, `trace`, …). Sub-type-specific payload fields live alongside the primitive at the canonical-JSON top level; see §7.4 for the general rule.
 
@@ -415,7 +423,7 @@ The field table in §8.1.1 mixes two kinds of fields: the **structural-primitive
 
 #### 8.1.1 Top-level fields
 
-A conformant evidence package MUST carry every field in the following list. Fields marked optional MAY be omitted; when present, they MUST conform to the type given.
+A conformant record package MUST carry every field in the following list. Fields marked optional MAY be omitted; when present, they MUST conform to the type given.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -461,7 +469,7 @@ A conformant evidence package MUST carry every field in the following list. Fiel
 
 #### 8.1.4 `provenance` object (informative on shape)
 
-When present, `provenance` is a W3C PROV-O JSON-LD graph with `@context` mapping the `prov`, `xsd`, `civic`, and `dcterms` prefixes, and an `@graph` array of typed entities, activities, and agents derived from the trace. The graph reflects per-source attribution: each MCP server appears as a `prov:Agent` with a `civic:sourceId`, and each data response is a `prov:Entity` tagged with the same `civic:sourceId`. Skill guidance, the LLM model, and the platform are also represented as agents. The platform is `urn:civic-evidence:platform:civic-ai-tools`.
+When present, `provenance` is a W3C PROV-O JSON-LD graph with `@context` mapping the `prov`, `xsd`, `civic`, and `dcterms` prefixes, and an `@graph` array of typed entities, activities, and agents derived from the trace. The graph reflects per-source attribution: each MCP server appears as a `prov:Agent` with a `civic:sourceId`, and each data response is a `prov:Entity` tagged with the same `civic:sourceId`. Skill guidance, the LLM model, and the platform are also represented as agents. In new-era emissions the platform is `urn:civic-record:platform:civic-ai-tools`; graphs emitted before the 2026-08-19 vocabulary settlement carry `urn:civic-evidence:platform:civic-ai-tools`, which remains valid forever — identifiers inside already-signed packages are frozen, and verifiers treat both eras as valid (Appendix J).
 
 The `civic:` prefix in existing PROV-O graphs predates the consolidation; new packages MAY emit `ts:` in place of `civic:`, but the `civic:` prefix in already-published packages remains valid (vocabulary URIs are identifiers, not fetch targets, and a future migration is gated on adopter need per [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology) / the OWL ontology promotion).
 
@@ -479,6 +487,8 @@ The fields `output`, `trace`, and `skillMetadata.skillText` MAY be supplied as a
  "size": 4194304
 }
 ```
+
+The `evidence-refs/` storage prefix in the example URL is an **exempt-frozen storage literal** (Appendix J): blob addresses are hash-frozen inside signed fields, so the prefix is recorded under the prior-era vocabulary rather than renamed.
 
 A verifier encountering a BlobRef MUST:
 
@@ -515,13 +525,13 @@ The `cost` object's current schema (`promptTokens`, `completionTokens`, `totalTo
 
 Canonicalization comes in two kinds,:
 
-- **Envelope-level canonicalization** is a single fixed rule committed to by the spec. Every package's unsigned envelope (the canonical-JSON evidence package object with the signature envelope removed) is canonicalized via [RFC 8785 JSON Canonicalization Scheme (JCS)](https://www.rfc-editor.org/rfc/rfc8785) to produce envelope bytes. The **envelope hash** is the SHA-256 hex digest of those JCS bytes. This rule applies to every envelope shape; there is no envelope-level URI.
+- **Envelope-level canonicalization** is a single fixed rule committed to by the spec. Every package's unsigned envelope (the canonical-JSON record package object with the signature envelope removed) is canonicalized via [RFC 8785 JSON Canonicalization Scheme (JCS)](https://www.rfc-editor.org/rfc/rfc8785) to produce envelope bytes. The **envelope hash** is the SHA-256 hex digest of those JCS bytes. This rule applies to every envelope shape; there is no envelope-level URI.
 - **Content-level canonicalization** varies per content shape. Off-log content (whatever the package's `contentHash` fingerprints) is canonicalized per the rule named by the package's `contentCanonicalization` field (§8.1.1). The **content hash** is the multihash digest set fingerprinting those canonicalized bytes — an object keyed by lowercase algorithm name (`sha256` required default, `sha3-256` + `blake3` registered alternates). v0.1 reserved canonicalization-rule URIs are `https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1` (datHere A-G/Jupyter) and `https://typedstandards.org/canonicalization/legacy-json/v1` (legacy default).
 
 **What each v0.1 canonicalization rule fingerprints.**
 
 - `dathere-ag-jupyter/v1` fingerprints the executed notebook (the `extensions["org.civicaitools.notebook"]` object and its rendered outputs, per §8.7.2) — the content the datHere profile is *about*; the A-G envelope's other sections are envelope metadata.
-- `legacy-json/v1` (default) fingerprints the JCS canonicalization of the canonical-JSON evidence package object with the `contentHash` field and the signature envelope both omitted. Excluding `contentHash` keeps the rule non-circular (a fingerprint cannot include itself); excluding the signature envelope matches the unsigned-envelope boundary used for the envelope hash (step 2 below). For a package whose content is fully inline — the legacy default — the content hash and the envelope hash therefore fingerprint nearly identical byte sets, differing only by the `contentHash` field; here the content hash satisfies the §8.1.1 requirement rather than fingerprinting genuinely-separate off-log content. The off-log-content concept becomes load-bearing only when content is supplied by reference (BlobRef) rather than inline.
+- `legacy-json/v1` (default) fingerprints the JCS canonicalization of the canonical-JSON record package object with the `contentHash` field and the signature envelope both omitted. Excluding `contentHash` keeps the rule non-circular (a fingerprint cannot include itself); excluding the signature envelope matches the unsigned-envelope boundary used for the envelope hash (step 2 below). For a package whose content is fully inline — the legacy default — the content hash and the envelope hash therefore fingerprint nearly identical byte sets, differing only by the `contentHash` field; here the content hash satisfies the §8.1.1 requirement rather than fingerprinting genuinely-separate off-log content. The off-log-content concept becomes load-bearing only when content is supplied by reference (BlobRef) rather than inline.
 
 The two rules are nested:
 
@@ -547,7 +557,7 @@ This section describes the signing, timestamping, and transparency-log mechanism
 
 #### 8.3.1 Signature
 
-**Every package is cryptographically signed so that any modification of its content invalidates the signature, and so that the signature ties the bytes to a publisher whose key is named in the trust registry.** A conformant evidence package MUST be signed with **Ed25519ph** (the pre-hashed Ed25519 variant, RFC 8032 §5.1.2). The signature is computed over the UTF-8 bytes of the **envelope-hash** hex string, NOT over the raw 32-byte hash bytes. The envelope hash is the SHA-256 hex digest of the RFC 8785 JCS canonicalization of the unsigned envelope (§8.2; [ADR-0008](../adr/0008-multihash-content-hash.md) §6-§7). Implementations using `@noble/curves/ed25519` apply Ed25519ph's internal SHA-512 prehash automatically; implementations using primitives that expose only Ed25519 MUST NOT pre-hash on the application side.
+**Every package is cryptographically signed so that any modification of its content invalidates the signature, and so that the signature ties the bytes to a publisher whose key is named in the trust registry.** A conformant record package MUST be signed with **Ed25519ph** (the pre-hashed Ed25519 variant, RFC 8032 §5.1.2). The signature is computed over the UTF-8 bytes of the **envelope-hash** hex string, NOT over the raw 32-byte hash bytes. The envelope hash is the SHA-256 hex digest of the RFC 8785 JCS canonicalization of the unsigned envelope (§8.2; [ADR-0008](../adr/0008-multihash-content-hash.md) §6-§7). Implementations using `@noble/curves/ed25519` apply Ed25519ph's internal SHA-512 prehash automatically; implementations using primitives that expose only Ed25519 MUST NOT pre-hash on the application side.
 
 The full signing chain v0.1:
 
@@ -577,7 +587,7 @@ Signing is best-effort at publish time. If the signing leg fails, the database r
 
 #### 8.3.2 Timestamp and transparency log
 
-**A publicly-verifiable timestamp proves the package existed by a particular time; an inclusion proof in a public transparency log makes the signing event itself auditable.** A conformant evidence package SHOULD also carry an RFC 3161 trusted timestamp from a public TSA and a Sigstore Rekor inclusion proof. The reference implementation uses `freetsa.org` for the timestamp and Rekor's `hashedrekord` v0.0.1 entry type for the transparency log. Both are best-effort: failures persist as `null` columns and the package remains queryable.
+**A publicly-verifiable timestamp proves the package existed by a particular time; an inclusion proof in a public transparency log makes the signing event itself auditable.** A conformant record package SHOULD also carry an RFC 3161 trusted timestamp from a public TSA and a Sigstore Rekor inclusion proof. The reference implementation uses `freetsa.org` for the timestamp and Rekor's `hashedrekord` v0.0.1 entry type for the transparency log. Both are best-effort: failures persist as `null` columns and the package remains queryable.
 
 A verifier checks the RFC 3161 token against FreeTSA's CA chain — validated to a pinned root anchor (§10.3) — and Rekor inclusion against the pinned `rekor.sigstore.dev` log key (§10.3), once it has obtained the timestamp token and the Rekor entry. The cryptographic *check* of these proofs requires only public infrastructure plus the pinned anchors. The *retrieval* of the proofs is carried by the §8.8 commitment view / self-contained bundle (`?inline=1` inlines them, enabling the zero-network verification demonstrated in §9.4); the canonical single-blob package JSON does not itself embed them, so a bare package without its bundle falls back to the reference implementation's verify endpoint. See §9 for the full verification surface and the [Q1](open-questions.md#q1--package-format) callout in §8.1 for the package-format question of whether the proofs should move into the package itself.
 
@@ -604,6 +614,8 @@ The trust registry is a JSON object with a `keys` array of entries:
  "revokedAt": null
 }
 ```
+
+The `kid` in the example above is the reference implementation's live key identifier — exempt-frozen under the 2026-08-19 vocabulary settlement (it is embedded in every envelope the key has signed; the next key rotation names its successor under the new vocabulary, with no forced rotation; Appendix J).
 
 Each entry MAY carry a `signerIdentity` object documenting which identity the `kid` is bound to. The verifier uses this to cross-check the envelope's `signer.identifier` claim against the registry-recorded identity for the envelope's `kid`. pre-v0.1 registry entries omit `signerIdentity`; verifiers treat absence as `signerIdentity: { bindingTier: "legacy_embedded", identifier: "<kid>", displayName: "<kid>" }` and apply no mismatch check. Post-ADR-0009 registries SHOULD populate `signerIdentity` for every active key.
 
@@ -648,7 +660,7 @@ This v0.1 draft documents the GitHub binding as the only currently-conformant id
 
 **Readers see exactly which mechanism produced the bytes they're verifying — and that mechanism is itself tamper-evident** (*tamper-evident:* any change to the labeled value invalidates the signature) **because the label is part of what the signature covers.** `captureMethod` is the label identifying how the package's content was captured. Its presence, its required-and-signed discipline, and its verbatim-by-construction labeling apply to every conformant package. The value space is open at the core level; valid values are declared per Producer Profile.
 
-A conformant evidence package published after 2026-04-29 MUST carry exactly one of the values declared by the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle. The vocabulary lookup follows the rule:
+A conformant record package published after 2026-04-29 MUST carry exactly one of the values declared by the captureMethod vocabulary of the package's `producerProfile`'s guidance bundle. The vocabulary lookup follows the rule:
 
 1. Read the package's `producerProfile`. When absent and `metadata.contentProfile === "datHere"`, treat producerProfile as `ai-assisted-analysis/datHere` legacy alias. When both fields are absent (pre-v0.1 packages), treat producerProfile as `ai-assisted-analysis` — the implicit profile-type for pre-existing packages, all of which were AI-mediated by construction.
 2. Resolve the producerProfile's guidance bundle via the local rule registry mechanism [Q32](open-questions.md#q32--producer-profile-guidance-doc-routing-convention) anticipates. v0.1 verifiers resolve to a hardcoded fallback table; the bundle distribution mechanism is a follow-on per Q32.
@@ -795,7 +807,7 @@ This section defines the commitment view as a **logical schema** (§8.8.1 — fi
 
 A reader holding only the self-contained bundle — this commitment view in its `?inline=1` serialization, with the package, the publisher's trust registry, and the RFC 3161 token, Rekor entry body and inclusion proof, and lifecycle chain all carried inline (`GET …/commitment?inline=1`) — can verify the package's full cryptographic envelope with **no network access at all**; this is the demonstrated offline property of §9.4. The lighter (non-`inline`) commitment view references the trust registry by URL and so still fetches the publisher's registry (and, for embeds, the package and attestations) over public infrastructure — offline *from the originating host*, but not zero-network. Either way the cross-host publication pattern *makes the package's content* independent of the originating host as long as the trust registry remains independently reachable. What stays gated on [Q1](open-questions.md#q1--package-format) is only whether the single-blob *package* should itself embed the proofs rather than carrying them in this commitment view.
 
-Bundle-export endpoints on conformant publishers produce the published artifact (the notebook with its embedded metadata, or the multi-file set including any sibling YAML) as a single response; the reference implementation's contract is in `civic-ai-tools-website/docs/api/evidence-publish.md`. Bundle endpoints are advisory — a publisher MAY support cross-host publication by manual artifact construction without offering a bundle endpoint.
+Bundle-export endpoints on conformant publishers produce the published artifact (the notebook with its embedded metadata, or the multi-file set including any sibling YAML) as a single response; the reference implementation's contract is in `civic-ai-tools-website/docs/api/evidence-publish.md` (renaming to `records-publish.md` under the vocabulary settlement, with the old filename remaining as a stub — Appendix J). Bundle endpoints are advisory — a publisher MAY support cross-host publication by manual artifact construction without offering a bundle endpoint.
 
 #### 8.8.1 Field definitions
 
@@ -803,7 +815,7 @@ A conformant commitment view carries the following fields. The field set is the 
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `evidenceProtocolVersion` | string | yes | The Typed Standards schema version this commitment view was published against (currently `0.1.0`). |
+| `protocolVersion` | string | yes (dual-era key) | The Typed Standards schema version this commitment view was published against (currently `0.1.0`). **Dual-era key** (Appendix J): commitment views minted before a publisher's settlement cutover carry the same value under the prior-era key `evidenceProtocolVersion`, which remains valid forever — the key is frozen inside already-signed artifacts. A conformant verifier MUST accept either key; post-cutover emissions use `protocolVersion`. The reference implementation's cutover is coordinated with the one live external adopter (which serves this field); until a publisher's cutover lands, its prior-era emissions remain conformant. |
 | `packageHash` | string (hex SHA-256) | yes | The SHA-256 hex digest of the canonical-JSON package object. The package's content-addressable identifier. |
 | `packageUrl` | string (URL) | conditional | The content-addressable URL where the canonical-JSON package is fetchable. Reference implementation: Vercel Blob URL. Other hosts MAY serve from their own content-addressable storage. Omitted when unknown and on redacted (sealed-visibility) views — a non-derivable capability URL MUST NOT be disclosed for a sealed-visibility record (see the redaction rule below). |
 | `visibility` | string | yes | The content node's visibility state ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md) §A vocabulary: `sealed` / `public`). Lets a verifier render a sealed / not-publicly-located state honestly instead of treating a missing `packageUrl` as an error. Reference implementations predating the value-rename sweep emit the legacy values `committed` / `published`; consumers SHOULD accept the legacy values as aliases (`committed` → `sealed`, `published` → `public`). |
@@ -824,7 +836,7 @@ A conformant commitment view carries the following fields. The field set is the 
 | `lifecycleAttestations` | array | optional | Signed lifecycle `attestation/*` envelopes carried inline (embed form) so an independent verifier resolves the §9.2 check-#10 lifecycle chain offline. Omitted when empty. |
 | `attestations` | array | optional | Non-lifecycle attestation entries (corroborations, contradictions, evaluations, …), each either a reference or an embed per §8.9. The reference implementation's served sidecar does not currently emit this array — its lifecycle chain travels under `lifecycleAttestations` — but cross-host serializations MAY carry it. |
 | `trustRegistryUrl` | string (URL) | yes | The `.well-known/typed-publisher.json` URL where the publisher's trust registry is served (the **canonical** path per §8.3.3). Lets a reader resolve `signature.kid` independently of the publishing host. Per-publisher configuration — never a constant. |
-| `trustRegistryUrlLegacy` | string (URL) | optional | Secondary registry URL served byte-identical to the canonical one (the §8.3.3 legacy path `.well-known/evidence-public-keys.json`), emitted for clients that only know the older path. |
+| `trustRegistryUrlLegacy` | string (URL) | optional | Secondary registry URL served byte-identical to the canonical one (the §8.3.3 legacy path `.well-known/evidence-public-keys.json`), emitted for clients that only know the older path. The legacy path is the **exempt-frozen leg of the already-completed trust-registry rename** (settlement ruling D2; Appendix J) — recorded, not renamed again. |
 | `subjectTitle` | string \| null | conditional | Human-readable title of the analysis. Matches the publisher's database `title` field. Omitted on redacted (sealed-visibility) views; MAY be an explicit `null` when the publisher has no title. |
 | `subjectSummary` | string \| null | conditional | The G-section summary. Matches the canonical-JSON `summary` field (§8.7.1 requirement 6). Omitted on redacted (sealed-visibility) views. |
 
@@ -836,14 +848,14 @@ A conformant commitment view carries the following fields. The field set is the 
 
 #### 8.8.2 Notebook-embedded serialization (`.ipynb` outputs)
 
-A `datHere`-content-profile package published as a Jupyter notebook (§8.7.2) MUST carry the commitment view in the notebook's root `metadata` object under the reverse-DNS namespace `org.civicaitools.evidence`:
+A `datHere`-content-profile package published as a Jupyter notebook (§8.7.2) MUST carry the commitment view in the notebook's root `metadata` object under the commitment-view reverse-DNS namespace. The namespace is **dual-era** (settlement ruling D3; Appendix J): new emissions mint **`org.civicaitools.record`**; notebooks published under the prior-era namespace **`org.civicaitools.evidence`** are accepted forever. A conformant verifier MUST read either namespace (preferring `org.civicaitools.record` when both are present); a publisher's pre-cutover emissions under the prior-era namespace remain conformant.
 
 ```json
 {
  "cells": [ ... ],
  "metadata": {
- "org.civicaitools.evidence": {
- "evidenceProtocolVersion": "0.1.0",
+ "org.civicaitools.record": {
+ "protocolVersion": "0.1.0",
  "packageHash": "<hex SHA-256>",
  "packageUrl": "<URL>",
  "visibility": "public",
@@ -864,20 +876,20 @@ A `datHere`-content-profile package published as a Jupyter notebook (§8.7.2) MU
 }
 ```
 
-The `org.civicaitools.evidence` namespace lives at the notebook's root `metadata` level — the location the Jupyter notebook format reserves for opaque metadata that conformant tooling MUST preserve on round-trip. Sibling namespaces (publisher-specific identifiers, `kernelspec`, `language_info`, future namespaces) coexist with the evidence namespace and are unaffected by it; a conformant verifier MUST ignore unknown sibling namespaces.
+The commitment-view namespace (`org.civicaitools.record`; `org.civicaitools.evidence` in prior-era notebooks) lives at the notebook's root `metadata` level — the location the Jupyter notebook format reserves for opaque metadata that conformant tooling MUST preserve on round-trip. Sibling namespaces (publisher-specific identifiers, `kernelspec`, `language_info`, future namespaces) coexist with the commitment-view namespace and are unaffected by it; a conformant verifier MUST ignore unknown sibling namespaces.
 
 All field names and semantics from §8.8.1 map directly. Nested objects (`signature`, `signer`) flatten naturally into the JSON shape Jupyter expects. Optional fields (`rfc3161Timestamp`, `rekorEntryId`, `rekorInclusionProof`, `rekorEntryBody`, `lifecycle`, `lifecycleAttestations`, `attestations`, `signerIdentity`) MAY be omitted; when present they carry the §8.8.1-defined shape.
 
-A conformant publisher MUST ensure the `org.civicaitools.evidence` metadata block survives notebook tooling round-trip (executing the notebook in Jupyter, Colab, VS Code, or analogous environments MUST NOT clobber the namespace). The Jupyter notebook format spec is explicit that root-level metadata under unrecognized keys is preserved by conformant tooling, which makes this serialization durable in practice.
+A conformant publisher MUST ensure the commitment-view metadata block (`org.civicaitools.record`, or `org.civicaitools.evidence` in prior-era notebooks) survives notebook tooling round-trip (executing the notebook in Jupyter, Colab, VS Code, or analogous environments MUST NOT clobber the namespace). The Jupyter notebook format spec is explicit that root-level metadata under unrecognized keys is preserved by conformant tooling, which makes this serialization durable in practice.
 
 Notebook-embedded is the recommended default serialization for `.ipynb` outputs.
 
 #### 8.8.3 Sibling YAML file serialization (non-notebook outputs and sidecar)
 
-A `datHere`-content-profile package published as a non-notebook artifact, or as a notebook alongside an explicit sidecar, MAY carry the commitment view as a sibling YAML file with the conventional filename `<artifact-basename>.evidence.yaml`. The file's content is the §8.8.1 field set serialized as YAML at the top level:
+A `datHere`-content-profile package published as a non-notebook artifact, or as a notebook alongside an explicit sidecar, MAY carry the commitment view as a sibling YAML file with the conventional filename `<artifact-basename>.record.yaml`. The filename convention is **dual-era** (Appendix J): sidecars published under the prior-era convention `<artifact-basename>.evidence.yaml` keep that filename valid indefinitely, and a conformant verifier MUST accept either filename; new sidecars use `.record.yaml`. (No emitting code existed for this convention at any main when the settlement landed, so the rename carries no emitter cutover.) The file's content is the §8.8.1 field set serialized as YAML at the top level:
 
 ```yaml
-evidenceProtocolVersion: "0.1.0"
+protocolVersion: "0.1.0"
 packageHash: "<hex SHA-256>"
 packageUrl: "<URL>"
 visibility: "public"
@@ -919,7 +931,7 @@ Recommended fields to surface in the table:
 - **Attestation summary count.** Number of attestations carried in §8.8.1's `attestations` field, optionally broken out by kind.
 - **Publishing host + timestamp.** `host` and publish-time information from the environment metadata (§8.7).
 
-The rendered cell is purely a reader affordance. A reader who needs to verify the package MUST work from the `org.civicaitools.evidence` namespace metadata (§8.8.2) or the sibling YAML (§8.8.3); the rendered table is not authoritative and SHOULD NOT be trusted on its own.
+The rendered cell is purely a reader affordance. A reader who needs to verify the package MUST work from the commitment-view namespace metadata (`org.civicaitools.record`, or the prior-era `org.civicaitools.evidence`; §8.8.2) or the sibling YAML (§8.8.3); the rendered table is not authoritative and SHOULD NOT be trusted on its own.
 
 ### 8.9 Embed-vs-reference policy for cross-host publication
 
@@ -1348,7 +1360,7 @@ Operationalization of specific sub-types lands per-ADR on its own timeline. The 
 
 The reference implementation publishes packages as stable URLs on `civicaitools.org`. There is currently no federation transport: a package's canonical home is the URL on the publisher's registry; cross-registry discovery is manual.
 
-The current direction names three candidate federation substrates (atproto firehose / labelers, KOI net with sensor nodes, nanopub network) and an orthogonal discoverability mechanism (outbound Croissant metadata at a well-known location on each evidence page, making packages discoverable via Hugging Face / Kaggle / CKAN / Schema.org-aware crawlers).
+The current direction names three candidate federation substrates (atproto firehose / labelers, KOI net with sensor nodes, nanopub network) and an orthogonal discoverability mechanism (outbound Croissant metadata at a well-known location on each record page, making packages discoverable via Hugging Face / Kaggle / CKAN / Schema.org-aware crawlers).
 
 This v0.1 draft makes no normative claim about federation transport or outbound metadata. Adopters running their own registries SHOULD publish to a stable, content-addressable URL and SHOULD honor the trust-registry contract for their own signing keys (§8.3.3), but no specific federation protocol is required. As [Q2](open-questions.md#q2--federation-substrate) resolves toward a specific substrate, this section will gain normative content describing how packages propagate across registries; until then, single-registry deployments and hand-replication between registries are the only patterns the specification contemplates.
 
@@ -1413,7 +1425,7 @@ Offline verifiability has graduated from an aspirational target to a **demonstra
 - **#8 transparency-log inclusion** — RFC 6962 Merkle-inclusion proof verified against a pinned Rekor log key and the entry's signed checkpoint (§10.3);
 - **#10 lifecycle state** — resolved from the signed `attestation/*` chain carried inline, each node's signature verified in-process.
 
-The demonstration is the **Q15 offline-bundle harness** (`apps/web/src/lib/q15-offline-bundle.test.ts` in the verifier monorepo): it runs the full verify flow over real production bundles — captured from `GET /api/evidence/<slug>/commitment?inline=1` (§8.8, the self-contained serialization: package + stamped trust registry + RFC 3161 token + Rekor entry body and inclusion proof + lifecycle chain, all inline) — behind a `fetch` stub that **throws on any call**, asserting zero fetches and a `fullyOffline` resolution. The fixtures span the verification matrix: a full-depth package (active key, TSA cert-chain, Merkle inclusion, and #10 resolved through a `withdraws → reinstates` attestation chain), a prod-parity package, a legacy/calm package (no Rekor entry, `legacy_embedded` key, withdrawn — verified offline without a false alarm), and a synthetic in-process-minted bundle that keeps the offline-plumbing regression independent of drift in captured production material. This is the hermetic external verification that [Q15](open-questions.md#q15--external-verification-testing) called for: real packages, full depth, no `civicaitools.org` endpoint in the verification path.
+The demonstration is the **Q15 offline-bundle harness** (`apps/web/src/lib/q15-offline-bundle.test.ts` in the verifier monorepo): it runs the full verify flow over real production bundles — captured from `GET /api/evidence/<slug>/commitment?inline=1` (§8.8, the self-contained serialization: package + stamped trust registry + RFC 3161 token + Rekor entry body and inclusion proof + lifecycle chain, all inline; the route segment as captured — under the 2026-08-19 settlement the canonical segment becomes `/api/records/`, with the prior-era `/api/evidence/` segment a permanent alias per Appendix J) — behind a `fetch` stub that **throws on any call**, asserting zero fetches and a `fullyOffline` resolution. The fixtures span the verification matrix: a full-depth package (active key, TSA cert-chain, Merkle inclusion, and #10 resolved through a `withdraws → reinstates` attestation chain), a prod-parity package, a legacy/calm package (no Rekor entry, `legacy_embedded` key, withdrawn — verified offline without a false alarm), and a synthetic in-process-minted bundle that keeps the offline-plumbing regression independent of drift in captured production material. This is the hermetic external verification that [Q15](open-questions.md#q15--external-verification-testing) called for: real packages, full depth, no `civicaitools.org` endpoint in the verification path.
 
 **Scope discipline — what is demonstrated and what stays open.** The demonstrated property is offline verifiability **of the self-contained bundle serialization**, not of the single-blob package alone. The bundle achieves it by carrying the proofs and the trust registry inline (the §8.8 commitment view in its `?inline=1` form); the canonical single-blob **package** still does not embed its own proofs, so a bare package handed to a verifier without its accompanying commitment view still depends on an out-of-band proof carrier. Whether the package format itself should embed the proofs — collapsing the package and its bundle into one artifact — remains [Q1](open-questions.md#q1--package-format) (package format), which the offline-hardening arc did **not** resolve: it decoupled offline verification from the package-format question rather than answering it. The lighter (non-`inline`) §8.8 commitment-view sidecar references the trust registry by URL and so still performs public-infrastructure fetches (the publisher's registry, the package blob); it is offline *from the publishing platform* but not zero-network. Zero-network full-depth verification is the property of the `?inline=1` self-contained bundle specifically.
 
@@ -1511,7 +1523,7 @@ Adopters publishing material with privacy-sensitive content SHOULD treat publica
 
 This specification requests **provisional registration** of `/.well-known/typed-publisher.json` in the IANA Well-Known URI Registry per [RFC 8615](https://www.rfc-editor.org/rfc/rfc8615). The registration request is filed at <https://github.com/protocol-registries/well-known-uris>; the citing document is this specification at its canonical URL (§2). The registration procedure per RFC 8615 is Specification Required; the designated expert is Mark Nottingham.
 
-The legacy path `/.well-known/evidence-public-keys.json` is NOT IANA-registered (and never was); reference implementations serving the legacy path do so as a backwards-compatibility convenience, not as an IANA-recognized path.
+The legacy path `/.well-known/evidence-public-keys.json` is NOT IANA-registered (and never was); reference implementations serving the legacy path do so as a backwards-compatibility convenience, not as an IANA-recognized path. Under the 2026-08-19 vocabulary settlement the legacy path is the exempt-frozen leg of the already-completed trust-registry rename (ruling D2; Appendix J) — recorded, not renamed again.
 
 Promotion to a permanent registration is deferred until a stable v1.0 of this specification is published at a permanent URL and at least one external implementation has demonstrated conformance. Provisional status is appropriate for v0.1.
 
@@ -1589,7 +1601,7 @@ Example (for a future v0.1-frozen envelope-section citation): *Typed Standards. 
 
 Academic citation follows the prevailing pattern across SLSA / in-toto / C2PA papers: cite the specification by its stable URL with an accessed-date footnote. Once v0.1 is frozen, a Zenodo DOI is applied for (the standard mechanism for academic citability of grey literature); the DOI takes precedence over the URL form for academic citations once issued. DOI application is deferred to v0.2 — v0.1 may need substantive revisions before freeze, and DOIs are permanent.
 
-For citation of a specific section of this specification, append the section number (e.g., `Typed Standards Specification v0.1, §8.3.1 Signature`). Stable anchors for section numbers are preserved across patch revisions; major-revision renumbering will preserve aliases.
+For citation of a specific section of this specification, append the section number (e.g., `Typed Standards Specification v0.1, §8.3.1 Signature`). Section **numbers** are the stable citation unit and are preserved across patch revisions; major-revision renumbering will preserve aliases. Rendered heading anchors (e.g., GitHub's auto-generated heading slugs) derive from heading *text* and can change when a heading is retitled within a patch revision — the v0.1.5 retitle of §8.1 ("Evidence package structure" → "Record package structure") is the case on record — so durable citations should use section numbers plus the patch-revision tag, not heading-text anchors.
 
 ### Appendix B. Worked example: typed claim
 
@@ -1734,6 +1746,7 @@ The most load-bearing open questions for v0.1 readers and reviewers:
 
 ### Appendix G. Revision history
 
+- **2026-08-19** — Vocabulary-settlement patch revision (v0.1.5; registry [Q50](open-questions.md#q50--evidence-product-framing-vs-precise-typed-node-resource-naming)/[Q66](open-questions.md#q66--project-glossary-and-controlled-vocabulary-for-prose-across-the-four-repos), anchored at [civic-ai-tools#160](https://github.com/npstorey/civic-ai-tools/issues/160); decision record [ADR-0025](../adr/0025-vocabulary-settlement-evidence-excision.md)). "Evidence" is retired from the artifact and infrastructure surface and retained as the epistemic QEC role — the two-roles scoping principle, recorded at §6.3. §8.1 retitled "Record package structure"; the §6.2 glossary term becomes "Record package"; conformance prose swaps "evidence package" → "record package" throughout. New **Appendix J** carries the full old→new mapping table with per-surface migration classes, the exemption and retained rows, and the normative dual-era verification rules (old records keep old keys and identifiers forever; verifiers treat both eras as valid; new emissions use the new vocabulary; nothing already published stops resolving). §8.8.1's wire version key documented as the dual-era pair `protocolVersion` / `evidenceProtocolVersion` (frozen-in-signed-artifacts); §8.8.2's commitment-view notebook namespace becomes dual-era `org.civicaitools.record` / `org.civicaitools.evidence` (ruling D3); §8.8.3's sidecar filename convention renames to `.record.yaml` with the prior-era filename valid indefinitely; the §8.1.4 URN example gains the new-era `urn:civic-record:` form with the prior-era `urn:civic-evidence:` annotated valid-forever; kid examples annotated exempt-frozen; the `evidence-refs/` BlobRef storage prefix annotated exempt-frozen; the legacy trust-registry path rows annotated per ruling D2. **Header-semver rider** (requested by an external integrator embedding a version identifier): both version blocks now carry the full patch version and its tag name, and the §2 citation guidance names the patch-revision tag (`v0.1.5-typed-standards-spec`) as the precise citation target, with the milestone tag (`v0.2-typed-standards-rfc`) scoped to the consolidation milestone. Appendix A notes that heading-text anchors can change on retitle (the §8.1 case) while section numbers stay the citation unit. No wire change: already-signed packages are byte-identical and remain verifiable; schema version unchanged (`0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec)).
 - **2026-08-03** — Spec-reconciliation patch revision (v0.1.4): the ADR-0016 deferred amendments + served-surface reconciliation, consolidating the pre-RFC edit round's first installment. **(1) ADR-0016 execution** ([ADR-0016](../adr/0016-vcs-native-lifecycle-mapping.md), Accepted 2026-06-15): §8.1.1 gains the optional `vcsRef` field (attested content-family self-declaration; verify-on-fetch, mismatch-informative, `captureMethod`-weighted); §8.12.1 gains the `attestation/revises/v1` row + the succession-vs-correction contrast; §8.10.5 (lineage; diff = derivable view, not a signed object) and §8.10.6 (three orthogonal dimensions: visibility / lifecycle status / host display) added; §10.1 gains the false-VCS-binding adversary row (chartered via [civic-ai-tools#63](https://github.com/npstorey/civic-ai-tools/issues/63)); descriptive state labels updated to `sealed` / `public` (§8.9, §8.10.1, §8.12.1). **(2) Served-surface reconciliation (codebase-wins; zero wire change):** §8.8.1 ratifies the served commitment-view shape — the `signer` (§8.5-shaped claim, check-#14 subject) vs. `signerIdentity` (informational provider block) split, the `lifecycleAttestations` carrier, and the fields the served view had grown (`visibility`, `rekorEntryBody`, `lifecycle`, `contentHash`, `contentCanonicalization`, `producerProfile`, `type`, `trustRegistryUrlLegacy`), with required/optional marks, the sealed-record redaction rule, and the `?inline=1` field additions; §8.8.2/§8.8.3 examples updated. **(3) `metadata` placement alignment:** `contentProfile` documented at its shipped location `metadata.contentProfile` (§8.1.2; previously described as top-level — the wire never changed; the formalization collaborator's formal model documented the wire correctly). **(4) Q48 resolved:** the `attestation/locatedAt/v1` payload fingerprint field ratified as `targetContentHash` (§8.10.2, §8.12.1), matching the shipped emission and the `targetNodeId` disambiguation precedent. **(5) Appendix B correction:** the worked typed-claim example gains the core-required `ts:subject` it had omitted (surfaced by the formalization collaborator's validation pass). Schema version unchanged (`0.1.0` per [Q27](open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec)); all changes are spec-text-only or additive-optional; no package bytes change.
 - **2026-07-02** — §6.3 gains the `contentProfile` two-senses disambiguation note ([civic-ai-tools#100](https://github.com/npstorey/civic-ai-tools/issues/100); the ADR-0006 field split stays deferred per Q27). No normative mechanics changed.
 - **2026-07-01** — IPR posture adopted (ADR-0017): §3 gains the patent-posture pointer to `PATENTS.md` (maintainer royalty-free non-assertion statement; DCO inbound per `IPR.md`). No normative mechanics changed.
@@ -1766,7 +1779,7 @@ The most load-bearing open questions for v0.1 readers and reviewers:
 - [`../adr/0011-capturemethod-generalization.md`](../adr/0011-capturemethod-generalization.md) — captureMethod value-space generalization + per-profile vocabulary. Authoritative for §8.6 (value-space half).
 - [`../adr/0012-typed-standards-consolidation.md`](../adr/0012-typed-standards-consolidation.md) — the consolidation that produced this document.
 - [`../docs/research/landscape-analysis.md`](../research/landscape-analysis.md) — relationship to existing standards.
-- `civic-ai-tools-website/docs/api/evidence-publish.md` — request/response contract for the canonical reference implementation. This document and the API doc MUST stay aligned; where they diverge, this document is normative for the package shape and the API doc is normative for the request/response contract.
+- `civic-ai-tools-website/docs/api/evidence-publish.md` (renaming to `records-publish.md` under the vocabulary settlement, with the old filename remaining as a stub — Appendix J) — request/response contract for the canonical reference implementation. This document and the API doc MUST stay aligned; where they diverge, this document is normative for the package shape and the API doc is normative for the request/response contract.
 - `civic-ai-tools-website/docs/key-rotation.md` — runbook for rotating the reference implementation's signing key.
 
 ### Appendix I. Acknowledgments
@@ -1780,6 +1793,58 @@ The layered artifact-layer / network-layer framing and several structural notes 
 The **Open Knowledge Foundation**'s open-data groundwork (Frictionless Data / the Data Package standard) informs the packaging and portability direction tracked under Q1 and Q18.
 
 Additional adopters and contributors will be acknowledged as their participation moves from private to publicly-named status.
+
+### Appendix J. Vocabulary settlement (Q50/Q66): old→new mapping and dual-era rules
+
+Settled 2026-08-19 by the maintainer, resolving registry [Q50](open-questions.md#q50--evidence-product-framing-vs-precise-typed-node-resource-naming) and recording a settled term under [Q66](open-questions.md#q66--project-glossary-and-controlled-vocabulary-for-prose-across-the-four-repos). Decision record: [ADR-0025](../adr/0025-vocabulary-settlement-evidence-excision.md); execution anchor: [civic-ai-tools#160](https://github.com/npstorey/civic-ai-tools/issues/160). This appendix is the canonical old→new mapping every later migration phase cites.
+
+#### J.1 Scoping principle (Group F): two roles, one retained
+
+"Evidence" plays two unrelated roles (§6.3). As the **artifact / infrastructure brand** — the package noun, route segments, environment-variable prefix, wire version key, exported type and function names, OAuth scope, skill name, sidecar filename — it **overclaims**: the record shows how an answer was produced, not that the answer is correct. That role is excised. As the **epistemic role** in the Question / Evidence / Claim triad — `content/evidence/v1`, the `contentType` value `"evidence"`, the `supportedBy` / `opposedBy` relations whose targets are evidence nodes — it is precise and **retained**: content serving as evidence-for-a-claim is the legitimate use.
+
+#### J.2 Migration classes
+
+| Class | Meaning |
+|---|---|
+| **alias-permanent** | The new name is canonical; the old name is served as a **permanent** alias (published links exist in the wild — this is not a deprecation window). |
+| **expand-then-flip** | Readers accept the new name first, then the old, with a deprecation warning on old-name reads; documentation, examples, preflight, and deployment surfaces flip to the new names; old names drop at a later major version of the owning surface. |
+| **frozen-in-signed-artifacts (dual-era)** | The identifier is embedded in already-signed artifacts and therefore never changes there. Old records keep the old identifier forever; verifiers treat both eras as valid; post-cutover emissions use the new identifier. |
+| **alias-and-deprecate** | The new name is exported/served beside the deprecated old name; both work; the old name drops at the owning package's next major version. |
+| **dual-era, accepted forever** | Like frozen-in-signed-artifacts, but with no drop horizon on the acceptance side even for new artifacts: new emissions mint the new key; the old key is accepted indefinitely (ruling D3). |
+| **exempt (recorded, not renamed)** | Deliberately out of the rename: internal names that never cross the wire, or values hash-frozen inside signed fields. The exemption is a ruling, not an omission. |
+| **retained** | Not part of the rename at all — the epistemic QEC vocabulary. |
+
+#### J.3 Old→new mapping table
+
+| Surface | Prior-era name | Settlement name | Migration class | Notes |
+|---|---|---|---|---|
+| API routes (reference implementation) | `/api/evidence/*` | `/api/records/*` | alias-permanent | New canonical segments; old segments served forever. Publish responses emit new-form URLs. The neutral verifier's URL construction learns new-then-old resolution in the same settlement sprint. |
+| Public pages (reference implementation) | `/evidence/*` | `/records/*` | alias-permanent | Same rule as the API routes. |
+| Environment variables (reference implementation; 14 variables) | `EVIDENCE_*` | `PUBLISHER_*` | expand-then-flip | The full set: `EVIDENCE_SIGNING_KEY`, `EVIDENCE_KEY_ID`, `EVIDENCE_PUBLIC_KEY`, `EVIDENCE_SIGNER_BINDING_TIER`, `EVIDENCE_SIGNER_IDENTIFIER`, `EVIDENCE_SIGNER_DISPLAY_NAME`, `EVIDENCE_PLATFORM_AGENT_ID`, `EVIDENCE_PLATFORM_AGENT_TITLE`, `EVIDENCE_PLATFORM_AGENT_URL`, `EVIDENCE_PUBLICATION_HOST`, `EVIDENCE_SITE_ORIGIN`, `EVIDENCE_TRUST_REGISTRY_URL`, `EVIDENCE_TRUST_REGISTRY_CANONICAL_URL`, `EVIDENCE_TRUST_REGISTRY_LEGACY_URL` — each takes the `PUBLISHER_` prefix (e.g. `EVIDENCE_PUBLIC_KEY` → `PUBLISHER_PUBLIC_KEY`). `EVIDENCE_PUBLIC_KEY` is written-not-read (emitted by the key-generation script and documented; never read at runtime). Rider: the successor of `EVIDENCE_TRUST_REGISTRY_URL` (the verify-side consume override) gains a documentation home in the same sweep — the prior-era name was documented in neither deployment guide. |
+| Commitment-view wire key (§8.8.1) | `evidenceProtocolVersion` | `protocolVersion` | frozen-in-signed-artifacts | Old records keep the old key forever; verifiers MUST accept both keys for both eras; post-cutover emissions use the new key. Cutover coordinated with the one live external adopter, which serves this field. |
+| URN scheme (§8.1.4) | `urn:civic-evidence:` | `urn:civic-record:` | frozen-in-signed-artifacts | Existing provenance graphs keep their identifiers; verifiers treat both eras as valid; golden fixtures re-freeze in the affected repos. The `typedstandards.org/ns/ts#` alignment question stays with the [Q10](open-questions.md#q10--civic-claim-vocabulary-as-a-full-ontology) ontology adoption round — explicitly not pre-judged here. |
+| Vocabulary URI (civic harness emitter) | `https://civicaitools.org/ns/evidence/` | `https://civicaitools.org/ns/civic/` | frozen-in-signed-artifacts | Same rules as the URN scheme row; single emitter (the civic harness vocabulary module). |
+| Exported type (produce-core; mirrored in the harness signature) | `EvidencePackage` | `RecordPackage` | alias-and-deprecate | New name exported beside the deprecated old one; old drops at the package's next major. |
+| Exported function (verify-core) | `verifyEvidence` | `verifyRecord` | alias-and-deprecate | Same rule. |
+| OAuth scope (reference implementation) | `evidence:publish` | `records:publish` | alias-and-deprecate | Token endpoints accept both scopes and mint the new one. |
+| Claude Code skill | `publish-evidence` | `publish-record` | alias-and-deprecate | Old invocation aliased; the skill's User-Agent literal and client display name move with the rename. |
+| Commitment-view sidecar filename (§8.8.3) | `<basename>.evidence.yaml` | `<basename>.record.yaml` | alias-and-deprecate | Existing sidecars keep the old filename valid; verifiers accept either; no emitting code existed at any main at settlement time. |
+| Reference-implementation API docs | `evidence-publish.md`, `evidence-commitment.md` | `records-publish.md`, `records-commitment.md` | alias-and-deprecate | Old-name stubs remain at the old paths. |
+| Extension namespace (§8.1.6, §8.8.2) | `org.civicaitools.evidence` | `org.civicaitools.record` | dual-era, accepted forever | Ruling D3 (deliberate, against the default recommendation): new emissions mint the new key; the old key is accepted forever; verifiers read either, preferring the new when both are present. `org.civicaitools.notebook` / `.environment` / `.execution` / `.summary` are unaffected (no excised word). |
+| Database names (reference implementation) | `evidence_records` table + its constraints and indexes | — | exempt (recorded, not renamed) | DB names never cross the wire. |
+| Blob storage prefixes | `evidence-packages/`, `evidence-refs/`, `evidence-packages/committed/` | — | exempt (recorded, not renamed) | Blob addresses are hash-frozen inside signed `packageUrl` and BlobRef fields; `committed/` is a declared frozen storage literal. |
+| Live signing-key kid | `platform:evidence-2026-04` | — | exempt (recorded, not renamed) | Inside every signed envelope. The next key rotation names its key under the new vocabulary; no forced rotation. |
+| OTel scope names inside already-signed traces | (as signed) | — | exempt (recorded, not renamed) | New emissions MAY change. |
+| Legacy trust-registry path (§8.3.3, §12.1) | `/.well-known/evidence-public-keys.json` | — | exempt (recorded, not renamed) | Ruling D2: the exempt-frozen leg of the **already-completed** trust-registry rename (`→ /.well-known/typed-publisher.json`, [ADR-0012](../adr/0012-typed-standards-consolidation.md)); not renamed again. |
+| Dated talk deck (2026-07) | (as published) | — | exempt (frozen dated record) | Ruling D4. |
+| Epistemic QEC vocabulary | `content/evidence/v1`; `contentType: "evidence"`; `supportedBy` / `opposedBy` evidence targets | (unchanged) | retained | The Group F ruling (§J.1): the epistemic role is the legitimate use and is untouched. |
+
+#### J.4 Dual-era verification rules (normative)
+
+1. **Old records keep their old keys and identifiers forever.** An identifier frozen inside an already-signed artifact (wire keys, URN identifiers, vocabulary URIs, kids, storage URLs, extension-namespace keys) is never rewritten: rewriting would change the envelope hash and invalidate the signature. Prior-era artifacts remain byte-identical and remain verifiable exactly as published.
+2. **Verifiers treat both eras as valid.** A conformant verifier MUST accept the prior-era and settlement-era forms of every dual-era surface in the §J.3 table (wire key, extension namespace, sidecar filename, URN scheme, vocabulary URI) without warning-as-error semantics; era is not a trust signal.
+3. **New emissions use the new vocabulary.** Post-cutover emissions mint the settlement-era names. Cutovers on externally-served surfaces (routes, the wire key) are coordinated with the one live external adopter; until a publisher's cutover lands, its prior-era emissions remain conformant.
+4. **Expand before any flip; nothing stops resolving.** Every accept-both / alias mechanism lands and is verified before any default or emission changes. No migration phase may create a state where an existing verifier, link, token, or record stops resolving.
 
 
 
