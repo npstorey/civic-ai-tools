@@ -15,6 +15,13 @@ import {
   buildEvaluationPrompt,
   parseEvaluationResponse,
 } from './adversarial-eval-core.ts';
+// DELIBERATELY on the prior-era name: `EvidencePackage` is produce-core
+// 0.3.0's deprecated alias of `RecordPackage` (spec Appendix J,
+// alias-and-deprecate). This suite is the executable proof that the alias
+// still compiles and still describes the same object, so a downstream caller
+// that has not renamed yet is not broken. Do not "modernize" it — the
+// settlement-era name is exercised by src/rubric/adversarial-eval-core.ts's
+// own signature and by src/golden-reproduction.test.ts.
 import type { EvidencePackage } from '@typedstandards/produce-core';
 
 /** The reference implementation's rubric version hash. Byte-exact preservation
