@@ -75,6 +75,18 @@ jobs:
       - name: Dependency-budget check
         run: npm run check:budgets
 
+      # Validates the Typed Standards Specification's YAML frontmatter: known
+      # keys only, no mapping indicator inside a plain scalar (the v0.1.5
+      # defect, which shipped machine-unreadable version metadata to an
+      # external integrator), a full patch Version, and a Tag that agrees with
+      # it. Placed with the other hermetic checks, ahead of the one step that
+      # depends on the network.
+      - name: Spec-frontmatter checker self-test
+        run: npm run check:spec-frontmatter:self-test
+
+      - name: Spec-frontmatter check
+        run: npm run check:spec-frontmatter
+
       - name: Skill-drift checker self-test
         run: npm run check:skill-drift:self-test
 

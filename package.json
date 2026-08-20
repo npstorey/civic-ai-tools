@@ -18,6 +18,8 @@
     "check:budgets": "node scripts/check-dependency-budget.mjs",
     "check:budgets:self-test": "node --test scripts/check-dependency-budget.test.mjs",
     "check:skill-drift": "node scripts/check-skill-drift.mjs",
-    "check:skill-drift:self-test": "node --test scripts/check-skill-drift.test.mjs"
+    "check:skill-drift:self-test": "node --test scripts/check-skill-drift.test.mjs",
+    "check:spec-frontmatter": "node scripts/check-spec-frontmatter.mjs",
+    "check:spec-frontmatter:self-test": "node --test scripts/check-spec-frontmatter.test.mjs"
   }
 }
