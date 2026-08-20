@@ -113,8 +113,19 @@ class _FakeResponse:
 
 
 def _commitment_response(host: str, package_hash: str = PACKAGE_HASH) -> _FakeResponse:
-    """A stubbed `GET /api/evidence/<slug>/commitment` body, shaped like
-    the documented commitment view (only the fields we read matter)."""
+    """A stubbed `GET /api/records/<slug>/commitment` body, shaped like
+    the documented commitment view (only the fields we read matter).
+
+    The version key is deliberately the PRIOR-era ``evidenceProtocolVersion``:
+    that is what the deployed civicaitools.org instance emits today, measured
+    directly against production on 2026-08-20 (the reference publisher serves
+    the new ``/api/records/*`` segments already, but still assembles its
+    commitment views with produce-core 0.2.x). A stub that ran ahead of the
+    server would be testing a fiction. When the website adopts produce-core
+    0.3.0 the emitted key becomes ``protocolVersion``; at that point this stub
+    gains the new key. The script reads neither key -- it reads ``packageUrl``
+    -- so this field is here for shape fidelity, not behavior, and the
+    transition is a documentation change rather than a break."""
     return _FakeResponse(
         json.dumps(
             {
@@ -200,7 +211,7 @@ class FetchCommitmentBlobHostTests(unittest.TestCase):
         self.assertEqual(host, STORE_HOST)
         requested = urlopen.call_args.args[0]
         self.assertEqual(
-            requested.full_url, f"{BASE_URL}/api/evidence/{SLUG}/commitment"
+            requested.full_url, f"{BASE_URL}/api/records/{SLUG}/commitment"
         )
         # Public endpoint — the fetch must carry no credentials.
         header_names = {k.lower() for k in requested.headers}
@@ -307,19 +318,19 @@ def _run_main(
     stubbed response (or exception) for the commitment GET. ``extra_argv``
     is appended to the CLI invocation (e.g. ``["--visibility",
     "committed"]``). ``server_visibility`` is the ``visibility`` value the
-    stubbed ``POST /api/evidence`` response carries — defaults to
+    stubbed ``POST /api/records`` response carries — defaults to
     ``"public"`` (what a current-instance server serves per ADR-0016 §A);
     pass a legacy value (``"published"`` / ``"committed"``) to simulate an
     older instance. Returns ``(parsed_stdout, stderr_text,
     sent_request_body)`` — the third element is the JSON body actually
-    POSTed to ``/api/evidence`` (``None`` if the request never fired).
+    POSTed to ``/api/records`` (``None`` if the request never fired).
 
     Shared by ``PublishOutputTests`` (blob-hint derivation) and
     ``VisibilityCliEndToEndTests`` (visibility rename / legacy-flag
     coverage) — both exercise the same ``main()`` call path against a
     stubbed server, no network, no credentials."""
     served_url = (
-        f"/evidence/{SLUG}"
+        f"/records/{SLUG}"
         if server_visibility in ("public", "published")
         else None
     )
@@ -341,7 +352,7 @@ def _run_main(
             if isinstance(commitment, Exception):
                 raise commitment
             return commitment
-        if full_url.endswith("/api/evidence"):
+        if full_url.endswith("/api/records"):
             data = getattr(req, "data", None)
             if data:
                 sent_bodies.append(json.loads(data.decode("utf-8")))
@@ -406,6 +417,67 @@ class PublishOutputTests(unittest.TestCase):
             result, _stderr, _body = _run_main(_commitment_response(STORE_HOST))
         self.assertEqual(
             result["blobHint"], _legacy_blob_url_for(OTHER_HOST, PACKAGE_HASH)
+        )
+
+
+# --------------------------------------------------------------------------
+# Vocabulary settlement (2026-08-19; specification Appendix J). The skill is a
+# NEW-emission surface, so it constructs the canonical `/api/records/*` paths
+# and prints the canonical output key -- while keeping every prior-era name
+# that something in the wild might already be reading.
+# --------------------------------------------------------------------------
+
+
+class OutputKeyAliasTests(unittest.TestCase):
+    """`recordUrl` is canonical; `evidenceUrl` is the deprecated alias.
+
+    Alias-and-deprecate means BOTH keys are emitted and both carry the
+    identical value -- a consumer that parses this JSON for `evidenceUrl`
+    must not break, and a consumer that moves to `recordUrl` must not get a
+    different URL. Asserting only the new key would let the alias silently
+    disappear; asserting only equality would let both keys vanish together."""
+
+    def test_both_keys_present_and_identical(self) -> None:
+        result, _stderr, _body = _run_main(_commitment_response(STORE_HOST))
+        self.assertIn("recordUrl", result)
+        self.assertIn("evidenceUrl", result)
+        self.assertEqual(result["recordUrl"], result["evidenceUrl"])
+
+    def test_record_url_uses_the_canonical_public_segment(self) -> None:
+        result, _stderr, _body = _run_main(_commitment_response(STORE_HOST))
+        self.assertEqual(result["recordUrl"], f"{BASE_URL}/records/{SLUG}")
+
+    def test_readback_url_uses_the_canonical_api_segment(self) -> None:
+        result, _stderr, _body = _run_main(_commitment_response(STORE_HOST))
+        self.assertEqual(result["readbackUrl"], f"{BASE_URL}/api/records/{SLUG}")
+
+
+class ScopeAndClientNameTests(unittest.TestCase):
+    """The device-authorization flow requests the settlement-era scope, and
+    the client display name shown on the approval page moves with it."""
+
+    def test_default_client_name_names_the_new_skill(self) -> None:
+        self.assertEqual(
+            publish.DEFAULT_CLIENT_NAME, "Claude Code publish-record skill"
+        )
+
+    def test_login_requests_the_records_publish_scope(self) -> None:
+        sent: list[dict[str, object]] = []
+
+        def fake_post_json(url: str, body: dict[str, object]) -> tuple[int, dict]:
+            sent.append({"url": url, "body": body})
+            # Stop the flow immediately after the first call; the scope in
+            # that first request is the whole point of this test.
+            return 500, {"error": "stopped by test"}
+
+        with mock.patch.object(publish, "_post_json", fake_post_json):
+            with self.assertRaises(SystemExit):
+                publish.do_login(BASE_URL, publish.DEFAULT_CLIENT_NAME, False)
+
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent[0]["body"]["scope"], "records:publish")
+        self.assertEqual(
+            sent[0]["url"], f"{BASE_URL}/api/auth/device/code"
         )
 
 

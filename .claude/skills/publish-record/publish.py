@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""POST a civic-data analysis to the civicaitools.org evidence registry.
+"""POST a civic-data analysis to the civicaitools.org record registry.
 
 Reads a structured analysis payload from ``--payload <file>`` (JSON),
 synthesizes a minimal OpenTelemetry trace with ``mcp_tool_call`` spans
 (so the server's per-source provenance logic emits the right PROV-O
-agents), posts the whole thing to ``POST /api/evidence``, and prints
+agents), posts the whole thing to ``POST /api/records``, and prints
 the resulting slug and blob URL.
 
-Designed for the Claude Code skill at ``.claude/skills/publish-evidence``
+Designed for the Claude Code skill at ``.claude/skills/publish-record``
 to call; see ``SKILL.md`` next to this file for usage context, or
 ``civic-ai-tools-website/docs/api/evidence-publish.md`` for the endpoint
 contract.
@@ -123,7 +123,7 @@ LEAK_REGEX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 )
 
 # Per-field size threshold at which content is uploaded to Vercel Blob
-# rather than inlined in the POST /api/evidence body. Chosen to leave
+# rather than inlined in the POST /api/records body. Chosen to leave
 # comfortable headroom under the Next.js App Router ~4 MB body cap even
 # when several fields land near threshold, while small fields stay
 # inline so verifiers don't need to fetch them separately. Tune via
@@ -141,7 +141,7 @@ DEVICE_FLOW_MIN_INTERVAL_SECONDS = 5
 DEVICE_FLOW_MAX_WAIT_SECONDS = 15 * 60
 
 CREDENTIALS_FILE_VERSION = "1"
-DEFAULT_CLIENT_NAME = "Claude Code publish-evidence skill"
+DEFAULT_CLIENT_NAME = "Claude Code publish-record skill"
 
 
 def eprint(*args: Any, **kwargs: Any) -> None:
@@ -708,7 +708,7 @@ def mint_upload_token(
     encoded = json.dumps(body).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+        "User-Agent": "civic-ai-tools-publish-record/0.4",
     }
     headers.update(auth_headers(auth_method, auth_value, cookie_name))
     req = urllib.request.Request(url, data=encoded, method="POST", headers=headers)
@@ -784,7 +784,7 @@ def put_to_blob_store(
             "x-vercel-blob-access": "public",
             "x-content-type": content_type,
             "Content-Type": content_type,
-            "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+            "User-Agent": "civic-ai-tools-publish-record/0.4",
         },
     )
     try:
@@ -871,7 +871,7 @@ def build_request_body(
     max_inline_bytes: int,
     blob_upload: Any | None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Assemble the /api/evidence request body.
+    """Assemble the /api/records request body.
 
     Returns ``(body, stats)``. ``stats`` records per-field size and
     inline-vs-blob decisions so the dry-run preview can surface them
@@ -1025,7 +1025,7 @@ def build_request_body(
 
 
 # --------------------------------------------------------------------------
-# HTTP POST to /api/evidence
+# HTTP POST to /api/records
 # --------------------------------------------------------------------------
 
 
@@ -1036,11 +1036,11 @@ def post_evidence(
     auth_value: str,
     cookie_name: str,
 ) -> dict[str, Any]:
-    url = f"{base_url.rstrip('/')}/api/evidence"
+    url = f"{base_url.rstrip('/')}/api/records"
     encoded = json.dumps(body).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+        "User-Agent": "civic-ai-tools-publish-record/0.4",
     }
     headers.update(auth_headers(auth_method, auth_value, cookie_name))
     req = urllib.request.Request(url, data=encoded, method="POST", headers=headers)
@@ -1064,14 +1064,14 @@ def post_evidence(
         if exc.code == 401:
             if auth_method == "bearer":
                 eprint(
-                    "error: 401 Unauthorized from /api/evidence. The saved "
+                    "error: 401 Unauthorized from /api/records. The saved "
                     "bearer token is invalid, expired, or revoked. Run "
                     "`publish.py --logout && publish.py --login` to start a "
                     "fresh device-authorization flow."
                 )
             else:
                 eprint(
-                    "error: 401 Unauthorized from /api/evidence. The session "
+                    "error: 401 Unauthorized from /api/records. The session "
                     "token is missing, invalid, or expired. Sign in again at "
                     "https://civicaitools.org, re-copy the "
                     f"`{cookie_name}` cookie value, and update "
@@ -1081,25 +1081,28 @@ def post_evidence(
             sys.exit(1)
         if exc.code == 403:
             eprint(
-                "error: 403 Forbidden from /api/evidence. The bearer token "
-                "is missing the evidence:publish scope. Run `publish.py "
+                "error: 403 Forbidden from /api/records. The bearer token "
+                "is missing the records:publish scope. Run `publish.py "
                 "--login` and ensure the approval page showed scope "
-                "`evidence:publish`."
+                "`records:publish`. A token minted before the 2026-08-19 "
+                "vocabulary settlement carries `evidence:publish`, which the "
+                "server still accepts -- so a 403 here means neither scope is "
+                "present, not that the token is merely old."
             )
             sys.exit(1)
         if exc.code == 404:
             eprint(
-                "error: 404 from /api/evidence. The server could not find "
+                "error: 404 from /api/records. The server could not find "
                 "your user record. Try signing out + back in on "
                 "civicaitools.org and re-running `publish.py --login`."
             )
             sys.exit(1)
-        eprint(f"error: HTTP {exc.code} from /api/evidence.")
+        eprint(f"error: HTTP {exc.code} from /api/records.")
         if detail:
             eprint(f"  response body: {detail[:500]}")
         sys.exit(3)
     except urllib.error.URLError as exc:
-        eprint(f"error: network failure posting to /api/evidence: {exc.reason}")
+        eprint(f"error: network failure posting to /api/records: {exc.reason}")
         sys.exit(3)
 
 
@@ -1142,16 +1145,16 @@ def blob_url_for(package_hash: str, blob_host: str) -> str:
 def fetch_commitment_blob_host(base_url: str, slug: str) -> str | None:
     """Read this instance's blob host off the public commitment view.
 
-    ``GET /api/evidence/<slug>/commitment`` needs no authentication and
+    ``GET /api/records/<slug>/commitment`` needs no authentication and
     carries ``packageUrl`` — the canonical, public package-blob URL for
     the record just published. Best-effort: any failure returns None and
     the caller degrades to omitting the hint rather than guessing a host.
     """
-    url = f"{base_url.rstrip('/')}/api/evidence/{slug}/commitment"
+    url = f"{base_url.rstrip('/')}/api/records/{slug}/commitment"
     req = urllib.request.Request(
         url,
         method="GET",
-        headers={"User-Agent": "civic-ai-tools-publish-evidence/0.3"},
+        headers={"User-Agent": "civic-ai-tools-publish-record/0.4"},
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -1271,7 +1274,7 @@ def _post_json(url: str, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         method="POST",
         headers={
             "Content-Type": "application/json",
-            "User-Agent": "civic-ai-tools-publish-evidence/0.3",
+            "User-Agent": "civic-ai-tools-publish-record/0.4",
         },
     )
     try:
@@ -1297,7 +1300,7 @@ def do_login(base_url: str, client_name: str, open_browser: bool) -> None:
     start_url = f"{base_url.rstrip('/')}/api/auth/device/code"
     status, start = _post_json(
         start_url,
-        {"name": client_name, "scope": "evidence:publish"},
+        {"name": client_name, "scope": "records:publish"},
     )
     if status != 200 or "device_code" not in start:
         eprint(
@@ -1343,7 +1346,7 @@ def do_login(base_url: str, client_name: str, open_browser: bool) -> None:
                 "access_token": resp["access_token"],
                 "token_type": resp.get("token_type", "Bearer"),
                 "expires_at": resp.get("expires_at"),
-                "scope": resp.get("scope", "evidence:publish"),
+                "scope": resp.get("scope", "records:publish"),
                 "name": client_name,
                 "created_at": datetime.now(timezone.utc)
                 .isoformat(timespec="seconds")
@@ -1420,7 +1423,7 @@ def main() -> None:
     parser.add_argument(
         "--payload",
         help="Path to a JSON file describing the analysis (see script "
-        "docstring or .claude/skills/publish-evidence/SKILL.md).",
+        "docstring or .claude/skills/publish-record/SKILL.md).",
     )
     parser.add_argument(
         "--base-url",
@@ -1593,37 +1596,45 @@ def main() -> None:
     slug = result.get("slug")
     package_hash = result.get("packageHash")
     if not slug or not package_hash:
-        eprint("error: unexpected response shape from /api/evidence:")
+        eprint("error: unexpected response shape from /api/records:")
         eprint(json.dumps(result, indent=2))
         sys.exit(4)
 
     # Sealed responses carry no public `url` (civic-ai-tools#71; ADR-0016
     # §A): the detail page is creator-only and the content blob lives at a
-    # random, non-derivable key — so neither evidenceUrl-as-public nor a
+    # random, non-derivable key — so neither recordUrl-as-public nor a
     # hash-derived blobHint would be honest. The hint is omitted and the URL
     # labeled. `result["visibility"]` is whatever the server returned
     # verbatim — a current instance serves `sealed`/`public`, but the skill
     # may be pointed at an older instance still serving `committed`/
     # `published`, so the comparison below tolerates both pairs.
     visibility = result.get("visibility", "public")
-    relative_url = result.get("url") or f"/evidence/{slug}"
+    relative_url = result.get("url") or f"/records/{slug}"
     full_url = f"{args.base_url.rstrip('/')}{relative_url}"
 
+    # Output keys follow Appendix J's alias-and-deprecate rule: `recordUrl` is
+    # the settlement-era name and the one to read; `evidenceUrl` is emitted
+    # beside it, carrying the identical value, so anything already parsing this
+    # JSON keeps working. The pair drops to `recordUrl` alone at the skill's
+    # next major. `readbackUrl` is a single key whose VALUE moves to the
+    # canonical /api/records path -- the prior path is a permanent alias
+    # server-side, so an already-recorded old-form URL keeps resolving.
     output: dict[str, Any] = {
         "slug": slug,
         "visibility": visibility,
+        "recordUrl": full_url,
         "evidenceUrl": full_url,
         "packageHash": package_hash,
         "packageId": payload.get("packageId") or str(uuid.uuid5(
             uuid.NAMESPACE_URL, full_url
         )),
-        "readbackUrl": f"{args.base_url.rstrip('/')}/api/evidence/{slug}",
+        "readbackUrl": f"{args.base_url.rstrip('/')}/api/records/{slug}",
     }
     if visibility in ("sealed", "committed"):
         output["note"] = (
             "Sealed (not public): the page and read-back URLs are "
             "creator-only; the public commitment is at "
-            f"{args.base_url.rstrip('/')}/api/evidence/{slug}/commitment. "
+            f"{args.base_url.rstrip('/')}/api/records/{slug}/commitment. "
             "Publish from the civicaitools.org dashboard when ready."
         )
     else:
@@ -1640,7 +1651,7 @@ def main() -> None:
                 "warning: could not resolve this instance's blob host from "
                 "the server's responses, so `blobHint` is omitted. The "
                 "canonical package URL is served as `packageUrl` by "
-                f"{args.base_url.rstrip('/')}/api/evidence/{slug}/commitment; "
+                f"{args.base_url.rstrip('/')}/api/records/{slug}/commitment; "
                 "set CIVICAITOOLS_BLOB_HOST (or --blob-host) if that "
                 "endpoint isn't reachable from here."
             )
