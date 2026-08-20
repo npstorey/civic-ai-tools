@@ -14,7 +14,7 @@
 
 import {
   sha256Hex,
-  type EvidencePackage,
+  type RecordPackage,
   type EvaluationResults,
 } from '@typedstandards/produce-core';
 
@@ -69,8 +69,12 @@ Respond in this exact JSON format (no markdown fences, just raw JSON):
  *  version, so an attestation pins the exact prompt set that scored it. */
 export const RUBRIC_VERSION_SHA256 = sha256Hex(EVALUATION_RUBRIC);
 
-/** Build the user-turn evaluation content from a package's signed fields. */
-export function buildEvaluationPrompt(pkg: EvidencePackage): string {
+/** Build the user-turn evaluation content from a package's signed fields.
+ *  Takes `RecordPackage` — produce-core 0.3.0's settlement-era name for the
+ *  same object (spec Appendix J, migration class alias-and-deprecate). The
+ *  prior name is a deprecated alias of this exact type upstream, so existing
+ *  callers still compile unchanged. */
+export function buildEvaluationPrompt(pkg: RecordPackage): string {
   const toolCallSummary = pkg.queries
     .map((q, i) => {
       const argStr = Object.entries(q.arguments)

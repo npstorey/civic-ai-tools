@@ -29,6 +29,28 @@
 // chain those bytes ARE the hashed bytes) and the fixture's captured
 // `serializedJson` / hash hex strings for the assembled envelope. No
 // deep-equal approximations.
+//
+// TWO VOCABULARY ERAS (spec Appendix J — the 2026-08-19 settlement). The
+// fixture is a 2026-07-31 capture, so the URNs inside its `serializedJson`
+// are prior-era AND ARE THE HASHED BYTES: the captured content/envelope
+// hashes are hashes of those exact strings. The fixture is therefore frozen
+// twice over (its own sha256 pin above, and the hash chain inside it) and no
+// byte of it is edited here. Instead the suite runs BOTH legs:
+//
+//   - PRIOR-ERA leg — derive with PRIOR_ERA_CIVIC_VOCABULARY injected and
+//     demand the original byte/hash identity, unchanged from before the
+//     settlement. This is the standing proof that an already-signed record
+//     still reproduces and still verifies.
+//   - SETTLEMENT-ERA leg — derive with the DEFAULT vocabulary and demand the
+//     result equals the fixture's bytes with exactly the two Appendix J
+//     literals substituted, with the hashes recomputed from those substituted
+//     bytes by verify-core's own `computeEnvelopeHash` /
+//     `computeContentHashSha256`. The expected side is the frozen fixture put
+//     through a pure string transform and hashed by the shared chain; the
+//     actual side is the harness deriving from raw inputs. They meet only if
+//     the whole derive→assemble chain is right, so this pins new-era bytes
+//     without minting a self-generated golden (which would pin the code
+//     against itself) and without touching the frozen fixture.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,8 +59,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
   buildEnvelope,
+  computeContentHashSha256,
+  computeEnvelopeHash,
+  DATHERE_AG_JUPYTER_CANONICALIZATION,
+  LEGACY_JSON_CANONICALIZATION,
   type EnvelopeInput,
-  type EvidencePackage,
+  type RecordPackage,
 } from '@typedstandards/produce-core';
 // verify-core primitives via produce-core's own dependency (present
 // transitively by construction — same documented pattern as src/).
@@ -53,8 +79,29 @@ import {
   CIVICAITOOLS_PROVENANCE_CONFIG,
   CIVICAITOOLS_ENVIRONMENT_CONFIG,
   ENVIRONMENT_EXTENSION_KEY,
+  CIVIC_NS,
+  CIVIC_URN_PREFIX,
+  PRIOR_ERA_CIVIC_NS,
+  PRIOR_ERA_CIVIC_URN_PREFIX,
+  PRIOR_ERA_CIVIC_VOCABULARY,
+  type ProvenanceConfig,
   type ToolCallSummary,
 } from './index.ts';
+
+/** The reference provenance config with the PRIOR-era vocabulary injected —
+ *  the only configuration under which this 2026-07-31 capture reproduces. */
+const PRIOR_ERA_PROVENANCE_CONFIG: ProvenanceConfig = {
+  ...CIVICAITOOLS_PROVENANCE_CONFIG,
+  vocabulary: PRIOR_ERA_CIVIC_VOCABULARY,
+};
+
+/** Lift a prior-era serialization to the settlement era by substituting
+ *  exactly the two Appendix J literals — nothing else in the bytes moves. */
+function toSettlementEra(json: string): string {
+  return json
+    .replaceAll(`${PRIOR_ERA_CIVIC_URN_PREFIX}:`, `${CIVIC_URN_PREFIX}:`)
+    .replaceAll(PRIOR_ERA_CIVIC_NS, CIVIC_NS);
+}
 
 // --- Fixture loading ---
 
@@ -155,7 +202,7 @@ function rawCallerExtensions(
 /** Derive every harness-owned envelope component for a fixture case from its
  *  RAW inputs, plus the assembled envelope input built from raw + derived
  *  values only. */
-function deriveCase(c: GoldenEnvelopeCase) {
+function deriveCase(c: GoldenEnvelopeCase, provenanceConfig: ProvenanceConfig) {
   const input = c.input as unknown as EnvelopeInput;
   const spec = RAW_SPECS[c.name];
   assert.ok(spec, `${c.name}: no raw/derived split declared for this case`);
@@ -184,8 +231,9 @@ function deriveCase(c: GoldenEnvelopeCase) {
   const dataSources = buildDataSources(toolCalls, inspectable, portal, input.createdAt);
 
   // PROV-O graph (harness capture group, reference config passed explicitly —
-  // 0.2.0 requires it). BlobRef outputs contribute their ref hash instead of
-  // a rehash (packager.ts:377–383).
+  // 0.2.0 requires it; the vocabulary era rides on that config). BlobRef
+  // outputs contribute their ref hash instead of a rehash
+  // (packager.ts:377–383).
   const outputIsBlob = isBlobRef(input.output);
   const provenance = buildProvenanceGraph(
     inspectable,
@@ -200,7 +248,7 @@ function deriveCase(c: GoldenEnvelopeCase) {
       model: input.cost.model,
       portal,
     },
-    CIVICAITOOLS_PROVENANCE_CONFIG,
+    provenanceConfig,
   );
 
   // datHere policy (harness format-extension group): producerProfile
@@ -249,8 +297,11 @@ function deriveCase(c: GoldenEnvelopeCase) {
 // --- Per-case: derivation-seam byte parity + assembled byte-golden ---
 
 for (const c of FIXTURE.envelopeCases) {
-  test(`golden input-side [${c.name}]: harness derivations reproduce the carried derived values byte-for-byte`, () => {
-    const { input, spec, skillMetadata, dataSources, provenance, fields } = deriveCase(c);
+  test(`golden input-side [prior era][${c.name}]: harness derivations reproduce the carried derived values byte-for-byte`, () => {
+    const { input, spec, skillMetadata, dataSources, provenance, fields } = deriveCase(
+      c,
+      PRIOR_ERA_PROVENANCE_CONFIG,
+    );
 
     // PROV-O graph — byte parity (legacy chain hashes JSON.stringify bytes).
     assert.equal(
@@ -297,10 +348,10 @@ for (const c of FIXTURE.envelopeCases) {
     }
   });
 
-  test(`golden input-side [${c.name}]: derived assembly reproduces the reference bytes, content hash, envelope hash`, () => {
-    const { assembled } = deriveCase(c);
+  test(`golden input-side [prior era][${c.name}]: derived assembly reproduces the reference bytes, content hash, envelope hash`, () => {
+    const { assembled } = deriveCase(c, PRIOR_ERA_PROVENANCE_CONFIG);
     const { pkg, envelopeHash } = buildEnvelope(assembled);
-    const built = pkg as EvidencePackage;
+    const built = pkg as RecordPackage;
 
     // 1. Serialized canonical JSON is byte-identical (insertion order and all).
     assert.equal(JSON.stringify(built), c.expected.serializedJson, `${c.name}: serialized JSON diverged`);
@@ -315,7 +366,114 @@ for (const c of FIXTURE.envelopeCases) {
     // 3. The envelope hash is identical.
     assert.equal(envelopeHash, c.expected.envelopeHash, `${c.name}: envelope hash diverged`);
   });
+
+  test(`golden input-side [settlement era][${c.name}]: the default vocabulary reproduces the reference bytes with exactly the two Appendix J literals substituted, and the hashes of those bytes`, () => {
+    const { assembled } = deriveCase(c, CIVICAITOOLS_PROVENANCE_CONFIG);
+    const { pkg, envelopeHash } = buildEnvelope(assembled);
+    const built = pkg as RecordPackage;
+
+    // The expected side: the FROZEN fixture bytes put through a pure string
+    // substitution. Nothing is regenerated by the code under test.
+    const substituted = toSettlementEra(c.expected.serializedJson);
+    const carriesVocabulary = substituted !== c.expected.serializedJson;
+    const expectedPkg = JSON.parse(substituted) as Record<string, unknown>;
+
+    // v0.1 packages EMBED `contentHash`, which fingerprints content the
+    // vocabulary lives inside — so the era flip necessarily moves that field
+    // too, and a pure string substitution cannot produce it. Recompute it from
+    // the substituted bytes with verify-core's own `computeContentHashSha256`
+    // (it strips `contentHash` before hashing, so this is well-defined on a
+    // package that already carries one). JSON.parse preserves source key
+    // order, so overwriting the value in place keeps `contentHash` spread last
+    // — the byte contract the envelope assembles under.
+    if (c.expected.contentHashSha256 !== null) {
+      const rule = expectedPkg.contentCanonicalization as string;
+      (expectedPkg.contentHash as { sha256: string }).sha256 = computeContentHashSha256(
+        expectedPkg,
+        rule,
+      );
+      // Whether contentHash MOVES across the era flip is a property of the
+      // canonicalization rule's hashed surface, and pinning it per rule is
+      // part of the coverage:
+      //   - legacy-json/v1 hashes the whole package, provenance graph
+      //     included, so the vocabulary IS inside the fingerprint and it must
+      //     move;
+      //   - dathere-ag-jupyter/v1 hashes only the executed notebook
+      //     (extensions['org.civicaitools.notebook']), which carries no civic
+      //     vocabulary at all, so it must NOT move — a changed value there
+      //     would mean the rule had started covering something it does not.
+      // The ENVELOPE hash covers the whole package under both rules and moves
+      // either way (asserted below).
+      const moved = (expectedPkg.contentHash as { sha256: string }).sha256;
+      if (rule === LEGACY_JSON_CANONICALIZATION) {
+        assert.notEqual(
+          moved,
+          c.expected.contentHashSha256,
+          `${c.name}: legacy-json/v1 hashes the whole package — the era flip must move contentHash`,
+        );
+      } else if (rule === DATHERE_AG_JUPYTER_CANONICALIZATION) {
+        assert.equal(
+          moved,
+          c.expected.contentHashSha256,
+          `${c.name}: dathere-ag-jupyter/v1 hashes only the notebook — the era flip must NOT move contentHash`,
+        );
+      }
+    }
+    const expectedJson = JSON.stringify(expectedPkg);
+
+    // 1. Serialized canonical JSON matches the era-lifted reference bytes.
+    assert.equal(JSON.stringify(built), expectedJson, `${c.name}: settlement-era serialized JSON diverged`);
+
+    // 2. Content hash + envelope hash are the hashes OF those bytes, computed
+    //    by verify-core's shared chain from the substituted fixture — the same
+    //    functions the prior-era pins were produced with, run on the other era.
+    assert.equal(
+      envelopeHash,
+      computeEnvelopeHash(expectedPkg),
+      `${c.name}: settlement-era envelope hash diverged`,
+    );
+    if (c.expected.contentHashSha256 === null) {
+      assert.ok(!('contentHash' in built), `${c.name}: legacy case must not emit contentHash`);
+    } else {
+      assert.equal(
+        built.contentHash?.sha256,
+        (expectedPkg.contentHash as { sha256: string }).sha256,
+        `${c.name}: settlement-era contentHash diverged`,
+      );
+    }
+
+    // 3. Non-vacuity + no era mixing. Cases whose envelope carries no
+    //    vocabulary at all (no provenance graph) legitimately have identical
+    //    bytes across eras; every other case must have MOVED, and no case may
+    //    emit a prior-era term.
+    if (carriesVocabulary) {
+      assert.notEqual(
+        envelopeHash,
+        c.expected.envelopeHash,
+        `${c.name}: the era flip changed bytes but not the hash — the hash chain is not covering the vocabulary`,
+      );
+    }
+    assert.ok(
+      !JSON.stringify(built).includes(PRIOR_ERA_CIVIC_URN_PREFIX),
+      `${c.name}: a settlement-era package must carry no prior-era identifier`,
+    );
+    assert.ok(
+      !JSON.stringify(built).includes(PRIOR_ERA_CIVIC_NS),
+      `${c.name}: a settlement-era package must carry no prior-era namespace URI`,
+    );
+  });
 }
+
+test('the era substitution is non-trivial on this fixture: every case with a provenance graph moves bytes', () => {
+  const moved = FIXTURE.envelopeCases.filter(
+    (c) => toSettlementEra(c.expected.serializedJson) !== c.expected.serializedJson,
+  );
+  assert.equal(
+    moved.length,
+    FIXTURE.envelopeCases.length,
+    'a case stopped carrying vocabulary — the settlement-era leg would be passing vacuously for it',
+  );
+});
 
 // --- The degraded paths the BlobRef cases route through ---
 
@@ -338,5 +496,12 @@ test('BlobRef output: the provenance output entity carries the ref hash, not a r
   const graph = (c!.input.provenance as { '@graph': Array<{ '@id': string }> })['@graph'];
   const outputNode = graph.find((n) => n['@id'].includes(':output:'));
   assert.ok(outputNode);
-  assert.equal(outputNode!['@id'], `urn:civic-evidence:${input.packageId}:output:${refHash}`);
+  // The node inspected here is the FIXTURE's carried graph, not a fresh
+  // emission — so its id is prior-era by construction and stays that way
+  // forever. Naming the constant rather than the literal keeps the intent
+  // explicit: this is not a site the settlement flips.
+  assert.equal(
+    outputNode!['@id'],
+    `${PRIOR_ERA_CIVIC_URN_PREFIX}:${input.packageId}:output:${refHash}`,
+  );
 });

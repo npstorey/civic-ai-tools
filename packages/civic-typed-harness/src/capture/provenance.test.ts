@@ -8,6 +8,18 @@
 // agent, source registry, and model description are per-instance inputs;
 // (4) honest omission — a config without modelAgentDescription emits a model
 // agent with no description field at all.
+//
+// BOTH VOCABULARY ERAS (spec Appendix J). `website-golden.json` was captured
+// 2026-08-01, before the 2026-08-19 settlement, so its graphs carry the
+// prior-era `urn:civic-record:` / `ns/evidence/` terms. Those bytes are
+// frozen and are never edited: the byte-parity tests inject
+// PRIOR_ERA_CIVIC_VOCABULARY and still demand byte-identity, which is what
+// proves the harness can still reproduce an already-signed prior-era record.
+// The settlement-era leg re-derives the same graphs under the DEFAULT
+// vocabulary and demands they equal the fixture with exactly the two
+// Appendix J literals substituted — so the eras are pinned to differ by the
+// vocabulary and by nothing else. Every live-derivation test below asserts
+// settlement-era ids, which is what a new emission mints.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,6 +31,13 @@ import {
   CIVICAITOOLS_PROVENANCE_CONFIG,
   type ProvenanceConfig,
 } from './provenance.ts';
+import {
+  CIVIC_NS,
+  CIVIC_URN_PREFIX,
+  PRIOR_ERA_CIVIC_NS,
+  PRIOR_ERA_CIVIC_URN_PREFIX,
+  PRIOR_ERA_CIVIC_VOCABULARY,
+} from '../format/vocabulary.ts';
 
 const FIXTURE = JSON.parse(
   readFileSync(
@@ -27,13 +46,28 @@ const FIXTURE = JSON.parse(
   ),
 );
 
-// --- Byte parity against the reference implementation ---
+/** The reference config with the PRIOR-era vocabulary injected — the only
+ *  configuration under which a 2026-08-01 capture can be reproduced. */
+const PRIOR_ERA_REFERENCE_CONFIG: ProvenanceConfig = {
+  ...CIVICAITOOLS_PROVENANCE_CONFIG,
+  vocabulary: PRIOR_ERA_CIVIC_VOCABULARY,
+};
 
-test('golden parity: multi-source trace reproduces the reference graph byte-for-byte', () => {
+/** Lift a prior-era serialization to the settlement era by substituting
+ *  exactly the two Appendix J literals — nothing else in the bytes moves. */
+function toSettlementEra(json: string): string {
+  return json
+    .replaceAll(`${PRIOR_ERA_CIVIC_URN_PREFIX}:`, `${CIVIC_URN_PREFIX}:`)
+    .replaceAll(PRIOR_ERA_CIVIC_NS, CIVIC_NS);
+}
+
+// --- Byte parity against the reference implementation (PRIOR era) ---
+
+test('golden parity [prior era]: multi-source trace reproduces the reference graph byte-for-byte', () => {
   const graph = buildProvenanceGraph(
     FIXTURE.trace,
     FIXTURE.provenanceInput,
-    CIVICAITOOLS_PROVENANCE_CONFIG,
+    PRIOR_ERA_REFERENCE_CONFIG,
   );
   assert.equal(
     JSON.stringify(graph),
@@ -42,7 +76,46 @@ test('golden parity: multi-source trace reproduces the reference graph byte-for-
   );
 });
 
-test('golden parity: empty trace + pre-computed outputHash reproduces the reference minimal graph', () => {
+test('golden parity [prior era]: empty trace + pre-computed outputHash reproduces the reference minimal graph', () => {
+  const graph = buildProvenanceGraph(
+    { resourceSpans: [] },
+    {
+      packageId: 'pkg-golden-002',
+      promptHash: 'ph2',
+      outputHash: 'deadbeef'.repeat(8),
+      model: 'anthropic/claude-3-5-sonnet',
+      portal: 'data.cityofnewyork.us',
+    },
+    PRIOR_ERA_REFERENCE_CONFIG,
+  );
+  assert.equal(JSON.stringify(graph), JSON.stringify(FIXTURE.provenanceGraphMinimal));
+});
+
+// --- Byte parity in the SETTLEMENT era (what new emissions mint) ---
+
+test('golden parity [settlement era]: the default vocabulary reproduces the reference graph with exactly the two Appendix J literals substituted', () => {
+  const graph = buildProvenanceGraph(
+    FIXTURE.trace,
+    FIXTURE.provenanceInput,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const priorEra = JSON.stringify(FIXTURE.provenanceGraph);
+  const expected = toSettlementEra(priorEra);
+  // Non-vacuity: the substitution must actually have moved bytes, otherwise
+  // this test would pass on a graph that never flipped.
+  assert.notEqual(expected, priorEra, 'the era substitution changed nothing — the fixture is not prior-era');
+  assert.equal(JSON.stringify(graph), expected);
+  assert.ok(
+    !JSON.stringify(graph).includes(PRIOR_ERA_CIVIC_URN_PREFIX),
+    'a settlement-era graph must carry no prior-era identifier',
+  );
+  assert.ok(
+    !JSON.stringify(graph).includes(PRIOR_ERA_CIVIC_NS),
+    'a settlement-era graph must carry no prior-era namespace URI',
+  );
+});
+
+test('golden parity [settlement era]: the minimal graph flips era with the same substitution', () => {
   const graph = buildProvenanceGraph(
     { resourceSpans: [] },
     {
@@ -54,7 +127,10 @@ test('golden parity: empty trace + pre-computed outputHash reproduces the refere
     },
     CIVICAITOOLS_PROVENANCE_CONFIG,
   );
-  assert.equal(JSON.stringify(graph), JSON.stringify(FIXTURE.provenanceGraphMinimal));
+  assert.equal(
+    JSON.stringify(graph),
+    toSettlementEra(JSON.stringify(FIXTURE.provenanceGraphMinimal)),
+  );
 });
 
 // --- Ported reference tests: M9.3 agent pruning ---
@@ -119,20 +195,20 @@ const BASE_INPUT = {
 
 function mcpAgents(graph: Array<{ '@id': string; [k: string]: unknown }>): string[] {
   return graph
-    .filter((node) => typeof node['@id'] === 'string' && node['@id'].startsWith('urn:civic-evidence:mcp-server:'))
+    .filter((node) => typeof node['@id'] === 'string' && node['@id'].startsWith('urn:civic-record:mcp-server:'))
     .map((node) => node['@id'] as string);
 }
 
 test('Data-Commons-only analysis emits only the data-commons MCP agent', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('data-commons', 'get_observations', 'span-1')]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
-  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:data-commons']);
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:data-commons']);
 });
 
 test('Socrata-only analysis emits only the socrata MCP agent', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('socrata', 'get_data', 'span-1')]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
-  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:socrata']);
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:socrata']);
 });
 
 test('Multi-source analysis emits both MCP agents', () => {
@@ -144,17 +220,17 @@ test('Multi-source analysis emits both MCP agents', () => {
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const agents = mcpAgents(graph['@graph']);
   assert.equal(agents.length, 2);
-  assert.ok(agents.includes('urn:civic-evidence:mcp-server:socrata'));
-  assert.ok(agents.includes('urn:civic-evidence:mcp-server:data-commons'));
+  assert.ok(agents.includes('urn:civic-record:mcp-server:socrata'));
+  assert.ok(agents.includes('urn:civic-record:mcp-server:data-commons'));
 });
 
 test('Boston OpenContext only analysis emits only the boston-opencontext MCP agent with correct title', () => {
   const trace = traceOf([skillSpan('skill-hash'), toolSpan('boston-opencontext', 'ckan__search_datasets', 'span-1')]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
-  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:boston-opencontext']);
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:boston-opencontext']);
 
   const bostonAgentNode = graph['@graph'].find(
-    (n) => n['@id'] === 'urn:civic-evidence:mcp-server:boston-opencontext',
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:boston-opencontext',
   );
   assert.ok(bostonAgentNode, 'expected Boston OpenContext agent node in graph');
   assert.equal(bostonAgentNode!['dcterms:title'], 'Boston OpenContext MCP Server');
@@ -172,9 +248,9 @@ test('Three-source analysis emits all three MCP agents, no stray sources', () =>
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const agents = mcpAgents(graph['@graph']);
   assert.equal(agents.length, 3);
-  assert.ok(agents.includes('urn:civic-evidence:mcp-server:socrata'));
-  assert.ok(agents.includes('urn:civic-evidence:mcp-server:data-commons'));
-  assert.ok(agents.includes('urn:civic-evidence:mcp-server:boston-opencontext'));
+  assert.ok(agents.includes('urn:civic-record:mcp-server:socrata'));
+  assert.ok(agents.includes('urn:civic-record:mcp-server:data-commons'));
+  assert.ok(agents.includes('urn:civic-record:mcp-server:boston-opencontext'));
 });
 
 test('Skill fetched but no tool calls emits no MCP agent', () => {
@@ -197,7 +273,7 @@ test('Pre-M9.1 Socrata span without mcp.source attribute still emits the socrata
   };
   const trace = traceOf([skillSpan('skill-hash'), legacyToolSpan]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
-  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-evidence:mcp-server:socrata']);
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:socrata']);
 });
 
 // --- Config injection (config-not-constants) ---
@@ -225,21 +301,27 @@ const CUSTOM_CONFIG: ProvenanceConfig = {
 test('config injection: platform agent identity is a config input', () => {
   const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, CUSTOM_CONFIG);
   const platform = graph['@graph'].find((n) =>
-    n['@id'].startsWith('urn:civic-evidence:platform:'),
+    n['@id'].startsWith('urn:civic-record:platform:'),
   );
   assert.ok(platform);
-  assert.equal(platform!['@id'], 'urn:civic-evidence:platform:city-evidence-portal');
+  assert.equal(platform!['@id'], 'urn:civic-record:platform:city-evidence-portal');
   assert.equal(platform!['dcterms:title'], 'City Evidence Portal');
   assert.equal(platform!['civic:url'], 'https://evidence.city.example');
   // The demo platform identity must NOT leak into a custom-config graph.
-  assert.ok(!JSON.stringify(graph).includes('urn:civic-evidence:platform:civic-ai-tools'));
+  // Both eras are named: the settlement-era form is what this graph would
+  // actually emit if the default leaked, and the prior-era form keeps the
+  // assertion honest for a graph built with PRIOR_ERA_CIVIC_VOCABULARY. A
+  // single-era check here would go vacuous the moment the emitted era moved.
+  const serialized = JSON.stringify(graph);
+  assert.ok(!serialized.includes(`${CIVIC_URN_PREFIX}:platform:civic-ai-tools`));
+  assert.ok(!serialized.includes(`${PRIOR_ERA_CIVIC_URN_PREFIX}:platform:civic-ai-tools`));
 });
 
 test('config injection: source registry and fallback source are config inputs', () => {
   const trace = traceOf([toolSpan('city-warehouse', 'warehouse_query', 'span-1')]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CUSTOM_CONFIG);
   const agent = graph['@graph'].find(
-    (n) => n['@id'] === 'urn:civic-evidence:mcp-server:city-warehouse',
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:city-warehouse',
   );
   assert.ok(agent, 'custom source agent should be emitted');
   assert.equal(agent!['dcterms:title'], 'City Warehouse MCP Server');
@@ -259,26 +341,26 @@ test('config injection: skill-fetch server URL overrides the configured skill so
   ]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CUSTOM_CONFIG);
   const agent = graph['@graph'].find(
-    (n) => n['@id'] === 'urn:civic-evidence:mcp-server:city-warehouse',
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:city-warehouse',
   );
   assert.equal(agent!['civic:serverUrl'], 'https://mcp-preview.city.example');
 });
 
 test('config injection: model agent description is a config input', () => {
   const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, CUSTOM_CONFIG);
-  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-evidence:model:'));
+  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-record:model:'));
   assert.equal(model!['dcterms:description'], 'Large language model via a self-hosted gateway');
 });
 
 test('reference config: demo platform agent and OpenRouter description come from the exported config, passed explicitly', () => {
   const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   const platform = graph['@graph'].find(
-    (n) => n['@id'] === 'urn:civic-evidence:platform:civic-ai-tools',
+    (n) => n['@id'] === 'urn:civic-record:platform:civic-ai-tools',
   );
   assert.ok(platform);
   assert.equal(platform!['dcterms:title'], 'Civic AI Tools');
   assert.equal(platform!['civic:url'], 'https://civicaitools.org');
-  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-evidence:model:'));
+  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-record:model:'));
   assert.equal(model!['dcterms:description'], 'Large language model via OpenRouter');
 });
 
@@ -289,7 +371,7 @@ test('honest omission: config without modelAgentDescription emits a model agent 
     // modelAgentDescription deliberately unset.
   };
   const graph = buildProvenanceGraph(traceOf([]), BASE_INPUT, config);
-  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-evidence:model:'));
+  const model = graph['@graph'].find((n) => n['@id'].startsWith('urn:civic-record:model:'));
   assert.ok(model, 'model agent node should be on the graph');
   assert.equal(model!['dcterms:title'], BASE_INPUT.model);
   // The field is ABSENT — not empty string, not a fallback value.

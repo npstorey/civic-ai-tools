@@ -351,10 +351,10 @@ test('derive leg: multi-source capture yields both MCP agents, both dataSources 
   // Multi-source agent emission on the PROV-O graph.
   const agents = provenance['@graph']
     .map((n) => n['@id'])
-    .filter((id) => id.startsWith('urn:civic-evidence:mcp-server:'));
+    .filter((id) => id.startsWith('urn:civic-record:mcp-server:'));
   assert.deepEqual(agents, [
-    'urn:civic-evidence:mcp-server:socrata',
-    'urn:civic-evidence:mcp-server:data-commons',
+    'urn:civic-record:mcp-server:socrata',
+    'urn:civic-record:mcp-server:data-commons',
   ]);
 
   // The skill span feeds BOTH the graph (skill entity + hadPlan) and the

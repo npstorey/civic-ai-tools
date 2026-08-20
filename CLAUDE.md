@@ -93,8 +93,10 @@ python scripts/real_data_analysis.py    # Real data example
 
 ## Claude Code skills
 
-### `publish-evidence`
+### `publish-record` (formerly `publish-evidence`)
 
-Bundled at `.claude/skills/publish-evidence/`. Publishes a completed civic-data analysis from a Claude Code session to the civicaitools.org evidence registry as a cryptographically signed, timestamped evidence package. Intended for frontier-model runs (Opus 4.7, 1M context) where the analysis depth exceeds what the civicaitools.org chat flow can cover under its token budget.
+Bundled at `.claude/skills/publish-record/`. Publishes a completed civic-data analysis from a Claude Code session to the civicaitools.org record registry as a cryptographically signed, timestamped record package. Intended for frontier-model runs (Opus 4.7, 1M context) where the analysis depth exceeds what the civicaitools.org chat flow can cover under its token budget.
 
-Invoke by saying something like "publish this as evidence" after a Socrata or Data Commons MCP-backed analysis completes. Requires a `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) in the shell environment. See [`docs/publish-evidence.md`](docs/publish-evidence.md) for the end-to-end walkthrough and [`civic-ai-tools-website/docs/api/evidence-publish.md`](../civic-ai-tools-website/docs/api/evidence-publish.md) for the underlying POST contract.
+Renamed from `publish-evidence` by the 2026-08-19 vocabulary settlement (specification Appendix J, migration class *alias-and-deprecate*). `.claude/skills/publish-evidence/` remains as a permanent alias directory holding only a pointer — one `publish.py`, in the `publish-record` directory — so both invocations run byte-identical code.
+
+Invoke by saying something like "publish this as a record" (or the prior-era "publish this as evidence") after a Socrata or Data Commons MCP-backed analysis completes. Authentication is a saved bearer token from `publish.py --login` (scope `records:publish`; tokens carrying the prior-era `evidence:publish` are still accepted), with `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) as the legacy fallback. See [`docs/publish-record.md`](docs/publish-record.md) for the end-to-end walkthrough — the old path `docs/publish-evidence.md` is kept as a stub pointing there — and [`civic-ai-tools-website/docs/api/evidence-publish.md`](../civic-ai-tools-website/docs/api/evidence-publish.md) for the underlying POST contract.

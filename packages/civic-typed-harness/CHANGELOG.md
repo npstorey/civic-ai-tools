@@ -3,6 +3,64 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+**Settlement-era civic vocabulary + produce-core 0.3.0**
+([civic-ai-tools#160](https://github.com/npstorey/civic-ai-tools/issues/160) —
+the 2026-08-19 vocabulary settlement, [ADR-0025](../../docs/adr/0025-vocabulary-settlement-evidence-excision.md);
+canonical mapping in the specification's **Appendix J**, migration class
+*frozen-in-signed-artifacts*). Minor, not breaking: no existing export is
+removed or retyped, and no already-published package changes.
+
+- **New emissions mint the settlement-era vocabulary.** `CIVIC_NS` becomes
+  `https://civicaitools.org/ns/civic/` (was
+  `https://civicaitools.org/ns/evidence/`) and `CIVIC_URN_PREFIX` becomes
+  `urn:civic-record` (was `urn:civic-evidence`). Every id emitted by
+  `buildProvenanceGraph` and every `civic:` `@context` entry moves with them.
+  **A package produced by this version is not byte-identical to one produced
+  by 0.2.0 from the same inputs** — the graph is inside the hashed envelope,
+  so its envelope hash differs. Packages already signed under 0.2.0 are
+  untouched and remain verifiable exactly as published.
+- **The prior era stays available, exported, and reproducible.** New:
+  `PRIOR_ERA_CIVIC_NS`, `PRIOR_ERA_CIVIC_URN_PREFIX`, the `CivicVocabulary`
+  type, `makeCivicVocabulary(ns, urnPrefix)`, and the two bound eras
+  `CIVIC_VOCABULARY` / `PRIOR_ERA_CIVIC_VOCABULARY`. `ProvenanceConfig` gains
+  an optional `vocabulary` field defaulting to `CIVIC_VOCABULARY`. Supplying
+  `PRIOR_ERA_CIVIC_VOCABULARY` reproduces a pre-settlement record
+  byte-for-byte — the only sanctioned use; it is never for new emissions.
+  Unlike the other `ProvenanceConfig` fields this one is defaulted rather than
+  required: emitting the current vocabulary is not the silent-attribution
+  hazard ADR-0024 guards against.
+- **Unchanged signatures.** `civicUrn`, `civicModelUrn`, `civicSourceAgentUrn`,
+  `civicPlatformUrn`, and `makeCivicProvContext` keep their exact signatures
+  and now delegate to `CIVIC_VOCABULARY`, so callers of the settlement era need
+  no edits.
+- **`buildEvaluationPrompt` takes `RecordPackage`** — produce-core 0.3.0's
+  settlement-era name for the same object (Appendix J, *alias-and-deprecate*).
+  `EvidencePackage` remains a deprecated upstream alias of that exact type, so
+  existing callers still compile; the rubric test suite deliberately stays on
+  the prior name as the executable alias proof.
+- **Dependency floor raised:** `@typedstandards/produce-core` `^0.2.0` →
+  `^0.3.0`, and the `@typedstandards/verify-core` devDependency `^0.8.0` →
+  `^0.9.0` to match the version produce-core 0.3.0 resolves (same-commit
+  manifest bump across a minor boundary). No behavior-affecting patch bumps
+  ride along.
+- **Both eras are under test.** The two captured fixtures
+  (`reference-golden.json`, `website-golden.json`) predate the settlement and
+  are not edited: their byte- and hash-parity legs now run with the prior-era
+  vocabulary injected, and a settlement-era leg asserts the same reference
+  bytes with exactly the two Appendix J literals substituted, with the hashes
+  recomputed from those substituted bytes by verify-core's shared chain. The
+  per-canonicalization-rule consequence is pinned explicitly: under
+  `legacy-json/v1` the era flip moves `contentHash` (the whole package is
+  fingerprinted, provenance included); under `dathere-ag-jupyter/v1` it does
+  not (only the executed notebook is). The envelope hash moves under both.
+- **Purity guard widened:** the capture/format boundary test now bars
+  vocabulary literals of **both** eras from `src/capture/**`. The invariant is
+  "vocabulary lives only in `format/vocabulary.ts`", not "the prior-era strings
+  are gone" — both eras are real vocabulary now, and either could be redefined
+  in the wrong module.
+
 ## 0.2.0 — 2026-08-17
 
 **Breaking: identity-bearing config is now required**
