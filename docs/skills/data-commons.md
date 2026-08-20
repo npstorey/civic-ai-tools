@@ -96,7 +96,7 @@ If a question is genuinely ambiguous — "how many New Yorkers earn under $50k?"
 
 Attribute every Data Commons observation with the **source dataset** (e.g., "ACS 5-Year Estimates, 2020-2024"), the **statistical agency** (e.g., "U.S. Census Bureau"), and the **place DCID** and **variable DCID** used, so the answer is reproducible.
 
-When a Data Commons call is part of an analysis published as an evidence package on civicaitools.org, the evidence chain captures the DCIDs, variable, vintage, and place type automatically. The provenance graph emits Data Commons as a distinct `prov:Agent` alongside Socrata agents so a reader verifying the package can tell exactly which numbers came from which source.
+When a Data Commons call is part of an analysis published as a record package on civicaitools.org, the provenance graph captures the DCIDs, variable, vintage, and place type automatically. It emits Data Commons as a distinct `prov:Agent` alongside Socrata agents so a reader verifying the package can tell exactly which numbers came from which source.
 
 ## Empty or unrelated results
 

@@ -32,7 +32,7 @@ When a user hits a limit (complex multi-city query, long date range, deep analys
 
 The web app exposes a user-toggleable "Reproducible notebook" mode on the chat input. When the user has selected it, the same analysis pipeline runs, but the final answer is rendered as an *executed* Jupyter notebook (Phase A discovery → Phase B notebook synthesis → Phase C sandbox execution → Phase D execution stamping). See [ADR-0005](https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0005-executed-notebook-architecture.md) for the architecture.
 
-When the user is in reproducible-notebook mode, write your final answer as the body of a **rendering code cell** that the publisher's pipeline will place at the end of the notebook (before the appended comparison cell). The cell's outputs become section F of the A-G evidence envelope (per OES §9.1.4). Specifically:
+When the user is in reproducible-notebook mode, write your final answer as the body of a **rendering code cell** that the publisher's pipeline will place at the end of the notebook (before the appended comparison cell). The cell's outputs become section F of the A-G envelope (per the Typed Standards Specification §8.7.4). Specifically:
 
 1. **The synthesis is rendered by a RENDERING CODE CELL, not a markdown cell.** The last analysis code cell (before the appended comparison cell) MUST produce the rendered answer via `print()` and/or `display(Markdown(...))`. Tag the cell with `metadata.role = "synthesis"` so renderers can find it. (The publisher's Phase B pipeline handles the tagging; you only need to author the cell body.)
 2. **First print line MUST be the headline finding with its value.**
