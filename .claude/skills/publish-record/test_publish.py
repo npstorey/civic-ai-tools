@@ -31,9 +31,144 @@ def _payload(**overrides: object) -> dict[str, object]:
         "prompt": "p",
         "output": "o",
         "toolCalls": [],
+        "model": "anthropic/test-model",
     }
     base.update(overrides)
     return base
+
+
+def _payload_without(key: str, **overrides: object) -> dict[str, object]:
+    """``_payload()`` with ``key`` deleted, for testing required-field
+    absence without hand-rolling a second fixture that could drift from
+    the base one."""
+    payload = _payload(**overrides)
+    del payload[key]
+    return payload
+
+
+# --------------------------------------------------------------------------
+# Apex default + credentials-store key normalization (civic-ai-tools#109,
+# civic-ai-tools#155 P3). Live-measured 2026-08-21 against production: GET
+# https://www.civicaitools.org/ 307-redirects to the apex, but the API paths
+# this script calls (device-code start, /api/records, /api/blob/upload-
+# token) answer directly on either host -- no redirect to follow on the API
+# path at all. So the fix-shape is (a): apex-as-default + key normalization,
+# with no redirect-following code, since there is nothing to follow.
+# --------------------------------------------------------------------------
+
+
+class DefaultBaseUrlTests(unittest.TestCase):
+    def test_default_is_the_apex_form(self) -> None:
+        self.assertEqual(publish.DEFAULT_BASE_URL, "https://civicaitools.org")
+
+
+class NormalizeBaseUrlForKeyTests(unittest.TestCase):
+    """Pure unit tests -- no filesystem, no network."""
+
+    def test_www_and_apex_collapse_to_the_same_key(self) -> None:
+        self.assertEqual(
+            publish.normalize_base_url_for_key("https://www.civicaitools.org"),
+            publish.normalize_base_url_for_key("https://civicaitools.org"),
+        )
+
+    def test_trailing_slash_is_trimmed(self) -> None:
+        self.assertEqual(
+            publish.normalize_base_url_for_key("https://civicaitools.org/"),
+            publish.normalize_base_url_for_key("https://civicaitools.org"),
+        )
+
+    def test_scheme_and_host_case_is_folded(self) -> None:
+        self.assertEqual(
+            publish.normalize_base_url_for_key("HTTPS://WWW.CivicAiTools.org"),
+            publish.normalize_base_url_for_key("https://civicaitools.org"),
+        )
+
+    def test_distinct_hosts_stay_distinct(self) -> None:
+        self.assertNotEqual(
+            publish.normalize_base_url_for_key("https://civicaitools.org"),
+            publish.normalize_base_url_for_key("https://staging.civicaitools.org"),
+        )
+
+    def test_port_is_preserved(self) -> None:
+        self.assertNotEqual(
+            publish.normalize_base_url_for_key("http://localhost:3000"),
+            publish.normalize_base_url_for_key("http://localhost:3001"),
+        )
+
+
+class _IsolatedCredentialsTestCase(unittest.TestCase):
+    """Points the credentials file at a throwaway temp dir for the
+    duration of each test, so these tests never touch a real
+    ``~/.config/civic-ai-tools/credentials.json``."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self._env_patch = mock.patch.dict(
+            os.environ, {"XDG_CONFIG_HOME": self._tmp.name}
+        )
+        self._env_patch.start()
+        self.addCleanup(self._env_patch.stop)
+        self.addCleanup(self._tmp.cleanup)
+
+
+class TokenKeyMigrationTests(_IsolatedCredentialsTestCase):
+    """The normalization must not orphan a token a pre-#109 `--login` run
+    already wrote to disk under the literal, un-normalized `www` key --
+    that's what makes it close the "secondary hazard" rather than just
+    stop making it worse going forward."""
+
+    def _seed_legacy_entry(self, key: str, access_token: str) -> None:
+        creds_path = publish.credentials_path()
+        creds_path.parent.mkdir(parents=True, exist_ok=True)
+        creds_path.write_text(
+            json.dumps(
+                {
+                    "version": publish.CREDENTIALS_FILE_VERSION,
+                    "tokens": {
+                        key: {
+                            "access_token": access_token,
+                            "scope": "records:publish",
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def test_legacy_www_keyed_token_is_found_by_apex_lookup(self) -> None:
+        self._seed_legacy_entry("https://www.civicaitools.org", "legacy-token")
+        entry = publish.token_for_base_url("https://civicaitools.org")
+        self.assertIsNotNone(entry)
+        assert entry is not None  # narrow for type checkers
+        self.assertEqual(entry["access_token"], "legacy-token")
+
+    def test_legacy_keyed_token_is_found_by_the_same_spelling_too(self) -> None:
+        self._seed_legacy_entry("https://www.civicaitools.org", "legacy-token")
+        entry = publish.token_for_base_url("https://www.civicaitools.org")
+        self.assertIsNotNone(entry)
+        assert entry is not None
+        self.assertEqual(entry["access_token"], "legacy-token")
+
+    def test_remove_token_clears_a_legacy_keyed_entry(self) -> None:
+        self._seed_legacy_entry("https://www.civicaitools.org", "legacy-token")
+        removed = publish.remove_token("https://civicaitools.org")
+        self.assertTrue(removed)
+        self.assertIsNone(publish.token_for_base_url("https://civicaitools.org"))
+        self.assertIsNone(
+            publish.token_for_base_url("https://www.civicaitools.org")
+        )
+
+    def test_upsert_writes_the_normalized_key_going_forward(self) -> None:
+        publish.upsert_token(
+            "https://www.civicaitools.org/",
+            {"access_token": "fresh-token", "scope": "records:publish"},
+        )
+        creds = json.loads(publish.credentials_path().read_text(encoding="utf-8"))
+        self.assertEqual(list(creds["tokens"].keys()), ["https://civicaitools.org"])
+
+    def test_no_saved_token_returns_none_not_an_error(self) -> None:
+        self.assertIsNone(publish.token_for_base_url("https://civicaitools.org"))
+        self.assertFalse(publish.remove_token("https://civicaitools.org"))
 
 
 class NegativePatternScanTests(unittest.TestCase):
@@ -69,6 +204,80 @@ class CaptureMethodValidationTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):
             publish.validate_payload(_payload(captureMethod="made-up"))
         self.assertEqual(cm.exception.code, 2)
+
+
+# --------------------------------------------------------------------------
+# Required `model` (ADR-0024 §A/§B; civic-ai-tools#129 / A8). No fallback
+# slug: an absent-or-blank `model` must refuse, naming the field, rather
+# than silently asserting a specific model inside a signed record.
+# --------------------------------------------------------------------------
+
+
+class RequiredModelTests(unittest.TestCase):
+    def test_present_model_passes(self) -> None:
+        publish.validate_payload(_payload())
+
+    def test_absent_model_fails_naming_the_field(self) -> None:
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()) as err:
+            publish.validate_payload(_payload_without("model"))
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("model", err.getvalue())
+
+    def test_empty_string_model_fails(self) -> None:
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()) as err:
+            publish.validate_payload(_payload(model=""))
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("model", err.getvalue())
+
+    def test_whitespace_only_model_fails(self) -> None:
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):
+            publish.validate_payload(_payload(model="   "))
+        self.assertEqual(cm.exception.code, 2)
+
+    def test_non_string_model_fails(self) -> None:
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):
+            publish.validate_payload(_payload(model=None))
+        self.assertEqual(cm.exception.code, 2)
+
+    def test_build_request_body_carries_the_supplied_model_verbatim(self) -> None:
+        payload = _payload(model="some/other-model")
+        publish.validate_payload(payload)
+        body, _stats = publish.build_request_body(
+            payload, max_inline_bytes=1_000_000, blob_upload=None
+        )
+        self.assertEqual(body["model"], "some/other-model")
+
+    def test_no_fallback_default_for_model_in_source(self) -> None:
+        """`model` must be a bare subscript (`payload["model"]`), never
+        `.get("model", <default>)` -- the presence of any default is
+        itself the defect ADR-0024 §B names, regardless of what the
+        default value is."""
+        source = Path(publish.__file__).read_text(encoding="utf-8")
+        self.assertNotRegex(source, r'payload\.get\(\s*"model"\s*,')
+        self.assertNotRegex(source, r"payload\.get\(\s*'model'\s*,")
+
+    def test_dry_run_cli_exits_2_naming_model_for_an_absent_field(self) -> None:
+        """Gate evidence (civic-ai-tools#155 P3): `--dry-run` of an
+        absent-`model` payload exits 2 naming the field. Exercised at
+        the CLI level (main()), not just as a direct validate_payload
+        call, per the sprint's evidence requirement."""
+        with tempfile.TemporaryDirectory() as tmp:
+            payload_path = Path(tmp) / "payload.json"
+            payload_path.write_text(
+                json.dumps(_payload_without("model")), encoding="utf-8"
+            )
+            argv = [
+                "publish.py",
+                "--payload",
+                str(payload_path),
+                "--dry-run",
+            ]
+            stderr = io.StringIO()
+            with mock.patch.object(sys, "argv", argv), redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as cm:
+                    publish.main()
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("model", stderr.getvalue())
 
 
 # --------------------------------------------------------------------------
@@ -309,6 +518,223 @@ class ResolveBlobHostTests(unittest.TestCase):
             )
 
 
+# --------------------------------------------------------------------------
+# Blob upload TARGET (E6, civic-ai-tools#155 P3). Distinct from the hint
+# derivation above: this is where oversized fields actually get PUT, and it
+# used to be unconditionally VERCEL_BLOB_API_URL regardless of --base-url or
+# --blob-host. Now: an explicit override is honored as the real PUT target;
+# with no override, only the reference civicaitools.org deployment (known to
+# run Vercel Blob) gets the Vercel Blob default -- any other instance is
+# refused with a named error instead of silently uploading to a vendor its
+# operator may not even be using.
+# --------------------------------------------------------------------------
+
+REFERENCE_BASE_URL = "https://civicaitools.org"
+
+
+def _upload_token_response(token: str = "stub-client-token") -> _FakeResponse:
+    return _FakeResponse(json.dumps({"clientToken": token}))
+
+
+def _blob_put_response(url: str) -> _FakeResponse:
+    return _FakeResponse(json.dumps({"url": url}))
+
+
+class ResolveBlobApiUrlTests(unittest.TestCase):
+    """`resolve_blob_api_url` in isolation -- no network."""
+
+    def test_no_override_defaults_to_vercel_blob(self) -> None:
+        self.assertEqual(
+            publish.resolve_blob_api_url(override=None, base_url=REFERENCE_BASE_URL),
+            publish.VERCEL_BLOB_API_URL,
+        )
+
+    def test_override_bare_host_builds_an_api_blob_path(self) -> None:
+        self.assertEqual(
+            publish.resolve_blob_api_url(override=OTHER_HOST, base_url=BASE_URL),
+            f"https://{OTHER_HOST}/api/blob",
+        )
+
+    def test_override_full_url_reduces_to_its_host(self) -> None:
+        self.assertEqual(
+            publish.resolve_blob_api_url(
+                override=f"https://{OTHER_HOST}/", base_url=BASE_URL
+            ),
+            f"https://{OTHER_HOST}/api/blob",
+        )
+
+
+class PutToBlobStoreTargetTests(unittest.TestCase):
+    """`put_to_blob_store` PUTs to whatever `blob_api_url` it's given."""
+
+    def test_default_target_is_vercel_blob(self) -> None:
+        requested: list[str] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            requested.append(getattr(req, "full_url", ""))
+            return _blob_put_response("https://blob.example/x")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            publish.put_to_blob_store(
+                pathname="evidence-refs/deadbeef.md",
+                content=b"hi",
+                content_type="text/markdown",
+                client_token="tok",
+            )
+        self.assertTrue(requested[0].startswith(publish.VERCEL_BLOB_API_URL))
+
+    def test_override_target_is_honored_as_the_put_url(self) -> None:
+        requested: list[str] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            requested.append(getattr(req, "full_url", ""))
+            return _blob_put_response(f"https://{OTHER_HOST}/x")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            publish.put_to_blob_store(
+                pathname="evidence-refs/deadbeef.md",
+                content=b"hi",
+                content_type="text/markdown",
+                client_token="tok",
+                blob_api_url=f"https://{OTHER_HOST}/api/blob",
+            )
+        self.assertTrue(requested[0].startswith(f"https://{OTHER_HOST}/api/blob"))
+        self.assertFalse(requested[0].startswith(publish.VERCEL_BLOB_API_URL))
+
+
+class UploadBlobRefTargetTests(unittest.TestCase):
+    """`upload_blob_ref` end-to-end: refusal, override, and reference-
+    deployment-default behavior, each confirmed by the actual PUT target
+    (or, for the refusal case, confirmed by no network request at all)."""
+
+    def test_refuses_without_override_for_a_non_reference_base_url(self) -> None:
+        with mock.patch(
+            "urllib.request.urlopen",
+            side_effect=AssertionError("refusal must not hit the network"),
+        ):
+            with self.assertRaises(SystemExit) as cm, redirect_stderr(
+                io.StringIO()
+            ) as err:
+                publish.upload_blob_ref(
+                    value="oversized content",
+                    content_type="text/markdown",
+                    extension=".md",
+                    base_url=BASE_URL,  # non-reference: https://www.example.org
+                    auth_method="bearer",
+                    auth_value="stub-token",
+                    cookie_name=publish.PROD_COOKIE_NAME,
+                    blob_host_override=None,
+                )
+        self.assertEqual(cm.exception.code, 2)
+        stderr_text = err.getvalue()
+        self.assertIn("--blob-host", stderr_text)
+        self.assertIn("CIVICAITOOLS_BLOB_HOST", stderr_text)
+
+    def test_override_is_honored_as_the_actual_upload_target(self) -> None:
+        put_urls: list[str] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            full_url = getattr(req, "full_url", "")
+            method = getattr(req, "get_method", lambda: "GET")()
+            if full_url.endswith("/api/blob/upload-token"):
+                return _upload_token_response()
+            if method == "PUT":
+                put_urls.append(full_url)
+                return _blob_put_response(f"https://{OTHER_HOST}/evidence-refs/x.md")
+            raise AssertionError(f"unexpected request to {full_url} ({method})")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            ref = publish.upload_blob_ref(
+                value="oversized content",
+                content_type="text/markdown",
+                extension=".md",
+                base_url=BASE_URL,  # non-reference, but override is given
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+                blob_host_override=OTHER_HOST,
+            )
+        self.assertEqual(len(put_urls), 1)
+        self.assertTrue(put_urls[0].startswith(f"https://{OTHER_HOST}/api/blob"))
+        self.assertEqual(ref["url"], f"https://{OTHER_HOST}/evidence-refs/x.md")
+
+    def test_reference_deployment_default_still_uploads_to_vercel_blob(self) -> None:
+        put_urls: list[str] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            full_url = getattr(req, "full_url", "")
+            method = getattr(req, "get_method", lambda: "GET")()
+            if full_url.endswith("/api/blob/upload-token"):
+                return _upload_token_response()
+            if method == "PUT":
+                put_urls.append(full_url)
+                return _blob_put_response("https://reference-store.example/x.md")
+            raise AssertionError(f"unexpected request to {full_url} ({method})")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            publish.upload_blob_ref(
+                value="oversized content",
+                content_type="text/markdown",
+                extension=".md",
+                base_url=REFERENCE_BASE_URL,  # the reference deployment
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+                blob_host_override=None,  # no override needed here
+            )
+        self.assertEqual(len(put_urls), 1)
+        self.assertTrue(put_urls[0].startswith(publish.VERCEL_BLOB_API_URL))
+
+    def test_www_reference_host_also_counts_as_the_reference_deployment(self) -> None:
+        """`www.civicaitools.org` and the apex are the same measured
+        deployment (see DEFAULT_BASE_URL); the refusal must not fire for
+        either spelling."""
+        put_urls: list[str] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            full_url = getattr(req, "full_url", "")
+            method = getattr(req, "get_method", lambda: "GET")()
+            if full_url.endswith("/api/blob/upload-token"):
+                return _upload_token_response()
+            if method == "PUT":
+                put_urls.append(full_url)
+                return _blob_put_response("https://reference-store.example/x.md")
+            raise AssertionError(f"unexpected request to {full_url} ({method})")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            publish.upload_blob_ref(
+                value="oversized content",
+                content_type="text/markdown",
+                extension=".md",
+                base_url="https://www.civicaitools.org",
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+                blob_host_override=None,
+            )
+        self.assertEqual(len(put_urls), 1)
+        self.assertTrue(put_urls[0].startswith(publish.VERCEL_BLOB_API_URL))
+
+
+class IsReferenceDeploymentTests(unittest.TestCase):
+    def test_apex_is_the_reference_deployment(self) -> None:
+        self.assertTrue(publish.is_reference_deployment("https://civicaitools.org"))
+
+    def test_www_is_also_the_reference_deployment(self) -> None:
+        self.assertTrue(
+            publish.is_reference_deployment("https://www.civicaitools.org")
+        )
+
+    def test_other_hosts_are_not(self) -> None:
+        for url in (
+            BASE_URL,
+            "https://notcivicaitools.org",
+            "https://evilcivicaitools.org.attacker.example",
+        ):
+            with self.subTest(url=url):
+                self.assertFalse(publish.is_reference_deployment(url))
+
+
 def _run_main(
     commitment: object,
     extra_argv: list[str] | None = None,
@@ -418,6 +844,19 @@ class PublishOutputTests(unittest.TestCase):
         self.assertEqual(
             result["blobHint"], _legacy_blob_url_for(OTHER_HOST, PACKAGE_HASH)
         )
+
+    def test_non_reference_base_url_with_no_oversized_field_still_publishes(
+        self,
+    ) -> None:
+        """The E6 refusal (`upload_blob_ref`) is lazy: it only fires when
+        a field actually needs to be uploaded. `_run_main`'s payload is
+        tiny and BASE_URL is non-reference (`https://www.example.org`)
+        with no --blob-host, so this run never enters the upload path at
+        all -- it must still publish successfully, same as every other
+        `_run_main`-based test in this file already (silently) proves."""
+        result, stderr, _body = _run_main(_commitment_response(STORE_HOST))
+        self.assertEqual(result["slug"], SLUG)
+        self.assertNotIn("--blob-host", stderr)
 
 
 # --------------------------------------------------------------------------
