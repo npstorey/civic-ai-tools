@@ -75,6 +75,18 @@ jobs:
       - name: Dependency-budget check
         run: npm run check:budgets
 
+      # Validates the Typed Standards Specification's YAML frontmatter: known
+      # keys only, no mapping indicator inside a plain scalar (the v0.1.5
+      # defect, which shipped machine-unreadable version metadata to an
+      # external integrator), a full patch Version, and a Tag that agrees with
+      # it. Placed with the other hermetic checks, ahead of the one step that
+      # depends on the network.
+      - name: Spec-frontmatter checker self-test
+        run: npm run check:spec-frontmatter:self-test
+
+      - name: Spec-frontmatter check
+        run: npm run check:spec-frontmatter
+
       - name: Skill-drift checker self-test
         run: npm run check:skill-drift:self-test
 
@@ -86,3 +98,17 @@ jobs:
       # quietly, on the principle that a check which cannot run has not passed.
       - name: Skill-drift check
         run: npm run check:skill-drift
+
+      # The publish-record skill's tests (45 of them) ran only by hand until
+      # this step — the gap recorded at civic-ai-tools#160 G5. They are
+      # hermetic: every server response is stubbed, two of those stubs raise on
+      # any call that reaches the network, no credential or token is read, and
+      # nothing outside a TemporaryDirectory is written. ubuntu-latest ships a
+      # python3, so this needs no setup-python step — which also keeps the
+      # workflow's action list at checkout + setup-node, as the charter above
+      # requires. `python3 --version` is echoed so the log records which
+      # interpreter the result came from.
+      - name: Test (publish-record skill, python)
+        run: |
+          python3 --version
+          python3 .claude/skills/publish-record/test_publish.py

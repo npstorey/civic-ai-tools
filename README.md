@@ -117,7 +117,7 @@ This repo is an npm workspace. [packages/civic-typed-harness](packages/civic-typ
 - [docs/sustainability.md](docs/sustainability.md) — Project sustainability posture
 
 ### Architecture
-- [docs/architecture/](docs/architecture/) — Canonical architecture documents and spec drafts (internal working drafts; not stable specs)
+- [docs/architecture/](docs/architecture/) — Canonical architecture documents. The Typed Standards Specification here is a **v0.1 Working Draft open for external review** (CC BY 4.0, tagged per patch revision) — open for review is not the same as stable, so cite it by its tag rather than treating it as frozen. The OES and CCV drafts absorbed into it are frozen historical snapshots; the doctrine and open-question documents are the project's own working records.
 - [docs/architecture/typed-standards-specification.md](docs/architecture/typed-standards-specification.md) — **the Typed Standards Specification** (v0.1 Working Draft, CC BY 4.0). Version-tagged: changes are patch revisions, not edits.
 - [docs/community-review/](docs/community-review/) — reviewer orientation and the circulated render of the spec.
 - [docs/architecture/end-state-vision.md](docs/architecture/end-state-vision.md) — Layered architecture target with build-state coloring and full glossary
