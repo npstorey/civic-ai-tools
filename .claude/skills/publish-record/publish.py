@@ -897,6 +897,22 @@ def resolve_blob_api_url(*, override: str | None, base_url: str) -> str:
     Blob API host is defaulting to what THAT SPECIFIC, known instance
     runs, not a vendor guess baked into the script for everyone who
     copies it.
+
+    KNOWN OVERLOAD, flagged for an owner decision rather than resolved
+    here (E6, civic-ai-tools#155 P3): this function and ``resolve_blob_host``
+    (the ``blobHint`` path) both read ``--blob-host`` /
+    ``CIVICAITOOLS_BLOB_HOST``, but want different host *shapes* on real
+    Vercel Blob -- the hint wants the public content host
+    (``<store>.public.blob.vercel-storage.com``, this script's own
+    ``--blob-host`` help example), this function wants an upload API
+    endpoint (``.../api/blob``), and those are two different hosts on
+    Vercel's actual infrastructure. An operator who already set
+    ``CIVICAITOOLS_BLOB_HOST`` to fix a `blobHint` on a non-Vercel
+    instance will now also have their uploads routed to
+    ``https://<hint-host>/api/blob``, which may not be a real endpoint on
+    their store. Not fixed in this phase: the two readers may need
+    separate flags (e.g. a distinct ``--blob-upload-api-url``) --
+    deliberately left as an owner call rather than guessed at here.
     """
     if override and override.strip():
         host = blob_host_from_url(override) or override.strip().strip("/")
@@ -1114,7 +1130,11 @@ def build_request_body(
                 f"the {max_inline_bytes:,}-byte inline threshold, but blob "
                 "uploads are disabled (dry-run or --no-blob). Re-run without "
                 "--dry-run (with valid credentials) so the field can be "
-                "uploaded to Vercel Blob, or raise --max-inline-bytes."
+                "uploaded to a blob store, or raise --max-inline-bytes. "
+                "Against a --base-url other than the reference "
+                "civicaitools.org deployment, that re-run also needs "
+                "--blob-host / CIVICAITOOLS_BLOB_HOST set (E6, "
+                "civic-ai-tools#155 P3) -- see upload_blob_ref."
             )
             sys.exit(2)
         blob_ref = blob_upload(value, content_type, extension)
@@ -1679,7 +1699,9 @@ def main() -> None:
         default=DEFAULT_MAX_INLINE_BYTES,
         help=f"Per-field inline threshold in bytes (default: "
         f"{DEFAULT_MAX_INLINE_BYTES}). Fields larger than this are "
-        "uploaded to Vercel Blob and referenced by hash.",
+        "uploaded to a blob store (Vercel Blob against the reference "
+        "civicaitools.org deployment; --blob-host / CIVICAITOOLS_BLOB_HOST "
+        "required otherwise) and referenced by hash.",
     )
     # Auth subcommands (mutually exclusive so --login --logout can't race)
     auth_group = parser.add_mutually_exclusive_group()
