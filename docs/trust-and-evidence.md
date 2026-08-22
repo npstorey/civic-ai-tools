@@ -38,7 +38,7 @@ Here is the one sentence a security reviewer most needs:
 
 The specification says this in its own words: a package's signature attests that the package was published and has not been altered since; it does **not** attest that the content matches what was generated in the original session — "that property is structural and follows from the capture method" (§8.6, `:680`). §9.3 lists the same fact first among the things a verifier cannot determine (`:1415`). ADR-0003 (`:33`) is where the project first recorded it.
 
-`captureMethod` is the field that tells you which mechanism stood between the model and the signature. It is inside the signed canonical JSON, so it cannot be silently re-described after the fact (§8.6, `:678`; §9.2 #11, `:1405`). What follows is what each labeled mechanism actually is, in this implementation, today.
+`captureMethod` is the field that names which mechanism the publisher **says** stood between the model and the signature. It is inside the signed canonical JSON, so it cannot be silently re-described after the fact (§8.6, `:678`; §9.2 #11, `:1405`) — the claim is tamper-evident. It is still a claim: nothing in the publish path binds the label to the mechanism that actually produced the record, which is the subject of *The label is a self-assertion the server does not cross-check* below. Read the rest of this section with that qualification in force. What follows is what each labeled mechanism is, in this implementation, today.
 
 Two facts about the two shipped paths are load-bearing, and neither is obvious from the labels.
 
@@ -46,7 +46,7 @@ Two facts about the two shipped paths are load-bearing, and neither is obvious f
 
 **The chat-flow path has a mechanical capture layer, but the platform keeps no copy of what it captured.** The server builds the analysis trace while the model is streaming (`civic-ai-tools-website/src/app/api/compare-stream/route.ts:192`, finalized and emitted at `:206-209`). Neither stream producer — `src/app/api/compare-stream/route.ts` nor `src/app/api/query-notebook/route.ts` — writes to the database, and the schema has no chat or message table (its six tables are `users`, `evidence_records`, `attestation_packages`, `attestation_nodes`, `device_codes`, `api_tokens`; `src/lib/db/schema.ts`). The publish dialog posts the answer content back from the browser (`src/components/PublishEvidenceDialog.tsx:191-193`). Stated exactly: **the platform streams the bytes to the browser, retains no server-side copy, and at publish signs the bytes the browser returns.**
 
-Both paths are weaker than their labels read, and they are weaker in *different* ways. That difference is the whole reason the label exists.
+Both paths are weaker than their labels read, and they are weaker in *different* ways. Conveying that difference is what the label is for — and whether a reader can rely on it to do so depends on the binding gap described two subsections below.
 
 ## Table 1 — what the signature attests, by capture method
 
@@ -107,7 +107,7 @@ ADR-0003 `:49` draws the line that matters most to a reader: a field is **verbat
 
 | Field | `chat-flow-stream` (website chat flow) | `claude-code-jsonl-readback` (publish skill) |
 |---|---|---|
-| `prompt.text` | **Verbatim-by-construction** — your own typed question, carried through the client to the route (`PublishEvidenceDialog.tsx:192` → `api/evidence/route.ts:272`). Never model-produced | **Verbatim by instruction** — `SKILL.md:125` requires it byte-for-byte from the session log; the publishing model transcribes it (`publish.py:1170`). Leak-scanned (`publish.py:578-580`) |
+| `prompt.text` | **Verbatim-by-construction** — your own typed question, carried through the client to the route (`PublishEvidenceDialog.tsx:192` → `api/evidence/route.ts:272`). Not model-authored on the path as designed; qualified by the same client round-trip as `output` below, since both fields reach the route from the browser and nothing mechanically distinguishes a posted prompt from a typed one | **Verbatim by instruction** — `SKILL.md:125` requires it byte-for-byte from the session log; the publishing model transcribes it (`publish.py:1170`). Leak-scanned (`publish.py:578-580`) |
 | `output` | **Verbatim-by-construction at the wire layer**, qualified by the client round-trip above (`PublishEvidenceDialog.tsx:193` → `route.ts:273`) | **Verbatim by instruction** — `SKILL.md:126`; model-transcribed (`publish.py:1171`). Leak-scanned (`publish.py:581-583`) |
 | `queries[]` (from `toolCalls`) | **Verbatim-by-construction** — derived from the server-built trace's tool spans (`compare-stream/route.ts:192`), submitted at `PublishEvidenceDialog.tsx:194` | **Model-transcribed** — `SKILL.md:143` instructs copying `tool_use.input` verbatim; the model writes the array and `publish.py` shape-validates only. **Not leak-scanned** — the scan covers `prompt`, `output`, `turns[].content` only (`publish.py:578-588`) |
 | `trace` | **Verbatim-by-construction** — built server-side during the run and finalized at `compare-stream/route.ts:206-209` | **Synthesized, not captured** — `publish.py` *constructs* a minimal OpenTelemetry trace from the payload's `toolCalls` (`publish.py:5`, builder at `:426-507`). No trace was captured in the original session |
@@ -132,7 +132,7 @@ Three situations matter to a reviewer, and a government instance will plausibly 
 | State | What the signature establishes | What a reader can conclude | What a reader cannot conclude |
 |---|---|---|---|
 | **public + signed** | The full §9.2 chain: bytes unaltered, signed by a registry-listed key, RFC 3161-timestamped, Rekor-included — plus the `attestation/publishes/v1` + `attestation/locatedAt/v1` pair, each independently signed, timestamped, and logged (`src/lib/evidence/publication.ts:119-138`) | This record was published by this instance, has not changed, existed by the timestamped moment, and its publication is on a public append-only log | Correctness (§10.2, `:1457`); that the content matches the original session (§9.3 #1, `:1415`); absence of coercion or conflict of interest (§9.3 #3, `:1417`); who the human submitter was, from the signed bytes |
-| **sealed + signed** | The same cryptographic commitment, minus content disclosure. The commitment endpoint is **public and unauthenticated** — the access gate is the separate host-display flag (`isPublic`, served as `listed`), not `visibility` (`src/lib/evidence/identifier.ts:66-79`) | This publisher committed to *some* content at this hash, at this time, on the public log, under a key their own trust registry authorizes, and its lifecycle state is what the signed chain says. **Sealed is not unverifiable** | What the content is; that the disclosed envelope claims are the signed ones; anything the envelope-integrity and content-hash checks would establish. **Sealed is not verified** |
+| **sealed + signed** | The same cryptographic commitment, minus content disclosure. The commitment endpoint is **public and unauthenticated** — the access gate is the separate host-display flag (`isPublic`, served as `listed`), not `visibility` (`src/lib/evidence/identifier.ts:66-79`) | This publisher committed to *some* content at this hash, at this time, on the public log, under a key their own trust registry authorizes, and its lifecycle state is what the signed chain says. **In plain terms: a member of the public can fetch the record's proofs and confirm the publisher committed to something, but cannot read the analysis, see its title or summary, or find where the content is stored.** **Sealed is not unverifiable** | What the content is; that the disclosed envelope claims are the signed ones; anything the envelope-integrity and content-hash checks would establish. **Sealed is not verified** |
 | **unsigned dev tier** (ADR-0020) | Nothing — there is no signature, and no record is persisted. The gate runs *before* the request body is read and refuses the whole persist path with `403 unsigned_tier` (`src/app/api/evidence/route.ts:155-158`; `src/lib/evidence/unsigned-tier.ts:203-217`) | Nothing about origin | Anything requiring a signature. Per ADR-0020 Decision C (`:64`) an unsigned package may reach **neither** `sealed` nor `public`, and a historical unsigned row cannot be promoted later (`unsigned-tier.ts:229-243`) |
 
 ### What a sealed record's commitment actually exposes
@@ -152,12 +152,24 @@ Check #1 is worth singling out because it is where a naive implementation would 
 
 ### Two §9.2 checks and their implementation state
 
-**This is a measured gap, stated plainly.** §9.2 defines a conformant verifier as one that "performs every check in §9.2" (`:1389`). In the two verifier environments measured:
+**This is a measured gap, stated plainly.** §9.2 defines a conformant verifier as one that "performs every check in §9.2" (`:1389`). All three environments named above were read, and all three are represented below — the portable library and the reference implementation's server-side verify for #6, the portable library for #13, and the neutral verifier for its own record of both:
 
 - **#6** (`metadata.signingKeyId` consistency, `:1400`) is **absent in both** — zero occurrences of `signingKeyId` in `typedstandards/packages/verify-core/src/`, and zero in the reference implementation's `src/lib/evidence/verify.ts`.
 - **#13** (`nodeId` cross-check, `:1407`) **recomputes the value but does not perform the cross-check.** The envelope hash is recomputed and returned as `nodeId` (`verify-core/src/verify.ts:183-184`, populated at `:364`; `checks.ts:33` records that the recompute "drives both check #1 … and check #13"). What is not performed is comparing an attestation's `targetNodeId` against that recomputed value.
 
-The neutral verifier documents both as not surfaced as discrete status codes (`typedstandards/apps/web/src/lib/trust-signal.ts:697-704`). This is a statement about two environments, not about every verifier that might exist. Registered as [Q71](architecture/open-questions.md#q71--92-conformance-vs-implementation-checks-6-and-13-in-the-measured-verifier-environments); no fix is asserted here.
+The neutral verifier documents both as not surfaced as discrete status codes (`typedstandards/apps/web/src/lib/trust-signal.ts:697-704`); the reference implementation carries the same note (`civic-ai-tools-website/src/lib/evidence/trust-signal.ts:766-773`). This is a statement about the three environments read, not about every verifier that might exist. Registered as [Q71](architecture/open-questions.md#q71--92-conformance-vs-implementation-checks-6-and-13-in-the-measured-verifier-environments); no fix is asserted here.
+
+**What the record page's badge shows while those two do not run.** It shows the green tier, labeled `Integrity verified`.
+
+The badge is a worst-tier-wins roll-up over the checks that emit a status (`civic-ai-tools-website/src/lib/evidence/trust-signal.ts:728-737`); if none alarms and none needs attention, and the package is signed, it resolves to `Integrity verified` / "The integrity checks ran cleanly. You can re-run them yourself in the independent verifier." (`:658-662`), rendered as the `verified` tier with a check glyph and the aria-label `Verified` (`:49`, `:81`).
+
+**Eleven of the fifteen checks feed that roll-up** (`:701-717`): #1, #2, #5, #7, #8, #9 always, plus #3, #4, #12, #14, #15 when the package bytes are available. The other four are excluded for three different reasons, and only one of them is a gap:
+
+- **#10 lifecycle** is excluded deliberately — it is a separate axis from cryptographic integrity and has its own page surfaces, the withdrawal banner and the status history (`:697-699`).
+- **#11 capture method** is excluded deliberately — it is a label, never assigned a tier (`:488-493`), for the reasons given earlier in this document.
+- **#6 and #13** are excluded because they emit nothing to roll up. They are not inputs to the badge's data shape at all (`:675-691`).
+
+So the honest reading of a green `Integrity verified` badge is: *the eleven checks that ran, ran cleanly.* It is not a statement about #6 or #13, and a reader cannot tell from the badge that two checks in the specification's list produced no verdict. Whether a badge should distinguish "passed" from "did not run" is part of what Q71 leaves open. The badge's own detail text points a reader at the independent verifier for the full breakdown, which is where the per-check list is visible.
 
 ## User-attested records are a legitimate trust shape
 
@@ -169,9 +181,9 @@ The skill path is user-attested, and this document names it that way rather than
 
 So: **the cryptography attributes the record to the instance; the byline attributes it to a person; the two are different claims carried by different mechanisms.** A reviewer should not read the signature as binding a named individual to the analysis.
 
-**Why the shape still works.** By publishing under their account, a person attaches their public reputation to the analysis. For solo dogfooding, exploratory work, and bylined journalism — where the author's name is the point and readers already weigh it — reputation-attached publication is a workable trust shape. It is a weaker root than platform capture, and the label is what tells a reader which one they are looking at.
+**Why the shape still works.** By publishing under their account, a person attaches their public reputation to the analysis. For solo dogfooding, exploratory work, and bylined journalism — where the author's name is the point and readers already weigh it — reputation-attached publication is a workable trust shape. It is a weaker root than platform capture. The label is what is *intended* to tell a reader which root they are looking at — and because nothing binds the label to the path that produced the record (Q70), a reader who needs certainty about the root cannot obtain it from the label alone. On the measured behavior, the cautious reading of any record is the weaker root, whatever its label says.
 
-**Why the project labels rather than gatekeeps.** ADR-0003 `:51` chose one signing key across all three capture methods, with the label as the differentiation, and explicitly rejected refusing to sign, hiding legacy records, or issuing a key per method. The revisit condition is stated in the same ADR: a separate key returns to the table if a future capture method has "meaningfully different trust properties" (`:56`). That is a condition, not a plan.
+**Why the project labels rather than gatekeeps.** ADR-0003 `:51` chose one signing key across all three capture methods, with the label as the differentiation, and explicitly rejected refusing to sign, hiding legacy records, or issuing a key per method. That choice put the whole weight of the distinction on the label, which is why the label's unbound state (Q70) matters more here than it would in a design that also gatekept. The revisit condition is stated in the same ADR: a separate key returns to the table if a future capture method has "meaningfully different trust properties" (`:56`). That is a condition, not a plan.
 
 **The identity ceiling.** The specification's graded identity-binding ladder is informative; **only GitHub OAuth is built** (§10.3, `:1468`). Higher-tier binding carries stronger signals but, in the specification's own framing, is no substitute for editorial judgment.
 
@@ -231,13 +243,22 @@ Four independent mechanisms carry them, each checkable without trusting civicait
 
 **Offline verification — the precise scope.** Zero-network, full-depth verification is a **demonstrated property of the self-contained commitment bundle** (the `?inline=1` form), which carries the proofs and the publisher's trust registry inline (§9.4, `:1422`). It is *not* a property of the bare package: the canonical single-blob package "still does not embed its own proofs, so a bare package handed to a verifier without its accompanying commitment view still depends on an out-of-band proof carrier" (§9.4, `:1431`).
 
+**If you are archiving a record so it stays verifiable without this site, save the self-contained bundle**, not the package. It is what `GET /api/records/<slug>/commitment?inline=1` returns (the prior-era `/api/evidence/` segment is a permanent alias): a single JSON document carrying the package, the publisher's trust registry as of that moment, the RFC 3161 token, the Rekor entry body and inclusion proof, and the lifecycle chain, all inline. That one file is what a verifier needs with no network access. Saving the package alone leaves you with bytes whose proofs you would have to fetch from somewhere.
+
 **One honest caveat about offline verification.** A self-contained bundle carries the trust registry as of the moment the bundle was generated. An offline verifier therefore cannot see a key revoked *after* that snapshot, and renders its verdict as "verified against the publisher's trust registry as of `<generatedAt>`" rather than as it stands now (§9.4, `:1433`; the same forensic boundary §10.2 `:1458` names for a compromised signing key). This is a property of working offline, not a defect.
 
 ## What is being disclosed
 
-Every record carries its audit trail: which AI model ran the analysis, which MCP data sources it queried, every tool call with its arguments and result summary, the skill-guidance text the model was operating under, and a W3C PROV-O graph naming each agent and data source. "Where did this number come from?" is answerable down to the tool call, not just the data source.
+Every record carries an audit trail. Stated as what the record **claims** rather than as what occurred — which is the distinction Table 2 exists to draw — it names the AI model that ran the analysis, the MCP data sources queried, each tool call with its arguments and result summary, the skill-guidance text the model was operating under, and a W3C PROV-O graph naming each agent and data source. A reader can follow a number back to the tool call the record attributes it to, rather than only to the data source.
 
-One qualification, from Table 2: under `claude-code-jsonl-readback` the trace is **synthesized at publish time** from the tool calls the payload declares, rather than recorded during the session. Either way the record names the tool calls; what differs by capture method is whether that list was captured as the analysis ran or assembled from a payload afterward.
+How much of that is captured and how much is asserted depends on the capture method, and under `claude-code-jsonl-readback` the answer is "mostly asserted." From Table 2, four elements of that trail are model-supplied on the skill path:
+
+- the **trace** is synthesized at publish time from the tool calls the payload declares, not recorded during the session (`publish.py:426-507`);
+- the **tool calls** themselves — names, sources, and arguments — are transcribed by the publishing model, and the leak-marker scan does not cover them (`publish.py:578-588`);
+- the **skill-guidance text** is whatever the payload passes as `skillText` (`publish.py:1205`), so the record's account of its own guidance is the publishing model's account;
+- the **token counts** are summed by the model under instruction and are unscanned (`SKILL.md:133`; `publish.py:1183`). The `model` identifier is the one element with a mechanical gate — required rather than defaulted, so an absent value is refused instead of asserted (`publish.py:1181`, per ADR-0024).
+
+On the chat-flow path the same elements are captured server-side, subject to the client round-trip described above. The disclosure surface is the same shape under both methods; what differs is how much of it was observed rather than declared.
 
 ## What is not being claimed
 
@@ -245,7 +266,7 @@ One qualification, from Table 2: under `claude-code-jsonl-readback` the trace is
 
 "Unverified" on a record page means no attestation has been added yet — not that the AI got the answer wrong. The platform itself does not issue correctness claims, and the specification is explicit that it does not: the signature attests publication and integrity, never that the content is correct (§5.3, `:147`; §10.2, `:1457`).
 
-Correctness review rides alongside as a **separately-signed attestation contributed by an identifiable reviewer**. Under the ratified v0.1 sub-type table (§8.12.1, `:1305-1322`), the three review shapes this project supports map as follows (§8.12.2, `:1330-1332`):
+Correctness review rides alongside the record rather than being folded into it. **In the specification** that means a separately-signed `attestation/*` node contributed by an identifiable reviewer; under the ratified v0.1 sub-type table (§8.12.1, `:1305-1322`), the three review shapes this project supports map as follows (§8.12.2, `:1330-1332`):
 
 | Pre-v0.1 review kind | v0.1 sub-type |
 |---|---|
@@ -253,7 +274,19 @@ Correctness review rides alongside as a **separately-signed attestation contribu
 | `evaluation` (adversarial review against a rubric) | `attestation/evaluates/v1`, with declared methodology |
 | `expert_attestation` (review by a named human expert) | `attestation/evaluates/v1` for a critique, or `attestation/endorses/v1` when vouching |
 
-Existing pre-v0.1 attestation records have **not** been migrated to the new sub-type URIs; that migration is scoped separately (§8.12.2, `:1334`).
+**In the reference implementation today, a review is not a signed node, and its signature is not retained.** This is worth stating precisely, because it is the point at which a reader is most likely to assume the cryptography does more than it does.
+
+All three review kinds are written by one route (`civic-ai-tools-website/src/app/api/evidence/[slug]/attestations/route.ts:21-22`). It builds the review payload, hashes it, and stores it in blob storage (`:185-191`). It then calls the signing function **without awaiting it and without keeping what it returns** — the source comments the call "Sign (non-blocking — failures don't prevent storage)" (`:193-194`) — and requests an RFC 3161 timestamp whose result is likewise discarded (`:197`). The row it inserts carries the record id, the review type, the reviewer's user id, the payload hash, the blob key, and the base-package hash (`:200-207`), because the table it writes to has no column for a signature: `attestation_packages` is the pre-v0.1 "comment on a package" feature, and the schema says so in as many words — it "has no signature/type-URI/targetNodeId columns" (`src/lib/db/schema.ts:215-230`, note at `:239-241`). The signed-node table that does carry those columns, `attestation_nodes` (`schema.ts:242-276`), is used by the lifecycle path — publication, location, withdrawal, reinstatement — not by review.
+
+So, to answer the question directly:
+
+- **Whose key signs a correctness endorsement? None that survives.** A signature is computed with the instance key if one is configured, and then dropped. There is no signature on the stored review for a reader or a verifier to check.
+- **What identifies the reviewer?** Their identity is inside the hashed payload — database user id, GitHub id, display name, and profile URL (`src/lib/evidence/expert-attestation.ts:85-88`) — so it is covered by the payload hash, but the hash is not itself signed or timestamped into anything retained.
+- **What does a review change on the record page?** For an expert attestation, nothing about the verification state: only the two machine kinds (`consistency`, `evaluation`) advance a record's verification status, and a human review is deliberately excluded from that state machine (`route.ts:209-215`).
+
+The last of those three is a property worth keeping: a named human vouching for an analysis does not move a platform-rendered verification indicator, which is exactly what *disclosure, not validation* requires. The first two are a gap between the specification's model and what ships. The specification already scopes the migration of pre-v0.1 attestation records to the new sub-type URIs as separate work (§8.12.2, `:1334`); that migration is also what would give a review a retained signature. Registered as [Q73](architecture/open-questions.md#q73--correctness-reviews-are-hashed-and-stored-but-their-signature-and-timestamp-are-discarded); no fix is asserted here.
+
+**Until it lands, treat a correctness review on a record page as an attributed comment, not as a countersignature.**
 
 For the full stance, see `civic-ai-tools-website/docs/design-principles.md` — *disclosure, not validation*.
 
@@ -263,13 +296,17 @@ An author can withdraw a record: a signed, public action with a stated reason. W
 
 ## Key rotation
 
-Signing keys rotate per the runbook at `civic-ai-tools-website/docs/key-rotation.md`. Older keys stay in the trust registry indefinitely, and records signed under a retired key remain verifiable — the registry's per-key status semantics are what §9.2 #5 applies (`:1399`).
+Signing keys rotate per the runbook at `civic-ai-tools-website/docs/key-rotation.md`. Older keys stay in the trust registry indefinitely, and records signed under a **retired** key remain verifiable — the registry's per-key status semantics are what §9.2 #5 applies (`:1399`).
+
+**A compromised key is a different case, and the specification declines it as a threat.** §10.2 (`:1458`) states it plainly: a signing key disclosed to an adversary can produce valid signatures under that `kid` until the registry entry is moved to `revoked` status. The registry's `revoked` status is the mitigation the specification names (§8.3.3), and check #5 reports it — but pre-revocation signatures may have been produced by the legitimate signer or by the adversary, and, in the specification's words, "the distinction lives in the timestamp's relationship to the disclosure event — a forensic question, not a protocol guarantee." An offline verifier working from a bundle generated before the revocation cannot see it at all (§9.4, `:1433`).
+
+This document does not state a compromise-response policy, because none is recorded; what is recorded is the revocation mechanism and the boundary around it. A reviewer evaluating this system should treat operator key custody (ADR-0020) as the control that matters here, not the rotation runbook.
 
 ## Contract stability
 
 Long-form verification and publish-API guidance lives in `civic-ai-tools-website/docs/api/records-publish.md`. Its stability statement: fields may be added in a backwards-compatible way; a breaking change bumps the `schemaVersion` inside the package and is noted in that document's change log (`records-publish.md:51`).
 
-Above that sits a governance commitment, recorded in three places: **a ≥90-day breaking-change notice on the record-package schema and the documented publish API** ([`sustainability.md:17`](sustainability.md); [ADR-0001](adr/0001-roadmap-governance.md) `:24` and `:50`, where it is stated as "a commitment, not an informal practice"; and `ROADMAP.md` Section 3). `ROADMAP.md` §3 also records the commitment's current phasing honestly: while the specification and the documented API are still stabilizing, every breaking change ships with a documented migration path and prompt public disclosure, and the fixed 90-day advance-notice window takes effect once they stabilize. That section also carries a disclosure of an occasion on which the notice window did not run.
+Above that sits a governance commitment, recorded in three places: **a ≥90-day breaking-change notice on the record-package schema and the documented publish API** ([`sustainability.md:17`](sustainability.md); [ADR-0001](adr/0001-roadmap-governance.md) `:24` and `:50`, where it is stated as "a commitment, not an informal practice"; and `ROADMAP.md` Section 3). `ROADMAP.md` §3 also records the commitment's current phasing honestly: while the specification and the documented API are still stabilizing, every breaking change ships with a documented migration path and prompt public disclosure, and the fixed 90-day advance-notice window takes effect once they stabilize — for which §3 states a goal of "within two to three quarters," with the switch-over to be announced in a roadmap refresh when it happens. Older schema versions stay verifiable indefinitely. That section also carries a disclosure of an occasion on which the notice window did not run.
 
 ---
 
