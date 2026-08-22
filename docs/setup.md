@@ -79,7 +79,7 @@ Installs the `datacommons-mcp` Python package globally:
 
 #### Step 5: Verify Data Commons API Key
 
-Checks if `DC_API_KEY` environment variable is set and warns if missing. Unlike the Socrata token, this key is required — the hosted Data Commons endpoint is mandatory-auth, so Data Commons tool calls will fail without it.
+Checks if `DC_API_KEY` environment variable is set and reports an error (`[ERROR]`, listed under "Issues to resolve" in the setup summary) if missing. Unlike the Socrata token, this key is required — `datacommons-mcp` calls Google's Data Commons API, which is key-authenticated, so Data Commons tool calls fail without it.
 
 #### Step 6: Print Summary
 
@@ -356,7 +356,7 @@ The API keys used in this project are **low-risk, public data keys**:
 | **Socrata App Token** | NYC Open Data (public data) | Low - only affects rate limits. No private data access, no billing. |
 | **Data Commons API Key** | Google Data Commons (public data) | Low if exposed — no private data access, no billing risk. (Absence is different: Data Commons calls fail without this key, unlike Socrata's token.) |
 
-Socrata's token exists primarily for **rate limiting and usage tracking**; Data Commons' key exists for **authentication** — the hosted endpoint requires it. Neither protects sensitive data or billing, and the underlying data in both cases is publicly accessible.
+Socrata's token exists primarily for **rate limiting and usage tracking**; Data Commons' key exists for **authentication** — the Data Commons API is key-authenticated, regardless of which client calls it. Neither protects sensitive data or billing, and the underlying data in both cases is publicly accessible.
 
 ### Best Practices
 
