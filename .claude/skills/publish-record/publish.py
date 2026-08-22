@@ -9,7 +9,7 @@ the resulting slug and blob URL.
 
 Designed for the Claude Code skill at ``.claude/skills/publish-record``
 to call; see ``SKILL.md`` next to this file for usage context, or
-``civic-ai-tools-website/docs/api/evidence-publish.md`` for the endpoint
+``civic-ai-tools-website/docs/api/records-publish.md`` for the endpoint
 contract.
 
 Capture modes:
@@ -387,7 +387,7 @@ def resolve_session_token() -> str:
         "obtain a bearer token via the device-authorization flow, or set "
         "CIVICAITOOLS_SESSION_TOKEN / CIVICAITOOLS_SESSION_TOKEN_OP for "
         "the legacy cookie path. See "
-        "civic-ai-tools-website/docs/api/evidence-publish.md#authentication."
+        "civic-ai-tools-website/docs/api/records-publish.md#authentication."
     )
     sys.exit(1)
 

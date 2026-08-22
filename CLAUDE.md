@@ -19,7 +19,7 @@ When contributing code, docs, commit messages, issue bodies, PR descriptions, or
 Run `./scripts/setup.sh` to install dependencies and verify configuration.
 
 **When the setup script reports missing API keys**, you MUST:
-1. Explain that the MCP tools require API keys to function (Data Commons won't work at all, Socrata can't return data)
+1. Explain the key requirements accurately: Data Commons won't work at all without its key; Socrata works without one too, just at a lower rate limit
 2. Share the sign-up links from the script output for each missing key
 3. Tell the user to open the `.env` file in the project folder and paste their keys there — do NOT ask them to paste API keys into this chat
 4. Remind them that `.env` is a hidden file (Mac: Cmd+Shift+. in Finder; Windows: View > Show > Hidden items in File Explorer)
@@ -99,4 +99,4 @@ Bundled at `.claude/skills/publish-record/`. Publishes a completed civic-data an
 
 Renamed from `publish-evidence` by the 2026-08-19 vocabulary settlement (specification Appendix J, migration class *alias-and-deprecate*). `.claude/skills/publish-evidence/` remains as a permanent alias directory holding only a pointer — one `publish.py`, in the `publish-record` directory — so both invocations run byte-identical code.
 
-Invoke by saying something like "publish this as a record" (or the prior-era "publish this as evidence") after a Socrata or Data Commons MCP-backed analysis completes. Authentication is a saved bearer token from `publish.py --login` (scope `records:publish`; tokens carrying the prior-era `evidence:publish` are still accepted), with `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) as the legacy fallback. See [`docs/publish-record.md`](docs/publish-record.md) for the end-to-end walkthrough — the old path `docs/publish-evidence.md` is kept as a stub pointing there — and [`civic-ai-tools-website/docs/api/evidence-publish.md`](../civic-ai-tools-website/docs/api/evidence-publish.md) for the underlying POST contract.
+Invoke by saying something like "publish this as a record" (or the prior-era "publish this as evidence") after a Socrata or Data Commons MCP-backed analysis completes. Authentication is a saved bearer token from `publish.py --login` (scope `records:publish`; tokens carrying the prior-era `evidence:publish` are still accepted), with `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) as the legacy fallback. See [`docs/publish-record.md`](docs/publish-record.md) for the end-to-end walkthrough — the old path `docs/publish-evidence.md` is kept as a stub pointing there — and [`civic-ai-tools-website/docs/api/records-publish.md`](../civic-ai-tools-website/docs/api/records-publish.md) for the underlying POST contract.
