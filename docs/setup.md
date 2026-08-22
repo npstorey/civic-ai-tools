@@ -79,7 +79,7 @@ Installs the `datacommons-mcp` Python package globally:
 
 #### Step 5: Verify Data Commons API Key
 
-Checks if `DC_API_KEY` environment variable is set and warns if missing (Data Commons will still work but with lower rate limits).
+Checks if `DC_API_KEY` environment variable is set and warns if missing. Unlike the Socrata token, this key is required — the hosted Data Commons endpoint is mandatory-auth, so Data Commons tool calls will fail without it.
 
 #### Step 6: Print Summary
 
@@ -97,13 +97,13 @@ Displays what was created and provides next steps for using the MCP servers with
 | npm | 8+ | Installs Node dependencies |
 | Python | 3.11+ | Required by datacommons-mcp |
 | git | any | Clones MCP server |
+| [Data Commons API Key](https://apikeys.datacommons.org/) | n/a | Mandatory-auth — Data Commons tool calls fail without it |
 
 ### Recommended
 
 | Tool | Purpose |
 |------|---------|
 | [uv](https://github.com/astral-sh/uv) | Fast Python package manager |
-| [Data Commons API Key](https://apikeys.datacommons.org/) | Higher rate limits |
 
 Install uv:
 ```bash
