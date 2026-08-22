@@ -224,12 +224,12 @@ if [ -z "$SOCRATA_TOKEN" ] || [ -z "$DC_KEY" ]; then
     echo -e "${RED}  API keys are required${NC}"
     echo -e "${RED}────────────────────────────────────────────────────────────────${NC}"
     echo ""
-    echo "  The MCP tools will NOT work without API keys:"
+    echo "  Data Commons requires its key to function at all. Socrata works without one, just at a lower rate limit:"
     if [ -z "$DC_KEY" ]; then
         echo "    - Data Commons MCP will not function at all without DC_API_KEY"
     fi
     if [ -z "$SOCRATA_TOKEN" ]; then
-        echo "    - Socrata MCP cannot return data without SOCRATA_APP_TOKEN"
+        echo "    - Socrata MCP works without SOCRATA_APP_TOKEN, just at a lower rate limit"
     fi
     echo ""
     echo "  Both keys are free. Here's where to get them:"
@@ -377,7 +377,7 @@ print_step "Checking API keys..."
 if [ "$SOCRATA_TOKEN" != "YOUR_SOCRATA_TOKEN_HERE" ]; then
     echo -e "${GREEN}[OK]${NC} Socrata App Token is configured"
 else
-    print_error "Socrata App Token not set — Socrata MCP cannot return data."
+    print_error "Socrata App Token not set — Socrata MCP will still work, just at a lower rate limit."
 fi
 
 if [ "$DC_KEY" != "YOUR_DC_API_KEY_HERE" ]; then
@@ -406,7 +406,7 @@ if [ ${#ERRORS[@]} -eq 0 ]; then
     echo "Next steps:"
     echo ""
     if [ "$SOCRATA_TOKEN" = "YOUR_SOCRATA_TOKEN_HERE" ] || [ "$DC_KEY" = "YOUR_DC_API_KEY_HERE" ]; then
-        echo -e "  ${RED}1. Add your API keys to .env — the MCP tools won't work without them.${NC}"
+        echo -e "  ${RED}1. Add your API keys to .env — Data Commons won't work at all without its key; Socrata works without one too, just at a lower rate limit.${NC}"
         echo "     Open .env in a text editor, add your keys, then re-run:"
         echo "     ./scripts/setup.sh"
         echo ""
