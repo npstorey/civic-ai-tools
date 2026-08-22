@@ -42,12 +42,17 @@ Environment variables (read at run time, never logged):
     CIVICAITOOLS_SESSION_TOKEN_OP   1Password reference (``op://...``)
                                     resolved via ``op read``.
     CIVICAITOOLS_BASE_URL           Override the publish base URL
-                                    (default ``https://www.civicaitools.org``).
+                                    (default ``https://civicaitools.org``).
     CIVICAITOOLS_BLOB_HOST          Escape hatch only. Public blob-store
                                     host used to build the package
                                     ``blobHint``. Unset by default — the
                                     host is read out of the server's own
                                     responses (see ``resolve_blob_host``).
+                                    Not used for the actual upload target
+                                    (see ``upload_blob_ref``): that's
+                                    derived from the upload-token grant
+                                    response itself, driver-shaped
+                                    server-side.
     XDG_CONFIG_HOME                 Respected when locating the
                                     credentials file.
 
@@ -79,7 +84,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_BASE_URL = "https://www.civicaitools.org"
+# Apex, not `www` (civic-ai-tools#109; measured live 2026-08-21 against the
+# production deployment during civic-ai-tools#155 P3): a GET to the `www`
+# host 307-redirects to the apex, but every API path this script actually
+# calls (`/api/auth/device/code`, `/api/records`, `/api/blob/upload-token`)
+# answers directly on either host with no redirect in the chain -- so the
+# apex is simply the canonical form, not a redirect this script needs to
+# follow. `normalize_base_url_for_key` below treats both spellings as the
+# same deployment for credentials-store purposes regardless.
+DEFAULT_BASE_URL = "https://civicaitools.org"
 PROD_COOKIE_NAME = "__Secure-next-auth.session-token"
 DEV_COOKIE_NAME = "next-auth.session-token"
 
@@ -122,7 +135,7 @@ LEAK_REGEX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"toolu_[A-Za-z0-9]+"), "leaked tool-use id (toolu_...)"),
 )
 
-# Per-field size threshold at which content is uploaded to Vercel Blob
+# Per-field size threshold at which content is uploaded to a blob store
 # rather than inlined in the POST /api/records body. Chosen to leave
 # comfortable headroom under the Next.js App Router ~4 MB body cap even
 # when several fields land near threshold, while small fields stay
@@ -216,11 +229,73 @@ def _parse_iso(value: str) -> datetime | None:
         return None
 
 
+def _normalized_host(base_url: str) -> str:
+    """Lowercase hostname of ``base_url`` with a leading ``www.`` label
+    stripped, or ``""`` if ``base_url`` isn't a usable absolute URL.
+
+    Used by the credentials-store key normalization
+    (``normalize_base_url_for_key``, civic-ai-tools#109), which needs
+    "is this the same site" rather than a byte-exact string, since
+    ``https://www.civicaitools.org`` and ``https://civicaitools.org`` are
+    confirmed the same deployment (see the ``DEFAULT_BASE_URL`` comment
+    above).
+    """
+    try:
+        parsed = urllib.parse.urlsplit((base_url or "").strip())
+    except ValueError:
+        return ""
+    host = (parsed.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[len("www.") :]
+    return host
+
+
+def normalize_base_url_for_key(base_url: str) -> str:
+    """Canonical credentials-store key for ``base_url`` (civic-ai-tools#109).
+
+    Collapses scheme case, a leading ``www.`` host label, and a trailing
+    slash so ``https://www.civicaitools.org`` and
+    ``https://civicaitools.org`` -- the same deployment -- store and look
+    up under one key instead of two. Falls back to a merely-slash-
+    trimmed string for inputs that don't parse as an absolute URL, so a
+    malformed ``--base-url`` still gets *some* stable key rather than an
+    exception.
+    """
+    stripped = (base_url or "").strip().rstrip("/")
+    try:
+        parsed = urllib.parse.urlsplit(stripped)
+    except ValueError:
+        return stripped
+    if not parsed.scheme or not parsed.netloc:
+        return stripped
+    host = _normalized_host(stripped)
+    netloc = f"{host}:{parsed.port}" if parsed.port else host
+    path = parsed.path.rstrip("/")
+    return urllib.parse.urlunsplit((parsed.scheme.lower(), netloc, path, "", ""))
+
+
 def token_for_base_url(base_url: str) -> dict[str, Any] | None:
     """Return the saved token entry for ``base_url`` if present and
-    not expired; otherwise None."""
+    not expired; otherwise None.
+
+    Looks up the normalized key first; on a miss, scans stored keys for
+    one that normalizes to the same value. That fallback matters because
+    the store holds keys written before ``normalize_base_url_for_key``
+    existed -- a ``--login`` run against the pre-#109 default would have
+    written the literal ``https://www.civicaitools.org`` string. Without
+    the scan, flipping ``DEFAULT_BASE_URL`` to the apex form would make
+    an already-saved token invisible (a regression, not just a leftover
+    hazard).
+    """
     creds = load_credentials()
-    entry = creds.get("tokens", {}).get(base_url.rstrip("/"))
+    tokens = creds.get("tokens", {})
+    key = normalize_base_url_for_key(base_url)
+    entry = tokens.get(key)
+    if entry is None:
+        for stored_key, stored_entry in tokens.items():
+            if normalize_base_url_for_key(stored_key) == key:
+                entry = stored_entry
+                break
     if not entry:
         return None
     expires_at = entry.get("expires_at")
@@ -234,20 +309,27 @@ def token_for_base_url(base_url: str) -> dict[str, Any] | None:
 def upsert_token(base_url: str, entry: dict[str, Any]) -> None:
     creds = load_credentials()
     tokens = creds.setdefault("tokens", {})
-    tokens[base_url.rstrip("/")] = entry
+    tokens[normalize_base_url_for_key(base_url)] = entry
     creds["version"] = CREDENTIALS_FILE_VERSION
     save_credentials(creds)
 
 
 def remove_token(base_url: str) -> bool:
+    """Remove the saved token for ``base_url``, including one stored
+    under a legacy, un-normalized key (see ``token_for_base_url``)."""
     creds = load_credentials()
     tokens = creds.get("tokens", {})
-    key = base_url.rstrip("/")
-    if key not in tokens:
-        return False
-    del tokens[key]
-    save_credentials(creds)
-    return True
+    key = normalize_base_url_for_key(base_url)
+    if key in tokens:
+        del tokens[key]
+        save_credentials(creds)
+        return True
+    for stored_key in list(tokens.keys()):
+        if normalize_base_url_for_key(stored_key) == key:
+            del tokens[stored_key]
+            save_credentials(creds)
+            return True
+    return False
 
 
 # --------------------------------------------------------------------------
@@ -576,6 +658,29 @@ def validate_payload(payload: dict[str, Any]) -> None:
     if missing:
         eprint(f"error: payload missing required fields: {', '.join(missing)}")
         sys.exit(2)
+
+    # `model` is deliberately checked on its own, not folded into the
+    # `required` list above, even though it's required on the wire too
+    # (ADR-0024, civic-ai-tools#129 / A8). The list above only checks
+    # presence; a blank `"model": ""` would sail through it. `model` gets
+    # a stricter absent-or-empty check because ADR-0024 §A's shape for a
+    # missing required field on the evidence path is "refuse, with a
+    # named, actionable failure that identifies the variable, points at
+    # [where to set it], and states the real consequence" -- richer than
+    # the generic message above, since a silently-defaulted or blank
+    # `model` would assert a specific, unsupplied fact inside a signed,
+    # timestamped record (ADR-0024 §B).
+    model = payload.get("model")
+    if not isinstance(model, str) or not model.strip():
+        eprint(
+            "error: payload missing required field `model`. Set "
+            '`"model"` in the analysis payload passed to --payload (e.g. '
+            '`"model": "anthropic/claude-opus-4-7"`) to the model that '
+            "actually produced this analysis. Without it, the published "
+            "record would assert a model claim nobody supplied "
+            "(ADR-0024 §B; civic-ai-tools#129)."
+        )
+        sys.exit(2)
     if not isinstance(payload["toolCalls"], list):
         eprint("error: payload.toolCalls must be a list")
         sys.exit(2)
@@ -688,13 +793,31 @@ def mint_upload_token(
     auth_method: str,
     auth_value: str,
     cookie_name: str,
-) -> str:
-    """Mint a presigned client token for a single blob upload.
+    content_type: str,
+    content_length: int,
+) -> dict[str, Any]:
+    """Mint a client-upload grant for a single blob upload.
 
-    Wraps the first half of the ``@vercel/blob/client`` upload flow:
-    POST ``/api/blob/upload-token`` with the ``blob.generate-client-token``
-    event, receive a ``vercel_blob_client_...`` token authorised for
-    exactly this pathname.
+    POSTs the Vercel client-upload protocol's token-mint event to
+    ``/api/blob/upload-token`` -- the same request event regardless of
+    which storage driver the target instance runs. ``contentType`` and
+    ``contentLength`` are included in the payload: the s3 driver requires
+    them (both get signed into its presigned URL), the vercel-blob
+    driver ignores them, so it's always safe to send them (confirmed
+    against the website's own reference client,
+    ``scripts/publish-with-blob-ref.mjs``, and the route/driver source
+    it calls: ``src/app/api/blob/upload-token/route.ts``,
+    ``src/lib/storage/s3.ts``, read directly 2026-08-21 during
+    civic-ai-tools#155 P3's E6 fix-on-top).
+
+    The response is driver-shaped (``src/lib/storage/driver.ts``'s
+    ``grantClientUpload`` doc comment): the vercel-blob driver returns
+    ``{clientToken, ...}``, the s3 driver returns
+    ``{uploadMethod: 'presigned-put', url, headers, blobUrl, ...}``.
+    Returned here as the full parsed dict, unexamined beyond "is this a
+    JSON object", so the caller (``upload_blob_ref``) can branch on
+    which protocol it describes -- this function has no opinion about
+    which driver the target instance runs.
     """
     url = f"{base_url.rstrip('/')}/api/blob/upload-token"
     body = {
@@ -703,6 +826,8 @@ def mint_upload_token(
             "pathname": pathname,
             "clientPayload": None,
             "multipart": False,
+            "contentType": content_type,
+            "contentLength": content_length,
         },
     }
     encoded = json.dumps(body).encode("utf-8")
@@ -716,14 +841,13 @@ def mint_upload_token(
         with urllib.request.urlopen(req, timeout=60) as resp:
             resp_body = resp.read().decode("utf-8")
             parsed = json.loads(resp_body)
-            token = parsed.get("clientToken")
-            if not token:
+            if not isinstance(parsed, dict):
                 eprint(
-                    "error: upload-token response missing `clientToken`: "
+                    "error: upload-token response was not a JSON object: "
                     f"{resp_body[:300]}"
                 )
                 sys.exit(3)
-            return token
+            return parsed
     except urllib.error.HTTPError as exc:
         detail = ""
         try:
@@ -742,9 +866,9 @@ def mint_upload_token(
                 eprint(
                     "error: 401 Unauthorized from /api/blob/upload-token. "
                     "The session cookie is missing, invalid, or expired. "
-                    "Sign in at civicaitools.org, re-copy the cookie, and "
-                    "update CIVICAITOOLS_SESSION_TOKEN — or switch to bearer "
-                    "auth via `publish.py --login`."
+                    f"Sign in at {base_url.rstrip('/')}, re-copy the cookie, "
+                    "and update CIVICAITOOLS_SESSION_TOKEN — or switch to "
+                    "bearer auth via `publish.py --login`."
                 )
             sys.exit(1)
         eprint(f"error: HTTP {exc.code} from /api/blob/upload-token.")
@@ -768,7 +892,9 @@ def put_to_blob_store(
     (see ``chunk-WLMB4XQD.js``'s ``requestApi`` + ``createPutHeaders``):
     PUT ``https://vercel.com/api/blob/?pathname=<p>`` with the
     Authorization bearer token plus Vercel-specific blob headers. The
-    response is JSON with the public blob URL.
+    response is JSON with the public blob URL. Used when the upload-
+    token grant carries a ``clientToken`` (the vercel-blob driver's
+    shape) -- see ``upload_blob_ref``.
     """
     from urllib.parse import urlencode
 
@@ -817,6 +943,44 @@ def put_to_blob_store(
         sys.exit(3)
 
 
+def put_to_presigned_url(url: str, content: bytes, headers: dict[str, Any]) -> None:
+    """PUT ``content`` to a presigned URL with EXACTLY the granted headers.
+
+    Used for the s3 driver's presigned-PUT protocol (an upload-token
+    grant carrying ``uploadMethod: 'presigned-put'`` -- see
+    ``upload_blob_ref``). The presigned URL's signature covers exactly
+    the headers the server signed into it (``Content-Type`` +
+    ``Content-Length`` -- confirmed against
+    ``src/lib/storage/s3.ts``'s ``signableHeaders``, read directly
+    2026-08-21): adding anything else here (an ``Authorization`` bearer,
+    Vercel-specific ``x-*`` headers) would not match the signature and
+    the store would reject the PUT. No response body is expected on
+    success; the caller reads the final URL from the grant's
+    ``blobUrl``, not from this response.
+    """
+    req = urllib.request.Request(
+        url, data=content, method="PUT", headers=dict(headers)
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180):
+            return
+    except urllib.error.HTTPError as exc:
+        detail = ""
+        try:
+            detail = exc.read().decode("utf-8")
+        except Exception:
+            detail = ""
+        eprint(f"error: HTTP {exc.code} from presigned blob upload.")
+        if detail:
+            eprint(f"  response body: {detail[:500]}")
+        sys.exit(3)
+    except urllib.error.URLError as exc:
+        eprint(
+            f"error: network failure uploading to presigned URL: {exc.reason}"
+        )
+        sys.exit(3)
+
+
 def upload_blob_ref(
     value: Any,
     content_type: str,
@@ -826,7 +990,7 @@ def upload_blob_ref(
     auth_value: str,
     cookie_name: str,
 ) -> dict[str, Any]:
-    """Upload ``value`` to Vercel Blob and return a BlobRef object.
+    """Upload ``value`` to a blob store and return a BlobRef object.
 
     Content-addressable: the pathname is derived from the SHA-256 of the
     uploaded bytes so re-uploads of identical content resolve to the
@@ -834,24 +998,74 @@ def upload_blob_ref(
     interface in the website's ``src/lib/evidence/blob-ref.ts``; the
     server-side verifier fetches the URL and confirms the hash and size
     match.
+
+    E6 fix-on-top (civic-ai-tools#155 P3): the upload target and
+    protocol are DERIVED from the mint-token grant response, not guessed
+    from ``base_url``. The original E6 pass gated uploads on
+    ``is_reference_deployment(base_url)`` -- reasoning that only the
+    project's own civicaitools.org deployment was known to run Vercel
+    Blob. That premise was incomplete: the website's
+    ``grantClientUpload`` is already driver-shaped server-side
+    (``src/lib/storage/driver.ts``) -- an s3-backed instance's grant
+    carries ``uploadMethod: 'presigned-put'`` + ``url`` + ``headers`` +
+    ``blobUrl`` instead of ``clientToken``, so the correct upload target
+    for ANY instance -- reference or not -- is simply "whatever this
+    grant says", with no need to guess or ask an operator to configure
+    it. Confirmed by reading ``src/lib/storage/s3.ts`` and the website's
+    own reference client, ``scripts/publish-with-blob-ref.mjs``, both
+    directly, 2026-08-21.
     """
     content = content_to_bytes(value, content_type)
     size = len(content)
     hash_hex = hashlib.sha256(content).hexdigest()
     pathname = f"evidence-refs/{hash_hex}{extension}"
-    client_token = mint_upload_token(
+    grant = mint_upload_token(
         base_url=base_url,
         pathname=pathname,
         auth_method=auth_method,
         auth_value=auth_value,
         cookie_name=cookie_name,
-    )
-    blob_url = put_to_blob_store(
-        pathname=pathname,
-        content=content,
         content_type=content_type,
-        client_token=client_token,
+        content_length=size,
     )
+
+    if grant.get("uploadMethod") == "presigned-put":
+        put_url = grant.get("url")
+        put_headers = grant.get("headers")
+        blob_url = grant.get("blobUrl")
+        if (
+            not isinstance(put_url, str)
+            or not put_url
+            or not isinstance(put_headers, dict)
+            or not isinstance(blob_url, str)
+            or not blob_url
+        ):
+            eprint(
+                "error: upload-token response declared "
+                "`uploadMethod: \"presigned-put\"` but is missing "
+                "`url`/`headers`/`blobUrl`. Response received: "
+                f"{json.dumps(grant)[:500]}"
+            )
+            sys.exit(3)
+        put_to_presigned_url(url=put_url, content=content, headers=put_headers)
+    elif grant.get("clientToken"):
+        blob_url = put_to_blob_store(
+            pathname=pathname,
+            content=content,
+            content_type=content_type,
+            client_token=grant["clientToken"],
+        )
+    else:
+        eprint(
+            "error: upload-token response matched neither the Vercel "
+            "client-upload protocol (`clientToken`) nor the presigned-PUT "
+            "protocol (`uploadMethod: \"presigned-put\"`). This instance's "
+            "/api/blob/upload-token may be running a storage driver this "
+            "script doesn't recognize. Response received: "
+            f"{json.dumps(grant)[:500]}"
+        )
+        sys.exit(3)
+
     return {
         "ref": f"blob:sha256:{hash_hex}",
         "url": blob_url,
@@ -932,7 +1146,7 @@ def build_request_body(
                 f"the {max_inline_bytes:,}-byte inline threshold, but blob "
                 "uploads are disabled (dry-run or --no-blob). Re-run without "
                 "--dry-run (with valid credentials) so the field can be "
-                "uploaded to Vercel Blob, or raise --max-inline-bytes."
+                "uploaded to a blob store, or raise --max-inline-bytes."
             )
             sys.exit(2)
         blob_ref = blob_upload(value, content_type, extension)
@@ -956,7 +1170,15 @@ def build_request_body(
         "prompt": payload["prompt"],
         "output": output_value,
         "toolCalls": post_tool_calls,
-        "model": payload.get("model", "anthropic/claude-opus-4-7"),
+        # No fallback (ADR-0024 §A/§B; civic-ai-tools#129): `model` is
+        # required, like `title`/`summary`/`prompt`/`output` above --
+        # `validate_payload` (which always runs first, see `main()`) is
+        # the gate that refuses an absent-or-empty value with a named
+        # error before this function is ever reached. `portal` and
+        # `tokenUsage` below stay as `.get(..., default)` on purpose:
+        # their defaults are honest absences ("n/a", "{}"), not asserted
+        # facts, so ADR-0024 §B doesn't apply to them.
+        "model": payload["model"],
         "portal": payload.get("portal", "n/a"),
         "tokenUsage": payload.get("tokenUsage", {}),
         "promptVisibility": payload.get("promptVisibility", "full_text"),
@@ -1073,7 +1295,7 @@ def post_evidence(
                 eprint(
                     "error: 401 Unauthorized from /api/records. The session "
                     "token is missing, invalid, or expired. Sign in again at "
-                    "https://civicaitools.org, re-copy the "
+                    f"{base_url.rstrip('/')}, re-copy the "
                     f"`{cookie_name}` cookie value, and update "
                     "CIVICAITOOLS_SESSION_TOKEN — or switch to bearer auth "
                     "via `publish.py --login`."
@@ -1094,7 +1316,7 @@ def post_evidence(
             eprint(
                 "error: 404 from /api/records. The server could not find "
                 "your user record. Try signing out + back in on "
-                "civicaitools.org and re-running `publish.py --login`."
+                f"{base_url.rstrip('/')} and re-running `publish.py --login`."
             )
             sys.exit(1)
         eprint(f"error: HTTP {exc.code} from /api/records.")
@@ -1182,6 +1404,8 @@ def resolve_blob_host(
     1. ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST`` — documented escape
        hatch for environments where the commitment endpoint isn't
        reachable from where the skill runs. Unset in the default flow.
+       (Not used for the actual upload target — see ``upload_blob_ref``,
+       which derives that from the upload-token grant response itself.)
     2. The commitment view's ``packageUrl`` — server-authoritative for
        the package blob on whichever instance was just published to.
     3. A blob URL this run already received from the store while
@@ -1430,7 +1654,7 @@ def main() -> None:
         default=os.environ.get("CIVICAITOOLS_BASE_URL", DEFAULT_BASE_URL),
         help=(
             "Override the publish base URL (default: "
-            "$CIVICAITOOLS_BASE_URL or https://www.civicaitools.org)."
+            "$CIVICAITOOLS_BASE_URL or https://civicaitools.org)."
         ),
     )
     parser.add_argument(
@@ -1441,7 +1665,10 @@ def main() -> None:
             "(e.g. `<store>.public.blob.vercel-storage.com`), used to "
             "build the `blobHint` in the result. Not needed in the normal "
             "flow — the host is read from the server's own commitment "
-            "response. Defaults to $CIVICAITOOLS_BLOB_HOST."
+            "response. Not used for the actual upload target -- that's "
+            "derived from the upload-token grant response itself, no "
+            "matter which storage driver the target instance runs. "
+            "Defaults to $CIVICAITOOLS_BLOB_HOST."
         ),
     )
     parser.add_argument(
@@ -1482,7 +1709,7 @@ def main() -> None:
         default=DEFAULT_MAX_INLINE_BYTES,
         help=f"Per-field inline threshold in bytes (default: "
         f"{DEFAULT_MAX_INLINE_BYTES}). Fields larger than this are "
-        "uploaded to Vercel Blob and referenced by hash.",
+        "uploaded to a blob store and referenced by hash.",
     )
     # Auth subcommands (mutually exclusive so --login --logout can't race)
     auth_group = parser.add_mutually_exclusive_group()
@@ -1635,7 +1862,8 @@ def main() -> None:
             "Sealed (not public): the page and read-back URLs are "
             "creator-only; the public commitment is at "
             f"{args.base_url.rstrip('/')}/api/records/{slug}/commitment. "
-            "Publish from the civicaitools.org dashboard when ready."
+            f"Publish from the {args.base_url.rstrip('/')} dashboard when "
+            "ready."
         )
     else:
         blob_host = resolve_blob_host(
