@@ -43,16 +43,16 @@ Environment variables (read at run time, never logged):
                                     resolved via ``op read``.
     CIVICAITOOLS_BASE_URL           Override the publish base URL
                                     (default ``https://civicaitools.org``).
-    CIVICAITOOLS_BLOB_HOST          Public blob-store host: both the
-                                    actual PUT target for oversized
-                                    fields (see ``upload_blob_ref``) and
-                                    the host used to build the package
-                                    ``blobHint``. Unset by default when
-                                    ``--base-url`` is the reference
-                                    civicaitools.org deployment (known to
-                                    run Vercel Blob); required for any
-                                    other instance that has an oversized
-                                    field to upload.
+    CIVICAITOOLS_BLOB_HOST          Escape hatch only. Public blob-store
+                                    host used to build the package
+                                    ``blobHint``. Unset by default — the
+                                    host is read out of the server's own
+                                    responses (see ``resolve_blob_host``).
+                                    Not used for the actual upload target
+                                    (see ``upload_blob_ref``): that's
+                                    derived from the upload-token grant
+                                    response itself, driver-shaped
+                                    server-side.
     XDG_CONFIG_HOME                 Respected when locating the
                                     credentials file.
 
@@ -96,12 +96,6 @@ DEFAULT_BASE_URL = "https://civicaitools.org"
 PROD_COOKIE_NAME = "__Secure-next-auth.session-token"
 DEV_COOKIE_NAME = "next-auth.session-token"
 
-# The project's own reference deployment (civic-ai-tools#109 / E6, sprint
-# 155 P3). `www` and apex are confirmed the same site (see the
-# DEFAULT_BASE_URL comment above) -- `is_reference_deployment` below treats
-# them as one host for this comparison.
-REFERENCE_DEPLOYMENT_HOST = "civicaitools.org"
-
 ALLOWED_SOURCES = {"socrata", "data-commons"}
 ALLOWED_PROMPT_VISIBILITY = {"full_text", "hash_only"}
 ALLOWED_CAPTURE_MODES = {"single_final_turn", "full_conversation"}
@@ -141,7 +135,7 @@ LEAK_REGEX_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"toolu_[A-Za-z0-9]+"), "leaked tool-use id (toolu_...)"),
 )
 
-# Per-field size threshold at which content is uploaded to Vercel Blob
+# Per-field size threshold at which content is uploaded to a blob store
 # rather than inlined in the POST /api/records body. Chosen to leave
 # comfortable headroom under the Next.js App Router ~4 MB body cap even
 # when several fields land near threshold, while small fields stay
@@ -239,10 +233,9 @@ def _normalized_host(base_url: str) -> str:
     """Lowercase hostname of ``base_url`` with a leading ``www.`` label
     stripped, or ``""`` if ``base_url`` isn't a usable absolute URL.
 
-    Shared by the credentials-store key normalization
-    (``normalize_base_url_for_key``, civic-ai-tools#109) and the
-    reference-deployment check (``is_reference_deployment``, E6) -- both
-    need "is this the same site" rather than a byte-exact string, since
+    Used by the credentials-store key normalization
+    (``normalize_base_url_for_key``, civic-ai-tools#109), which needs
+    "is this the same site" rather than a byte-exact string, since
     ``https://www.civicaitools.org`` and ``https://civicaitools.org`` are
     confirmed the same deployment (see the ``DEFAULT_BASE_URL`` comment
     above).
@@ -279,16 +272,6 @@ def normalize_base_url_for_key(base_url: str) -> str:
     netloc = f"{host}:{parsed.port}" if parsed.port else host
     path = parsed.path.rstrip("/")
     return urllib.parse.urlunsplit((parsed.scheme.lower(), netloc, path, "", ""))
-
-
-def is_reference_deployment(base_url: str) -> bool:
-    """True when ``base_url`` points at the project's own reference
-    deployment (E6, sprint 155 P3) -- ``www`` or apex, confirmed the same
-    site. Used by the blob-upload-target refusal: the reference
-    deployment is known to run Vercel Blob, so it doesn't need an
-    operator to say so; any other instance does.
-    """
-    return _normalized_host(base_url) == REFERENCE_DEPLOYMENT_HOST
 
 
 def token_for_base_url(base_url: str) -> dict[str, Any] | None:
@@ -810,13 +793,31 @@ def mint_upload_token(
     auth_method: str,
     auth_value: str,
     cookie_name: str,
-) -> str:
-    """Mint a presigned client token for a single blob upload.
+    content_type: str,
+    content_length: int,
+) -> dict[str, Any]:
+    """Mint a client-upload grant for a single blob upload.
 
-    Wraps the first half of the ``@vercel/blob/client`` upload flow:
-    POST ``/api/blob/upload-token`` with the ``blob.generate-client-token``
-    event, receive a ``vercel_blob_client_...`` token authorised for
-    exactly this pathname.
+    POSTs the Vercel client-upload protocol's token-mint event to
+    ``/api/blob/upload-token`` -- the same request event regardless of
+    which storage driver the target instance runs. ``contentType`` and
+    ``contentLength`` are included in the payload: the s3 driver requires
+    them (both get signed into its presigned URL), the vercel-blob
+    driver ignores them, so it's always safe to send them (confirmed
+    against the website's own reference client,
+    ``scripts/publish-with-blob-ref.mjs``, and the route/driver source
+    it calls: ``src/app/api/blob/upload-token/route.ts``,
+    ``src/lib/storage/s3.ts``, read directly 2026-08-21 during
+    civic-ai-tools#155 P3's E6 fix-on-top).
+
+    The response is driver-shaped (``src/lib/storage/driver.ts``'s
+    ``grantClientUpload`` doc comment): the vercel-blob driver returns
+    ``{clientToken, ...}``, the s3 driver returns
+    ``{uploadMethod: 'presigned-put', url, headers, blobUrl, ...}``.
+    Returned here as the full parsed dict, unexamined beyond "is this a
+    JSON object", so the caller (``upload_blob_ref``) can branch on
+    which protocol it describes -- this function has no opinion about
+    which driver the target instance runs.
     """
     url = f"{base_url.rstrip('/')}/api/blob/upload-token"
     body = {
@@ -825,6 +826,8 @@ def mint_upload_token(
             "pathname": pathname,
             "clientPayload": None,
             "multipart": False,
+            "contentType": content_type,
+            "contentLength": content_length,
         },
     }
     encoded = json.dumps(body).encode("utf-8")
@@ -838,14 +841,13 @@ def mint_upload_token(
         with urllib.request.urlopen(req, timeout=60) as resp:
             resp_body = resp.read().decode("utf-8")
             parsed = json.loads(resp_body)
-            token = parsed.get("clientToken")
-            if not token:
+            if not isinstance(parsed, dict):
                 eprint(
-                    "error: upload-token response missing `clientToken`: "
+                    "error: upload-token response was not a JSON object: "
                     f"{resp_body[:300]}"
                 )
                 sys.exit(3)
-            return token
+            return parsed
     except urllib.error.HTTPError as exc:
         detail = ""
         try:
@@ -878,70 +880,26 @@ def mint_upload_token(
         sys.exit(3)
 
 
-def resolve_blob_api_url(*, override: str | None, base_url: str) -> str:
-    """Resolve the PUT target for blob uploads (E6, civic-ai-tools#155 P3).
-
-    An explicit ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST`` always wins.
-    This is a judgment call, stated explicitly because it's a guess, not
-    a guarantee: this script has no way to discover a non-Vercel
-    instance's actual upload protocol, so it assumes the operator's blob
-    store speaks the same ``/api/blob`` presigned-token PUT protocol
-    Vercel Blob does, just fronted by a different host. A genuinely
-    different blob backend needs its own upload implementation -- out of
-    scope for this script, which only has the Vercel Blob client
-    protocol (``mint_upload_token`` + ``put_to_blob_store``) coded up.
-
-    With no override, the caller (``upload_blob_ref``) has already
-    refused unless ``base_url`` is the reference deployment -- so by the
-    time this function runs with no override, defaulting to the Vercel
-    Blob API host is defaulting to what THAT SPECIFIC, known instance
-    runs, not a vendor guess baked into the script for everyone who
-    copies it.
-
-    KNOWN OVERLOAD, flagged for an owner decision rather than resolved
-    here (E6, civic-ai-tools#155 P3): this function and ``resolve_blob_host``
-    (the ``blobHint`` path) both read ``--blob-host`` /
-    ``CIVICAITOOLS_BLOB_HOST``, but want different host *shapes* on real
-    Vercel Blob -- the hint wants the public content host
-    (``<store>.public.blob.vercel-storage.com``, this script's own
-    ``--blob-host`` help example), this function wants an upload API
-    endpoint (``.../api/blob``), and those are two different hosts on
-    Vercel's actual infrastructure. An operator who already set
-    ``CIVICAITOOLS_BLOB_HOST`` to fix a `blobHint` on a non-Vercel
-    instance will now also have their uploads routed to
-    ``https://<hint-host>/api/blob``, which may not be a real endpoint on
-    their store. Not fixed in this phase: the two readers may need
-    separate flags (e.g. a distinct ``--blob-upload-api-url``) --
-    deliberately left as an owner call rather than guessed at here.
-    """
-    if override and override.strip():
-        host = blob_host_from_url(override) or override.strip().strip("/")
-        return f"https://{host}/api/blob"
-    return VERCEL_BLOB_API_URL
-
-
 def put_to_blob_store(
     pathname: str,
     content: bytes,
     content_type: str,
     client_token: str,
-    blob_api_url: str = VERCEL_BLOB_API_URL,
 ) -> str:
-    """PUT ``content`` to a Vercel-Blob-protocol store using a presigned
-    client token.
+    """PUT ``content`` to Vercel Blob using a presigned client token.
 
     Mirrors the second half of the ``@vercel/blob/client`` upload flow
     (see ``chunk-WLMB4XQD.js``'s ``requestApi`` + ``createPutHeaders``):
-    PUT ``<blob_api_url>/?pathname=<p>`` with the Authorization bearer
-    token plus Vercel-specific blob headers. The response is JSON with
-    the public blob URL. ``blob_api_url`` defaults to the reference
-    Vercel Blob API host; ``upload_blob_ref`` passes a resolved override
-    when one was given (see ``resolve_blob_api_url``).
+    PUT ``https://vercel.com/api/blob/?pathname=<p>`` with the
+    Authorization bearer token plus Vercel-specific blob headers. The
+    response is JSON with the public blob URL. Used when the upload-
+    token grant carries a ``clientToken`` (the vercel-blob driver's
+    shape) -- see ``upload_blob_ref``.
     """
     from urllib.parse import urlencode
 
     query = urlencode({"pathname": pathname})
-    url = f"{blob_api_url}/?{query}"
+    url = f"{VERCEL_BLOB_API_URL}/?{query}"
     req = urllib.request.Request(
         url,
         data=content,
@@ -985,6 +943,44 @@ def put_to_blob_store(
         sys.exit(3)
 
 
+def put_to_presigned_url(url: str, content: bytes, headers: dict[str, Any]) -> None:
+    """PUT ``content`` to a presigned URL with EXACTLY the granted headers.
+
+    Used for the s3 driver's presigned-PUT protocol (an upload-token
+    grant carrying ``uploadMethod: 'presigned-put'`` -- see
+    ``upload_blob_ref``). The presigned URL's signature covers exactly
+    the headers the server signed into it (``Content-Type`` +
+    ``Content-Length`` -- confirmed against
+    ``src/lib/storage/s3.ts``'s ``signableHeaders``, read directly
+    2026-08-21): adding anything else here (an ``Authorization`` bearer,
+    Vercel-specific ``x-*`` headers) would not match the signature and
+    the store would reject the PUT. No response body is expected on
+    success; the caller reads the final URL from the grant's
+    ``blobUrl``, not from this response.
+    """
+    req = urllib.request.Request(
+        url, data=content, method="PUT", headers=dict(headers)
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=180):
+            return
+    except urllib.error.HTTPError as exc:
+        detail = ""
+        try:
+            detail = exc.read().decode("utf-8")
+        except Exception:
+            detail = ""
+        eprint(f"error: HTTP {exc.code} from presigned blob upload.")
+        if detail:
+            eprint(f"  response body: {detail[:500]}")
+        sys.exit(3)
+    except urllib.error.URLError as exc:
+        eprint(
+            f"error: network failure uploading to presigned URL: {exc.reason}"
+        )
+        sys.exit(3)
+
+
 def upload_blob_ref(
     value: Any,
     content_type: str,
@@ -993,7 +989,6 @@ def upload_blob_ref(
     auth_method: str,
     auth_value: str,
     cookie_name: str,
-    blob_host_override: str | None = None,
 ) -> dict[str, Any]:
     """Upload ``value`` to a blob store and return a BlobRef object.
 
@@ -1004,52 +999,73 @@ def upload_blob_ref(
     server-side verifier fetches the URL and confirms the hash and size
     match.
 
-    E6 (civic-ai-tools#155 P3): refuses up front, before minting a token
-    or touching the network, unless either (a) ``blob_host_override`` (a
-    caller-supplied ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST``) says
-    where to upload, or (b) ``base_url`` is the reference deployment,
-    which is known to run Vercel Blob (``is_reference_deployment`` --
-    defaulting there is defaulting to what that specific instance runs,
-    not a vendor guess baked in for every adopter). Any other instance
-    with no override would otherwise upload to ``VERCEL_BLOB_API_URL``
-    regardless of what it actually runs -- a hardcoded vendor default on
-    someone else's data, the exact shape ADR-0024 rules out.
+    E6 fix-on-top (civic-ai-tools#155 P3): the upload target and
+    protocol are DERIVED from the mint-token grant response, not guessed
+    from ``base_url``. The original E6 pass gated uploads on
+    ``is_reference_deployment(base_url)`` -- reasoning that only the
+    project's own civicaitools.org deployment was known to run Vercel
+    Blob. That premise was incomplete: the website's
+    ``grantClientUpload`` is already driver-shaped server-side
+    (``src/lib/storage/driver.ts``) -- an s3-backed instance's grant
+    carries ``uploadMethod: 'presigned-put'`` + ``url`` + ``headers`` +
+    ``blobUrl`` instead of ``clientToken``, so the correct upload target
+    for ANY instance -- reference or not -- is simply "whatever this
+    grant says", with no need to guess or ask an operator to configure
+    it. Confirmed by reading ``src/lib/storage/s3.ts`` and the website's
+    own reference client, ``scripts/publish-with-blob-ref.mjs``, both
+    directly, 2026-08-21.
     """
-    has_override = bool(blob_host_override and blob_host_override.strip())
-    if not has_override and not is_reference_deployment(base_url):
-        eprint(
-            "error: a field exceeds the inline-upload threshold and would "
-            f"be uploaded to Vercel Blob, but --base-url ({base_url!r}) is "
-            "not the reference civicaitools.org deployment (the only "
-            "instance this script knows runs Vercel Blob) and no "
-            "--blob-host / CIVICAITOOLS_BLOB_HOST override was given. Set "
-            "--blob-host (or CIVICAITOOLS_BLOB_HOST) to your instance's "
-            "own blob-store host, or raise --max-inline-bytes so this "
-            "field stays inline instead of uploading."
-        )
-        sys.exit(2)
-
     content = content_to_bytes(value, content_type)
     size = len(content)
     hash_hex = hashlib.sha256(content).hexdigest()
     pathname = f"evidence-refs/{hash_hex}{extension}"
-    client_token = mint_upload_token(
+    grant = mint_upload_token(
         base_url=base_url,
         pathname=pathname,
         auth_method=auth_method,
         auth_value=auth_value,
         cookie_name=cookie_name,
-    )
-    blob_api_url = resolve_blob_api_url(
-        override=blob_host_override, base_url=base_url
-    )
-    blob_url = put_to_blob_store(
-        pathname=pathname,
-        content=content,
         content_type=content_type,
-        client_token=client_token,
-        blob_api_url=blob_api_url,
+        content_length=size,
     )
+
+    if grant.get("uploadMethod") == "presigned-put":
+        put_url = grant.get("url")
+        put_headers = grant.get("headers")
+        blob_url = grant.get("blobUrl")
+        if (
+            not isinstance(put_url, str)
+            or not put_url
+            or not isinstance(put_headers, dict)
+            or not isinstance(blob_url, str)
+            or not blob_url
+        ):
+            eprint(
+                "error: upload-token response declared "
+                "`uploadMethod: \"presigned-put\"` but is missing "
+                "`url`/`headers`/`blobUrl`. Response received: "
+                f"{json.dumps(grant)[:500]}"
+            )
+            sys.exit(3)
+        put_to_presigned_url(url=put_url, content=content, headers=put_headers)
+    elif grant.get("clientToken"):
+        blob_url = put_to_blob_store(
+            pathname=pathname,
+            content=content,
+            content_type=content_type,
+            client_token=grant["clientToken"],
+        )
+    else:
+        eprint(
+            "error: upload-token response matched neither the Vercel "
+            "client-upload protocol (`clientToken`) nor the presigned-PUT "
+            "protocol (`uploadMethod: \"presigned-put\"`). This instance's "
+            "/api/blob/upload-token may be running a storage driver this "
+            "script doesn't recognize. Response received: "
+            f"{json.dumps(grant)[:500]}"
+        )
+        sys.exit(3)
+
     return {
         "ref": f"blob:sha256:{hash_hex}",
         "url": blob_url,
@@ -1130,11 +1146,7 @@ def build_request_body(
                 f"the {max_inline_bytes:,}-byte inline threshold, but blob "
                 "uploads are disabled (dry-run or --no-blob). Re-run without "
                 "--dry-run (with valid credentials) so the field can be "
-                "uploaded to a blob store, or raise --max-inline-bytes. "
-                "Against a --base-url other than the reference "
-                "civicaitools.org deployment, that re-run also needs "
-                "--blob-host / CIVICAITOOLS_BLOB_HOST set (E6, "
-                "civic-ai-tools#155 P3) -- see upload_blob_ref."
+                "uploaded to a blob store, or raise --max-inline-bytes."
             )
             sys.exit(2)
         blob_ref = blob_upload(value, content_type, extension)
@@ -1389,14 +1401,11 @@ def resolve_blob_host(
 
     Resolution order:
 
-    1. ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST`` — an operator-
-       supplied override, also used (E6, civic-ai-tools#155 P3) as the
-       actual blob-upload target in ``upload_blob_ref``. Unset in the
-       default flow against the reference deployment; required against
-       any other instance that uploads an oversized field, but still
-       optional here even then (e.g. the commitment endpoint is
-       reachable but this run uploaded nothing, so there's no upload-
-       path requirement to satisfy).
+    1. ``--blob-host`` / ``CIVICAITOOLS_BLOB_HOST`` — documented escape
+       hatch for environments where the commitment endpoint isn't
+       reachable from where the skill runs. Unset in the default flow.
+       (Not used for the actual upload target — see ``upload_blob_ref``,
+       which derives that from the upload-token grant response itself.)
     2. The commitment view's ``packageUrl`` — server-authoritative for
        the package blob on whichever instance was just published to.
     3. A blob URL this run already received from the store while
@@ -1652,13 +1661,14 @@ def main() -> None:
         "--blob-host",
         default=os.environ.get("CIVICAITOOLS_BLOB_HOST", ""),
         help=(
-            "The target instance's public blob-store host (e.g. "
-            "`<store>.public.blob.vercel-storage.com`) -- both the actual "
-            "PUT target for oversized fields and the host used to build "
-            "the `blobHint` in the result. Not needed against the "
-            "reference civicaitools.org deployment (known to run Vercel "
-            "Blob); required for any other --base-url that has an "
-            "oversized field to upload. Defaults to $CIVICAITOOLS_BLOB_HOST."
+            "Escape hatch: the target instance's public blob-store host "
+            "(e.g. `<store>.public.blob.vercel-storage.com`), used to "
+            "build the `blobHint` in the result. Not needed in the normal "
+            "flow — the host is read from the server's own commitment "
+            "response. Not used for the actual upload target -- that's "
+            "derived from the upload-token grant response itself, no "
+            "matter which storage driver the target instance runs. "
+            "Defaults to $CIVICAITOOLS_BLOB_HOST."
         ),
     )
     parser.add_argument(
@@ -1699,9 +1709,7 @@ def main() -> None:
         default=DEFAULT_MAX_INLINE_BYTES,
         help=f"Per-field inline threshold in bytes (default: "
         f"{DEFAULT_MAX_INLINE_BYTES}). Fields larger than this are "
-        "uploaded to a blob store (Vercel Blob against the reference "
-        "civicaitools.org deployment; --blob-host / CIVICAITOOLS_BLOB_HOST "
-        "required otherwise) and referenced by hash.",
+        "uploaded to a blob store and referenced by hash.",
     )
     # Auth subcommands (mutually exclusive so --login --logout can't race)
     auth_group = parser.add_mutually_exclusive_group()
@@ -1797,7 +1805,6 @@ def main() -> None:
             auth_method=auth_method,
             auth_value=auth_value,
             cookie_name=cookie_name,
-            blob_host_override=args.blob_host,
         )
         if isinstance(blob_ref.get("url"), str):
             uploaded_blob_urls.append(blob_ref["url"])

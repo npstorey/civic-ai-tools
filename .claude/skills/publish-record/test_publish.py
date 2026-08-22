@@ -519,220 +519,275 @@ class ResolveBlobHostTests(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------
-# Blob upload TARGET (E6, civic-ai-tools#155 P3). Distinct from the hint
-# derivation above: this is where oversized fields actually get PUT, and it
-# used to be unconditionally VERCEL_BLOB_API_URL regardless of --base-url or
-# --blob-host. Now: an explicit override is honored as the real PUT target;
-# with no override, only the reference civicaitools.org deployment (known to
-# run Vercel Blob) gets the Vercel Blob default -- any other instance is
-# refused with a named error instead of silently uploading to a vendor its
-# operator may not even be using.
+# Blob upload TARGET + protocol (E6, civic-ai-tools#155 P3; fix-on-top of the
+# first E6 pass). The original pass gated uploads on
+# `is_reference_deployment(base_url)` -- reasoning that only civicaitools.org
+# was known to run Vercel Blob, and required an operator override for any
+# other instance. That premise was incomplete: the website's
+# `grantClientUpload` is already driver-shaped SERVER-SIDE
+# (civic-ai-tools-website src/lib/storage/driver.ts) -- an s3-backed
+# instance's upload-token grant carries `uploadMethod: 'presigned-put'` +
+# `url` + `headers` + `blobUrl` instead of `clientToken`, so the correct
+# upload target for ANY instance is simply "whatever the grant says", with no
+# guessing, no override, and no refusal needed. Confirmed by reading
+# src/lib/storage/s3.ts, src/app/api/blob/upload-token/route.ts, and the
+# website's own reference client scripts/publish-with-blob-ref.mjs directly,
+# 2026-08-21.
 # --------------------------------------------------------------------------
 
-REFERENCE_BASE_URL = "https://civicaitools.org"
 
-
-def _upload_token_response(token: str = "stub-client-token") -> _FakeResponse:
-    return _FakeResponse(json.dumps({"clientToken": token}))
+def _grant_response(grant: dict[str, object]) -> _FakeResponse:
+    return _FakeResponse(json.dumps(grant))
 
 
 def _blob_put_response(url: str) -> _FakeResponse:
     return _FakeResponse(json.dumps({"url": url}))
 
 
-class ResolveBlobApiUrlTests(unittest.TestCase):
-    """`resolve_blob_api_url` in isolation -- no network."""
-
-    def test_no_override_defaults_to_vercel_blob(self) -> None:
-        self.assertEqual(
-            publish.resolve_blob_api_url(override=None, base_url=REFERENCE_BASE_URL),
-            publish.VERCEL_BLOB_API_URL,
-        )
-
-    def test_override_bare_host_builds_an_api_blob_path(self) -> None:
-        self.assertEqual(
-            publish.resolve_blob_api_url(override=OTHER_HOST, base_url=BASE_URL),
-            f"https://{OTHER_HOST}/api/blob",
-        )
-
-    def test_override_full_url_reduces_to_its_host(self) -> None:
-        self.assertEqual(
-            publish.resolve_blob_api_url(
-                override=f"https://{OTHER_HOST}/", base_url=BASE_URL
-            ),
-            f"https://{OTHER_HOST}/api/blob",
-        )
+PRESIGNED_PUT_HEADERS = {"Content-Type": "text/markdown", "Content-Length": "18"}
 
 
-class PutToBlobStoreTargetTests(unittest.TestCase):
-    """`put_to_blob_store` PUTs to whatever `blob_api_url` it's given."""
+class PutToBlobStoreTests(unittest.TestCase):
+    """`put_to_blob_store` -- the vercel-blob driver's PUT protocol.
+    Unchanged by the E6 fix-on-top; only reached when the upload-token
+    grant carries `clientToken` (see UploadBlobRefProtocolTests)."""
 
-    def test_default_target_is_vercel_blob(self) -> None:
-        requested: list[str] = []
+    def test_puts_to_the_vercel_blob_api_host_with_bearer_auth(self) -> None:
+        requested: list[object] = []
 
         def fake_urlopen(req: object, *a: object, **kw: object) -> object:
-            requested.append(getattr(req, "full_url", ""))
+            requested.append(req)
             return _blob_put_response("https://blob.example/x")
 
         with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
-            publish.put_to_blob_store(
+            url = publish.put_to_blob_store(
                 pathname="evidence-refs/deadbeef.md",
                 content=b"hi",
                 content_type="text/markdown",
                 client_token="tok",
             )
-        self.assertTrue(requested[0].startswith(publish.VERCEL_BLOB_API_URL))
+        req = requested[0]
+        self.assertTrue(req.full_url.startswith(publish.VERCEL_BLOB_API_URL))
+        header_names = {k.lower(): v for k, v in req.headers.items()}
+        self.assertEqual(header_names.get("authorization"), "Bearer tok")
+        self.assertEqual(url, "https://blob.example/x")
 
-    def test_override_target_is_honored_as_the_put_url(self) -> None:
-        requested: list[str] = []
+
+class MintUploadTokenGrantTests(unittest.TestCase):
+    """`mint_upload_token` sends contentType/contentLength and returns the
+    FULL grant dict, unexamined beyond "is this a JSON object" -- the
+    driver-shape branching is `upload_blob_ref`'s job, not this one's."""
+
+    def test_includes_content_type_and_length_in_the_mint_payload(self) -> None:
+        sent_bodies: list[dict[str, object]] = []
 
         def fake_urlopen(req: object, *a: object, **kw: object) -> object:
-            requested.append(getattr(req, "full_url", ""))
-            return _blob_put_response(f"https://{OTHER_HOST}/x")
+            data = getattr(req, "data", None)
+            if data:
+                sent_bodies.append(json.loads(data.decode("utf-8")))
+            return _grant_response({"clientToken": "tok"})
 
         with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
-            publish.put_to_blob_store(
+            publish.mint_upload_token(
+                base_url=BASE_URL,
                 pathname="evidence-refs/deadbeef.md",
-                content=b"hi",
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
                 content_type="text/markdown",
-                client_token="tok",
-                blob_api_url=f"https://{OTHER_HOST}/api/blob",
+                content_length=18,
             )
-        self.assertTrue(requested[0].startswith(f"https://{OTHER_HOST}/api/blob"))
-        self.assertFalse(requested[0].startswith(publish.VERCEL_BLOB_API_URL))
+        sent_payload = sent_bodies[0]["payload"]
+        self.assertEqual(sent_payload["contentType"], "text/markdown")
+        self.assertEqual(sent_payload["contentLength"], 18)
 
+    def test_returns_the_full_vercel_shaped_grant_unexamined(self) -> None:
+        grant_body = {"clientToken": "tok", "type": "blob.generate-client-token"}
+        with mock.patch(
+            "urllib.request.urlopen", return_value=_grant_response(grant_body)
+        ):
+            grant = publish.mint_upload_token(
+                base_url=BASE_URL,
+                pathname="evidence-refs/deadbeef.md",
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+                content_type="text/markdown",
+                content_length=2,
+            )
+        self.assertEqual(grant, grant_body)
 
-class UploadBlobRefTargetTests(unittest.TestCase):
-    """`upload_blob_ref` end-to-end: refusal, override, and reference-
-    deployment-default behavior, each confirmed by the actual PUT target
-    (or, for the refusal case, confirmed by no network request at all)."""
+    def test_returns_the_full_presigned_put_shaped_grant_unexamined(self) -> None:
+        grant_body = {
+            "uploadMethod": "presigned-put",
+            "url": "https://s3.example/bucket/evidence-refs/x.md",
+            "headers": PRESIGNED_PUT_HEADERS,
+            "pathname": "evidence-refs/x.md",
+            "blobUrl": "https://cdn.example/evidence-refs/x.md",
+        }
+        with mock.patch(
+            "urllib.request.urlopen", return_value=_grant_response(grant_body)
+        ):
+            grant = publish.mint_upload_token(
+                base_url=BASE_URL,
+                pathname="evidence-refs/x.md",
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+                content_type="text/markdown",
+                content_length=18,
+            )
+        self.assertEqual(grant, grant_body)
 
-    def test_refuses_without_override_for_a_non_reference_base_url(self) -> None:
+    def test_non_object_response_refuses(self) -> None:
         with mock.patch(
             "urllib.request.urlopen",
-            side_effect=AssertionError("refusal must not hit the network"),
+            return_value=_FakeResponse(json.dumps(["not", "an", "object"])),
         ):
-            with self.assertRaises(SystemExit) as cm, redirect_stderr(
-                io.StringIO()
-            ) as err:
-                publish.upload_blob_ref(
-                    value="oversized content",
-                    content_type="text/markdown",
-                    extension=".md",
-                    base_url=BASE_URL,  # non-reference: https://www.example.org
+            with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):
+                publish.mint_upload_token(
+                    base_url=BASE_URL,
+                    pathname="evidence-refs/x.md",
                     auth_method="bearer",
                     auth_value="stub-token",
                     cookie_name=publish.PROD_COOKIE_NAME,
-                    blob_host_override=None,
+                    content_type="text/markdown",
+                    content_length=1,
                 )
-        self.assertEqual(cm.exception.code, 2)
-        stderr_text = err.getvalue()
-        self.assertIn("--blob-host", stderr_text)
-        self.assertIn("CIVICAITOOLS_BLOB_HOST", stderr_text)
+        self.assertEqual(cm.exception.code, 3)
 
-    def test_override_is_honored_as_the_actual_upload_target(self) -> None:
-        put_urls: list[str] = []
+
+class UploadBlobRefProtocolTests(unittest.TestCase):
+    """`upload_blob_ref` branches on the mint-token grant's shape -- not on
+    --base-url. `base_url` in every test below is the non-reference
+    `BASE_URL` (https://www.example.org) on purpose: which protocol runs
+    must depend only on what the grant says, never on which instance was
+    asked."""
+
+    def test_vercel_client_token_grant_puts_via_put_to_blob_store(self) -> None:
+        requests: list[object] = []
 
         def fake_urlopen(req: object, *a: object, **kw: object) -> object:
             full_url = getattr(req, "full_url", "")
-            method = getattr(req, "get_method", lambda: "GET")()
+            requests.append(req)
             if full_url.endswith("/api/blob/upload-token"):
-                return _upload_token_response()
-            if method == "PUT":
-                put_urls.append(full_url)
-                return _blob_put_response(f"https://{OTHER_HOST}/evidence-refs/x.md")
-            raise AssertionError(f"unexpected request to {full_url} ({method})")
+                return _grant_response({"clientToken": "tok"})
+            if getattr(req, "get_method", lambda: "GET")() == "PUT":
+                return _blob_put_response("https://blob.example/evidence-refs/x.md")
+            raise AssertionError(f"unexpected request to {full_url}")
 
         with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
             ref = publish.upload_blob_ref(
                 value="oversized content",
                 content_type="text/markdown",
                 extension=".md",
-                base_url=BASE_URL,  # non-reference, but override is given
+                base_url=BASE_URL,
                 auth_method="bearer",
                 auth_value="stub-token",
                 cookie_name=publish.PROD_COOKIE_NAME,
-                blob_host_override=OTHER_HOST,
             )
-        self.assertEqual(len(put_urls), 1)
-        self.assertTrue(put_urls[0].startswith(f"https://{OTHER_HOST}/api/blob"))
-        self.assertEqual(ref["url"], f"https://{OTHER_HOST}/evidence-refs/x.md")
-
-    def test_reference_deployment_default_still_uploads_to_vercel_blob(self) -> None:
-        put_urls: list[str] = []
-
-        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
-            full_url = getattr(req, "full_url", "")
-            method = getattr(req, "get_method", lambda: "GET")()
-            if full_url.endswith("/api/blob/upload-token"):
-                return _upload_token_response()
-            if method == "PUT":
-                put_urls.append(full_url)
-                return _blob_put_response("https://reference-store.example/x.md")
-            raise AssertionError(f"unexpected request to {full_url} ({method})")
-
-        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
-            publish.upload_blob_ref(
-                value="oversized content",
-                content_type="text/markdown",
-                extension=".md",
-                base_url=REFERENCE_BASE_URL,  # the reference deployment
-                auth_method="bearer",
-                auth_value="stub-token",
-                cookie_name=publish.PROD_COOKIE_NAME,
-                blob_host_override=None,  # no override needed here
-            )
-        self.assertEqual(len(put_urls), 1)
-        self.assertTrue(put_urls[0].startswith(publish.VERCEL_BLOB_API_URL))
-
-    def test_www_reference_host_also_counts_as_the_reference_deployment(self) -> None:
-        """`www.civicaitools.org` and the apex are the same measured
-        deployment (see DEFAULT_BASE_URL); the refusal must not fire for
-        either spelling."""
-        put_urls: list[str] = []
-
-        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
-            full_url = getattr(req, "full_url", "")
-            method = getattr(req, "get_method", lambda: "GET")()
-            if full_url.endswith("/api/blob/upload-token"):
-                return _upload_token_response()
-            if method == "PUT":
-                put_urls.append(full_url)
-                return _blob_put_response("https://reference-store.example/x.md")
-            raise AssertionError(f"unexpected request to {full_url} ({method})")
-
-        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
-            publish.upload_blob_ref(
-                value="oversized content",
-                content_type="text/markdown",
-                extension=".md",
-                base_url="https://www.civicaitools.org",
-                auth_method="bearer",
-                auth_value="stub-token",
-                cookie_name=publish.PROD_COOKIE_NAME,
-                blob_host_override=None,
-            )
-        self.assertEqual(len(put_urls), 1)
-        self.assertTrue(put_urls[0].startswith(publish.VERCEL_BLOB_API_URL))
-
-
-class IsReferenceDeploymentTests(unittest.TestCase):
-    def test_apex_is_the_reference_deployment(self) -> None:
-        self.assertTrue(publish.is_reference_deployment("https://civicaitools.org"))
-
-    def test_www_is_also_the_reference_deployment(self) -> None:
-        self.assertTrue(
-            publish.is_reference_deployment("https://www.civicaitools.org")
+        put_req = next(
+            r for r in requests if getattr(r, "get_method", lambda: "GET")() == "PUT"
         )
+        self.assertTrue(put_req.full_url.startswith(publish.VERCEL_BLOB_API_URL))
+        header_names = {k.lower(): v for k, v in put_req.headers.items()}
+        self.assertEqual(header_names.get("authorization"), "Bearer tok")
+        self.assertEqual(ref["url"], "https://blob.example/evidence-refs/x.md")
 
-    def test_other_hosts_are_not(self) -> None:
-        for url in (
-            BASE_URL,
-            "https://notcivicaitools.org",
-            "https://evilcivicaitools.org.attacker.example",
+    def test_presigned_put_grant_puts_with_exactly_the_granted_headers(self) -> None:
+        content = "oversized content"
+        content_bytes = content.encode("utf-8")
+        granted_headers = {
+            "Content-Type": "text/markdown",
+            "Content-Length": str(len(content_bytes)),
+        }
+        presigned_url = "https://s3.example/bucket/evidence-refs/x.md?sig=abc"
+        put_requests: list[object] = []
+
+        def fake_urlopen(req: object, *a: object, **kw: object) -> object:
+            full_url = getattr(req, "full_url", "")
+            if full_url.endswith("/api/blob/upload-token"):
+                return _grant_response(
+                    {
+                        "uploadMethod": "presigned-put",
+                        "url": presigned_url,
+                        "headers": granted_headers,
+                        "blobUrl": "https://cdn.example/evidence-refs/x.md",
+                    }
+                )
+            if full_url == presigned_url:
+                put_requests.append(req)
+                return _FakeResponse("")
+            raise AssertionError(f"unexpected request to {full_url}")
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            ref = publish.upload_blob_ref(
+                value=content,
+                content_type="text/markdown",
+                extension=".md",
+                base_url=BASE_URL,
+                auth_method="bearer",
+                auth_value="stub-token",
+                cookie_name=publish.PROD_COOKIE_NAME,
+            )
+
+        self.assertEqual(len(put_requests), 1)
+        sent_headers = {k.lower(): v for k, v in put_requests[0].headers.items()}
+        self.assertEqual(
+            sent_headers, {k.lower(): v for k, v in granted_headers.items()}
+        )
+        # Nothing Vercel-specific leaked onto the presigned PUT -- that
+        # would break the URL's signature (s3.ts's `signableHeaders`
+        # covers exactly content-type + content-length, nothing else).
+        self.assertNotIn("authorization", sent_headers)
+        self.assertNotIn("x-vercel-blob-access", sent_headers)
+        self.assertNotIn("x-api-version", sent_headers)
+        self.assertNotIn("x-content-type", sent_headers)
+        self.assertEqual(ref["url"], "https://cdn.example/evidence-refs/x.md")
+
+    def test_presigned_put_grant_missing_fields_refuses(self) -> None:
+        with mock.patch(
+            "urllib.request.urlopen",
+            return_value=_grant_response({"uploadMethod": "presigned-put"}),
         ):
-            with self.subTest(url=url):
-                self.assertFalse(publish.is_reference_deployment(url))
+            with self.assertRaises(SystemExit) as cm, redirect_stderr(
+                io.StringIO()
+            ) as err:
+                publish.upload_blob_ref(
+                    value="x",
+                    content_type="text/markdown",
+                    extension=".md",
+                    base_url=BASE_URL,
+                    auth_method="bearer",
+                    auth_value="stub-token",
+                    cookie_name=publish.PROD_COOKIE_NAME,
+                )
+        self.assertEqual(cm.exception.code, 3)
+        self.assertIn("presigned-put", err.getvalue())
+
+    def test_unrecognized_grant_shape_refuses_quoting_the_response(self) -> None:
+        with mock.patch(
+            "urllib.request.urlopen",
+            return_value=_grant_response(
+                {"somethingElse": "unexpected-driver-shape"}
+            ),
+        ):
+            with self.assertRaises(SystemExit) as cm, redirect_stderr(
+                io.StringIO()
+            ) as err:
+                publish.upload_blob_ref(
+                    value="x",
+                    content_type="text/markdown",
+                    extension=".md",
+                    base_url=BASE_URL,
+                    auth_method="bearer",
+                    auth_value="stub-token",
+                    cookie_name=publish.PROD_COOKIE_NAME,
+                )
+        self.assertEqual(cm.exception.code, 3)
+        stderr_text = err.getvalue()
+        self.assertIn("somethingElse", stderr_text)
+        self.assertIn("unexpected-driver-shape", stderr_text)
 
 
 def _run_main(
@@ -844,19 +899,6 @@ class PublishOutputTests(unittest.TestCase):
         self.assertEqual(
             result["blobHint"], _legacy_blob_url_for(OTHER_HOST, PACKAGE_HASH)
         )
-
-    def test_non_reference_base_url_with_no_oversized_field_still_publishes(
-        self,
-    ) -> None:
-        """The E6 refusal (`upload_blob_ref`) is lazy: it only fires when
-        a field actually needs to be uploaded. `_run_main`'s payload is
-        tiny and BASE_URL is non-reference (`https://www.example.org`)
-        with no --blob-host, so this run never enters the upload path at
-        all -- it must still publish successfully, same as every other
-        `_run_main`-based test in this file already (silently) proves."""
-        result, stderr, _body = _run_main(_commitment_response(STORE_HOST))
-        self.assertEqual(result["slug"], SLUG)
-        self.assertNotIn("--blob-host", stderr)
 
 
 # --------------------------------------------------------------------------
