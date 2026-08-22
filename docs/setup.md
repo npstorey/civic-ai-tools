@@ -314,7 +314,7 @@ python scripts/real_data_analysis.py
 
 ## API Keys Configuration
 
-API keys are optional but recommended for higher rate limits. Configure them by creating a `.env` file:
+Socrata's app token is optional — it only raises rate limits. Data Commons' key is required — calls fail without it. Configure them by creating a `.env` file:
 
 ```bash
 # Copy the example file
@@ -329,7 +329,7 @@ nano .env  # or use your preferred editor
 | Service | Purpose | Get Key |
 |---------|---------|---------|
 | NYC Open Data (Socrata) | Higher rate limits for NYC data | [Get Token](https://data.cityofnewyork.us/profile/edit/developer_settings) |
-| Google Data Commons | Higher rate limits for statistical data | [Get Key](https://apikeys.datacommons.org/) |
+| Google Data Commons | Required — Data Commons calls fail without it | [Get Key](https://apikeys.datacommons.org/) |
 
 ### .env File Format
 
@@ -337,7 +337,7 @@ nano .env  # or use your preferred editor
 # NYC Open Data - increases rate limits significantly
 SOCRATA_APP_TOKEN=your_token_here
 
-# Data Commons - recommended for statistical queries
+# Data Commons - required; calls fail without this key
 DC_API_KEY=your_key_here
 ```
 
@@ -354,9 +354,9 @@ The API keys used in this project are **low-risk, public data keys**:
 | Key | What It Protects | Risk If Exposed |
 |-----|------------------|-----------------|
 | **Socrata App Token** | NYC Open Data (public data) | Low - only affects rate limits. No private data access, no billing. |
-| **Data Commons API Key** | Google Data Commons (public data) | Low - only affects rate limits. No private data access, no billing. |
+| **Data Commons API Key** | Google Data Commons (public data) | Low if exposed — no private data access, no billing risk. (Absence is different: Data Commons calls fail without this key, unlike Socrata's token.) |
 
-These keys exist primarily for **rate limiting and usage tracking**, not for protecting sensitive data or billing. The underlying data is publicly accessible.
+Socrata's token exists primarily for **rate limiting and usage tracking**; Data Commons' key exists for **authentication** — the hosted endpoint requires it. Neither protects sensitive data or billing, and the underlying data in both cases is publicly accessible.
 
 ### Best Practices
 
