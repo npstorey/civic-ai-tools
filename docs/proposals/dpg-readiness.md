@@ -24,7 +24,7 @@ This proposal organizes the work into filed GitHub issues, identifies what's sub
 | 6 | Mechanism for extracting data | ✅ Strong | Bundle-export endpoint from #69 satisfies |
 | 7 | Privacy and applicable laws | ⚠️ Real tension | #74 (privacy-and-applicable-laws doc — substantive) |
 | 8 | Adherence to standards | ✅ Strong | Standards-landscape work (see #67); conformance table |
-| 9 | Do no harm by design | ⚠️ Mostly strong; gaps | #63 (harms section); proposed-issue 009 (natural-person ontology) |
+| 9 | Do no harm by design | ⚠️ Mostly strong; one gap remaining | #63 ✅ **delivered** — [`docs/trust-and-evidence.md`](../trust-and-evidence.md); proposed-issue 009 (natural-person ontology) still open |
 
 ## The substantive work
 
@@ -32,7 +32,7 @@ Two indicators require substantive thinking, not just packaging:
 
 **Indicator 7 — privacy and applicable laws (issue #74).** The publication-irreversibility property in the OES architecture is in real tension with GDPR Article 17 right-to-erasure. The architecture has good mitigations (attest-by-default, withdrawal meta-attestations, host policy de-listing, content-vs-commitment separation, subject-objection meta-attestations), but they need to be articulated as a coherent doc. The doc is useful well beyond DPG — standards-track engagement (SCITT, W3C), academic adoption, partner agreements.
 
-**Indicator 9 — do no harm by design (#63 + proposed-issue 009).** The OES harms section (#63, existing) needs expansion to incorporate the attest/publish framing introduced by the pilot-integration arc. The subject-of-claim natural-person ontology (proposed-issue 009) is the highest-leverage single defense against the doxxing failure mode and should land as a follow-on issue after typed attestations (#70).
+**Indicator 9 — do no harm by design (#63 ✅ delivered + proposed-issue 009).** The harms half is **delivered**: [`docs/trust-and-evidence.md`](../trust-and-evidence.md) is the reference-implementation threat model, covering what a signature establishes by capture method, by field, by visibility state, and by signing tier, and stating the attest/publish framing the pilot-integration arc introduced. (This bullet previously referred to "the OES harms section" — prior-era naming; the Open Evidence Standard was consolidated into the Typed Standards Specification by [ADR-0012](../adr/0012-typed-standards-consolidation.md), and the harms material now lives in the standalone document above alongside specification §10.1–§10.3.) The subject-of-claim natural-person ontology (proposed-issue 009) remains open — it is the highest-leverage single defense against the doxxing failure mode and should land as a follow-on issue after typed attestations (#70).
 
 ## Filed issues
 
@@ -49,14 +49,14 @@ Related proposed-issue (will be promoted when its dependency lands):
 Coordination with existing issues:
 
 - **#50** (Democratic Capabilities Gap Map submission) — sibling submission effort; the two share preparation work.
-- **#63** (threat model documentation by capture method) — supports Indicator 9; expanded per the cross-reference comment with the pilot-integration arc context.
+- **#63** (threat model documentation by capture method) — supports Indicator 9. ✅ **Delivered**: [`docs/trust-and-evidence.md`](../trust-and-evidence.md), carrying the pilot-integration arc's attest/publish framing.
 - **#67** (standards adoption review) — supports Indicator 8 evidence.
 
 ## Sequencing
 
 **Phase 1 — substantive writing (1-3 weeks, parallel with the integration arc):**
 - #74 (privacy doc) — the longest-lead substantive piece.
-- #63 expansion (harms section incorporates attest/publish framing).
+- ~~#63 expansion (harms section incorporates attest/publish framing).~~ ✅ **Done** — [`docs/trust-and-evidence.md`](../trust-and-evidence.md).
 
 **Phase 2 — mechanical work (1 week, interleave with anything):**
 - #75 (licensing audit + declarations).
@@ -77,7 +77,7 @@ Work done for the pilot integration also moves DPG readiness forward. Explicit o
 
 | DPG item | Integration-arc equivalent | Notes |
 |----------|----------------------------|-------|
-| Harms section (Indicator 9) | Existing #63 (expanded per cross-reference comment) | Same doc; one effort. |
+| Harms section (Indicator 9) | #63 ✅ delivered — [`docs/trust-and-evidence.md`](../trust-and-evidence.md) | Same doc; one effort. Complete. |
 | Natural-person ontology (Indicator 9) | Proposed-issue 009 (follow-on from #70) | Becomes a 5th issue eventually; serves both arcs. |
 | Subject-objection ops (Indicator 7) | #70 (typed attestation primitive) | Implementation overlap. |
 | Data portability (Indicator 6) | #69 bundle-export endpoint | Bundle export work serves both arcs. |
