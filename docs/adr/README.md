@@ -28,3 +28,5 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0022](0022-civic-typed-harness-packaging.md) | Civic-harness packaging — npm workspaces and the first package in the hub repo | Accepted (2026-08-01) |
 | [0023](0023-notebook-executor-driver.md) | Notebook executor as a driver interface — Vercel Sandbox default, local container-runner as the portable shape | Accepted (2026-08-05) |
 | [0024](0024-evidence-path-configuration.md) | Configuration that reaches signed output is absent-or-error, never defaulted | Accepted (2026-08-12) |
+| [0025](0025-vocabulary-settlement-evidence-excision.md) | "Evidence" retired from the artifact and infrastructure surface, retained as the epistemic QEC role | Accepted (2026-08-19) |
+| [0026](0026-jsonl-readback-capture-label-vs-mechanism.md) | The `claude-code-jsonl-readback` capture method labels a readback no shipped tool performs or verifies | Proposed (2026-08-22) |

@@ -19,7 +19,7 @@ When contributing code, docs, commit messages, issue bodies, PR descriptions, or
 Run `./scripts/setup.sh` to install dependencies and verify configuration.
 
 **When the setup script reports missing API keys**, you MUST:
-1. Explain the key requirements accurately: Data Commons won't work at all without its key; Socrata works without one too, just at a lower rate limit
+1. Explain that the MCP tools require API keys to function (Data Commons won't work at all, Socrata can't return data)
 2. Share the sign-up links from the script output for each missing key
 3. Tell the user to open the `.env` file in the project folder and paste their keys there — do NOT ask them to paste API keys into this chat
 4. Remind them that `.env` is a hidden file (Mac: Cmd+Shift+. in Finder; Windows: View > Show > Hidden items in File Explorer)
@@ -84,6 +84,12 @@ Canonical specifications and design decisions live in [`docs/architecture/`](doc
 
 ADRs in [`docs/adr/`](docs/adr/) record settled decisions; the architecture docs above describe the artifacts those decisions are about. ADRs cite the doctrine and specs by URL when their decisions involve a Xanadu-test gate.
 
+## Trust and evidence model
+
+**[`docs/trust-and-evidence.md`](docs/trust-and-evidence.md)** — the reference-implementation companion to the specification's protocol-level threat model (§10.1–§10.3, §9.2, §9.3, §8.6). Written for a non-specialist government reviewer. States what a signature on a record published by this codebase establishes — by capture method, by field, by visibility state, by signing tier — and what it does not. Cites the specification by section and asserts nothing normative.
+
+**Read it before changes that affect evidence-integrity claims, capture-method UI, or trust signaling on the detail page.** Any change in those areas either confirms a claim the document makes or falsifies one; if it falsifies one, the document is updated in the same change. Its measured `file:line` citations span three repositories and are anchored to stated commits, so a change to `publish.py`, the publish route, `trust-signal.ts`, or `verify-core` may move a citation even when it does not move a fact.
+
 ## Running Scripts
 
 ```bash
@@ -99,4 +105,4 @@ Bundled at `.claude/skills/publish-record/`. Publishes a completed civic-data an
 
 Renamed from `publish-evidence` by the 2026-08-19 vocabulary settlement (specification Appendix J, migration class *alias-and-deprecate*). `.claude/skills/publish-evidence/` remains as a permanent alias directory holding only a pointer — one `publish.py`, in the `publish-record` directory — so both invocations run byte-identical code.
 
-Invoke by saying something like "publish this as a record" (or the prior-era "publish this as evidence") after a Socrata or Data Commons MCP-backed analysis completes. Authentication is a saved bearer token from `publish.py --login` (scope `records:publish`; tokens carrying the prior-era `evidence:publish` are still accepted), with `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) as the legacy fallback. See [`docs/publish-record.md`](docs/publish-record.md) for the end-to-end walkthrough — the old path `docs/publish-evidence.md` is kept as a stub pointing there — and [`civic-ai-tools-website/docs/api/records-publish.md`](../civic-ai-tools-website/docs/api/records-publish.md) for the underlying POST contract.
+Invoke by saying something like "publish this as a record" (or the prior-era "publish this as evidence") after a Socrata or Data Commons MCP-backed analysis completes. Authentication is a saved bearer token from `publish.py --login` (scope `records:publish`; tokens carrying the prior-era `evidence:publish` are still accepted), with `CIVICAITOOLS_SESSION_TOKEN` (or `CIVICAITOOLS_SESSION_TOKEN_OP` 1Password reference) as the legacy fallback. See [`docs/publish-record.md`](docs/publish-record.md) for the end-to-end walkthrough — the old path `docs/publish-evidence.md` is kept as a stub pointing there — and [`civic-ai-tools-website/docs/api/records-publish.md`](../civic-ai-tools-website/docs/api/records-publish.md) for the underlying POST contract (the prior-era path `docs/api/evidence-publish.md` is a redirect stub). What a published record's signature does and does not establish is [`docs/trust-and-evidence.md`](docs/trust-and-evidence.md).
