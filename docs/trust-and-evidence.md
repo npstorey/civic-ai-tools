@@ -38,7 +38,7 @@ Here is the one sentence a security reviewer most needs:
 
 The specification says this in its own words: a package's signature attests that the package was published and has not been altered since; it does **not** attest that the content matches what was generated in the original session — "that property is structural and follows from the capture method" (§8.6, `:680`). §9.3 lists the same fact first among the things a verifier cannot determine (`:1415`). ADR-0003 (`:33`) is where the project first recorded it.
 
-`captureMethod` is the field that names which mechanism the publisher **says** stood between the model and the signature. It is inside the signed canonical JSON, so it cannot be silently re-described after the fact (§8.6, `:678`; §9.2 #11, `:1405`) — the claim is tamper-evident. It is still a claim: nothing in the publish path binds the label to the mechanism that actually produced the record, which is the subject of *The label is a self-assertion the server does not cross-check* below. Read the rest of this section with that qualification in force. What follows is what each labeled mechanism is, in this implementation, today.
+`captureMethod` is the field that names which mechanism the publisher **says** stood between the model and the signature. It is inside the signed canonical JSON, so it cannot be silently re-described after the fact (§8.6, `:678`; §9.2 #11, `:1405`) — the claim is tamper-evident. It is still a claim: nothing in the publish path binds the label to the mechanism that actually produced the record, which is the subject of *The label is a self-assertion the server does not cross-check* below. Every row of Table 1 sits under that qualification. What follows is what each labeled mechanism is, in this implementation, today.
 
 Two facts about the two shipped paths are load-bearing, and neither is obvious from the labels.
 
@@ -97,7 +97,7 @@ If you are comparing a record page against a downloaded bundle, expect the wordi
 
 ### One more thing the labels do not say
 
-For a record published before 2026-04-29, the detail page renders **no capture-method line at all** — `resolveCaptureMethodLabel` returns `null` for an absent value (`trust-signal.ts:513-514`) and the component omits the line (`src/components/evidence/EvidenceActions.tsx:176`, `:258`). Absence of the line means "this record predates the discipline," not "this record was captured somehow." Read it that way.
+For a record published before 2026-04-29, the detail page renders **no capture-method line at all** — `resolveCaptureMethodLabel` returns `null` for an absent value (`trust-signal.ts:513-514`) and the component omits the line (`src/components/evidence/EvidenceActions.tsx:176`, `:258`). Absence of the line means "this record predates the discipline," not "this record was captured somehow."
 
 ## Table 2 — what is captured verbatim, and what the publishing model wrote
 
@@ -284,9 +284,9 @@ So, to answer the question directly:
 - **What identifies the reviewer?** Their identity is inside the hashed payload — database user id, GitHub id, display name, and profile URL (`src/lib/evidence/expert-attestation.ts:85-88`) — so it is covered by the payload hash, but the hash is not itself signed or timestamped into anything retained.
 - **What does a review change on the record page?** For an expert attestation, nothing about the verification state: only the two machine kinds (`consistency`, `evaluation`) advance a record's verification status, and a human review is deliberately excluded from that state machine (`route.ts:209-215`).
 
-The last of those three is a property worth keeping: a named human vouching for an analysis does not move a platform-rendered verification indicator, which is exactly what *disclosure, not validation* requires. The first two are a gap between the specification's model and what ships. The specification already scopes the migration of pre-v0.1 attestation records to the new sub-type URIs as separate work (§8.12.2, `:1334`); that migration is also what would give a review a retained signature. Registered as [Q73](architecture/open-questions.md#q73--correctness-reviews-are-hashed-and-stored-but-their-signature-and-timestamp-are-discarded); no fix is asserted here.
+The last of those three is what *disclosure, not validation* requires: a named human vouching for an analysis does not move a platform-rendered verification indicator. The first two are a gap between the specification's model and what ships. The specification already scopes the migration of pre-v0.1 attestation records to the new sub-type URIs as separate work (§8.12.2, `:1334`); that migration is also what would give a review a retained signature. Registered as [Q73](architecture/open-questions.md#q73--correctness-reviews-are-hashed-and-stored-but-their-signature-and-timestamp-are-discarded); no fix is asserted here.
 
-**Until it lands, treat a correctness review on a record page as an attributed comment, not as a countersignature.**
+**Until it lands, what a record page carries beside an analysis is an attributed comment, not a countersignature.**
 
 For the full stance, see `civic-ai-tools-website/docs/design-principles.md` — *disclosure, not validation*.
 
@@ -300,7 +300,7 @@ Signing keys rotate per the runbook at `civic-ai-tools-website/docs/key-rotation
 
 **A compromised key is a different case, and the specification declines it as a threat.** §10.2 (`:1458`) states it plainly: a signing key disclosed to an adversary can produce valid signatures under that `kid` until the registry entry is moved to `revoked` status. The registry's `revoked` status is the mitigation the specification names (§8.3.3), and check #5 reports it — but pre-revocation signatures may have been produced by the legitimate signer or by the adversary, and, in the specification's words, "the distinction lives in the timestamp's relationship to the disclosure event — a forensic question, not a protocol guarantee." An offline verifier working from a bundle generated before the revocation cannot see it at all (§9.4, `:1433`).
 
-This document does not state a compromise-response policy, because none is recorded; what is recorded is the revocation mechanism and the boundary around it. A reviewer evaluating this system should treat operator key custody (ADR-0020) as the control that matters here, not the rotation runbook.
+This document does not state a compromise-response policy, because none is recorded; what is recorded is the revocation mechanism and the boundary around it. The control that bears on a compromised key is operator key custody ([ADR-0020](adr/0020-instance-key-custody.md)) rather than the rotation runbook, which governs planned retirement.
 
 ## Contract stability
 
