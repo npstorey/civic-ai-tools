@@ -218,7 +218,9 @@ Under ADR-0003 `:56`, a capture method with demonstrably different trust propert
 
 ## How to verify a record
 
-Four independent mechanisms, each checkable without trusting civicaitools.org:
+**"Verifiable" has a specific, narrow meaning here.** With the package alone and a standard verification tool, anyone can confirm four things: that the package has not been altered since publication, that it was signed by a key listed in the published trust registry, that an independent public timestamp authority saw it at the claimed time, and that an independent transparency log recorded the signature. Those four — and, per everything above, not more.
+
+Four independent mechanisms carry them, each checkable without trusting civicaitools.org:
 
 - **Signature.** Ed25519**ph** over canonical JSON (§10.3, `:1465`), verifiable against the `kid` entry in the publisher's trust registry. The canonical location is `<publisher-origin>/.well-known/typed-publisher.json`; the prior-era `evidence-public-keys.json` path remains served as a permanent alias (ADR-0025 §D, ruling D2). Each publisher hosts their own registry at their own well-known path — there is no central key authority (§8.3.3; `src/lib/site-config.ts:364-387` derives both URLs per instance).
 - **Timestamp.** An RFC 3161 token from FreeTSA, verifiable against FreeTSA's published CA chain. A conformant offline verifier validates the full X.509 chain to a **pinned** FreeTSA root, whose SHA-256 fingerprint the specification records (§10.3, `:1466`).
