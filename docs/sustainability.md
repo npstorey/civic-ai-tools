@@ -40,7 +40,7 @@ Without adopting commitments that would require a team, funding could accelerate
 The succession *trigger* is committed in `ROADMAP.md` Section 3 (#7: no stealth deprecation; any known successor or fork linked). This section records *what a successor would need to hold* — the concrete assets behind the standard and the reference deployment:
 
 - **Domains.** `civicaitools.org` (live) and `typedstandards.org` (registration in flight); registrar accounts are maintainer-held.
-- **Registry signing keys.** The platform Ed25519 signing key (`EVIDENCE_SIGNING_KEY` / `EVIDENCE_KEY_ID`) and the trust-registry contents served at `/.well-known/typed-publisher.json`. Rotation runbook: `civic-ai-tools-website/docs/key-rotation.md`.
+- **Registry signing keys.** The platform Ed25519 signing key (`PUBLISHER_SIGNING_KEY` / `PUBLISHER_KEY_ID`; prior era: `EVIDENCE_SIGNING_KEY` / `EVIDENCE_KEY_ID`, still read as a fallback) and the trust-registry contents served at `/.well-known/typed-publisher.json`. Rotation runbook: `civic-ai-tools-website/docs/key-rotation.md`.
 - **The publisher index** reserved at `typedstandards.org` (indexing-only; spec §8.13).
 - **npm scope.** `@typedstandards` (the `verify-core` releases).
 - **Archival DOI.** A Zenodo DOI is deferred to spec v0.2 (ADR-0012); once minted it joins this list.

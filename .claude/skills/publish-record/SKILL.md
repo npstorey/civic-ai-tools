@@ -6,7 +6,7 @@ allowed-tools: Bash(python3 *), Read, Write
 
 # publish-record
 
-This skill turns the current Claude Code conversation's civic-data analysis into a signed record package on civicaitools.org. It wraps `POST /api/records`; the endpoint contract lives in `civic-ai-tools-website/docs/api/evidence-publish.md`.
+This skill turns the current Claude Code conversation's civic-data analysis into a signed record package on civicaitools.org (the default target — see "Publishing to a different instance" below). It wraps `POST /api/records`; the endpoint contract lives in `civic-ai-tools-website/docs/api/records-publish.md`.
 
 Renamed from `publish-evidence` by the 2026-08-19 vocabulary settlement (specification Appendix J: "evidence" is retired as the artifact/infrastructure name and retained only for the epistemic Question/Evidence/Claim role). **The old invocation still works** — `.claude/skills/publish-evidence/` remains as a permanent alias that routes here. There is one `publish.py`, in this directory; the alias never carries a copy.
 
@@ -65,7 +65,7 @@ Before posting, confirm these are all true. If any is missing, ask the user befo
    - **Preferred:** a saved bearer token at `~/.config/civic-ai-tools/credentials.json`. Confirm with `python3 .claude/skills/publish-record/publish.py --list-tokens`. If nothing is saved, tell the user to run `python3 .claude/skills/publish-record/publish.py --login` once — that starts a browser-based device-authorization flow and saves a 90-day token. The user can also revoke tokens anytime from the civicaitools.org dashboard. The flow requests the `records:publish` scope; a token minted before the settlement carries `evidence:publish`, which the server still accepts, so an existing saved token needs no re-login.
    - **Legacy fallback:** `CIVICAITOOLS_SESSION_TOKEN` or `CIVICAITOOLS_SESSION_TOKEN_OP` set in the user's shell. Check presence without revealing the value: `[ -n "$CIVICAITOOLS_SESSION_TOKEN" ] || [ -n "$CIVICAITOOLS_SESSION_TOKEN_OP" ] && echo set || echo missing`. Never `echo`, `cat`, or otherwise print the value itself.
 
-   If neither path is configured, prefer pointing the user at `--login` over the cookie path — it's the cleaner long-term story. See `civic-ai-tools-website/docs/api/evidence-publish.md#authentication`.
+   If neither path is configured, prefer pointing the user at `--login` over the cookie path — it's the cleaner long-term story. See `civic-ai-tools-website/docs/api/records-publish.md#authentication`.
 
 2. **The analysis actually ran.** There must be at least one Socrata or Data Commons MCP tool call earlier in this conversation with a real result. Do not publish hypothetical or placeholder analyses.
 
@@ -120,13 +120,13 @@ Fields marked **verbatim from JSONL** must be filled by reading the session JSON
 |------|--------|
 | `title` | Inherently model-authored (per ADR-0003). A short, specific name for the analysis (≤80 chars, shown on the record detail page and in the URL slug). Derive from the user's original question. Ask the user to confirm. |
 | `summary` | Inherently model-authored. 2–4 sentences for a non-technical reader. Neutral third-person voice (never "I" or "we"). Describe what was analyzed, what the key finding was, and any caveats or partial results. |
-| `captureMode` | `"single_final_turn"` (default) or `"full_conversation"`. See "Capture modes" above. |
-| `captureMethod` | **Always** `"claude-code-jsonl-readback"` for skill-published packages. The server enum also accepts `"chat-flow-stream"` (website chat path) and `"claude-code-self-report"` (legacy paraphrase path, deprecated 2026-04-28); the skill never sets those. |
+| `captureMode` | `"single_final_turn"` (default) or `"full_conversation"`. See "Capture modes" above. Not the same axis as `captureMethod` below — similar names, deliberately distinct fields, not a naming collision: `captureMode` is single-turn vs. full-conversation *scope* (how much of the session gets captured). |
+| `captureMethod` | **Always** `"claude-code-jsonl-readback"` for skill-published packages. The server enum also accepts `"chat-flow-stream"` (website chat path) and `"claude-code-self-report"` (legacy paraphrase path, deprecated 2026-04-28); the skill never sets those. Orthogonal to `captureMode` above — `captureMethod` is *how* the content was captured (ADR-0003), unrelated to capture scope. |
 | `prompt` | **Verbatim from JSONL.** Single-turn: the genuine user `message.content` from the user record that prompted the analysis, byte-for-byte. Multi-turn: the first genuine user message in the captured window, OR a later semantic analysis question if the first turn is setup/clarification. Never the "publish this" follow-up. Skip records with `isMeta: true` and slash-command output. |
 | `output` | **Verbatim from JSONL.** Single-turn: the final assistant invocation's `text`-typed content blocks, concatenated in document order. Multi-turn: a rendered markdown transcript built from `turns[]` with `### Turn N — User` / `### Turn N — Assistant` headers (`turns[].index`, `turns[].role`). Both shapes preserve tables, citations, and caveats exactly as the model emitted them. |
 | `turns[]` | **Verbatim from JSONL.** Required when `captureMode` is `full_conversation`. Array of `{ index, role, content }` objects, strictly increasing `index`. Roles are `user`, `assistant`, or `tool`. `content` is the concatenated `text`-typed blocks for assistant turns or the user's `message.content` string for user turns — never thinking, never tool_use markup, never paraphrase. See "Turn roles" above. |
 | `sessionBoundary` | Optional, full_conversation only. `"first_civic_tool_call"` (default) or `"session_start"`. Confirm with the user before setting to `session_start`. |
-| `model` | The model slug from the session's assistant records (`message.model`). For Claude Opus 4.7 that's `anthropic/claude-opus-4-7`. Use the exact slug, do not normalize. |
+| `model` | **Required** (the script exits 2 if absent or blank; civic-ai-tools#129). The model slug from the session's assistant records (`message.model`). For Claude Opus 4.7 that's `anthropic/claude-opus-4-7`. Use the exact slug, do not normalize. |
 | `portal` | `data.cityofnewyork.us` if any Socrata tool calls used NYC Open Data; otherwise the portal used; otherwise `n/a` for Data-Commons-only analyses. |
 | `promptVisibility` | `full_text` by default — the prompt goes into the package in the clear. Switch to `hash_only` only if the user explicitly asks to omit their prompt text. |
 | `visibility` | `"public"` by default — the skill is invoked as "publish this", so a public, listed record is the expected outcome. Set `"sealed"` (or pass `--visibility sealed`) when the user asks to sign/attest WITHOUT making the content public: the package is signed, timestamped, and registered on the transparency log, but the content stays private to the user and the record is unlisted; they can publish it later from the civicaitools.org dashboard, where an adversarial evaluation runs by default. If the user says things like "sign this but don't publish it yet," "seal this," or "keep it private for now," use `sealed`. (Legacy `--visibility published`/`committed` are still accepted and mapped automatically to `public`/`sealed` per ADR-0016 §A — prefer the new spelling for anything you write.) |
@@ -160,7 +160,7 @@ Before posting, capture the civic-ai-tools repo's composed skill text and includ
 
 In the same payload, set `skillMcpServerUrl` to `"local-stdio (civic-ai-tools/.mcp.json)"` to record that the MCP servers were loaded locally by Claude Code, not fetched over HTTP. Always populate both fields together — they describe the same capture.
 
-**Path resolution.** When cwd is the civic-ai-tools repo root, the three relative paths resolve directly. When cwd is the `civic-ai-tools-project/` workspace root (typical), they resolve through the `civic-ai-tools/` symlink. From any other cwd (a different repo, or a workspace where civic-ai-tools is not present), the paths won't resolve — proceed under the opt-out path below.
+**Path resolution.** When cwd is the civic-ai-tools repo root, the three relative paths resolve directly. When cwd is a workspace root set up with a `civic-ai-tools/` symlink (the maintainer's own `civic-ai-tools-project/` workspace layout — one convention, not a requirement), they resolve through that symlink. From any other cwd (a different repo, or a workspace where civic-ai-tools is not present), the paths won't resolve — proceed under the opt-out path below.
 
 **Opt-out conditions (any one is sufficient).** Omit both `skillText` and `skillMcpServerUrl`:
 
@@ -190,6 +190,8 @@ Fields that can become a BlobRef: `output`, `trace`, `skillMetadataOverride.skil
 The threshold can be overridden with `--max-inline-bytes N` (e.g., force-inline with a very high number for debugging, or force-blob with a low number to exercise the upload path). Don't change it without reason — 512 KB is tuned to keep request bodies comfortably under the cap while avoiding blob overhead for small content.
 
 ## How to invoke the script
+
+**Publishing to a different instance.** This skill defaults to civicaitools.org but is not tied to it. If the user asks to publish somewhere else ("publish to my own instance", "point this at <url>"), pass `--base-url <their-origin>` on every invocation below (both `--dry-run` and the live publish), or set `CIVICAITOOLS_BASE_URL=<their-origin>` for the whole session so you don't have to repeat the flag. Saved bearer tokens are keyed per base URL — if the user hasn't already run `--login` against that origin, they'll need to before you can publish there. See [`docs/publish-record.md`](../../../docs/publish-record.md)'s "Publishing to your own instance" section for the full walkthrough.
 
 1. Write the assembled payload to a temporary JSON file outside the repo (e.g., `/tmp/publish-record-<timestamp>.json`) so it never gets accidentally committed.
 2. Preview it first:

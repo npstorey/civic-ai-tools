@@ -6,6 +6,8 @@ The `publish-record` skill lets a Claude Code session post a completed civic-dat
 
 The skill lives at `.claude/skills/publish-record/` in this repo. It is auto-discovered by Claude Code when you open civic-ai-tools as the working directory, under either name.
 
+**Substitute your own origin.** This guide describes the reference deployment, civicaitools.org — the skill's default publish target. Every `civicaitools.org` host below that the skill actually calls (the sign-in / device-flow destination, the dashboard, and above all the `POST /api/records` publish target itself, including every sample record URL and JSON output shown in the examples further down) is that deployment's concrete example. Pass `--base-url <your-origin>` to `publish.py`, or set `CIVICAITOOLS_BASE_URL=<your-origin>` in the environment, to point the skill at any other instance running this skill's server-side contract instead — see "Publishing to your own instance" below. Where the text instead states a fact about what civicaitools.org itself does or requires (e.g. "sign in once at civicaitools.org" as an instruction for using the reference deployment specifically), that's describing that deployment's own behavior, not a host the reader must substitute.
+
 ## What you need
 
 - **Claude Code**, pointing at this repo as cwd.
@@ -31,7 +33,7 @@ The script:
 Useful follow-ups:
 
 - `publish.py --list-tokens` — show saved tokens (display-safe: prefix + scope + expiry only, never the full value).
-- `publish.py --logout` — delete the token for the current base URL from the credentials file. This does **not** revoke the token server-side; visit the [Dashboard → Tokens tab](https://www.civicaitools.org/dashboard) to revoke.
+- `publish.py --logout` — delete the token for the current base URL from the credentials file. This does **not** revoke the token server-side; visit the [Dashboard → Tokens tab](https://civicaitools.org/dashboard) to revoke.
 - Visit the same Dashboard tab anytime to see active tokens, last-used timestamps, and a Revoke button per token.
 
 Tokens are valid for 90 days. When one expires or you revoke it, re-run `--login` to get a fresh token.
@@ -59,7 +61,7 @@ The session token expires — when you see `401 Unauthorized`, either re-copy th
 
 </details>
 
-Full authentication contract: [`civic-ai-tools-website/docs/api/evidence-publish.md#authentication`](../../civic-ai-tools-website/docs/api/evidence-publish.md#authentication).
+Full authentication contract: [`civic-ai-tools-website/docs/api/records-publish.md#authentication`](../../civic-ai-tools-website/docs/api/records-publish.md#authentication).
 
 ## Invoking the skill
 
@@ -100,7 +102,7 @@ If the dry-run scan flags a field, the fix is to re-read it from the JSONL — n
 
 Published packages by default include the civic-ai-tools repo's composed skill text — the three files in `docs/skills/` (`base.md`, `local.md`, `data-commons.md`) concatenated and shipped in the payload as `skillText`, with `skillMcpServerUrl` set to `"local-stdio (civic-ai-tools/.mcp.json)"`. This records the guidance that shaped the analysis alongside the analysis itself, so a reader of the record page can see not just what Claude said but the framing it was operating under. The website chat flow does the equivalent capture by fetching the same guidance from the MCP server's prompt endpoint, so packages from both publish paths carry comparable provenance.
 
-The skill resolves the three files relative to the current cwd: directly when cwd is the civic-ai-tools repo, and via the `civic-ai-tools/` symlink when cwd is the workspace root. If the files aren't on disk (cwd is a different repo or a workspace that doesn't carry civic-ai-tools), or you say something like "publish without skill text" / "skip skill capture", the skill omits both fields and surfaces a one-line note in the dry-run summary (e.g., "no skillText — files not on disk") so you can either correct the cwd or reconfirm the opt-out before the live publish.
+The skill resolves the three files relative to the current cwd: directly when cwd is the civic-ai-tools repo, and via a `civic-ai-tools/` symlink when cwd is a workspace root set up with one (the maintainer's own workspace layout — one convention, not a requirement). If the files aren't on disk (cwd is a different repo or a workspace that doesn't carry civic-ai-tools), or you say something like "publish without skill text" / "skip skill capture", the skill omits both fields and surfaces a one-line note in the dry-run summary (e.g., "no skillText — files not on disk") so you can either correct the cwd or reconfirm the opt-out before the live publish.
 
 ## Capture modes: single turn vs. full conversation
 
@@ -180,11 +182,11 @@ python3 civic-ai-tools/.claude/skills/publish-record/publish.py \
     --dry-run   # optional: preview without POSTing
 ```
 
-The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and optional `captureMode`, `captureMethod`, `visibility`, `turns[]`, `sessionBoundary`, `model`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`. `captureMethod` defaults to `"claude-code-jsonl-readback"` and is the only value the skill should set; the wider enum (`chat-flow-stream`, `claude-code-self-report`) is reachable for completeness only.
+The payload schema is documented at the top of `publish.py` and in the `SKILL.md` file alongside it. In short, required: `title`, `summary`, `prompt`, `output`, `toolCalls[]` with `name` + `source` + `args` per call, and `model` — the script exits 2 if any is missing, and `model` alone gets a stricter present-but-blank check too (an empty `"model": ""` would otherwise assert an unsupplied fact inside a signed record; civic-ai-tools#129). Optional: `captureMode`, `captureMethod`, `visibility`, `turns[]`, `sessionBoundary`, `portal`, `tokenUsage`, `duration_ms`, `extensions`, `skillText`, `skillMcpServerUrl`. `captureMethod` defaults to `"claude-code-jsonl-readback"` and is the only value the skill should set; the wider enum (`chat-flow-stream`, `claude-code-self-report`) is reachable for completeness only.
 
 ### Sealed visibility (attest without publishing)
 
-By default the skill publishes — content public, listed in the registry. Pass `--visibility sealed` (or set `"visibility": "sealed"` in the payload) to **seal instead**: the package is signed, RFC 3161-timestamped, and registered on the Sigstore Rekor transparency log, but the content stays private to you, the record is unlisted, and the content blob lives at a non-derivable key. The script output then carries `"visibility": "sealed"`, omits the blob hint, and points at the public commitment endpoint (`/api/records/<slug>/commitment`) — the proofs anyone can verify without the content. Publish later from your [dashboard](https://www.civicaitools.org/dashboard), where the promotion step runs an adversarial evaluation by default (toggleable). Per the lifecycle model (civic-ai-tools#71, spec §8.10; ADR-0016 §A): every claim is attested; publication is opt-in and irreversible.
+By default the skill publishes — content public, listed in the registry. Pass `--visibility sealed` (or set `"visibility": "sealed"` in the payload) to **seal instead**: the package is signed, RFC 3161-timestamped, and registered on the Sigstore Rekor transparency log, but the content stays private to you, the record is unlisted, and the content blob lives at a non-derivable key. The script output then carries `"visibility": "sealed"`, omits the blob hint, and points at the public commitment endpoint (`/api/records/<slug>/commitment`) — the proofs anyone can verify without the content. Publish later from your [dashboard](https://civicaitools.org/dashboard), where the promotion step runs an adversarial evaluation by default (toggleable). Per the lifecycle model (civic-ai-tools#71, spec §8.10; ADR-0016 §A): every claim is attested; publication is opt-in and irreversible.
 
 Legacy `--visibility committed`/`published` values (and `"visibility": "committed"`/`"published"` in the payload) are still accepted indefinitely and mapped automatically to `sealed`/`public` — the script prints a deprecation note on stderr when it substitutes one. Prefer the new spelling for anything you write; the old one keeps working for already-shipped payloads and older callers.
 
@@ -193,8 +195,28 @@ When publishing without a Claude conversation in the loop, you are responsible f
 CLI flags worth knowing:
 
 - `--mode single_final_turn|full_conversation` — override the payload's `captureMode` without editing the file.
+- `--base-url <url>` (or `CIVICAITOOLS_BASE_URL`) — override the publish target. Defaults to `https://civicaitools.org`. See "Publishing to your own instance" below.
+- `--blob-host <host>` (or `CIVICAITOOLS_BLOB_HOST`) — escape hatch only, for the target instance's public blob-store host (e.g. `<store>.public.blob.vercel-storage.com`) used to build the `blobHint` in the result. Not needed in the normal flow: the host is normally read from the target instance's own commitment response. It does **not** affect the actual upload target — that's derived entirely from the upload-token grant response, regardless of which storage driver the target instance runs.
 - `--max-inline-bytes N` — per-field inline threshold (default 524288). Fields above this threshold upload to Vercel Blob via `/api/blob/upload-token` and are referenced by SHA-256 hash in the record package.
 - `--dry-run` — validate the payload, run the negative pattern scan, print a redacted preview, and exit without POSTing or uploading. Useful for debugging payload shape and for catching accidental paraphrase before publication.
+
+## Publishing to your own instance
+
+This skill is not reference-deployment-only. `publish.py` publishes to whatever `--base-url` (or `CIVICAITOOLS_BASE_URL`) names, as long as that instance runs this skill's server-side contract — the `POST /api/records` route and the auth, blob-upload, and commitment endpoints it depends on (documented in [`civic-ai-tools-website/docs/api/records-publish.md`](../../civic-ai-tools-website/docs/api/records-publish.md)). Everywhere else in this guide, `civicaitools.org` is the reference deployment's default, not a hardcoded requirement.
+
+```bash
+python3 civic-ai-tools/.claude/skills/publish-record/publish.py \
+    --base-url https://your-instance.example \
+    --payload /path/to/payload.json
+```
+
+or, for the whole session:
+
+```bash
+export CIVICAITOOLS_BASE_URL=https://your-instance.example
+```
+
+Saved bearer tokens are keyed per base URL (`--login` against one instance doesn't authenticate you against another), so run `publish.py --login --base-url https://your-instance.example` once per instance you publish to. `--blob-host` is a separate, rarely-needed escape hatch — see the flag list above — not part of the normal cross-instance setup.
 
 ## Troubleshooting
 
