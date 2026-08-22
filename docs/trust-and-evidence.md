@@ -74,7 +74,7 @@ The specification's threat model calls this class **pre-signing fabrication** an
 
 **This is a measured gap in the reference implementation, and it is registered.** The publish route validates `captureMethod` against the Producer Profile's vocabulary and nothing else (`civic-ai-tools-website/src/app/api/evidence/route.ts:231-240`); it never checks the value against the authentication path the request arrived on (`:134-147`). The value is taken verbatim from the request body (`:282`). A client holding a valid bearer token can therefore submit `chat-flow-stream` on a record the chat flow never produced, and the vocabulary check will pass. On the skill side the same holds: `claude-code-jsonl-readback` is a default a payload may override (`publish.py:122`, `:724-728`, `:1187`).
 
-Nothing in the envelope is wrong when this happens — the label is faithfully signed, and #11 and #15 both report exactly what they are specified to report. What is absent is any binding between the label and the mechanism. Registered as [Q70](architecture/open-questions.md) in the open-questions registry; no fix is asserted here.
+Nothing in the envelope is wrong when this happens — the label is faithfully signed, and #11 and #15 both report exactly what they are specified to report. What is absent is any binding between the label and the mechanism. Registered as [Q70](architecture/open-questions.md#q70--capturemethod-is-validated-against-the-profile-vocabulary-but-not-bound-to-the-path-that-produced-the-record) in the open-questions registry; no fix is asserted here.
 
 ### The reader-facing labels, verbatim
 
@@ -157,7 +157,7 @@ Check #1 is worth singling out because it is where a naive implementation would 
 - **#6** (`metadata.signingKeyId` consistency, `:1400`) is **absent in both** — zero occurrences of `signingKeyId` in `typedstandards/packages/verify-core/src/`, and zero in the reference implementation's `src/lib/evidence/verify.ts`.
 - **#13** (`nodeId` cross-check, `:1407`) **recomputes the value but does not perform the cross-check.** The envelope hash is recomputed and returned as `nodeId` (`verify-core/src/verify.ts:183-184`, populated at `:364`; `checks.ts:33` records that the recompute "drives both check #1 … and check #13"). What is not performed is comparing an attestation's `targetNodeId` against that recomputed value.
 
-The neutral verifier documents both as not surfaced as discrete status codes (`typedstandards/apps/web/src/lib/trust-signal.ts:697-704`). This is a statement about two environments, not about every verifier that might exist. Registered as [Q71](architecture/open-questions.md); no fix is asserted here.
+The neutral verifier documents both as not surfaced as discrete status codes (`typedstandards/apps/web/src/lib/trust-signal.ts:697-704`). This is a statement about two environments, not about every verifier that might exist. Registered as [Q71](architecture/open-questions.md#q71--92-conformance-vs-implementation-checks-6-and-13-in-the-measured-verifier-environments); no fix is asserted here.
 
 ## User-attested records are a legitimate trust shape
 
@@ -192,7 +192,7 @@ Two in-tree precedents show what a recorded result can look like. **Neither is o
 - The weaker one is §9.2 #9's BlobRef result, `blobRefsVerified: boolean | null` (`verify-core/src/verify.ts:203`), with four per-reference failure reasons (`blob-ref.ts:67-70`). Its `null` collapses **three** distinct states: no package available to inspect, no BlobRefs present, and never attempted (`verify.ts:304-309`).
 - The stronger one is the envelope-integrity tri-state already described above — `verified | altered | unavailable`, where `unavailable` carries a `reason` separating private-by-design from unfetchable. Its own source records why it replaced a boolean: the boolean "collapsed 'content unavailable' onto `false` — so a private (content-redacted) record read as tampered" (`verify.ts:88-90`).
 
-The question — what a verifier records when it resolves an external reference, and how "not attempted" is distinguished from "resolved-match" and "resolved-mismatch" — is registered as [Q69](architecture/open-questions.md) in the open-questions registry, with no answer asserted.
+The question — what a verifier records when it resolves an external reference, and how "not attempted" is distinguished from "resolved-match" and "resolved-mismatch" — is registered as [Q69](architecture/open-questions.md#q69--what-should-a-verifier-record-when-it-resolves-an-external-reference) in the open-questions registry, with no answer asserted.
 
 ## Higher-stakes paths and futures
 
