@@ -1,7 +1,6 @@
 ---
 Status: Doctrine
 Last updated: 2026-08-23
-Maintainer: [TK: leave as placeholder]
 ---
 
 # Chat type taxonomy
