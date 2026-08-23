@@ -1,82 +1,80 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (GitHub Copilot, Cursor, Claude Code, etc.) when working with this repository.
+The hub repo of a four-repo project: MCP configs and setup tooling for civic open data (NYC Open Data via Socrata, Google
+Data Commons), the Typed Standards Specification and its ADRs, the source of truth for shared skill guidance, and the
+`publish-record` skill. npm workspaces (one package, `packages/civic-typed-harness`) alongside Python examples. Cursor
+and Codex read this file natively; `CLAUDE.md` is a one-line bridge to it.
 
-## Project Overview
+## Boundaries
 
-A standalone example for querying civic data using MCP servers:
-- **Socrata MCP** - NYC Open Data (data.cityofnewyork.us) via Socrata API
-- **Data Commons MCP** - Google Data Commons for statistical data
+**This repo is public.** Strategic and relationship context — named external stakeholders, prospective collaborators,
+pre-meeting strategy, private outreach plans, named individuals' opinions — lives in local-only planning docs, never here.
+Use neutral phrasing ("an external stakeholder", "an upcoming demo") wherever output lands in this repo; if a prompt you
+received carries strategic context, scrub it first.
 
-## Setup
+**Never push to `main`,** and never bypass a git hook or the pre-push sensitivity guard. The guard scans the added lines
+of *each outgoing commit*, not the net diff, so a fix commit on top never clears it — rebuild the branch history.
 
-Run `./scripts/setup.sh` to install dependencies and verify configuration.
+**Secret hygiene** (incident: civic#174, the 2026-08-22 token exposure). Never `cat`, `head`, `tail`, or otherwise dump
+`.env*`, `auth.json`, `credentials*`, `*.pem`, `*.key`, or anything under `~/.ssh` or `~/.aws`. Two reads are permitted:
+a field-scoped read by key **name** (`grep '^VAR_NAME=' .env`, or `jq` over non-secret fields), and a command the tool
+itself exposes (`publish.py --list-tokens` prints prefix, scope, and expiry only). One prohibition: **never
+load-and-print a credentials file, even through a redaction filter** — a filter applied at the wrong nesting level prints
+the value it was written to hide. Publish tokens live in `~/.config/civic-ai-tools/credentials.json`; `--logout` is
+local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a user to paste them there, never into a chat.
 
-See [docs/setup.md](docs/setup.md) for detailed instructions.
+## Commands
 
-## MCP Configuration
+| Command | Healthy output |
+|---|---|
+| `npm ci` | `added 116 packages, and audited 118 packages` … `found 0 vulnerabilities`; leaves `packages/civic-typed-harness/dist` populated |
+| `npm run build` | the `tsc -p tsconfig.json` echo and nothing after it, exit 0 |
+| `npm test` | `# pass 125` / `# fail 0` (`node --test` TAP; includes the golden byte-compat suite) |
+| `npm run typecheck` | no output, exit 0 |
+| `npm run lint` | no output, exit 0 |
+| `npm run check:budgets` | `Dependency-budget check passed.` — twin `check:budgets:self-test` → `# pass 9` / `# fail 0` |
+| `npm run check:spec-frontmatter` | `Spec-frontmatter check passed.` — twin `check:spec-frontmatter:self-test` → `# pass 11` / `# fail 0` |
+| `npm run check:skill-drift` | `Skill-drift check passed — every embedded copy matches its source of truth.` — twin `check:skill-drift:self-test` → `# pass 29` / `# fail 0` |
+| `python3 .claude/skills/publish-record/test_publish.py` | `Ran 73 tests` … `OK` |
 
-| Tool | Config File |
-|------|-------------|
-| Claude Code CLI | `.mcp.json` |
-| Cursor IDE | `.cursor/mcp.json` |
-| VS Code / Copilot | `.vscode/mcp.json` |
+`.github/workflows/ci.yml` is the only workflow and runs exactly these, in this order. It is **credential-free by
+construction** — never add a `secrets.` reference or placeholder-credential `env:` block. `npm ci` before believing red.
 
-## Socrata MCP Guidance
+## MCP configuration
 
-**For detailed query patterns, SoQL syntax, and domain-specific workarounds, read [`docs/opengov-skill.md`](docs/opengov-skill.md).**
+Copy the tracked `.example` to the real path (gitignored — it holds your keys), or let `./scripts/setup.sh` do it. Install detail: [`docs/setup.md`](docs/setup.md).
 
-Key points:
-- Always discover columns first with `SELECT * LIMIT 1` for unfamiliar datasets
-- Never hallucinate data - only report what queries return
-- Check query complexity before large analyses
-- NYC 311 dataset ID: `erm2-nwe9`
-- Restaurant Inspections: `43nn-pn8j`
-- Housing Violations: `wvxf-dwi5`
+| Tool | Tracked template | Real path |
+|---|---|---|
+| Claude Code CLI | `.mcp.json.example` | `.mcp.json` |
+| Cursor IDE | `.cursor/mcp.json.example` | `.cursor/mcp.json` |
+| VS Code / Copilot | `.vscode/mcp.json.example` | `.vscode/mcp.json` |
+| Codex CLI | `.codex/config.toml.example` | `.codex/config.toml` |
 
-## Data Commons DCIDs
+## Where the detail lives
 
-| City | DCID |
-|------|------|
-| NYC | `geoId/3651000` |
-| Los Angeles | `geoId/0644000` |
-| Chicago | `geoId/1714000` |
+- [`docs/trust-and-evidence.md`](docs/trust-and-evidence.md) — **read before any change touching evidence-integrity
+  claims, capture-method UI, or trust signalling.** It states what a signature on a record published by this codebase
+  establishes and what it does not; such a change either confirms a claim it makes or falsifies one, and a falsified
+  claim is fixed in the same change. Its measured `file:line` citations span three repos and can move without a fact moving.
+- [`docs/architecture/open-questions.md`](docs/architecture/open-questions.md) — the registry of unresolved decisions.
+- [`docs/skills/README.md`](docs/skills/README.md) — skill guidance is authored here and CI drift-checks the copies
+  socrata-mcp-server embeds. [`docs/datasets.md`](docs/datasets.md) is the curated Socrata catalogue and
+  [`docs/skills/data-commons.md`](docs/skills/data-commons.md) the DCID shapes.
+- [`docs/publish-record.md`](docs/publish-record.md) — the `publish-record` skill end to end.
 
-Common variables: `Count_Person`, `Median_Income_Person`, `Count_HousingUnit`
+Path-scoped rules in `.claude/rules/` load on a matching file: architecture and ADR docs, skill docs, fixtures, examples.
 
-## Project Structure
+## Rules
 
-```
-civic-ai-tools/
-├── scripts/           # Infrastructure scripts (setup.sh, proxy-wrapper.js)
-├── examples/          # Demo scripts and sample analyses
-│   ├── nyc_311_dashboard.py    # Streamlit dashboard
-│   ├── mcp_demo.py             # Interactive MCP demo
-│   └── REAL_DATA_ANALYSIS.md   # Sample results
-├── docs/              # Documentation
-│   └── opengov-skill.md        # OpenGov query patterns
-└── visualizations/    # Generated charts and dashboards
-```
-
-## Running Examples
-
-```bash
-# Interactive MCP demo
-python examples/mcp_demo.py
-
-# Real data analysis
-python examples/real_data_analysis.py
-
-# Streamlit dashboard (311 data)
-streamlit run examples/nyc_311_dashboard.py --server.headless=true
-```
-
-## Best Practices for Agents
-
-1. **Data Queries**: Use the Socrata MCP tools to query NYC Open Data. Always check column names before building complex queries.
-
-2. **SSL Issues**: In corporate environments, you may need `verify=False` for requests due to proxy SSL interception.
-
-3. **Large Datasets**: NYC 311 has millions of records. Always use date filters and reasonable limits.
-
-4. **Visualization**: Follow Tufte's principles - maximize data-ink ratio, avoid chartjunk, use direct labels.
+- **`git commit -s` on every commit.** The `Signed-off-by` email must be the exact author email.
+  <!-- The DCO probot matches the trailer to the commit author literally. Live failure and fix on civic#156 and
+       website#260 (2026-08-17); unmerged branches had to be amended and force-pushed. -->
+- **Prove any install-path claim in a fresh `git clone`,** never an in-place `rm -rf node_modules`; npm 10.x runs
+  workspace `prepare` even under `--ignore-scripts`, and `prepare` has consumers outside CI.
+  <!-- civic#122: a failed install had already repopulated packages/*/dist, so the next in-place attempt passed on
+       leftovers. Removing typedstandards' prepare fixed CI and broke the Vercel preview build that relied on it. -->
+- **Never mint brand-role "evidence" on a new surface, and never "fix" a prior-era name.** Appendix J of the
+  specification is canonical; prior-era routes, scopes, wire keys, and the exempt-frozen list are permanent.
+  <!-- civic#160 (closed 2026-08-21): fixtures proving the fallback leg, exempt-frozen paths, and old-wire-key stubs
+       are load-bearing — "fixing" one breaks the settlement's guarantees. -->

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "sandbox": {
+    "_shakedown": "UNMEASURED — re-measure in a fresh top-level session booted with enabled:true. A top-level session reads sandbox settings only at startup, so writing this file mid-session does not activate the configured sandbox, and a nested `claude -p` cannot initialize one at all (EPERM binding its srt-mux socket). Anything observed by flipping the value inside a running session is that session's startup state, not this file's effect. Observed here on 2026-08-22 while attempting exactly that, recorded only as a datum for whoever re-measures: the session already ran with SANDBOX_RUNTIME=1 and denied a touch under $HOME, curl reached a NON-allowlisted domain fine (http_code=200), and Node's global fetch could not resolve DNS for any host — 'getaddrinfo ENOTFOUND' for an allowlisted domain and a non-allowlisted one alike — which is the state in which `npm run check:skill-drift` exits 1 on its raw.githubusercontent.com fetches. None of that is attributable to this file. To re-measure: start a fresh session in this repo with enabled:true, run `npm ci` and then the CI gates in AGENTS.md, and record the result here. Do not measure by flipping the setting inside a running session — enabling once is sticky for the rest of it. The allowlist and excludedCommands below are unmeasured for the same reason; check:skill-drift is the only gate that needs egress, and CI is the real gate for it either way.",
+    "enabled": false,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": ["gh *", "git *"],
+    "filesystem": {
+      "allowWrite": ["~/.npm"]
+    },
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "github.com",
+        "api.github.com",
+        "objects.githubusercontent.com",
+        "codeload.github.com",
+        "raw.githubusercontent.com",
+        "astral.sh",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "data.cityofnewyork.us",
+        "api.datacommons.org"
+      ]
+    }
+  }
+}

@@ -5,6 +5,7 @@
 .mcp.json
 .cursor/mcp.json
 .vscode/mcp.json
+.codex/config.toml
 
 # Environment and secrets
 .env

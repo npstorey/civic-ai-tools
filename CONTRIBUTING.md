@@ -24,6 +24,18 @@ Thank you for your interest in contributing! This project aims to make public da
 3. Create a branch for your changes
 4. Submit a pull request
 
+## If you use Claude Code
+
+Cloning this repo installs its checked-in Claude Code configuration: `.claude/settings.json` (a network
+allowlist and a sandbox block — no hooks in this repo today), the agent definitions in `.claude/agents/`
+(`impl` for one sprint phase, `cold-read` for a fresh-context review), the path-scoped rules in
+`.claude/rules/`, and the `publish-record` skill in `.claude/skills/`. `AGENTS.md` is the instruction file
+— Cursor and Codex read it natively, and `CLAUDE.md` is a one-line bridge to it, so all three tools get
+the same guidance.
+
+Those files are ordinary JSON and Markdown — read them before you trust them, the same as any other code
+you clone. Personal overrides belong in `.claude/settings.local.json`, which is gitignored.
+
 ## Guidelines
 
 - Keep changes focused — one fix or feature per PR
