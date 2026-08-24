@@ -93,7 +93,9 @@ export interface ProvenanceConfig {
 }
 
 /** The civicaitools.org reference deployment's values. Passed explicitly by
- *  the reference app — never applied as a default. */
+ *  the reference app — never applied as a default, and never spread into
+ *  another instance's config, which would assert infrastructure that
+ *  instance doesn't run. */
 export const CIVICAITOOLS_PROVENANCE_CONFIG: ProvenanceConfig = {
   platformAgent: CIVICAITOOLS_PLATFORM_AGENT,
   sourceRegistry: CIVIC_SOURCE_REGISTRY,
