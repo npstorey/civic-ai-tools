@@ -10,6 +10,7 @@ Point-in-time research documents. Each file carries its own status line; none of
 - [dataset-directory-evaluation.md](dataset-directory-evaluation.md) — Evaluation of the curated dataset directory's size (2026-03-10); retained as method-of-record, not a live decision.
 - [eval-queries.md](eval-queries.md) — Test queries and scoring rubric behind the model evaluation (2026-03-10); retained as method-of-record, not a live decision.
 - [landscape-analysis.md](landscape-analysis.md) — Map of projects and organizations at the AI + civic data intersection (last updated 2026-04-24).
+- [machine-readable-spec/](machine-readable-spec/) — The Typed Standards Specification re-expressed in two formalisms (SHACL shapes, SysML v2 models) plus a draft OWL ontology and architecture views; exploratory study bundle, not normative — the spec governs (produced 2026-06-24, reconciled 2026-08-18; see its README).
 - [model-evaluation-results.md](model-evaluation-results.md) — Point-in-time snapshot of the 2026-03-10 model evaluation run; read for methodology and failure taxonomy, not for a current ranking.
 - [odp-mcp-analysis.md](odp-mcp-analysis.md) — Pagination and result-limit patterns in socrata/odp-mcp; research, not a decision (March 2026).
 - [skill-routing-architectural-shapes.md](skill-routing-architectural-shapes.md) — Design space for dynamic skill-guidance routing across multiple MCP sources; research, not a decision (April 2026).

@@ -1,0 +1,218 @@
+# Architecture views — Needs, Functional, Logical
+
+Status: exploratory sketch (research surface, not a decided spec). Three arch-framework-style
+views of the repository and its immediate ecosystem, grounded in the README,
+`docs/architecture/end-state-vision.md`, and the ADR corpus. Produced 2026-06-24;
+reconciled 2026-08-18 against the spec's v0.1.4 revision and the ADR corpus through
+ADR-0024 (see the reconciliation notes under §3).
+
+## 1. Needs architecture — who needs what, and why
+
+```mermaid
+flowchart LR
+    subgraph Stakeholders
+        CT["Civic technologists,<br/>journalists, students"]
+        GOV["Government workers /<br/>data publishers"]
+        VER["Downstream verifiers<br/>(readers of AI analyses)"]
+    end
+
+    N1["N1: Query public civic data<br/>in plain English, no coding"]
+    N2["N2: Trust AI-mediated analysis —<br/>inspectable, reproducible, verifiable"]
+    N3["N3: Durable, citable evidence<br/>(timestamped, archived)"]
+    N4["N4: Interoperability — open standards,<br/>not a proprietary silo"]
+
+    CT --> N1 & N2
+    GOV --> N2 & N4
+    VER --> N2 & N3
+```
+
+## 2. Functional architecture — what the system does
+
+```mermaid
+flowchart LR
+    F1["F1: Discover & query<br/>civic datasets<br/>(NYC Open Data, Data Commons)"]
+    F2["F2: Analyze & visualize<br/>via AI assistant"]
+    F3["F3: Package analysis as<br/>signed evidence<br/>(hash, sign, timestamp)"]
+    F4["F4: Publish to<br/>evidence registry"]
+    F5["F5: Verify evidence<br/>(signature, timestamp,<br/>transparency log)"]
+    F6["F6: Govern the standard<br/>(spec, ADRs, open questions)"]
+
+    F1 --> F2 --> F3 --> F4 --> F5
+    F6 -.constrains.-> F3 & F4 & F5
+```
+
+## 3. Logical architecture — what components realize it (this repo highlighted)
+
+```mermaid
+flowchart TB
+    subgraph Clients["AI clients"]
+        CC["Claude Code / Copilot / Cursor"]
+    end
+
+    subgraph ThisRepo["civic-ai-tools (this repo — npm workspace)"]
+        CFG["MCP configs<br/>.mcp.json, .cursor, .codex"]:::thisRepo
+        SKILL["publish-evidence skill<br/>+ opengov skill docs"]:::thisRepo
+        HARNESS["@typedstandards/civic-typed-harness<br/>packages/civic-typed-harness:<br/>format-extension + capture + rubric"]:::thisRepo
+        SPEC["Typed Standards Spec<br/>ADRs, open-questions registry,<br/>doctrine docs"]:::thisRepo
+    end
+
+    subgraph Servers["MCP servers"]
+        SOC["socrata-mcp-server<br/>→ NYC Open Data"]
+        DC["Data Commons MCP<br/>→ Google Data Commons"]
+    end
+
+    subgraph Ecosystem["Companion components"]
+        WEB["civic-ai-tools-website<br/>reference application: evidence registry<br/>+ publish API (instance-deployable;<br/>DB / BLOB / EXECUTOR driver seams)"]
+        subgraph TSRepo["typedstandards monorepo + typedstandards.org"]
+            PC["@typedstandards/produce-core"]
+            VC["@typedstandards/verify-core<br/>+ client-side verifier"]
+        end
+        TRUST["Sigstore Rekor + RFC 3161 TSA<br/>(signing / timestamp infra)"]
+    end
+
+    CC --> CFG --> SOC & DC
+    CC --> SKILL --> WEB
+    WEB --> TRUST
+    HARNESS -- "depends on —<br/>the format/domain line" --> PC
+    PC -- "depends on" --> VC
+    VC -.verifies.-> WEB
+    SPEC -.specifies.-> WEB & PC & VC & HARNESS & SKILL
+
+    classDef thisRepo fill:#1f6feb,stroke:#0d419d,color:#ffffff
+    style ThisRepo fill:#dbeafe,stroke:#1f6feb,color:#0d419d
+```
+
+Reconciliation notes (2026-08-18). When this view was produced (2026-06-24) the repo
+carried no code; the topology above now reflects the ADR-0019–0024 delta:
+
+- **This repo is an npm workspace** shipping `@typedstandards/civic-typed-harness`
+  (`packages/civic-typed-harness`; ADR-0022) — the DOMAIN side of ADR-0021's
+  format/domain line, held in two module groups plus a small third (format-extension
+  `src/format/`, capture `src/capture/`, and the adversarial rubric core — ADR-0022 §C's
+  boundary, reserved for a possible future split). Whether "harness" extends
+  further, to an experience-layer composition artifact (a guidance manifest), is open
+  as Q65.
+- **The typedstandards repo publishes two cores**: `@typedstandards/verify-core` and,
+  since 2026-08-01, `@typedstandards/produce-core` (ADR-0021; Q59 resolved via its
+  option (a)). The producer/verifier stack is civic-typed-harness → produce-core →
+  verify-core: the format/domain line runs between the harness and produce-core ("the
+  harness derives, the core assembles"), and produce-core depends on verify-core so
+  producer and verifier share one canonicalization/hash chain by construction.
+- **The reference application is instance-first** (ADR-0019, refined by ADR-0020 —
+  Q56's instance case, resolved; the spoke case stays open): open-source,
+  demo-hostable, no hosted service; each instance is its own publisher, with
+  per-instance Ed25519 keys and a per-instance trust registry at its own well-known
+  path, plus an intentional unsigned dev tier — a signing status (`unsigned` →
+  `signed`) orthogonal to visibility, under which an unsigned package can reach
+  neither `sealed` nor `public`. Its portability seams are env-selected driver pairs —
+  `DB_DRIVER`, `BLOB_DRIVER`, `EXECUTOR_DRIVER` (ADR-0023) — and its evidence-path
+  configuration is absent-or-error, never defaulted (ADR-0024; the harness's
+  identity-bearing config became required parameters in harness 0.2.0). Instances ship
+  only the app surfaces; the marketing group is the reference deployment's own
+  (extraction deferred, Q68).
+- **Two adoption layers** (ADR-0019 Decision 6): the forkable/instance-deployable
+  application and the importable packages. N4's open-standards interop is served by
+  both — governance (F6) plus format compatibility resting on a pinned dependency
+  rather than discipline (ADR-0021).
+
+## Cross-layer traceability
+
+Hierarchical trace from needs through functions to the logical components that realize
+them. Solid edge = primary realization, dotted edge = supporting. Blue nodes live in
+this repo.
+
+```mermaid
+flowchart LR
+    subgraph Needs
+        N1["N1 plain-English<br/>data access"]
+        N2["N2 trustworthy<br/>AI analysis"]
+        N3["N3 durable, citable<br/>evidence"]
+        N4["N4 open-standards<br/>interop"]
+    end
+
+    subgraph Functions
+        F1["F1 query"]
+        F2["F2 analyze"]
+        F3["F3 package"]
+        F4["F4 publish"]
+        F5["F5 verify"]
+        F6["F6 govern"]
+    end
+
+    subgraph Components["Logical components"]
+        CFG["MCP configs"]:::thisRepo
+        SOC["socrata-mcp-server /<br/>Data Commons MCP"]
+        SKILL["publish-evidence skill<br/>+ opengov skill docs"]:::thisRepo
+        HARNESS["civic-typed-harness"]:::thisRepo
+        PC["produce-core<br/>(typedstandards monorepo)"]
+        WEB["evidence registry<br/>(civic-ai-tools-website)"]
+        TS["verify-core +<br/>typedstandards.org verifier"]
+        TRUST["Rekor + RFC 3161 TSA"]
+        SPEC["Typed Standards Spec,<br/>ADRs, open-questions registry"]:::thisRepo
+    end
+
+    N1 --> F1
+    N1 --> F2
+    N2 --> F3
+    N2 --> F4
+    N2 --> F5
+    N2 -.-> F2
+    N2 -.-> F6
+    N3 --> F3
+    N3 --> F5
+    N3 -.-> F4
+    N4 --> F6
+    N4 -.-> F3
+    N4 -.-> F4
+    N4 -.-> F5
+
+    F1 --> CFG
+    F1 --> SOC
+    F2 --> SOC
+    F2 -.-> SKILL
+    F3 --> SKILL
+    F3 --> HARNESS
+    F3 --> PC
+    F3 --> TRUST
+    F4 --> SKILL
+    F4 --> WEB
+    F5 --> TS
+    F5 --> TRUST
+    F6 --> SPEC
+    F3 -. constrained by .- SPEC
+    F4 -. constrained by .- SPEC
+    F5 -. constrained by .- SPEC
+
+    classDef thisRepo fill:#1f6feb,stroke:#0d419d,color:#ffffff
+```
+
+Reading notes: F3's two package-layer components are new with the 2026-08-18
+reconciliation — the harness carries the civic derivations and capture machinery while
+produce-core, its sole runtime dependency, carries envelope/attestation assembly and
+the Ed25519ph signing mechanism ("the harness derives, the core assembles",
+ADR-0021/0022); the skill and the reference application orchestrate above that stack.
+F2's dotted edge to the skill docs reflects that reproducibility starts in
+the analysis itself (queries recorded, no hallucinated data — the opengov skill's rules);
+N3's dotted edge to F4 reflects that the registry makes evidence citable while durability
+comes from F3/F5's timestamp and transparency-log steps; N4's dotted edges mark F3–F5 as
+the functions the open standard disciplines. The dotted `constrained by` edges between
+F3–F5 and the spec are arrowless and declared function-to-spec so the layout keeps its
+three stacked bands (an edge running the other way, spec-to-function, would fight the
+Functions→Components edges above it and break the vertical stacking); semantically the
+constraint flows from the spec to the functions (it specifies F3's package shape and F5's
+§9.2 verification sequence, and constrains F4's publish API contract).
+
+### Needs × Logical components
+
+| Need | Function(s) | Logical component(s) |
+| --- | --- | --- |
+| N1 plain-English data access | F1, F2 | MCP configs, socrata-mcp-server, Data Commons MCP |
+| N2 trustworthy AI analysis | F3, F4, F5 | publish-evidence skill, civic-typed-harness + produce-core, evidence registry, verifier, Rekor/TSA |
+| N3 durable citable evidence | F3, F5 | Rekor transparency log, RFC 3161 timestamps (Zenodo DOI designed) |
+| N4 open-standards interop | F6 | Typed Standards Spec, ADRs, open-questions registry; the importable package stack (verify-core ← produce-core ← civic-typed-harness) as the pinned-dependency interop path (ADR-0019 Decision 6, ADR-0021) |
+
+Note: the runnable artifacts in this repo are the MCP configs, the publish-evidence
+skill, and — since ADR-0022 — the `@typedstandards/civic-typed-harness` package under
+`packages/` (the repo is an npm workspace, with PR-gating CI: workflow checks,
+dependency budget, skill drift); the spec/ADR corpus remains the repo's main payload,
+with the registry and verifier implemented in the companion repos.
