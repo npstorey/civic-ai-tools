@@ -30,3 +30,4 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0024](0024-evidence-path-configuration.md) | Configuration that reaches signed output is absent-or-error, never defaulted | Accepted (2026-08-12) |
 | [0025](0025-vocabulary-settlement-evidence-excision.md) | "Evidence" retired from the artifact and infrastructure surface, retained as the epistemic QEC role | Accepted (2026-08-19) |
 | [0026](0026-jsonl-readback-capture-label-vs-mechanism.md) | The `claude-code-jsonl-readback` capture method labels a readback no shipped tool performs or verifies | Proposed (2026-08-22) |
+| [0027](0027-merge-commit-only-vcs-policy.md) | Merge-commit-only across the program's repositories — squash and rebase merge disabled, at both the repo-settings and ruleset layers | Accepted (2026-08-26) |
