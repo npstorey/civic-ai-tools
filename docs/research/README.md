@@ -11,6 +11,7 @@ Point-in-time research documents. Each file carries its own status line; none of
 - [eval-queries.md](eval-queries.md) — Test queries and scoring rubric behind the model evaluation (2026-03-10); retained as method-of-record, not a live decision.
 - [landscape-analysis.md](landscape-analysis.md) — Map of projects and organizations at the AI + civic data intersection (last updated 2026-04-24).
 - [model-evaluation-results.md](model-evaluation-results.md) — Point-in-time snapshot of the 2026-03-10 model evaluation run; read for methodology and failure taxonomy, not for a current ranking.
+- [receipt-evidence-projection-poc.md](receipt-evidence-projection-poc.md) — One `receipt/evidence-record/v1` record projected one-way into a Typed Standards node and verified offline; build only, nothing published (2026-08-26).
 - [odp-mcp-analysis.md](odp-mcp-analysis.md) — Pagination and result-limit patterns in socrata/odp-mcp; research, not a decision (March 2026).
 - [skill-routing-architectural-shapes.md](skill-routing-architectural-shapes.md) — Design space for dynamic skill-guidance routing across multiple MCP sources; research, not a decision (April 2026).
 - [theory-of-change/](theory-of-change/) — AI-assisted theory-of-change research folder; citations machine-checked, synthesis not yet vetted by a human (see its README).
