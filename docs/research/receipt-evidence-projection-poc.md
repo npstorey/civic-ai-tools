@@ -78,8 +78,9 @@ about what it verified.
 ## Findings against the design note's §6
 
 The projection rule in the planning note's §6 was treated as a **claim under test**. Its hazard list
-holds. Its **field table does not**: five of its eight rows are wrong, and three of those are
-reproduced as runnable negative controls in leg D.
+holds. Its **field table does not**: six of its eight rows are wrong, and three of those are
+reproduced as runnable negative controls in leg D. Only rows 6 (producer signature —
+*not projectable*) and 8 (`createdAtUtc` — informational only) survive intact.
 
 Full detail, including what each row should say instead, is in the report accompanying this branch.
 The short form:
@@ -97,6 +98,12 @@ The short form:
    never be equal.
 5. **`producer` must not project onto `signer`.** `signer` is check #14's subject, resolved against the
    registry entry for *our* `kid`; a foreign producer there asserts they hold our signing key.
+6. **An RFC 3161 token does not project into `rfc3161Timestamp`.** The row calls this "re-encoded, not
+   re-issued", implying the token carries over. It does not: check #7 verifies a token's
+   `messageImprint` against *our* `packageHash` (`verify.ts:298`, `rfc3161.ts:297`), and `receipt`'s
+   token attests a `receipt` digest. Re-encoding DER to base64 changes the encoding, not the subject.
+   Source-cited, not executed — see limitation 5. Moot for the evidence-record variant, where v1
+   *refuses* a `.tsr` sidecar, so the row has no analogue at all.
 
 Two further observations, neither a defect in the note's hazard list but both worth adding to it:
 
@@ -148,10 +155,10 @@ Stated plainly; these bound every claim above.
    `claude-code-jsonl-readback`. This is the same gap `poc/rulespec-interop` recorded as its finding 1,
    reached from a second direction — check #15 *rejects* out-of-vocabulary values, so an honest label
    is structurally blocked rather than merely absent.
-5. **Finding 5's RFC 3161 sibling is source-cited, not executed.** Check #7 binds a token's
-   `messageImprint` to *our* `packageHash` (`verify.ts:298`, `rfc3161.ts:297`), so a `receipt` token
-   attesting a `receipt` digest could not satisfy it. No token was built to demonstrate this — v1
-   evidence records refuse a `.tsr` sidecar, so none exists.
+5. **Finding 6 is source-cited, not executed.** No RFC 3161 token was built to demonstrate the
+   `messageImprint` mismatch: v1 evidence records refuse a `.tsr` sidecar, so none exists, and
+   fabricating one to fail a check would prove nothing the cited lines do not already state. It is
+   the one finding here resting on reading the verifier rather than running it.
 6. **The body is a domain event about this branch.** It states what was built, not a civic-data
    finding. Nothing about the projection depends on its contents; `receipt` has no opinion about body
    schemas and neither does this node.
