@@ -77,7 +77,17 @@ const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 // --- read the EMITTED artifacts, as bytes -----------------------------------
 const recordRaw = readFileSync(join(fixtures, `${RECORD_STEM}.json`));
 const bodyRaw = readFileSync(join(fixtures, `${RECORD_STEM}.body.json`));
-const producerSig = readFileSync(join(fixtures, `${RECORD_STEM}.producer.sig`));
+// The signature is committed as BASE64 TEXT, never as the 64 raw bytes
+// `receipt` writes — a binary fixture kills the pre-push guard's awk stage and
+// is then silently unscanned. Read the text form directly: the only thing this
+// minter ever does with the signature is base64-encode it, so a decode/re-encode
+// round trip here would be pure ceremony. The raw bytes are still exercised for
+// real — the hazard runner verifies the signature against them.
+const producerSigB64 = readFileSync(join(fixtures, `${RECORD_STEM}.producer.sig.b64`), 'utf8').trim();
+const producerSig = Buffer.from(producerSigB64, 'base64');
+if (producerSig.length !== 64) {
+  throw new Error(`producer signature must decode to 64 bytes, got ${producerSig.length}`);
+}
 const emitMeta = JSON.parse(readFileSync(join(fixtures, 'emit-metadata.json'), 'utf8'));
 
 const recordText = recordRaw.toString('utf8');
@@ -158,7 +168,7 @@ const extension = {
 
   // --- receipt's producer signature: OBSERVED, NOT CO-SIGNED ---------------
   co_signed: false,
-  producer_signature_base64: producerSig.toString('base64'),
+  producer_signature_base64: producerSigB64,
   producer_signature_byte_length: producerSig.length,
   producer_signature_scheme:
     'raw Ed25519 (NOT Ed25519ph) over DOMAIN || record_bytes, where DOMAIN = b"receipt/evidence-record/v1\\x00"',

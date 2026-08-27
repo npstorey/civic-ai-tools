@@ -20,12 +20,17 @@ Usage (from the repo root, with a pinned receipt clone at .evidence-clones/recei
 
     uv run --project .evidence-clones/receipt python scripts/emit-evidence-record.py <outdir>
 
-Writes into <outdir>:  <NNNN>-<sha16>.json, .body.json, .producer.sig
+Writes into <outdir>:  <NNNN>-<sha16>.json, .body.json, .producer.sig.b64
 plus emit-metadata.json (the public key + the parameters, for the harness).
+
+The signature is flattened out as BASE64 TEXT rather than the 64 raw bytes
+`receipt` writes, so no fixture in the tree is binary — see the comment at the
+flatten step for why that matters to the pre-push guard.
 """
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import pathlib
@@ -116,15 +121,31 @@ def main() -> int:
 
     # Flatten the emitted directory up into <outdir> so the fixture names are
     # stable and flat; the emitter's own layout is an implementation detail.
-    import base64
     import shutil
 
     body_path = record_path.with_name(f"{record_path.stem}.body.json")
     sig_path = record_path.with_name(f"{record_path.stem}.producer.sig")
-    for src in (record_path, body_path, sig_path):
+    for src in (record_path, body_path):
         dst = outdir / src.name
         if src.resolve() != dst.resolve():
             shutil.copyfile(src, dst)
+
+    # The signature is emitted by `receipt` as 64 RAW bytes. It is flattened out
+    # as BASE64 TEXT, not copied verbatim: a 64-byte binary blob in the tree
+    # makes the pre-push sensitivity guard's awk stage die with
+    # "towc: multibyte conversion failure", which leaves that file SILENTLY
+    # UNSCANNED on every push. A guard that fails quietly is worse than one that
+    # fails loudly, so nothing under scripts/fixtures/ is binary.
+    # Base64 is injective, so comparing the .b64 files IS comparing the raw
+    # bytes — the harness's re-emission leg loses nothing by diffing the text.
+    # Encoded here in Python rather than by the `base64(1)` CLI because the
+    # no-wrap flag is spelled `-w 0` on GNU and `-b 0` on BSD/macOS; this always
+    # writes ONE unwrapped line, which `base64 -d` reads on both.
+    signature_raw = sig_path.read_bytes()
+    signature_b64 = base64.b64encode(signature_raw).decode("ascii")
+    (outdir / f"{record_path.stem}.producer.sig.b64").write_text(
+        signature_b64 + "\n", encoding="utf-8"
+    )
 
     raw = record_path.read_bytes()
     metadata = {
@@ -146,7 +167,7 @@ def main() -> int:
         "domainHex": DOMAIN.hex(),
         "producerPublicKeyPem": public_pem.decode("ascii"),
         "producerPublicKeySpkiBase64": base64.b64encode(public_spki_der).decode("ascii"),
-        "producerSignatureBase64": base64.b64encode(sig_path.read_bytes()).decode("ascii"),
+        "producerSignatureBase64": signature_b64,
     }
     (outdir / "emit-metadata.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"

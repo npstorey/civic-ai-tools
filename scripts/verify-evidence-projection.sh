@@ -5,13 +5,25 @@
 # real `receipt/evidence-record/v1` record into ONE Typed Standards node, and
 # the offline verification of that node.
 #
+# NO FIXTURE IN THIS TREE IS BINARY. `receipt` emits its producer signature as 64
+# RAW bytes; it is committed as BASE64 TEXT (`*.producer.sig.b64`) and decoded
+# back to those bytes by leg A, into a gitignored scratch directory, for the legs
+# that need them. The reason is the pre-push sensitivity guard: a raw 64-byte
+# blob kills its awk stage with "towc: multibyte conversion failure", which
+# leaves that file SILENTLY UNSCANNED on every push. A guard that fails quietly
+# is worse than one that fails loudly. Base64 is injective, so nothing is lost —
+# leg F still compares the emitted signature byte for byte.
+#
 #   leg A  preflight — assert the exact pinned library versions
 #          (@typedstandards/produce-core 0.3.0, @typedstandards/verify-core
 #          0.9.0) are resolvable from this repo's own node_modules, and that
 #          every committed fixture is present. Both libraries are already
 #          workspace dependencies of packages/civic-typed-harness, so `npm ci`
 #          (the repo's documented setup step) is the only thing this harness
-#          needs, and it needs NO network of its own.
+#          needs, and it needs NO network of its own. Leg A also DECODES the
+#          base64 signature into a scratch fixture directory and asserts the
+#          round trip (64 bytes, and equal to the base64 the emitter recorded in
+#          emit-metadata.json); legs D and E read from that directory.
 #   leg B  offline verification of the committed commitment bundle with
 #          verify-core — OUR verifier — with `fetch` stubbed to THROW (spec
 #          §9.4 / Q15 pattern). The verdict is asserted FIELD BY FIELD against
@@ -94,7 +106,7 @@ echo "   @typedstandards/verify-core  @ $verify_core"
 for f in \
   "$RECORD_STEM.json" \
   "$RECORD_STEM.body.json" \
-  "$RECORD_STEM.producer.sig" \
+  "$RECORD_STEM.producer.sig.b64" \
   "emit-metadata.json" \
   "evidence-projection-trust-registry.json" \
   "evidence-projection-payload.json" \
@@ -116,6 +128,30 @@ if (JSON.stringify(p) !== JSON.stringify(c.package)) {
 }
 " || fail "package fixture / commitment bundle mismatch"
 echo "   package fixture matches the package inside the commitment bundle"
+
+# Materialize a working fixture directory: every committed fixture, plus the
+# signature DECODED back to the 64 raw bytes `receipt` emitted. `base64 -d`
+# reads an unwrapped line on both GNU and BSD/macOS (the *encode* no-wrap flag
+# is what differs between them, which is why the emitter encodes in Python).
+MATERIALIZED="$SCRATCH/fixtures"
+rm -rf "$MATERIALIZED"
+mkdir -p "$MATERIALIZED"
+cp "$FIXTURES"/*.json "$MATERIALIZED/"
+base64 -d < "$FIXTURES/$RECORD_STEM.producer.sig.b64" > "$MATERIALIZED/$RECORD_STEM.producer.sig" \
+  || fail "could not base64-decode $RECORD_STEM.producer.sig.b64"
+decoded_bytes="$(wc -c < "$MATERIALIZED/$RECORD_STEM.producer.sig" | tr -d ' ')"
+[ "$decoded_bytes" = "64" ] \
+  || fail "decoded signature is $decoded_bytes bytes, expected 64 (an Ed25519 signature)"
+# Cross-check the round trip against the base64 the EMITTER independently
+# recorded, so the decode is checked rather than assumed. Compared this way
+# because re-encoding here would need the platform-specific no-wrap flag.
+meta_sig_b64="$(node -p "
+JSON.parse(require('node:fs').readFileSync('$FIXTURES/emit-metadata.json','utf8')).producerSignatureBase64
+")"
+fixture_sig_b64="$(tr -d '\n' < "$FIXTURES/$RECORD_STEM.producer.sig.b64")"
+[ "$meta_sig_b64" = "$fixture_sig_b64" ] \
+  || fail "signature fixture disagrees with emit-metadata.json producerSignatureBase64"
+echo "   signature: decoded $decoded_bytes bytes from base64, round trip agrees with emit-metadata.json"
 
 # --------------------------------------------------------------------------
 note "leg B: verify-core offline verification (our verifier), verdict asserted field by field"
@@ -158,7 +194,7 @@ echo "   digest join: all four readings agree on $FRESH_DIGEST"
 # --------------------------------------------------------------------------
 note "leg D: the hazards, executed — and three §6 table rows as negative controls"
 # --------------------------------------------------------------------------
-node "$ROOT/scripts/run-evidence-projection-hazards.mjs" "$FIXTURES" \
+node "$ROOT/scripts/run-evidence-projection-hazards.mjs" "$MATERIALIZED" \
   || fail "hazard legs did not reproduce"
 
 # --------------------------------------------------------------------------
@@ -168,7 +204,7 @@ rm -rf "$SCRATCH/mint"
 mkdir -p "$SCRATCH/mint"
 cp "$FIXTURES/$RECORD_STEM.json" \
    "$FIXTURES/$RECORD_STEM.body.json" \
-   "$FIXTURES/$RECORD_STEM.producer.sig" \
+   "$FIXTURES/$RECORD_STEM.producer.sig.b64" \
    "$FIXTURES/emit-metadata.json" \
    "$FIXTURES/evidence-projection-trust-registry.json" \
    "$SCRATCH/mint/"
@@ -213,7 +249,10 @@ else
   rm -rf "$SCRATCH/emit"
   uv run --project "$CLONES/receipt" python "$ROOT/scripts/emit-evidence-record.py" "$SCRATCH/emit" \
     || fail "re-emission failed"
-  for f in "$RECORD_STEM.json" "$RECORD_STEM.body.json" "$RECORD_STEM.producer.sig"; do
+  # The signature is compared as base64: the emitter writes the same text form
+  # the fixture holds, and base64 is injective, so this is a byte comparison of
+  # the 64 raw bytes with no binary file in the tree.
+  for f in "$RECORD_STEM.json" "$RECORD_STEM.body.json" "$RECORD_STEM.producer.sig.b64"; do
     cmp -s "$FIXTURES/$f" "$SCRATCH/emit/$f" \
       || fail "re-emission is not byte-identical to the committed fixture: $f"
     echo "   byte-identical on re-emission: $f"

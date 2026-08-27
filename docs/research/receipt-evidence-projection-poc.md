@@ -38,6 +38,7 @@ Signing this node asserts *"we observed these bytes and this is their digest."* 
 | Evidence record | `scripts/fixtures/0000-e7d6e3062de1a62a.json`, 376 bytes |
 | Record sha256 | `e7d6e3062de1a62a079ce2929431bf1397c4afbafe024a73149a929f7cfb5953` |
 | Body sidecar | `scripts/fixtures/0000-e7d6e3062de1a62a.body.json`, 292 bytes |
+| Producer signature | `scripts/fixtures/0000-e7d6e3062de1a62a.producer.sig.b64` — base64 of the 64 raw bytes |
 | Body sha256 | `dc9cc260e4286a8fbe56b0219dd1aaa91d7cd901647d15e1285f1578c7744e87` |
 | Node id (`packageHash`) | `50064e8a3c0e3d123722203d0d43e4533cd49bee898de2c221aec01d3f302006` |
 | Node `contentHash.sha256` | `028b4e6a45ed400d7872894cecd669c753ab154edb8cc43471cc8b1b44d0d365` |
@@ -48,6 +49,13 @@ Signing this node asserts *"we observed these bytes and this is their digest."* 
 Neither signing key is committed. Both are derived as SHA-256 of a committed ASCII **label**, so the
 tree carries no private key material and anyone can rederive them. The two keys are different keys, so
 nothing in the signature-crossing result below is an accident of sharing one keypair.
+
+**No fixture in this tree is binary.** `receipt` emits its producer signature as 64 raw bytes; it is
+committed as base64 text and decoded by leg A into a gitignored scratch directory for the legs that
+need the bytes. A raw blob kills the pre-push sensitivity guard's `awk` stage with
+`towc: multibyte conversion failure`, which leaves that file *silently unscanned* on every push — a
+guard that fails quietly is worse than one that fails loudly. Base64 is injective, so nothing is lost:
+leg F still compares the emitted signature byte for byte.
 
 ## The verdict is honestly not green
 
