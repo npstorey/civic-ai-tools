@@ -172,25 +172,37 @@ Then compute the diff per row and aggregate in code. State it explicitly: "Resol
 
 ## Domain Support
 
-**Any Socrata open data portal can be queried.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use the `search` tool to discover datasets on that domain, or use `get_data` with the domain directly. Do NOT refuse a query just because a city isn't listed below.
+**Any Socrata open data portal can be queried.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use `get_data` with `type: "catalog"` and that portal to discover its datasets, then `get_data` with `type: "query"` to read them. Do NOT refuse a query just because a city isn't listed below.
 
-To find a portal domain for a city, use common patterns: `data.cityofX.us`, `data.X.gov`, `data.Xcounty.gov`, `data.state.X.us`. If unsure, use the `search` tool with the city name.
+To find a portal domain for a city, use common patterns: `data.cityofX.us`, `data.X.gov`, `data.Xcounty.gov`, `data.state.X.us`. If you aren't sure which domain is right, try a candidate with `get_data` and `type: "catalog"`: one call either returns that portal's datasets or shows the portal isn't reachable.
+
+### Which Tool Reaches Which Portal
+
+**`get_data` is the only tool that takes a portal.** Settle that before choosing a tool:
+
+- **`get_data`** accepts a `portal` argument (`domain` is an accepted spelling of the same thing) and works against **any** Socrata portal. With `type: "catalog"` it is the cross-portal discovery path; with `type: "query"` it runs SoQL against the portal you name.
+- **`search`** takes exactly one argument, `query`, and searches **only the portal this server is configured for**. It has no portal argument, and anything else sent with it is rejected. Reach for it when the portal you want is the configured one; use `get_data` with `type: "catalog"` for every other portal.
+- **`fetch`** takes exactly one argument, `id`, and the portal travels inside that identifier. A `search` hit hands you `dataset:<portal>:<dataset_id>` (or `record:<portal>:<dataset_id>:<row_id>` for a single row), and a full dataset URL is also accepted — both name their portal. A **bare 4x4 ID names no portal**, so it resolves against the portal this server is configured for.
+
+So a dataset ID you learned somewhere else — from the tables below, from the curated directory, or from a web search — is reached with `get_data` and an explicit `portal`, not with a bare ID handed to `fetch`. If you don't know which portal this server is configured for, don't guess: name the portal you want on a `get_data` call.
 
 ### Well-Tested Domains
 
-These portals have been extensively tested. Tool compatibility notes:
+These portals have been extensively tested, and each has a dataset table further down. Coverage below is `get_data` coverage, because `get_data` is the tool that takes a portal:
 
-| Domain | get_data | search | fetch | Status |
-|--------|----------|--------|-------|--------|
-| `data.cityofnewyork.us` | Full | Full | Full | Fully Compatible |
-| `data.cityofchicago.org` | Full | Full | Full | Fully Compatible |
-| `data.sfgov.org` | Full | Limited | Unknown | Query-Preferred |
-| `data.seattle.gov` | Full | Full | Full | Fully Compatible |
-| `data.lacity.org` | Full | Limited | Fails | Query-Only |
+| Domain | City | get_data coverage |
+|--------|------|-------------------|
+| `data.cityofnewyork.us` | New York City | Full |
+| `data.cityofchicago.org` | Chicago | Full |
+| `data.sfgov.org` | San Francisco | Full |
+| `data.seattle.gov` | Seattle | Full |
+| `data.lacity.org` | Los Angeles | Full |
+
+`search` and `fetch` have no column here, because how they behave is not a property of the portal in the row: `search` covers only the portal this server is configured for, and a bare 4x4 given to `fetch` resolves against that same portal. Neither is a way to reach one of these portals when the server is configured for a different one.
 
 ### Other Portals
 
-For portals not listed above, start with `search` to discover available datasets, then use `get_data` to query them. Most Socrata portals support all three tools. If `search` or `fetch` fails on a particular portal, fall back to `get_data` with a known dataset ID.
+For portals not listed above, discover datasets with `get_data` — `type: "catalog"`, the portal, and a search phrase — then read them with `get_data` and `type: "query"`. `search` will not help here: it covers only the portal this server is configured for. If a catalog call turns up nothing usable, go straight to `type: "query"` with a known dataset ID and that portal.
 
 ### When a Portal Doesn't Work
 
@@ -202,12 +214,12 @@ Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platf
 ### Domain-Specific Workarounds
 
 **San Francisco (`data.sfgov.org`):**
-- Search tool sometimes returns NYC data instead of SF
-- Use web search to find SF dataset IDs, then use `get_data`
+- `search` covers only the configured portal. On a server configured for a different city it returns that city's datasets, not SF's — results that look like an answer and are not SF data.
+- Discover SF datasets with `get_data`, `type: "catalog"`, `portal: "data.sfgov.org"`, then read them with `type: "query"` and the same portal.
 
 **Los Angeles (`data.lacity.org`):**
-- Only `get_data` works; search and fetch tools fail
-- Use web search to find LA dataset IDs, then use `get_data` exclusively
+- A bare LA 4x4 handed to `fetch` resolves against the configured portal rather than against LA, so it will not return the LA dataset unless this server is configured for LA.
+- Use `get_data` with `portal: "data.lacity.org"` — `type: "catalog"` to discover, `type: "query"` to read. The known IDs below can go straight into a query.
 
 **Known LA Dataset IDs:**
 - MyLA311 2025: `h73f-gn57`
@@ -237,7 +249,7 @@ Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platf
 
 ## Key Datasets by Portal
 
-A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.md`](https://github.com/npstorey/civic-ai-tools/blob/main/docs/datasets.md). Below are the most-used datasets per portal for quick reference. Use the MCP `search` tool for datasets not listed here.
+A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.md`](https://github.com/npstorey/civic-ai-tools/blob/main/docs/datasets.md). Below are the most-used datasets per portal for quick reference. For datasets not listed here, use `get_data` with `type: "catalog"` and the portal you want; `search` covers only the portal this server is configured for.
 
 ### NYC (`data.cityofnewyork.us`)
 
@@ -289,7 +301,7 @@ A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.m
 
 ### Los Angeles (`data.lacity.org`)
 
-**Note:** Only `get_data` works for LA — search and fetch tools fail.
+**Note:** Reach these with `get_data` and `portal: "data.lacity.org"`. A bare 4x4 handed to `fetch` resolves against the portal this server is configured for, so an LA ID will not resolve there.
 
 | Dataset | ID | Key Fields |
 |---------|----|------------|
@@ -325,11 +337,11 @@ A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.m
 
 ## Socrata MCP Server Tools
 
-| Tool | Purpose | Returns |
-|------|---------|---------|
-| **search** | Find datasets or search within a dataset | Encoded IDs |
-| **fetch** | Retrieve full metadata or records | Complete data with metadata |
-| **get_data** | Execute SoQL queries (recommended) | Raw query results |
+| Tool | Arguments | Purpose | Returns |
+|------|-----------|---------|---------|
+| **search** | `query` only — no portal argument | Find datasets on the portal this server is configured for | Up to 10 hits, each with an `id` of the form `dataset:<portal>:<dataset_id>`, a title, a portal URL, a description snippet, and — where the dataset allows it — its columns and a few preview rows |
+| **fetch** | `id` only — the portal travels in the identifier; a bare 4x4 resolves against the configured portal | Retrieve one dataset's full metadata, or one record | Metadata and the column list, or the record |
+| **get_data** | `type`, `portal` (any portal), plus SoQL parameters | Catalog discovery and SoQL queries — the only tool that reaches a portal other than the configured one | Raw query results |
 
 ## Output Format Guidelines
 
