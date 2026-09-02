@@ -366,3 +366,73 @@ test('unknown source ids contribute no dataSources entry', () => {
   );
   assert.equal(entries.length, 0);
 });
+
+// --- dataSources states what the call carried (Wave N9 P-H1) ---
+//
+// RED INSTRUMENT — the fourth of four; the other three are in
+// provenance.test.ts. `buildDataSources` keys dataset-keyed entries on the
+// call's `dataset_id` and takes the portal from the call's `portal` argument;
+// when that argument is absent it substitutes `fallbackPortal` — the run's
+// selected portal — and mints `portalUrl` and `datasetUrl` on it. The loop
+// that writes the calls injects `portal` into `get_data` arguments only, so a
+// dataset-keyed call without one is attributed to a portal it never carried.
+// The property: an entry may not attribute a call to
+// `https://<fallbackPortal>` when the call carried no portal. Whether such an
+// entry is omitted or emitted with no portal is left to the fix.
+
+test('dataSources states what the call carried: a dataset-keyed call with no portal argument is not attributed to the fallback portal', () => {
+  const FALLBACK_PORTAL = 'data.run-portal.example';
+  const toolCalls: ToolCallSummary[] = [
+    { name: 'get_data', args: { type: 'query', dataset_id: 'abcd-1234' } },
+  ];
+  // The span the loop writes for that call: a dataset id, no portal domain.
+  const trace = traceWithToolSpans([toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234' })]);
+
+  const entries = buildDataSources(toolCalls, trace, FALLBACK_PORTAL, NOW);
+
+  for (const entry of entries) {
+    assert.notEqual(
+      entry.portalUrl,
+      `https://${FALLBACK_PORTAL}`,
+      `entry for ${entry.datasetId} attributes the call to the fallback portal, which the call never carried`,
+    );
+    assert.ok(
+      !(entry.datasetUrl ?? '').includes(FALLBACK_PORTAL),
+      `datasetUrl "${entry.datasetUrl}" is minted on the fallback portal, which the call never carried`,
+    );
+  }
+  assert.ok(
+    !JSON.stringify(entries).includes(FALLBACK_PORTAL),
+    'no dataSources entry may carry the fallback portal for a call that did not',
+  );
+});
+
+// --- The honest shape (Wave N9 P-H1, the fix) ---
+
+test('honest shape: a dataset-keyed call with an injected portal still yields its entry; one that carried no portal yields none', () => {
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' },
+    },
+    { name: 'get_data', args: { type: 'query', dataset_id: 'abcd-1234' } },
+  ];
+  const trace = traceWithToolSpans([
+    toolSpan('socrata', { 'tool.dataset_id': 'erm2-nwe9', 'tool.portal_domain': 'data.cityofnewyork.us' }),
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234' }),
+  ]);
+
+  // `fallbackPortal` is accepted and not consulted: it appears in no entry.
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.equal(entries.length, 1, 'exactly the call that carried a portal contributes an entry');
+  assert.deepEqual(entries[0], {
+    sourceId: 'socrata',
+    catalogType: 'socrata',
+    portalUrl: 'https://data.cityofnewyork.us',
+    datasetId: 'erm2-nwe9',
+    datasetUrl: 'https://data.cityofnewyork.us/d/erm2-nwe9',
+    accessTimestamp: NOW,
+  });
+  assert.ok(!JSON.stringify(entries).includes('data.run-portal.example'));
+});

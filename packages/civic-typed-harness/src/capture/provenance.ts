@@ -61,6 +61,12 @@ export interface ProvenanceInput {
    *  itself is exactly this value by construction. */
   outputHash?: string;
   model: string;
+  /** The run's selected portal. Accepted and NOT consulted by the graph
+   *  builder since 0.3.1: the graph states the portal a tool span carried
+   *  (`tool.portal_domain`) and states absence as absence — it never
+   *  substitutes the run's portal for one the call did not address. The
+   *  field stays in the type so callers that pass it (the reference app
+   *  does, as an object literal) keep compiling. */
   portal: string;
 }
 
@@ -132,7 +138,8 @@ export function buildProvenanceGraph(
 ): ProvGraph {
   const otel = trace as unknown as OTelTrace;
   const spans = otel?.resourceSpans?.[0]?.scopeSpans?.[0]?.spans || [];
-  const { packageId, promptHash, promptText, outputText, model, portal } = input;
+  // `input.portal` is deliberately not read — see `ProvenanceInput.portal`.
+  const { packageId, promptHash, promptText, outputText, model } = input;
   const outputHash = input.outputHash ?? hash(outputText ?? '');
 
   const registry = config.sourceRegistry;
@@ -305,7 +312,22 @@ export function buildProvenanceGraph(
     );
   }
 
-  // MCP tool call spans
+  // MCP tool call spans.
+  //
+  // Every node derived from a span states what the span carried, and states
+  // absence as absence: a span with no `tool.name` yields nodes that name no
+  // tool, and a span with no `tool.portal_domain` yields a data response
+  // attributed to no portal. Nothing here substitutes the run's selected
+  // portal (`input.portal`, accepted and unused since 0.3.1) or a default
+  // tool name for a value the producer did not write. The reference
+  // producer's loop always writes `tool.name`, and writes
+  // `tool.portal_domain` only when the call's arguments carried a portal —
+  // which its portal injection does for `get_data` and for no other tool.
+  // The Socrata server's `search` (one argument, `query`) and `fetch` (one
+  // argument, `id`) address the portal that server is configured for, which
+  // the producer does not know. A `fetch` id may embed a portal, but that
+  // grammar belongs to the server: the graph does not parse arguments, so an
+  // id is never a portal the span carried.
   const dataResponseUrns: string[] = [];
 
   for (const span of toolSpans) {
@@ -313,10 +335,12 @@ export function buildProvenanceGraph(
     const argsStr = getAttr(span.attributes, 'tool.arguments') || '{}';
     const queryHash = hash(argsStr);
     const responseHash = getAttr(span.attributes, 'tool.response_hash');
-    const toolName = getAttr(span.attributes, 'tool.name') || 'get_data';
+    // Absent when the span carried none — never defaulted.
+    const toolName = getAttr(span.attributes, 'tool.name');
     const opType = getAttr(span.attributes, 'tool.operation_type') || 'unknown';
     const datasetId = getAttr(span.attributes, 'tool.dataset_id');
-    const portalDomain = getAttr(span.attributes, 'tool.portal_domain') || portal;
+    // Absent when the span carried none — never the run's portal.
+    const portalDomain = getAttr(span.attributes, 'tool.portal_domain');
     const toolSource = getAttr(span.attributes, 'mcp.source') || fallbackSourceId;
     const toolAgentUrn = agentUrnForSource(toolSource);
     const toolSourceDatasetKeyed = isDatasetKeyedSource(toolSource, registry);
@@ -332,7 +356,8 @@ export function buildProvenanceGraph(
     graph.push(
       makeEntityNode(queryUrn, {
         'civic:contentHash': `sha256:${queryHash}`,
-        'civic:toolName': toolName,
+        // Omitted — not placeholdered — when the span named no tool.
+        ...(toolName ? { 'civic:toolName': toolName } : {}),
         'civic:operationType': opType,
         'dcterms:description': `MCP tool arguments (${opType})`,
         ...(precedingInference
@@ -346,10 +371,20 @@ export function buildProvenanceGraph(
       const dataUrn = vocab.urn(packageId, 'data', responseHash);
       dataResponseUrns.push(dataUrn);
 
-      // Description varies by source — dataset-keyed sources (Socrata) have
-      // a portal domain; aggregate/unknown sources are described by their
-      // agent title.
-      const description = toolSourceDatasetKeyed
+      // Description: the portal the span carried, when it carried one;
+      // otherwise the agent that answered the call, by its registry title —
+      // the form aggregate and unknown sources already take. A dataset-keyed
+      // source whose span carried a dataset id but no portal takes the
+      // agent-title form too, with the dataset id stated below as
+      // `civic:datasetId` and no URL minted (a dataset URL needs a host the
+      // span did not carry). That branch is latent by construction for the
+      // reference producer — its loop injects the run portal into `get_data`
+      // arguments before the span opens (run-tool-loop.ts:799 at the time of
+      // writing), and `get_data` is the only tool whose arguments carry a
+      // dataset id — but any producer that writes `tool.dataset_id` without
+      // `tool.portal_domain` reaches it, so it is stated honestly rather
+      // than left dead.
+      const description = toolSourceDatasetKeyed && portalDomain
         ? `Data response from ${portalDomain}`
         : `Data response from ${sourceAgentMap[toolSource]?.title || toolSource}`;
 
@@ -362,12 +397,18 @@ export function buildProvenanceGraph(
           'civic:sourceId': toolSource,
           ...provWasGeneratedBy(toolCallUrn),
           // Croissant 1.1 placeholder — only meaningful for dataset-keyed
-          // sources today.
+          // sources today. The dataset id is stated whenever the span carried
+          // one; the portal and the dataset URL only when the span carried
+          // the portal as well. Key order is the byte contract.
           ...(toolSourceDatasetKeyed && datasetId
             ? {
                 'civic:datasetId': datasetId,
-                'civic:portalDomain': portalDomain,
-                'civic:datasetUrl': `https://${portalDomain}/d/${datasetId}`,
+                ...(portalDomain
+                  ? {
+                      'civic:portalDomain': portalDomain,
+                      'civic:datasetUrl': `https://${portalDomain}/d/${datasetId}`,
+                    }
+                  : {}),
                 'civic:croissantMetadataUrl': null, // hook for future Croissant integration
               }
             : {}),
@@ -382,7 +423,10 @@ export function buildProvenanceGraph(
     const durationMs = getAttr(span.attributes, 'tool.duration_ms');
     graph.push(
       makeActivityNode(toolCallUrn, {
-        'dcterms:description': `MCP tool call: ${toolName} (${opType})`,
+        // Names the tool only when the span did.
+        'dcterms:description': toolName
+          ? `MCP tool call: ${toolName} (${opType})`
+          : `MCP tool call (${opType})`,
         'civic:sourceId': toolSource,
         ...provUsed([queryUrn]),
         ...provWasAssociatedWith(toolAgentUrn),
