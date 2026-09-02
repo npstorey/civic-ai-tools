@@ -3,6 +3,57 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.3.1 — 2026-09-02
+
+**The graph states what the span carried, and states absence as absence**
+([civic-ai-tools-website#384](https://github.com/npstorey/civic-ai-tools-website/issues/384),
+Wave N9 P-H1). Patch, not breaking: no existing export is removed or
+retyped, and every golden byte — both vocabulary eras, all eight
+golden-reproduction cases — is unchanged.
+
+- **`buildProvenanceGraph` no longer invents a tool name.** An
+  `mcp_tool_call` span with no `tool.name` yields a query entity with no
+  `civic:toolName` key (omitted, not placeholdered) and a tool-call activity
+  described as `MCP tool call (<operation type>)`. Previously the builder
+  substituted `get_data`.
+- **`buildProvenanceGraph` no longer attributes a data response to the run's
+  portal.** `civic:portalDomain` and `civic:datasetUrl` are emitted only when
+  the span carried both `tool.portal_domain` and `tool.dataset_id`. A
+  dataset-keyed span with no portal is described by its source agent's
+  registry title (`Data response from Socrata MCP Server`), the form
+  aggregate and unknown sources already took; a span with a dataset id and
+  no portal states `civic:datasetId` and mints no URL. Previously the builder
+  substituted `ProvenanceInput.portal` — the run's selected portal — which
+  attributed every `search` and `fetch` response to a portal the call never
+  addressed (the Socrata server's `search` and `fetch` take no portal and
+  answer from the portal that server is configured for). The graph does not
+  parse tool arguments: a portal embedded in a `fetch` id is not a portal the
+  span carried.
+- **`buildDataSources` no longer mints an entry on `fallbackPortal`.** A
+  dataset-keyed call whose arguments carry `dataset_id` but no `portal`
+  contributes no `dataSources` entry — `DataSourceEntry.portalUrl` is a
+  required string in produce-core, so an entry with no portal is not a shape
+  this package can emit — and the call remains on the graph's tool-call
+  activities. Calls that carry a portal (every `get_data` call from the
+  reference producer, whose loop injects the run portal before the record is
+  built) are unchanged.
+- **Unchanged signatures, two inputs now unused.** `ProvenanceInput.portal`
+  and the `fallbackPortal` parameter of `buildDataSources` keep their exact
+  types and positions, are accepted, and are not consulted; both say so at
+  the declaration.
+- **Byte consequence.** A package produced by this version from a trace
+  whose tool spans all carry `tool.name`, and carry `tool.portal_domain`
+  wherever they carry a response hash, is byte-identical to one produced by
+  0.3.0. Where a span carried less, the 0.3.0 output asserted a value the
+  span did not, and this version's output differs from it by exactly that
+  assertion. Packages already signed under 0.3.0 are untouched and remain
+  verifiable exactly as published.
+- **Dependency range widened, nothing resolved differently.**
+  `@typedstandards/produce-core` is accepted at `^0.3.0 || ^0.4.0` so a
+  consumer that takes produce-core 0.4.0 (an additive minor) resolves one
+  copy rather than nesting a second under this package. The lockfile here
+  still resolves 0.3.0.
+
 ## 0.3.0 — 2026-08-20
 
 **Settlement-era civic vocabulary + produce-core 0.3.0**
