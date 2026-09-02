@@ -563,3 +563,151 @@ test('the graph states what the span carried: a fetch span whose id names anothe
     'the portal inside the fetch id is server grammar the span never carried as an attribute',
   );
 });
+
+// --- The honest shapes (Wave N9 P-H1, the fix) ---
+//
+// The four instruments above forbid the invented values. These pin the
+// shapes the builder now emits, so a later change that reinvents a value or
+// drops a stated fact fails by name.
+
+test('honest shape: a get_data span carrying both tool.portal_domain and tool.dataset_id yields the description, civic:portalDomain and civic:datasetUrl it always has', () => {
+  const span: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-get-data',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': '{"type":"query","dataset_id":"abcd-1234","portal":"data.cityofnewyork.us"}',
+      'mcp.source': 'socrata',
+      'tool.dataset_id': 'abcd-1234',
+      'tool.portal_domain': 'data.cityofnewyork.us',
+      'tool.response_hash': 'a0b1c2',
+    }),
+  };
+  // The run portal differs from the span's on purpose: the span's nodes
+  // state the span's portal and nothing of the run's.
+  const graph = buildProvenanceGraph(
+    traceOf([span]),
+    { ...BASE_INPUT, portal: RUN_PORTAL },
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-get-data');
+  const response = derived.find((n) => n['@id'].includes(':data:'));
+  assert.ok(response, 'data-response entity expected');
+  assert.equal(response!['dcterms:description'], 'Data response from data.cityofnewyork.us');
+  assert.equal(response!['civic:datasetId'], 'abcd-1234');
+  assert.equal(response!['civic:portalDomain'], 'data.cityofnewyork.us');
+  assert.equal(response!['civic:datasetUrl'], 'https://data.cityofnewyork.us/d/abcd-1234');
+  assert.equal(response!['civic:croissantMetadataUrl'], null);
+  // Key order is the byte contract: the block reads exactly as it did before.
+  assert.deepEqual(
+    Object.keys(response!).filter((k) => k.startsWith('civic:')),
+    [
+      'civic:contentHash',
+      'civic:sourceId',
+      'civic:datasetId',
+      'civic:portalDomain',
+      'civic:datasetUrl',
+      'civic:croissantMetadataUrl',
+    ],
+  );
+  const query = derived.find((n) => n['@id'].includes(':query:'));
+  assert.equal(query!['civic:toolName'], 'get_data');
+  const activity = derived.find((n) => n['@id'].includes(':tool-call:'));
+  assert.equal(activity!['dcterms:description'], 'MCP tool call: get_data (query)');
+  assertNoPortalClaim(derived, RUN_PORTAL, "the span carried its own portal; the run's is not it");
+});
+
+test('honest shape: a dataset-keyed span with no tool.portal_domain describes its data response by the source agent title', () => {
+  const span: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-search-shape',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'tool.name': 'search',
+      'tool.operation_type': 'search',
+      'tool.arguments': '{"query":"noise complaints"}',
+      'mcp.source': 'socrata',
+      'tool.response_hash': 'a0b1c2',
+    }),
+  };
+  const graph = buildProvenanceGraph(traceOf([span]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-search-shape');
+  const response = derived.find((n) => n['@id'].includes(':data:'));
+  assert.ok(response, 'data-response entity expected');
+  // The same form aggregate and unknown sources take: the agent that
+  // answered, by its registry title.
+  assert.equal(response!['dcterms:description'], 'Data response from Socrata MCP Server');
+  assert.equal(response!['civic:sourceId'], 'socrata');
+  for (const key of ['civic:datasetId', 'civic:portalDomain', 'civic:datasetUrl', 'civic:croissantMetadataUrl']) {
+    assert.ok(
+      !Object.prototype.hasOwnProperty.call(response, key),
+      `${key} must be absent — the span carried neither a dataset id nor a portal`,
+    );
+  }
+});
+
+test('honest shape: a dataset-keyed span with a dataset id and no portal states the dataset id and mints no URL', () => {
+  // Latent by construction for the reference producer (its loop injects the
+  // run portal into get_data arguments before the span opens); reachable by
+  // any producer that writes tool.dataset_id without tool.portal_domain.
+  const span: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-dataset-no-portal',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': '{"type":"query","dataset_id":"abcd-1234"}',
+      'mcp.source': 'socrata',
+      'tool.dataset_id': 'abcd-1234',
+      'tool.response_hash': 'a0b1c2',
+    }),
+  };
+  const graph = buildProvenanceGraph(
+    traceOf([span]),
+    { ...BASE_INPUT, portal: RUN_PORTAL },
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-dataset-no-portal');
+  const response = derived.find((n) => n['@id'].includes(':data:'));
+  assert.ok(response, 'data-response entity expected');
+  assert.equal(response!['dcterms:description'], 'Data response from Socrata MCP Server');
+  assert.equal(response!['civic:datasetId'], 'abcd-1234', 'the dataset id the span carried is stated');
+  assert.ok(!Object.prototype.hasOwnProperty.call(response, 'civic:portalDomain'));
+  assert.ok(!Object.prototype.hasOwnProperty.call(response, 'civic:datasetUrl'));
+  assert.equal(response!['civic:croissantMetadataUrl'], null);
+  assert.deepEqual(
+    Object.keys(response!).filter((k) => k.startsWith('civic:')),
+    ['civic:contentHash', 'civic:sourceId', 'civic:datasetId', 'civic:croissantMetadataUrl'],
+  );
+  assertNoPortalClaim(derived, RUN_PORTAL, 'the span carried no portal');
+});
+
+test('honest shape: a span with no tool.name yields a query entity with no civic:toolName key and an activity that names no tool', () => {
+  const span: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-no-tool-name-shape',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.operation_type': 'unknown',
+      'tool.arguments': '{"query":"noise complaints"}',
+    }),
+  };
+  const graph = buildProvenanceGraph(traceOf([span]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-no-tool-name-shape');
+  const query = derived.find((n) => n['@id'].includes(':query:'));
+  assert.ok(query, 'query entity expected');
+  // The key is ABSENT — not an empty string, not a placeholder.
+  assert.ok(!Object.prototype.hasOwnProperty.call(query, 'civic:toolName'));
+  assert.equal(query!['civic:operationType'], 'unknown');
+  assert.equal(query!['dcterms:description'], 'MCP tool arguments (unknown)');
+  const activity = derived.find((n) => n['@id'].includes(':tool-call:'));
+  assert.equal(activity!['dcterms:description'], 'MCP tool call (unknown)');
+});

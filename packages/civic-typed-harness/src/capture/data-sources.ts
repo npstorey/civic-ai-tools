@@ -94,13 +94,19 @@ export function resolveToolSource(
  * Build the per-source evidence-package `dataSources` array.
  *
  * Dataset-keyed sources (Socrata) contribute one entry per unique
- * `dataset_id` observed across tool calls. Aggregate sources (Data Commons,
+ * `dataset_id` observed across tool calls that also carried a `portal`
+ * argument; a dataset-keyed call that carried no portal contributes NO
+ * entry (the loop body says why). Aggregate sources (Data Commons,
  * Boston OpenContext — registry entries carrying `aggregatePortalUrl`)
  * contribute a single entry when any of their tool calls was made. Unknown
  * source ids contribute no entry. Each entry is tagged with `sourceId` so
  * downstream consumers can distinguish provenance. Emission order: the
  * dataset-keyed entries (first-seen order), then aggregate sources in
  * registry insertion order — matching the reference implementation.
+ *
+ * `fallbackPortal` is accepted and NOT consulted since 0.3.1: an entry
+ * states the portal the call carried, never the run's. The parameter stays
+ * in the signature so existing callers keep compiling.
  */
 export function buildDataSources(
   toolCalls: ToolCallSummary[],
@@ -122,8 +128,20 @@ export function buildDataSources(
     const source = resolveToolSource(tc, toolSpans[i], resolver, fallbackSourceId);
     if (isDatasetKeyedSource(source, registry)) {
       const datasetId = tc.args.dataset_id as string | undefined;
-      const portal = (tc.args.portal as string) || fallbackPortal;
-      if (datasetId) {
+      const portal = tc.args.portal as string | undefined;
+      // An entry is minted only from what the call carried: a dataset id AND
+      // a portal. A dataset-keyed call with a dataset id and no portal
+      // contributes no entry. `DataSourceEntry.portalUrl` is a required
+      // string (produce-core), so "an entry with no portal" is not a shape
+      // this package can emit; and substituting the run's portal
+      // (`fallbackPortal`, before 0.3.1) attributed the call to a portal it
+      // never addressed. Omission is the honest shape — the call is still on
+      // the PROV-O graph's tool-call activities, stated without a portal.
+      // The branch is latent for the reference producer, whose loop injects
+      // the run portal into `get_data` arguments before the record is built
+      // (run-tool-loop.ts:799 at the time of writing); any caller whose
+      // summary carries `dataset_id` without `portal` reaches it.
+      if (datasetId && portal) {
         let byDataset = datasetKeyed.get(source);
         if (!byDataset) {
           byDataset = new Map();
