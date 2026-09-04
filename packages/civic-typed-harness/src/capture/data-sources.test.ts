@@ -436,3 +436,217 @@ test('honest shape: a dataset-keyed call with an injected portal still yields it
   });
   assert.ok(!JSON.stringify(entries).includes('data.run-portal.example'));
 });
+
+// --- A call the record states as failed asserts no access (Wave N10 P-H1) ---
+//
+// RED INSTRUMENT. At 0.3.1 `ToolCallSummary` is `{ name; args }`, so
+// `buildDataSources` cannot see a rejection its caller recorded, and a rejected
+// call reaches BOTH minting branches: the dataset-keyed branch mints an entry
+// for a dataset the call never read, and the aggregate branch marks the source
+// accessed on a call that resolved and nothing more. Both land inside the bytes
+// a publisher signs — the package states an access, at a timestamp, that the
+// record it was built from does not carry.
+//
+// The property: a call the source rejected asserts no access. Scope is
+// `buildDataSources` only — the call is still on the PROV-O graph's tool-call
+// activities, and a caller's own `queries[]` still carries the whole attempt.
+//
+// The two shapes below are the ones in which the assertion CAN fail. A rejected
+// call on a dataset a successful call also read de-duplicates into that call's
+// entry, and an aggregate source with any successful call is accessed however
+// the rejected one is treated: in neither shape could these assertions fail, so
+// neither is the instrument. Both are pinned further down as the converse.
+
+test('shape A: a call recorded as failed mints no entry for its dataset, and the succeeded call keeps its own', () => {
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.city.example', dataset_id: 'abcd-1234' },
+    },
+    {
+      // Recorded as rejected, on a dataset nothing else in this run touched —
+      // the shape in which an entry for it cannot come from anywhere else.
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.city.example', dataset_id: 'efab-5678' },
+      failed: true,
+      failureKind: 'unavailable',
+    },
+  ];
+  const trace = traceWithToolSpans([
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234', 'tool.portal_domain': 'data.city.example' }),
+    toolSpan('socrata', { 'tool.dataset_id': 'efab-5678', 'tool.portal_domain': 'data.city.example' }),
+  ]);
+
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.ok(
+    !entries.some((e) => e.datasetId === 'efab-5678'),
+    'a call the record states as failed read no dataset: it may not appear in dataSources',
+  );
+  assert.ok(
+    !JSON.stringify(entries).includes('efab-5678'),
+    'the rejected dataset may not be named anywhere in the emitted entries',
+  );
+  assert.equal(entries.length, 1, 'exactly the succeeded call contributes an entry');
+  assert.deepEqual(entries[0], {
+    sourceId: 'socrata',
+    catalogType: 'socrata',
+    portalUrl: 'https://data.city.example',
+    datasetId: 'abcd-1234',
+    datasetUrl: 'https://data.city.example/d/abcd-1234',
+    accessTimestamp: NOW,
+  });
+});
+
+test('shape B: a call recorded as failed marks no aggregate source accessed', () => {
+  const registry: CivicSourceRegistry = {
+    'city-warehouse': {
+      displayName: 'City Warehouse',
+      agentTitle: 'City Warehouse MCP Server',
+      serverUrl: 'https://mcp.city.example',
+      catalogType: 'warehouse',
+      aggregatePortalUrl: 'https://data.city.example',
+    },
+  };
+  const resolver = (name: string) => (name === 'warehouse_query' ? 'city-warehouse' : undefined);
+  // One call to the source, and it was rejected — the shape in which the
+  // source's accessed-ness can only come from the rejected call.
+  const toolCalls: ToolCallSummary[] = [
+    { name: 'warehouse_query', args: { query: 'noise complaints' }, failed: true, failureKind: 'timeout' },
+  ];
+
+  const entries = buildDataSources(
+    toolCalls,
+    { resourceSpans: [] },
+    'data.run-portal.example',
+    NOW,
+    { resolver, registry, fallbackSourceId: 'city-warehouse' },
+  );
+
+  assert.ok(
+    !entries.some((e) => e.sourceId === 'city-warehouse'),
+    'a call the record states as failed accessed nothing: its aggregate source may not be marked accessed',
+  );
+  assert.equal(entries.length, 0, 'a run whose only call was rejected accessed no data source');
+});
+
+test('shape B on the shipped civic registry: a rejected Data Commons call marks the source accessed nowhere', () => {
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'search_indicators',
+      args: { query: 'median household income' },
+      failed: true,
+      failureKind: 'unavailable',
+    },
+  ];
+  const trace = traceWithToolSpans([toolSpan('data-commons')]);
+
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.equal(entries.length, 0, 'the run reached no source it can state it accessed');
+});
+
+// --- The converse: absent is absent, and a recorded success is a success ---
+
+test('a summary carrying no failure key behaves exactly as it did before the key existed', () => {
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.city.example', dataset_id: 'abcd-1234' },
+    },
+    { name: 'search_indicators', args: { query: 'population' } },
+  ];
+  const trace = traceWithToolSpans([
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234', 'tool.portal_domain': 'data.city.example' }),
+    toolSpan('data-commons'),
+  ]);
+
+  const withoutKey = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+  const withExplicitFalse = buildDataSources(
+    toolCalls.map((tc) => ({ ...tc, failed: false })),
+    trace,
+    'data.run-portal.example',
+    NOW,
+  );
+
+  assert.equal(withoutKey.length, 2);
+  assert.equal(
+    JSON.stringify(withExplicitFalse),
+    JSON.stringify(withoutKey),
+    'a recorded success and an unrecorded outcome produce the same entries',
+  );
+});
+
+test('a rejected call on a dataset a successful call also read leaves that entry standing', () => {
+  // The shape Wave N9 P6 drove, pinned here as the shape in which the
+  // rejected-call assertion CANNOT fail: the successful call mints the entry,
+  // so dropping the rejected one changes nothing.
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.city.example', dataset_id: 'abcd-1234' },
+    },
+    {
+      name: 'get_data',
+      args: { type: 'metadata', portal: 'data.city.example', dataset_id: 'abcd-1234' },
+      failed: true,
+      failureKind: 'timeout',
+    },
+  ];
+  const trace = traceWithToolSpans([
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234', 'tool.portal_domain': 'data.city.example' }),
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234', 'tool.portal_domain': 'data.city.example' }),
+  ]);
+
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].datasetId, 'abcd-1234', 'the successful call read this dataset, and says so');
+});
+
+test('an aggregate source with one rejected call and one successful call is still accessed', () => {
+  const toolCalls: ToolCallSummary[] = [
+    {
+      name: 'search_indicators',
+      args: { query: 'median household income' },
+      failed: true,
+      failureKind: 'timeout',
+    },
+    {
+      name: 'get_observations',
+      args: { variable_dcid: 'Median_Income_Household', place_dcid: 'geoId/36061' },
+    },
+  ];
+  const trace = traceWithToolSpans([toolSpan('data-commons'), toolSpan('data-commons')]);
+
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].sourceId, 'data-commons');
+  assert.equal(entries[0].portalUrl, 'https://api.datacommons.org/mcp');
+});
+
+test('a rejected call keeps its position: the calls after it still pair with their own spans', () => {
+  // `resolveToolSource` pairs a call to `toolSpans[i]` BY INDEX, so a fix that
+  // filtered the rejected call out of the list before the walk would shift
+  // every later call onto the wrong span. Here call 0 is rejected and resolves
+  // to an aggregate source; call 1 is a dataset-keyed success. A shifted walk
+  // reads span 0 for call 1 and emits the aggregate entry instead.
+  const toolCalls: ToolCallSummary[] = [
+    { name: 'search_indicators', args: { query: 'population' }, failed: true, failureKind: 'unavailable' },
+    {
+      name: 'get_data',
+      args: { type: 'query', portal: 'data.city.example', dataset_id: 'abcd-1234' },
+    },
+  ];
+  const trace = traceWithToolSpans([
+    toolSpan('data-commons'),
+    toolSpan('socrata', { 'tool.dataset_id': 'abcd-1234', 'tool.portal_domain': 'data.city.example' }),
+  ]);
+
+  const entries = buildDataSources(toolCalls, trace, 'data.run-portal.example', NOW);
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].sourceId, 'socrata', 'the surviving call kept its own span');
+  assert.equal(entries[0].datasetId, 'abcd-1234');
+});

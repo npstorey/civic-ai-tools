@@ -30,6 +30,22 @@ export type { DataSourceEntry };
 export interface ToolCallSummary {
   name: string;
   args: Record<string, unknown>;
+  /** Did the producer record this call as REJECTED by the source? A call
+   *  recorded as failed asserts no access: it contributes no dataset-keyed
+   *  entry and marks no aggregate source accessed (see `buildDataSources`).
+   *
+   *  Optional, and absent is absent: a producer that records no outcome
+   *  passes neither this nor `failureKind`, and gets exactly the entries it
+   *  got before the fields existed. Absence means "not recorded as failed",
+   *  never "succeeded". Added 0.4.0. */
+  failed?: boolean;
+  /** The producer's own label for why the call was rejected, carried so a
+   *  caller can hand its record through unchanged. An open string with no
+   *  normative vocabulary: the harness never interprets it, and this module
+   *  never reads it. `failed` is the assertion and `failureKind` only a label
+   *  on one — a summary carrying a kind but no `failed` is not treated as a
+   *  rejection. Added 0.4.0. */
+  failureKind?: string;
 }
 
 interface TraceSpan {
@@ -104,14 +120,25 @@ export function resolveToolSource(
  * dataset-keyed entries (first-seen order), then aggregate sources in
  * registry insertion order — matching the reference implementation.
  *
- * `fallbackPortal` is accepted and NOT consulted since 0.3.1: an entry
- * states the portal the call carried, never the run's. The parameter stays
- * in the signature so existing callers keep compiling.
+ * A call the producer recorded as FAILED (`ToolCallSummary.failed`) asserts
+ * no access and contributes nothing on either branch: no dataset-keyed entry
+ * for a dataset it never read, and no accessed-marking of its aggregate
+ * source. It keeps its POSITION in the walk, because calls are paired to
+ * spans by index. The call is still on the PROV-O graph's tool-call
+ * activities and in the caller's own `queries[]` — what it is not is an
+ * assertion, inside signed bytes, that a source was reached at a timestamp.
+ *
+ * @param fallbackPortal DEPRECATED, and inert since 0.3.1: an entry states
+ * the portal the call carried, never the run's. It stays third of five
+ * positional parameters so existing callers keep compiling, and since 0.4.0
+ * it also accepts `undefined`, which is what a caller that has stopped
+ * consulting it should pass. Dropping it is a breaking change and waits for
+ * a major.
  */
 export function buildDataSources(
   toolCalls: ToolCallSummary[],
   trace: Record<string, unknown>,
-  fallbackPortal: string,
+  fallbackPortal: string | undefined,
   now: string,
   options: DataSourceOptions = {},
 ): DataSourceEntry[] {
@@ -125,6 +152,11 @@ export function buildDataSources(
 
   for (let i = 0; i < toolCalls.length; i++) {
     const tc = toolCalls[i];
+    // A call the producer recorded as rejected reached no data, so it mints
+    // no entry on either branch below. The walk keeps its index rather than
+    // filtering the list: `resolveToolSource` pairs a call to `toolSpans[i]`,
+    // and a filtered list would shift every later call onto the wrong span.
+    if (tc.failed) continue;
     const source = resolveToolSource(tc, toolSpans[i], resolver, fallbackSourceId);
     if (isDatasetKeyedSource(source, registry)) {
       const datasetId = tc.args.dataset_id as string | undefined;

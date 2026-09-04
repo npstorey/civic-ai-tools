@@ -3,6 +3,50 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+**A call the record states as failed asserts no access**
+([civic-ai-tools#192](https://github.com/npstorey/civic-ai-tools/issues/192),
+Wave N10 P-H1). Additive: no existing export is removed, no existing caller
+changes, and every golden byte — both vocabulary eras, all eight
+golden-reproduction cases — is unchanged.
+
+- **`ToolCallSummary` can see the rejection.** Two new OPTIONAL fields:
+  `failed?: boolean`, the producer's assertion that the source rejected this
+  call, and `failureKind?: string`, the producer's own open label for why.
+  The harness never interprets the label, and `buildDataSources` never reads
+  it — `failed` is the assertion, `failureKind` only a label on one. A
+  summary carrying neither is exactly the 0.3.1 shape, and absence means
+  "not recorded as failed", never "succeeded".
+- **`buildDataSources` mints nothing from a rejected call.** A call whose
+  summary carries `failed: true` contributes no dataset-keyed entry for the
+  dataset it never read, and marks no aggregate source accessed. Previously
+  the population could not see the failure at all, so a rejected call minted
+  its dataset's entry and, on an aggregate source, marked that source
+  accessed at a timestamp — inside the bytes a publisher signs. The rejected
+  call keeps its POSITION in the walk (calls pair to spans by index), and it
+  remains on the PROV-O graph's tool-call activities and in the caller's own
+  `queries[]`. A source with any non-rejected call is still accessed; a
+  dataset a successful call also read still gets its entry.
+- **The two inert inputs are marked deprecated, not removed.**
+  `buildDataSources`'s `fallbackPortal` — accepted and not consulted since
+  0.3.1 — now also accepts `undefined`, so a caller that has stopped
+  consulting it can stop supplying a value; it stays third of five positional
+  parameters, because dropping a positional parameter is breaking.
+  `ProvenanceInput.portal` becomes optional and carries `@deprecated`;
+  removing it outright would make the reference app's object literal an
+  excess-property error. Both removals wait for a major.
+- **Byte consequence.** A package built from a record that states no failure
+  is byte-identical to one built by 0.3.1 — the walk reaches the new branch
+  only when a summary carries `failed: true`. A package built from a record
+  that DOES state a failure loses the `dataSources` entries that failure
+  never earned; that is the defect being fixed, and the wave re-emits
+  nothing.
+- **Type-level gate.** `src/capture/data-sources.assert.ts` pins the shape at
+  compile time. `tsconfig.json` excludes `src/**/*.test.ts`, so the suite
+  type-checks nothing — a test can drive a field the type does not have and
+  `npm run typecheck` stays green.
+
 ## 0.3.1 — 2026-09-02
 
 **The graph states what the span carried, and states absence as absence**
