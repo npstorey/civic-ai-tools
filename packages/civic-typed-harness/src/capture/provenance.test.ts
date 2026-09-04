@@ -38,6 +38,7 @@ import {
   PRIOR_ERA_CIVIC_URN_PREFIX,
   PRIOR_ERA_CIVIC_VOCABULARY,
 } from '../format/vocabulary.ts';
+import { CIVIC_SOURCE_REGISTRY } from '../format/sources.ts';
 
 const FIXTURE = JSON.parse(
   readFileSync(
@@ -1009,5 +1010,110 @@ test('byte stability: the golden trace carries no rejected call, so its five too
     JSON.stringify(graph),
     JSON.stringify(FIXTURE.provenanceGraph),
     'a trace that records no failure reproduces the reference bytes exactly',
+  );
+});
+
+// --- The two names the graph carries (Wave N10 P-H3, civic-ai-tools#194) ---
+//
+// #194 asks that the data-response description name a source the way a reader
+// would name it ("Data response from Socrata") rather than by the agent that
+// answered ("Data response from Socrata MCP Server"). The registry already
+// carries both names — `displayName` beside `agentTitle` — so the change is
+// three characters of the prefix expression. It is NOT made here: the
+// description is inside `website-golden.json`'s frozen bytes on the
+// agent-title branch, so the change moves golden bytes, and whether those
+// bytes move is the owner's ruling and not this file's. The two instruments
+// below hold the constraint that survives either ruling and measure exactly
+// what is at stake.
+
+test('the agent node states the AGENT, by its registry title — the reader-facing name reaches no node here', () => {
+  // Non-vacuity: this can only catch a change because the registry's two
+  // names differ for this source. A builder that read `displayName` for the
+  // agent node would emit "Socrata" and fail — and those are signed bytes in
+  // both golden fixtures.
+  assert.notEqual(
+    CIVIC_SOURCE_REGISTRY.socrata.displayName,
+    CIVIC_SOURCE_REGISTRY.socrata.agentTitle,
+    'the fixture is shaped so it cannot fail unless the registry carries two distinct names',
+  );
+  const graph = buildProvenanceGraph(
+    traceOf([skillSpan('a0b1c2'), toolSpan('socrata', 'get_data', 'span-agent-title')]),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const agent = (graph['@graph'] as GraphNode[]).find(
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:socrata',
+  );
+  assert.ok(agent, 'the socrata MCP agent node is expected');
+  assert.equal(agent!['dcterms:title'], 'Socrata MCP Server');
+  assert.equal(
+    agent!['dcterms:title'],
+    CIVIC_SOURCE_REGISTRY.socrata.agentTitle,
+    'the agent node is titled by the registry `agentTitle`, and by nothing else',
+  );
+  assert.notEqual(
+    agent!['dcterms:title'],
+    CIVIC_SOURCE_REGISTRY.socrata.displayName,
+    'the reader-facing name must not reach the agent node — it is inside both golden fixtures’ frozen signed bytes',
+  );
+});
+
+test('byte stability: the golden graph carries two data-response descriptions on the agent-title branch — exactly the frozen bytes a reader-facing prefix would move', () => {
+  // This names the driving fixture for #194's byte question, and it is able
+  // to fail: it asserts the two frozen descriptions read as the registry's
+  // AGENT TITLES today and would read as the registry's DISPLAY NAMES after
+  // the change, on sources whose two names differ. The portal-branch response
+  // and the unknown-source response are named too, as the bytes that must NOT
+  // move under either ruling.
+  const graph = buildProvenanceGraph(
+    FIXTURE.trace,
+    FIXTURE.provenanceInput,
+    PRIOR_ERA_REFERENCE_CONFIG,
+  );
+  const responses = (graph['@graph'] as GraphNode[])
+    .filter((n) => n['@id'].includes(':data:'))
+    .map((n) => ({
+      sourceId: n['civic:sourceId'] as string,
+      description: n['dcterms:description'] as string,
+    }));
+  assert.equal(responses.length, 4, 'the golden trace yields four data responses');
+
+  // The portal branch — untouched by #194 under any ruling.
+  assert.deepEqual(
+    responses.filter((r) => r.description.includes('.')),
+    [{ sourceId: 'socrata', description: 'Data response from data.cityofnewyork.us' }],
+    'exactly one response is described by the portal its span carried',
+  );
+
+  // The agent-title branch on a REGISTRY source: the two bytes at stake.
+  const registryNamed = responses.filter((r) => CIVIC_SOURCE_REGISTRY[r.sourceId] !== undefined
+    && !r.description.includes('.'));
+  assert.deepEqual(
+    registryNamed.map((r) => r.sourceId),
+    ['data-commons', 'boston-opencontext'],
+    'two golden responses are described by a registry source with no portal',
+  );
+  for (const r of registryNamed) {
+    const info = CIVIC_SOURCE_REGISTRY[r.sourceId]!;
+    assert.notEqual(info.displayName, info.agentTitle, `${r.sourceId}: the two registry names must differ for this to be a real measurement`);
+    assert.equal(
+      r.description,
+      `Data response from ${info.agentTitle}`,
+      `${r.sourceId}: the frozen byte reads by AGENT TITLE — reading \`displayName\` here is the #194 change, and it moves this line`,
+    );
+    assert.notEqual(
+      r.description,
+      `Data response from ${info.displayName}`,
+      `${r.sourceId}: stated as the byte the change would write, so this instrument fails the day it does`,
+    );
+  }
+
+  // An UNKNOWN source falls back to the raw id, and holds still under the
+  // change as long as the prefix reads the registry rather than the
+  // capitalising `displayNameForSource` helper.
+  assert.deepEqual(
+    responses.filter((r) => CIVIC_SOURCE_REGISTRY[r.sourceId] === undefined),
+    [{ sourceId: 'euro stat', description: 'Data response from euro stat' }],
+    'the unknown-source response states the raw source id',
   );
 });

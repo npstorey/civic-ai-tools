@@ -5,6 +5,42 @@ to the Typed Standards specification unless noted otherwise.
 
 ## Unreleased
 
+**The reader-facing source name is measured, not changed**
+([civic-ai-tools#194](https://github.com/npstorey/civic-ai-tools/issues/194),
+Wave N10 P-H3). Tests only: no exported behaviour changes, and every golden
+byte — both vocabulary eras, all eight golden-reproduction cases — is
+unchanged.
+
+- **The change #194 asks for moves frozen golden bytes.** A data response the
+  builder cannot describe by a portal is described by its source's registry
+  `agentTitle` (`Data response from Socrata MCP Server`) — the agent's title,
+  implementation language on a reader-facing surface. Reading the registry's
+  `displayName` instead — the reader-facing name, in the registry beside
+  `agentTitle` since the package's first release — is a one-expression change,
+  and it rewrites two lines inside `__fixtures__/website-golden.json`'s
+  captured graph: the data-commons and boston-opencontext data responses, both
+  on the agent-title branch. Three whole-graph byte-parity assertions read
+  those two lines. A golden fixture is never edited to match new behaviour, so
+  the change waits on a decision about whether those bytes move.
+- **The vocabulary era cannot carry it.** `CivicVocabulary` binds exactly two
+  literals — the `civic:` namespace and the id-scheme prefix
+  (`makeCivicVocabulary(ns, urnPrefix)`) — and both era suites assert the two
+  eras differ by those and by nothing else. A description's wording is neither
+  of them and is not era-scoped: the same prefix is emitted under both eras, so
+  gating it on the era would make prior-era reproduction and settlement-era
+  emission disagree about a reader's wording rather than about an identifier.
+- **Two instruments, both able to fail.** `provenance.test.ts` now pins the
+  agent node's `dcterms:title` to the registry `agentTitle` — those are signed
+  bytes in both golden fixtures and the one thing that does not move under
+  either decision — and names the two golden descriptions at stake, asserting
+  each reads by agent title today and *not* by display name. The sources they
+  drive all carry two distinct registry names, which is what makes the
+  assertions able to fail; a builder changed under either one turns it red.
+- **What holds still either way.** The portal branch
+  (`Data response from data.cityofnewyork.us`) and the unknown-source fallback
+  (`Data response from euro stat`, the raw source id) move under neither
+  decision.
+
 **The PROV-O activity for a rejected call says it was rejected**
 ([civic-ai-tools#193](https://github.com/npstorey/civic-ai-tools/issues/193),
 Wave N10 P-H2). Additive: no existing export is removed or retyped, and every
