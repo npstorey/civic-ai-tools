@@ -64,10 +64,14 @@ export interface ProvenanceInput {
   /** The run's selected portal. Accepted and NOT consulted by the graph
    *  builder since 0.3.1: the graph states the portal a tool span carried
    *  (`tool.portal_domain`) and states absence as absence — it never
-   *  substitutes the run's portal for one the call did not address. The
-   *  field stays in the type so callers that pass it (the reference app
-   *  does, as an object literal) keep compiling. */
-  portal: string;
+   *  substitutes the run's portal for one the call did not address.
+   *
+   *  @deprecated Inert since 0.3.1 and optional since 0.4.0 — a caller that
+   *  has stopped consulting it should stop passing it. The field stays in
+   *  the type so callers that do pass it (the reference app does, as an
+   *  object literal) keep compiling; removing it outright would make that
+   *  literal an excess-property error, so removal waits for a major. */
+  portal?: string;
 }
 
 /** Instance configuration for the graph build (config-not-constants). */
