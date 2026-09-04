@@ -3,7 +3,30 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.4.0 — 2026-09-04
+
+Minor: two optional input fields are added and no existing export is removed
+or retyped. `fallbackPortal` and `ProvenanceInput.portal`, inert since 0.3.1,
+are widened and deprecated rather than dropped — removing either is breaking
+and waits for a major.
+
+**What this release claims about golden bytes, and what it does not.** Every
+golden byte is unchanged — both vocabulary eras, all eight
+golden-reproduction cases, and `__fixtures__/website-golden.json`. That
+sentence has appeared in every release note since 0.3.0, and it is narrower
+than it reads: **`__fixtures__/reference-golden.json` carries no spans at
+all** — `spanId` and `scopeSpans` each occur zero times across its eight
+cases, whose traces are empty `resourceSpans` arrays or BlobRefs. So those
+eight cases are green for anything the tool-span loop does, including the
+rejection marker this release adds, and their green is not evidence about it.
+
+`website-golden.json` is the only golden fixture that exercises span-derived
+output: five tool-call activities and four data-response descriptions. It is
+the fixture that proves this release's byte-stability claim, and the one the
+conditional spread of `civic:failed` was measured against — driven red by
+making that spread unconditional, which moves it. Read
+[civic-ai-tools#199](https://github.com/npstorey/civic-ai-tools/issues/199)
+before citing a green golden suite as evidence about the graph builder.
 
 **The reader-facing source name is measured, not changed**
 ([civic-ai-tools#194](https://github.com/npstorey/civic-ai-tools/issues/194),
