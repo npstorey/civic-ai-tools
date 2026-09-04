@@ -36,6 +36,8 @@ import type { OTelTrace, OTelAttribute } from './trace.ts';
 import {
   CIVIC_VOCABULARY,
   CIVICAITOOLS_PLATFORM_AGENT,
+  CIVIC_TERM_FAILED,
+  CIVIC_TERM_FAILURE_KIND,
   type CivicVocabulary,
   type PlatformAgentConfig,
 } from '../format/vocabulary.ts';
@@ -117,6 +119,31 @@ export const CIVICAITOOLS_PROVENANCE_CONFIG: ProvenanceConfig = {
 function getAttr(attrs: OTelAttribute[], key: string): string | undefined {
   const attr = attrs.find(a => a.key === key);
   return attr?.value?.stringValue ?? attr?.value?.intValue ?? undefined;
+}
+
+/**
+ * Read an attribute the producer wrote as a BOOLEAN.
+ *
+ * `getAttr` above returns `stringValue ?? intValue` and cannot see the third
+ * OTel value shape at all — `TraceBuilder` encodes a boolean as
+ * `{ boolValue }` (trace.ts), so `getAttr(attrs, 'error')` returns `undefined`
+ * for a span the producer really did end with `error: true`. This is a
+ * separate reader rather than a widening of `getAttr` on purpose: the nine
+ * attributes `getAttr` serves are strings by contract and feed hashes,
+ * descriptions and `Number()`, and teaching it a fourth return shape would
+ * change what all nine yield for value shapes nobody has measured.
+ *
+ * The comparison is strict, and only `true` counts. A truthiness test over
+ * `stringValue` would read the string `"false"` as an assertion of failure —
+ * marking a call that ANSWERED as refused, inside bytes a publisher signs.
+ * The cost of the strictness is that a producer encoding this attribute as a
+ * string gets no marker; the reference producer does not, and under-reading a
+ * foreign encoding leaves the graph silent, where over-reading one would make
+ * it lie.
+ */
+function getBoolAttr(attrs: OTelAttribute[], key: string): boolean | undefined {
+  const attr = attrs.find(a => a.key === key);
+  return typeof attr?.value?.boolValue === 'boolean' ? attr.value.boolValue : undefined;
 }
 
 function nanoToIso(nano: string): string {
@@ -425,6 +452,29 @@ export function buildProvenanceGraph(
     // the call. In multi-source analyses each call may target a different
     // agent (e.g. socrata for `get_data`, data-commons for `get_observations`).
     const durationMs = getAttr(span.attributes, 'tool.duration_ms');
+
+    // Did the SOURCE REFUSE this call? Before 0.4.0 the graph never asked, so
+    // a refused call and one that answered were the same node with the same
+    // description — the absence of a data-response entity was the only trace
+    // of the rejection, and absence stated as nothing is not absence stated.
+    //
+    // `error` is the ASSERTION and `error.kind` only a LABEL on one. A span
+    // carrying a kind and no assertion is not a rejection, so the kind is read
+    // and stated only inside the failure branch — the posture
+    // `ToolCallSummary.failed`/`failureKind` already takes on the other input.
+    // `error.kind` is the one attribute name across this package and the
+    // reference producer (Wave N10 D5); neither side invents a second.
+    //
+    // The kind is the ONLY cause this graph will ever state. The producer
+    // stopped writing a rejection's raw text onto the span in the same wave —
+    // that text is authored by the source, can name a host, a port or a stack
+    // frame, and the trace travels inline inside the bytes an instance signs.
+    // Reading it here would put it back one layer up; the classified vocabulary
+    // widens instead. Nor does the description change: it states what the call
+    // WAS, and the marker below states how it ended.
+    const failed = getBoolAttr(span.attributes, 'error');
+    const failureKind = failed === true ? getAttr(span.attributes, 'error.kind') : undefined;
+
     graph.push(
       makeActivityNode(toolCallUrn, {
         // Names the tool only when the span did.
@@ -441,6 +491,17 @@ export function buildProvenanceGraph(
           ? { 'prov:endedAtTime': xsdDateTime(nanoToIso(span.endTimeUnixNano)) }
           : {}),
         ...(durationMs ? { 'civic:durationMs': Number(durationMs) } : {}),
+        // Appended LAST and spread conditionally, exactly as `civic:durationMs`
+        // above is: a span that recorded no rejection yields the key list it
+        // yielded at 0.3.1, in the same order, and property insertion order is
+        // the legacy chain's byte contract. `false` is never emitted — a
+        // producer that stated "not failed" and one that stated nothing must
+        // read the same, which is what makes a marker that IS present mean
+        // something. A rejected span carries no `tool.duration_ms` from the
+        // reference producer today (civic-ai-tools-website#413), so
+        // `civic:durationMs` simply does not fire beside these two.
+        ...(failed === true ? { [CIVIC_TERM_FAILED]: true } : {}),
+        ...(failureKind ? { [CIVIC_TERM_FAILURE_KIND]: failureKind } : {}),
       }),
     );
   }

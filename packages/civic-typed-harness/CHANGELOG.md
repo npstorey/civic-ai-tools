@@ -5,6 +5,52 @@ to the Typed Standards specification unless noted otherwise.
 
 ## Unreleased
 
+**The PROV-O activity for a rejected call says it was rejected**
+([civic-ai-tools#193](https://github.com/npstorey/civic-ai-tools/issues/193),
+Wave N10 P-H2). Additive: no existing export is removed or retyped, and every
+golden byte — both vocabulary eras, all eight golden-reproduction cases — is
+unchanged.
+
+- **Two new activity terms.** `CIVIC_TERM_FAILED` (`civic:failed`) and
+  `CIVIC_TERM_FAILURE_KIND` (`civic:failureKind`) are declared in
+  `src/format/vocabulary.ts` and exported from the package root. A `civic:`
+  property name is vocabulary as much as the namespace it hangs under, so the
+  capture-side builder imports them rather than spelling them; `purity.test.ts`
+  now lists both, which is what makes that a claim able to fail.
+- **`buildProvenanceGraph` reads the span's failure.** A tool span the producer
+  ended with the boolean `error: true` yields a tool-call activity carrying
+  `civic:failed: true`, and `civic:failureKind` with the span's `error.kind`
+  verbatim when it carried one. Previously the builder read nine `tool.*` /
+  `mcp.*` attributes and never asked about the outcome, so a call the source
+  REFUSED and one that answered were the same node with the same description —
+  and, a rejected call having no response hash, the absent data-response entity
+  was the only trace of the rejection in the graph. `error.kind` is the one
+  attribute name across this package and the reference producer.
+- **`error` is the assertion, `error.kind` only a label on one.** A span
+  carrying a kind and no assertion is not a rejection and yields neither key —
+  the posture `ToolCallSummary.failed` / `failureKind` already takes.
+- **A new boolean attribute reader.** The module's string attribute reader
+  returns `stringValue ?? intValue` and cannot see `boolValue` at all, so it
+  returned `undefined` for a span that really did record a rejection.
+  `getBoolAttr` is a separate, strictly-typed reader rather than a widening of
+  the string one: the nine attributes that reader serves are strings by
+  contract, and a truthiness test would read the string `"false"` as an
+  assertion of failure. Only the boolean `true` marks an activity.
+- **The description states no cause.** `dcterms:description` is byte-unchanged
+  — it states what the call WAS, and the marker states how it ended. The
+  classified kind is the only cause the graph will ever carry: the reference
+  producer stopped writing a rejection's raw text onto the span in this same
+  wave, and the builder does not read it back in one layer up.
+- **Byte consequence.** Both terms are spread conditionally and appended after
+  every key the activity already carried, exactly as `civic:durationMs` is. A
+  span that recorded no rejection yields the 0.3.1 key list in the 0.3.1 order,
+  and `civic:failed: false` is never emitted — a producer that stated "not
+  failed" and one that stated nothing must read the same, which is what makes a
+  marker that IS present mean something. A rejected span carries no
+  `tool.duration_ms` from the reference producer today
+  ([civic-ai-tools-website#413](https://github.com/npstorey/civic-ai-tools-website/issues/413)),
+  so `civic:durationMs` does not fire beside the two new keys.
+
 **A call the record states as failed asserts no access**
 ([civic-ai-tools#192](https://github.com/npstorey/civic-ai-tools/issues/192),
 Wave N10 P-H1). Additive: no existing export is removed, no existing caller
