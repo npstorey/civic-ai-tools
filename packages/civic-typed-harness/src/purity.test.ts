@@ -149,12 +149,26 @@ test('boundary: capture modules define no civic vocabulary (terms live in format
   // records and must stay reproducible), so a capture module could redefine
   // EITHER era and break the boundary the same way. Listing only the era of
   // the day would let the other one through.
+  //
+  // The list also carries TERM NAMES, not only the two namespace roots and the
+  // profile string. A `civic:` property name is vocabulary as much as the
+  // namespace it hangs under: it is the word a reader of a signed graph
+  // interprets, and it belongs beside the namespace that gives it meaning.
+  // Only the terms minted from Wave N10 onward are listed — the settlement-era
+  // property names that predate it (`civic:sourceId`, `civic:durationMs`,
+  // `civic:datasetId` and their siblings) are still inline literals in
+  // capture/provenance.ts, which is a real inconsistency and is recorded as
+  // one rather than fixed here: moving them is a separate, byte-sensitive
+  // change with no phase behind it. Listing a term here is what makes "the
+  // term is declared in format/vocabulary.ts" a claim that can fail.
   const VOCAB_LITERALS = [
     'urn:civic-record', // the id scheme, settlement era
     'urn:civic-evidence', // the id scheme, prior era
     'civicaitools.org/ns/civic', // the civic: namespace, settlement era
     'civicaitools.org/ns/evidence', // the civic: namespace, prior era
     'ai-assisted-analysis/datHere', // the datHere producer profile
+    'civic:failed', // the rejected-call marker (Wave N10, civic-ai-tools#193)
+    'civic:failureKind', // the classified kind that labels it
   ];
   for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'))) {
     const code = readFileSync(file, 'utf8');

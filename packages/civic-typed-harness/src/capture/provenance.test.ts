@@ -140,7 +140,11 @@ interface SpanStub {
   spanId?: string;
   startTimeUnixNano?: string;
   endTimeUnixNano?: string;
-  attributes: Array<{ key: string; value: { stringValue?: string; intValue?: string } }>;
+  // `boolValue` is the third OTel value shape (capture/trace.ts) and the one a
+  // rejection arrives in — the reference producer ends a refused call's span
+  // with `error: true`. It is on this stub so a fixture can drive that shape
+  // rather than a string the producer never writes.
+  attributes: Array<{ key: string; value: { stringValue?: string; intValue?: string; boolValue?: boolean } }>;
 }
 
 function traceOf(spans: SpanStub[]): Record<string, unknown> {
@@ -710,4 +714,300 @@ test('honest shape: a span with no tool.name yields a query entity with no civic
   assert.equal(query!['dcterms:description'], 'MCP tool arguments (unknown)');
   const activity = derived.find((n) => n['@id'].includes(':tool-call:'));
   assert.equal(activity!['dcterms:description'], 'MCP tool call (unknown)');
+});
+
+// --- The activity states the rejection (Wave N10 P-H2, civic-ai-tools#193) ---
+//
+// RED INSTRUMENT. At 0.3.1 the graph describes a call the source REFUSED
+// exactly as it describes one that answered — same activity node, same
+// description, no marker — so a reader of the signed graph cannot tell them
+// apart. `buildProvenanceGraph` reads nine `tool.*` / `mcp.*` attributes and
+// never looks at the span's failure at all.
+//
+// HOW THE REJECTION ARRIVES. The reference producer ends a rejected call's
+// span with `error: true` and `error.kind: <ToolFailureKind>`
+// (civic-ai-tools-website `src/lib/model-loop/run-tool-loop.ts`, the catch
+// site). `error.kind` is the one attribute name across both repositories
+// (Wave N10 D5) and `error.message` is gone from that span by the same wave,
+// so the classified kind is the ONLY cause the graph may ever state.
+//
+// `error` is a BOOLEAN, and `TraceBuilder` encodes a boolean as
+// `{ boolValue }` (capture/trace.ts) — a value shape the module's string
+// attribute reader returns `undefined` for. The fixtures below therefore
+// write it as a boolean rather than as the string "true": a fixture that
+// wrote the string would drive a path the producer does not use, and would go
+// green over a reader that cannot see a real rejection.
+//
+// THE PROPERTY. `error` is the ASSERTION and `error.kind` only a LABEL on one
+// — the posture `ToolCallSummary.failed` / `failureKind` already takes. A span
+// carrying a kind and no assertion is not a rejection. A span carrying
+// `error: false` is not a rejection either, and states that by carrying NO
+// marker key at all: a literal `false` inside signed bytes would assert an
+// outcome the producer never stated, and "recorded as not-failed" is not
+// distinguishable from "nothing recorded" once it is written down.
+
+/** A span attribute the producer wrote as a BOOLEAN. */
+function boolAttr(key: string, boolValue: boolean): SpanStub['attributes'][number] {
+  return { key, value: { boolValue } };
+}
+
+/** Two dataset ids so the rejected call addresses a dataset nothing else
+ *  touched — the shape in which an assertion about the rejected call can
+ *  actually fail. Seeded hex opens in the letter range (fixture convention). */
+const ANSWERED_DATASET = 'abcd-1234';
+const REJECTED_DATASET = 'a1b2-c3d4';
+
+/**
+ * The wave's driving shape: in ONE trace, a call the source answered and a
+ * call it REFUSED, on different datasets. Two calls rather than one so that a
+ * builder which marked every activity, or marked the wrong one, fails here.
+ *
+ * The rejected span carries no `tool.response_hash` (there was no response)
+ * and no `tool.duration_ms` — the reference producer measures a duration for
+ * a rejected call and does not write it onto the span
+ * (civic-ai-tools-website#413, out of scope for this phase), so the
+ * conditional `civic:durationMs` simply does not fire. That is the input, not
+ * a thing to compensate for.
+ */
+function answeredAndRejectedTrace(options: {
+  kind?: string;
+  rawText?: string;
+  assertion?: boolean;
+} = {}): Record<string, unknown> {
+  const answered: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-answered',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': `{"type":"query","dataset_id":"${ANSWERED_DATASET}","portal":"${RUN_PORTAL}"}`,
+      'tool.dataset_id': ANSWERED_DATASET,
+      'tool.portal_domain': RUN_PORTAL,
+      'tool.response_hash': 'a0b1c2',
+      'tool.duration_ms': '850',
+    }),
+  };
+  const rejected: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-rejected',
+    startTimeUnixNano: '3000000000',
+    endTimeUnixNano: '4000000000',
+    attributes: [
+      ...attrs({
+        'mcp.source': 'socrata',
+        'tool.name': 'get_data',
+        'tool.operation_type': 'query',
+        'tool.arguments': `{"type":"query","dataset_id":"${REJECTED_DATASET}","portal":"${RUN_PORTAL}"}`,
+        'tool.dataset_id': REJECTED_DATASET,
+        'tool.portal_domain': RUN_PORTAL,
+        ...(options.kind ? { 'error.kind': options.kind } : {}),
+        ...(options.rawText ? { 'error.message': options.rawText } : {}),
+      }),
+      ...(options.assertion === undefined
+        ? [boolAttr('error', true)]
+        : [boolAttr('error', options.assertion)]),
+    ],
+  };
+  return traceOf([answered, rejected]);
+}
+
+/** The tool-call activity the builder derived from one span. */
+function activityForSpan(nodes: GraphNode[], spanId: string): GraphNode {
+  const urn = `${CIVIC_URN_PREFIX}:${BASE_INPUT.packageId}:tool-call:${spanId}`;
+  const node = nodes.find((n) => n['@id'] === urn);
+  assert.ok(node, `${urn}: the tool-call activity must be on the graph`);
+  return node!;
+}
+
+/** The keys a tool-call activity carried at 0.3.1, in emission order — the
+ *  byte contract. A marker is APPENDED to this list; nothing in it moves. */
+const ACTIVITY_KEYS_0_3_1 = [
+  '@id',
+  '@type',
+  'dcterms:description',
+  'civic:sourceId',
+  'prov:used',
+  'prov:wasAssociatedWith',
+  'prov:startedAtTime',
+  'prov:endedAtTime',
+];
+
+function hasKey(node: GraphNode, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(node, key);
+}
+
+test('the activity states the rejection: a span ended with the failure carries the marker and its classified kind, and the call that answered carries neither', () => {
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace({ kind: 'unavailable' }),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const nodes = graph['@graph'] as GraphNode[];
+  const rejected = activityForSpan(nodes, 'span-rejected');
+  const answered = activityForSpan(nodes, 'span-answered');
+
+  assert.equal(
+    rejected['civic:failed'],
+    true,
+    'the activity for a span the source refused must state the rejection — without it the graph describes a refused call exactly as it describes one that answered',
+  );
+  assert.equal(
+    rejected['civic:failureKind'],
+    'unavailable',
+    'the classified kind the span carried is stated verbatim — the producer classifies once, the graph does not re-derive',
+  );
+
+  // The two must be TELLABLE APART. This leg is what makes the assertion
+  // above able to fail in the other direction: a builder that marked every
+  // activity would satisfy the first two assertions and fail here.
+  assert.ok(!hasKey(answered, 'civic:failed'), 'the call that answered must carry no failure marker');
+  assert.ok(!hasKey(answered, 'civic:failureKind'), 'the call that answered must carry no failure kind');
+  assert.notDeepEqual(
+    Object.keys(rejected),
+    Object.keys(answered).filter((k) => k !== 'civic:durationMs'),
+    'a reader must be able to tell the two activities apart',
+  );
+});
+
+test('the activity states the rejection: a rejected span that carried no kind states the failure and states no kind', () => {
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace(),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const rejected = activityForSpan(graph['@graph'] as GraphNode[], 'span-rejected');
+  assert.equal(rejected['civic:failed'], true);
+  assert.ok(
+    !hasKey(rejected, 'civic:failureKind'),
+    'a kind the span did not carry is omitted, never placeholdered with "unknown" — that word is one of the producer\'s four real values',
+  );
+});
+
+test('the activity states the rejection: the marker is appended, leaving every key the activity already carried in its place', () => {
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace({ kind: 'timeout' }),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const nodes = graph['@graph'] as GraphNode[];
+  assert.deepEqual(
+    Object.keys(activityForSpan(nodes, 'span-answered')),
+    [...ACTIVITY_KEYS_0_3_1, 'civic:durationMs'],
+    'the activity for a call that answered is the 0.3.1 shape, key for key and in order',
+  );
+  assert.deepEqual(
+    Object.keys(activityForSpan(nodes, 'span-rejected')),
+    [...ACTIVITY_KEYS_0_3_1, 'civic:failed', 'civic:failureKind'],
+    'the marker is appended after the keys the activity already carried — insertion order is the hashed byte order',
+  );
+});
+
+test('absent is absent: a span carrying error: false yields an activity with no failure key at all, not a literal false', () => {
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace({ assertion: false, kind: 'timeout' }),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const node = activityForSpan(graph['@graph'] as GraphNode[], 'span-rejected');
+  assert.ok(
+    !hasKey(node, 'civic:failed'),
+    'a producer that stated "not failed" and a producer that stated nothing must be indistinguishable in the bytes — a literal false asserts an outcome',
+  );
+  assert.ok(!hasKey(node, 'civic:failureKind'), 'no assertion, so no label on one');
+  assert.deepEqual(Object.keys(node), ACTIVITY_KEYS_0_3_1);
+});
+
+test('the kind is a label on the assertion, not the assertion: a span carrying error.kind and no error is not a rejection', () => {
+  const rejectedWithKindOnly: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-kind-only',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': '{"type":"query"}',
+      'error.kind': 'unavailable',
+    }),
+  };
+  const graph = buildProvenanceGraph(
+    traceOf([rejectedWithKindOnly]),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const node = activityForSpan(graph['@graph'] as GraphNode[], 'span-kind-only');
+  assert.ok(!hasKey(node, 'civic:failed'), 'a label with nothing to label is not an assertion of failure');
+  assert.ok(!hasKey(node, 'civic:failureKind'), 'and the label alone is not stated either');
+  assert.deepEqual(Object.keys(node), ACTIVITY_KEYS_0_3_1);
+});
+
+test('the description names no cause the span did not carry: raw text on the span reaches no node the builder derives from it', () => {
+  // The reference producer stopped writing raw error text onto the span in
+  // this same wave, precisely so it could not reach signed bytes. This
+  // fixture puts it back — a hostname and a stack fragment, the shapes such
+  // text actually carries — and demands the builder ignore it. Without the
+  // fixture the assertion could only ever be green.
+  const rawText = 'connect ECONNREFUSED mcp.unreachable.example:8443 at Socket.onError';
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace({ kind: 'unavailable', rawText }),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-rejected');
+  for (const node of derived) {
+    assert.ok(
+      !JSON.stringify(node).includes('mcp.unreachable.example'),
+      `${node['@id']}: a node derived from the span names a host out of the source's raw text`,
+    );
+    assert.ok(
+      !JSON.stringify(node).includes('ECONNREFUSED'),
+      `${node['@id']}: a node derived from the span carries the source's raw text`,
+    );
+  }
+  const activity = activityForSpan(graph['@graph'] as GraphNode[], 'span-rejected');
+  assert.equal(
+    activity['dcterms:description'],
+    'MCP tool call: get_data (query)',
+    'the description states what the call WAS; the cause is stated by the classified kind and by nothing else',
+  );
+  assert.equal(activity['civic:failureKind'], 'unavailable', 'the classified kind is the only cause on the node');
+});
+
+test('byte stability: the golden trace carries no rejected call, so its five tool-call activities are what an unconditional marker would move', () => {
+  // This names the driving fixture for the byte-stability criterion. The
+  // golden-parity tests at the top of this file compare the whole graph
+  // against `website-golden.json` byte for byte; an unconditional
+  // `civic:failed: false` would add a key to each of these five activities and
+  // turn every one of them, and all eight golden-reproduction cases, red.
+  const goldenToolSpans = (FIXTURE.trace.resourceSpans[0].scopeSpans[0].spans as SpanStub[]).filter(
+    (s) => s.name === 'mcp_tool_call',
+  );
+  assert.equal(goldenToolSpans.length, 5, 'the golden trace has five tool spans');
+  for (const span of goldenToolSpans) {
+    assert.ok(
+      !span.attributes.some((a) => a.key === 'error' || a.key === 'error.kind'),
+      'no golden tool span carries a failure — this fixture can only exercise the unmarked path',
+    );
+  }
+
+  const graph = buildProvenanceGraph(
+    FIXTURE.trace,
+    FIXTURE.provenanceInput,
+    PRIOR_ERA_REFERENCE_CONFIG,
+  );
+  const activities = (graph['@graph'] as GraphNode[]).filter((n) => n['@id'].includes(':tool-call:'));
+  assert.equal(activities.length, 5);
+  for (const activity of activities) {
+    assert.ok(!hasKey(activity, 'civic:failed'), `${activity['@id']}: no failure was recorded, so no key is emitted`);
+    assert.ok(!hasKey(activity, 'civic:failureKind'), `${activity['@id']}: and no kind either`);
+  }
+  assert.equal(
+    JSON.stringify(graph),
+    JSON.stringify(FIXTURE.provenanceGraph),
+    'a trace that records no failure reproduces the reference bytes exactly',
+  );
 });
