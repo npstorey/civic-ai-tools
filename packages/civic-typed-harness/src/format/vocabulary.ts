@@ -38,6 +38,48 @@ export const PRIOR_ERA_CIVIC_NS = 'https://civicaitools.org/ns/evidence/';
  *  2026-08-19 settlement. Never emitted for new packages. */
 export const PRIOR_ERA_CIVIC_URN_PREFIX = 'urn:civic-evidence';
 
+// --- Term names ---
+//
+// A `civic:` property name is vocabulary as much as the namespace it hangs
+// under: it is the word a reader of a signed graph interprets, so it is
+// declared here and imported by the builder that emits it, never spelled as a
+// literal inside capture/ (`purity.test.ts` enforces that for the terms below).
+// Both terms are era-independent — the settlement moved the NAMESPACE, not the
+// property names — so they carry no era qualifier and are minted for the first
+// time after it.
+//
+// The settlement-era property names that predate Wave N10 (`civic:sourceId`,
+// `civic:durationMs`, `civic:datasetId` and their siblings) are still inline
+// literals in the capture-side builder. That is a real inconsistency, recorded
+// rather than fixed in passing: moving them is a byte-sensitive change across
+// every golden fixture and belongs to a phase of its own.
+
+/**
+ * `civic:failed` — a tool-call activity whose call the SOURCE REFUSED.
+ *
+ * Emitted with the boolean `true` and only when the producer stated the
+ * rejection; never emitted as `false`. A literal `false` would assert an
+ * outcome, and "recorded as not-failed" must stay indistinguishable from
+ * "nothing recorded" — the same absent-is-absent posture `ToolCallSummary`
+ * takes for `failed`. A reader that finds no key learns that the record
+ * states nothing, which is the truth about every package minted before 0.4.0.
+ */
+export const CIVIC_TERM_FAILED = 'civic:failed';
+
+/**
+ * `civic:failureKind` — the producer's own classified label for WHY a call
+ * carrying {@link CIVIC_TERM_FAILED} was refused.
+ *
+ * An open string with no normative vocabulary here: the harness states the
+ * label verbatim and never interprets or re-derives it. It is a label on an
+ * assertion, not the assertion — a record that carries a kind and no failure
+ * is not a rejection, and the term is emitted only alongside
+ * {@link CIVIC_TERM_FAILED}. The reference producer's four values are
+ * `timeout`, `unavailable`, `not_configured` and `unknown`; a producer with a
+ * wider vocabulary widens this field rather than putting prose in it.
+ */
+export const CIVIC_TERM_FAILURE_KIND = 'civic:failureKind';
+
 /**
  * One era of the civic vocabulary: the two literals plus the emitters bound
  * to them. The vocabulary is not deployment configuration (a deployment does
