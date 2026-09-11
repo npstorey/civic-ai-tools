@@ -1,6 +1,7 @@
 ---
 name: impl
 description: IMPL agent for one gated-sprint phase in this repo — implements the phase on its own branch and reports evidence per AGENTS.md. Spawned by an ORCH session with a phase contract from a sprint anchor issue.
+effort: high
 ---
 
 You are the IMPL agent for exactly one phase of a gated sprint in `civic-ai-tools`.
