@@ -3,6 +3,97 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.4.1 — 2026-09-12
+
+Patch: one existing export changes its output for one input shape, and no
+export is added, removed or retyped. That is measured across the release
+boundary rather than asserted — the published `0.4.0` and this build each
+expose 49 runtime exports from the package root, none added, none removed,
+none changing runtime type, and no declared top-level name in `dist/*.d.ts`
+differing between them. The tarball carries the same 28 files, and 22 of the
+24 under `dist/` are byte-identical to `0.4.0`; the two that are not are
+`dist/rubric/adversarial-eval-core.js` and its `.d.ts`, the latter differing
+by a doc comment alone.
+
+**What this release claims about golden bytes, and what it does not.** Every
+golden byte is unchanged. This time that sentence is not the evidence, and
+saying so is the point: **no golden fixture reaches the export that changed.**
+`buildEvaluationPrompt` is named in two test files, both under `src/rubric/`,
+and in neither golden suite. `__fixtures__/website-golden.json` carries no
+`queries` array at all; `__fixtures__/reference-golden.json` carries eight and
+**zero** occurrences of the `failed` key that is this release's only new
+branch. So the golden suites are green for this change the way they are green
+for a change to a file they never import, and their green is not evidence
+about it. This is the same narrowing
+[civic-ai-tools#199](https://github.com/npstorey/civic-ai-tools/issues/199)
+records for the graph builder, met from the other side.
+
+What **is** evidence is a direct measurement of the changed export either side
+of the release boundary: `buildEvaluationPrompt` imported from the published
+`0.4.0` and from this build, run over the same package.
+
+- A package in which **no entry records `failed: true`** renders
+  **byte-identical** on both — 492 bytes, `sha256 ed77c84e…` — over five entry
+  shapes: `resultRows: 12`, `resultRows: 0`, no `resultRows` at all,
+  `failed: false`, and a bare `failureKind` carrying no `failed`.
+- The same package plus one entry recorded `failed: true` renders
+  **differently** (539 bytes against 607). That case is the reason the first
+  one is worth reporting: an instrument that answers "identical" whatever it is
+  fed has not measured anything, and this one is shown answering "different"
+  on the shape it must flag.
+
+**The evaluator reads a rejected call as rejected**
+([civic-ai-tools#203](https://github.com/npstorey/civic-ai-tools/issues/203),
+Wave N11 P-H1). Behaviour change, confined to one input shape.
+
+- **The line that changes.** A `queries[]` entry the producer recorded as
+  rejected rendered `→ ? rows` — the same line an entry whose row count was
+  simply never recorded produces. A rejection and an unrecorded count were one
+  line to the evaluator, and the rubric asks that evaluator to cross-check the
+  answer's figures against the data the tool calls returned, so the conflation
+  invited it to read data that was never returned as merely uncounted. Its
+  score becomes a signed attestation. The entry now reads `→ REJECTED by the
+  source — no data was returned, and no row count is claimed`.
+- **`failed: true` is the whole assertion.** `failureKind` is declared on the
+  shape and **deliberately not rendered**: it is producer-controlled text, and
+  the turn built here is read by a model whose score is signed, so the
+  rejection is stated in this module's own fixed words, interpolating nothing
+  the producer wrote and claiming no row count.
+- **Absence stays absence.** An entry that records no outcome renders exactly
+  as it did before the fields existed. `failed: false` is not a rejection, and
+  a `failureKind` with no `failed` is not a rejection — the posture
+  `ToolCallSummary.failed` already takes in `capture/data-sources.ts`.
+- **No dependency moves.** The two keys are read off a locally-declared shape
+  rather than imported, following that same file: produce-core `0.3.0`, which
+  the lockfile resolves, names neither key. No manifest change, no lockfile
+  bump, no new dependency.
+
+**`RUBRIC_VERSION_SHA256` does not move, and the claim around it is corrected
+rather than left standing**
+([civic-ai-tools#207](https://github.com/npstorey/civic-ai-tools/issues/207)).
+The hash is `sha256Hex(EVALUATION_RUBRIC)` — the rubric text alone. It does not
+cover `buildEvaluationPrompt`, the template that assembles that rubric with the
+package's tool calls, data sources and model into the turn the evaluator
+actually reads. So this release changes what an evaluator is shown without
+changing the value an attestation pins as `methodology.promptSetVersion`: two
+evaluations either side of it carry the same value, measured here as
+`b62b193c992fd430cc82dff9a80a057bbe0b2b656fbdace450ca1a5d99fffa02` on both the
+published `0.4.0` and this build.
+
+- **The overclaim is retired in the same change.** ADR-0015 §3, Q26's
+  resolution note and the two module comments said the value pinned the whole
+  prompt set that produced the scores. They now say it pins the rubric
+  *wording*, and that the prompt template is outside the hash. The phrase they
+  used for the wider claim appears nowhere in the tree at this release.
+- **The gap is filed, not resolved.** #207 records what the hash covers, what
+  it does not, and the two spec-level options — widen the hash, or add a second
+  field — with no recommendation. Which one is right is a specification
+  decision, not a package's.
+
+A consumer sees none of this until its own lockfile moves: `^0.4.0` admits
+`0.4.1`, so the manifest range need not change and the refresh is the whole of
+the upgrade.
+
 ## 0.4.0 — 2026-09-04
 
 Minor: two optional input fields are added and no existing export is removed
