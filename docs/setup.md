@@ -176,7 +176,7 @@ The fastest way to get started — no local install needed.
 
 ### VS Code with GitHub Copilot (City Workers)
 
-For NYC city employees behind the corporate proxy (`bcpxy.nycnet`):
+For users behind a corporate proxy (the example config's `GLOBAL_AGENT_HTTP_PROXY` and `GLOBAL_AGENT_HTTPS_PROXY` use the placeholder `http://proxy.example.internal:8080`; set both to your proxy's host and port):
 
 1. **Build the Socrata MCP server:**
    ```powershell
