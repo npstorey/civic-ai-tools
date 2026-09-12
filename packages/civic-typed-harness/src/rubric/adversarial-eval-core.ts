@@ -5,8 +5,14 @@
 // brief §1. The model runner and DB/blob emission (`adversarial-eval.ts`)
 // stay app-side — this module never performs I/O.
 //
-// ⚠ RUBRIC_VERSION_SHA256 is a Q26-pinned version hash: attestations pin the
-// exact prompt set that scored them by this value. The rubric text below is
+// ⚠ RUBRIC_VERSION_SHA256 is a Q26-pinned version hash over THE RUBRIC TEXT
+// ALONE (`sha256Hex(EVALUATION_RUBRIC)`). It does NOT cover
+// `buildEvaluationPrompt` below — the template that assembles the rubric with
+// the package's tool calls, data sources and model into the turn the evaluator
+// actually reads. So two evaluations either side of a change to that template
+// carry the SAME `methodology.promptSetVersion` while the evaluator saw
+// different inputs; civic-ai-tools#207 files that gap for the specification to
+// settle, and this module does not resolve it. The rubric text below is
 // byte-exact with the reference implementation (the relocation changes no
 // hashes), and the test suite asserts the literal digest. Any wording change
 // to EVALUATION_RUBRIC is a NEW rubric version — never edit the text without
@@ -66,8 +72,54 @@ Respond in this exact JSON format (no markdown fences, just raw JSON):
 
 /** The methodology's `promptSetVersion`: SHA-256 of the rubric text, computed
  *  once at module load. Any wording change to the rubric produces a new
- *  version, so an attestation pins the exact prompt set that scored it. */
+ *  version, so an attestation pins the rubric WORDING that scored it — and
+ *  that wording only. The prompt template around it (`buildEvaluationPrompt`)
+ *  is outside this hash, so one value does not identify one set of evaluator
+ *  inputs (civic-ai-tools#207). */
 export const RUBRIC_VERSION_SHA256 = sha256Hex(EVALUATION_RUBRIC);
+
+/** The outcome keys a producer records on a `queries[]` entry, declared HERE
+ *  rather than imported. produce-core's `EnvelopeQuery` does not name them —
+ *  the lockfile resolves 0.3.0, whose entry shape is `tool` / `operationType`
+ *  / `arguments` / `datasetId` / `portal` / `duration_ms` / `resultRows` /
+ *  `resultColumns` and nothing else. The harness already reads these keys off
+ *  its own locally-declared shape in `capture/data-sources.ts`
+ *  (`ToolCallSummary.failed`), and this module follows that precedent, so
+ *  reading them here needs no lockfile bump, no manifest change and no new
+ *  dependency (civic-ai-tools#203).
+ *
+ *  ABSENCE IS ABSENCE. `failed` is the assertion. A producer that records no
+ *  outcome passes neither key and gets exactly the rendering it got before the
+ *  fields existed; absence means "not recorded as failed", never "succeeded".
+ *
+ *  `failureKind` is the producer's own open-vocabulary label for a rejection.
+ *  It is declared so this shape describes what an entry can carry, and it is
+ *  DELIBERATELY NOT RENDERED: it is producer-controlled text, and the turn
+ *  built here is read by a model whose score becomes a signed attestation, so
+ *  the rejection is stated in this module's own fixed words instead. `failed`
+ *  is the assertion and `failureKind` only a label on one — an entry carrying
+ *  a kind but no `failed` is NOT a rejection, which is the harness's own rule
+ *  as stated at `capture/data-sources.ts`. */
+interface RecordedCallOutcome {
+  failed?: boolean;
+  failureKind?: string;
+}
+
+/** Did the producer record this entry as REJECTED by the source? Only a
+ *  literal `failed: true` is a rejection (see `RecordedCallOutcome`). */
+function wasRecordedRejected(query: RecordPackage['queries'][number]): boolean {
+  return (query as typeof query & RecordedCallOutcome).failed === true;
+}
+
+/** What the evaluator is told about a call the source rejected. A FIXED
+ *  string: it interpolates nothing the producer wrote, and it claims no row
+ *  count — there were no rows to count, which is neither "zero rows" nor "an
+ *  unknown number of rows". The rubric asks the evaluator to cross-check
+ *  figures against the data returned in the tool calls, so a rejected call
+ *  reading `→ ? rows` invited it to treat absent data as merely unrecorded
+ *  (civic-ai-tools#203). */
+const REJECTED_CALL_RENDERING =
+  'REJECTED by the source — no data was returned, and no row count is claimed';
 
 /** Build the user-turn evaluation content from a package's signed fields.
  *  Takes `RecordPackage` — produce-core 0.3.0's settlement-era name for the
@@ -80,7 +132,10 @@ export function buildEvaluationPrompt(pkg: RecordPackage): string {
       const argStr = Object.entries(q.arguments)
         .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
         .join(', ');
-      return `  ${i + 1}. ${q.tool}(${argStr}) → ${q.resultRows ?? '?'} rows`;
+      const outcome = wasRecordedRejected(q)
+        ? REJECTED_CALL_RENDERING
+        : `${q.resultRows ?? '?'} rows`;
+      return `  ${i + 1}. ${q.tool}(${argStr}) → ${outcome}`;
     })
     .join('\n');
 

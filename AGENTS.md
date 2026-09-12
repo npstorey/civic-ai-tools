@@ -29,7 +29,7 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 |---|---|
 | `npm ci` | `added 116 packages, and audited 118 packages` … `found 0 vulnerabilities`; leaves `packages/civic-typed-harness/dist` populated |
 | `npm run build` | the `tsc -p tsconfig.json` echo and nothing after it, exit 0 |
-| `npm test` | `# pass 125` / `# fail 0` (`node --test` TAP; includes the golden byte-compat suite) |
+| `npm test` | `# pass 162` / `# fail 0` (`node --test` TAP; includes the golden byte-compat suite) |
 | `npm run typecheck` | no output, exit 0 |
 | `npm run lint` | no output, exit 0 |
 | `npm run check:budgets` | `Dependency-budget check passed.` — twin `check:budgets:self-test` → `# pass 9` / `# fail 0` |
