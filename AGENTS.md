@@ -27,18 +27,27 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 
 | Command | Healthy output |
 |---|---|
-| `npm ci` | `added 116 packages, and audited 118 packages` … `found 0 vulnerabilities`; leaves `packages/civic-typed-harness/dist` populated |
+| `npm ci` | exit 0, and `packages/civic-typed-harness/dist` populated. The package and audit counts move with the lockfile; a pre-existing high-severity advisory is reported here and gates nothing |
 | `npm run build` | the `tsc -p tsconfig.json` echo and nothing after it, exit 0 |
-| `npm test` | `# pass 162` / `# fail 0` (`node --test` TAP; includes the golden byte-compat suite) |
-| `npm run typecheck` | no output, exit 0 |
+| `npm test` | `# fail 0` (`node --test` TAP; includes the golden byte-compat suite). The pass total rises as tests are added — read it from the latest merge-ref run; `# fail 0` is the gate |
+| `npm run typecheck` | no output, exit 0 — runs the build config AND `tsconfig.test.json`, so a type error in a test file fails here (civic-ai-tools#197) |
 | `npm run lint` | no output, exit 0 |
-| `npm run check:budgets` | `Dependency-budget check passed.` — twin `check:budgets:self-test` → `# pass 9` / `# fail 0` |
-| `npm run check:spec-frontmatter` | `Spec-frontmatter check passed.` — twin `check:spec-frontmatter:self-test` → `# pass 11` / `# fail 0` |
-| `npm run check:skill-drift` | `Skill-drift check passed — every embedded copy matches its source of truth.` — twin `check:skill-drift:self-test` → `# pass 29` / `# fail 0` |
-| `python3 .claude/skills/publish-record/test_publish.py` | `Ran 73 tests` … `OK` |
+| `npm run check:budgets` | `Dependency-budget check passed.` — twin `check:budgets:self-test` → `# fail 0` |
+| `npm run check:spec-frontmatter` | `Spec-frontmatter check passed.` — twin `check:spec-frontmatter:self-test` → `# fail 0` |
+| `npm run check:gate-table` | `# fail 0` — guards this table: no pinned count, and the same command set as `ci.yml` |
+| `npm run check:skill-drift` | `Skill-drift check passed — every embedded copy matches its source of truth.` — twin `check:skill-drift:self-test` → `# fail 0` |
+| `python3 .claude/skills/publish-record/test_publish.py` | `OK` (`unittest`; the test total rises as tests are added) |
 
-`.github/workflows/ci.yml` is the only workflow and runs exactly these, in this order. It is **credential-free by
-construction** — never add a `secrets.` reference or placeholder-credential `env:` block. `npm ci` before believing red.
+**No cell above pins a count.** Every pass total, package count and test total in this table was wrong within a wave or
+two of being written — the `npm test` row was stale by 25 when Wave N11 P-H1 moved it, and the `npm ci` row still claimed
+`found 0 vulnerabilities` against a tree that reports one. What holds still is the invariant (`# fail 0`, exit 0, the
+checker's own sentence), so that is what is written down; `scripts/agents-md-gate-table.test.mjs` fails if a count comes
+back. Read a live total from the latest merge-ref run, never from this file.
+
+`.github/workflows/ci.yml` is the only workflow and runs exactly these commands (each checker's self-test immediately
+before its check). That agreement is guarded in both directions by the same test: a command in this table that CI does
+not run, or a gate CI runs that this table does not name, fails it. The workflow is **credential-free by construction**
+— never add a `secrets.` reference or placeholder-credential `env:` block. `npm ci` before believing red.
 
 ## MCP configuration
 

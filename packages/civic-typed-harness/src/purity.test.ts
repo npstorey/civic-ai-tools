@@ -141,44 +141,166 @@ test('boundary: format-extension and rubric modules never import from capture', 
   }
 });
 
-test('boundary: capture modules define no civic vocabulary (terms live in format/)', () => {
-  // BOTH ERAS are barred (spec Appendix J). The invariant this test defends is
-  // "vocabulary literals live only in format/vocabulary.ts" — not "the
-  // prior-era strings are gone". After the 2026-08-19 settlement the prior-era
-  // terms are still real, exported vocabulary (they are frozen inside signed
-  // records and must stay reproducible), so a capture module could redefine
-  // EITHER era and break the boundary the same way. Listing only the era of
-  // the day would let the other one through.
-  //
-  // The list also carries TERM NAMES, not only the two namespace roots and the
-  // profile string. A `civic:` property name is vocabulary as much as the
-  // namespace it hangs under: it is the word a reader of a signed graph
-  // interprets, and it belongs beside the namespace that gives it meaning.
-  // Only the terms minted from Wave N10 onward are listed — the settlement-era
-  // property names that predate it (`civic:sourceId`, `civic:durationMs`,
-  // `civic:datasetId` and their siblings) are still inline literals in
-  // capture/provenance.ts, which is a real inconsistency and is recorded as
-  // one rather than fixed here: moving them is a separate, byte-sensitive
-  // change with no phase behind it. Listing a term here is what makes "the
-  // term is declared in format/vocabulary.ts" a claim that can fail.
-  const VOCAB_LITERALS = [
-    'urn:civic-record', // the id scheme, settlement era
-    'urn:civic-evidence', // the id scheme, prior era
-    'civicaitools.org/ns/civic', // the civic: namespace, settlement era
-    'civicaitools.org/ns/evidence', // the civic: namespace, prior era
-    'ai-assisted-analysis/datHere', // the datHere producer profile
-    'civic:failed', // the rejected-call marker (Wave N10, civic-ai-tools#193)
-    'civic:failureKind', // the classified kind that labels it
-  ];
-  for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'))) {
+// --- Vocabulary literals: the universe is derived from both ends ---
+//
+// The rule is "capture modules never DEFINE civic vocabulary". Until Wave N11
+// this test held a LIST of the seven literals it knew about, and a list is
+// exactly the shape that cannot fail on the site it never named: two `civic:`
+// term names were on it and fourteen others, spelled inline in
+// capture/provenance.ts and declared nowhere, were invisible to it
+// (civic-ai-tools#199 §2). Both legs below derive their universe instead —
+// one from what the FORMAT group declares, one from what the CAPTURE group
+// spells — so neither can be satisfied by editing this file.
+//
+// A third leg lives in capture/provenance.test.ts, because it needs a graph:
+// every `civic:` key a DRIVEN build emits must be the value of a constant
+// declared in format/vocabulary.ts, and every declared term must be emitted.
+// Static text cannot state that one.
+
+/**
+ * Every string literal in a TypeScript source, with comments removed.
+ *
+ * Scanning literals rather than raw text is what lets the checks below name a
+ * bare `civicaitools.org` — capture modules mention it in PROSE, and a
+ * substring search over the file text would fail on the comment. The previous
+ * list dodged that by listing `civicaitools.org/ns/civic` instead; deriving
+ * the universe means the derivation has to be able to tell code from a
+ * comment. Template literals are returned whole, `${...}` included.
+ *
+ * Exported so the test below can drive it over samples where the right answer
+ * is written out — an extractor that quietly returned nothing would make
+ * every check here pass.
+ */
+export function stringLiterals(source: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  const n = source.length;
+  while (i < n) {
+    const c = source[i]!;
+    const next = i + 1 < n ? source[i + 1] : '';
+    if (c === '/' && next === '/') {
+      while (i < n && source[i] !== '\n') i++;
+      continue;
+    }
+    if (c === '/' && next === '*') {
+      i += 2;
+      while (i < n && !(source[i] === '*' && source[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      const quote = c;
+      i++;
+      let value = '';
+      while (i < n && source[i] !== quote) {
+        if (source[i] === '\\') {
+          value += source[i + 1] ?? '';
+          i += 2;
+          continue;
+        }
+        value += source[i];
+        i++;
+      }
+      i++;
+      out.push(value);
+      continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+test('the literal extractor reads code and not comments (the check below is only as good as this)', () => {
+  const sample = [
+    "const a = 'kept';",
+    '// const b = \'from-a-line-comment\';',
+    '/* const c = \'from-a-block-comment\'; */',
+    'const d = "with // a slash-slash inside";',
+    'const e = `template ${x} literal`;',
+    "const f = 'escaped \\' quote';",
+  ].join('\n');
+  assert.deepEqual(stringLiterals(sample), [
+    'kept',
+    'with // a slash-slash inside',
+    'template ${x} literal',
+    "escaped ' quote",
+  ]);
+  // And a real file: the extractor must actually find something in the module
+  // the checks below scan, or "no offending literal" means "no literal read".
+  const provenance = shippedSourceFiles().find((f) => rel(f) === 'capture/provenance.ts');
+  assert.ok(provenance, 'capture/provenance.ts is expected in the shipped source');
+  assert.ok(
+    stringLiterals(readFileSync(provenance!, 'utf8')).includes('tool.duration_ms'),
+    'the extractor reads capture/provenance.ts — a known literal from it must come back',
+  );
+});
+
+/** Every top-level `export const NAME = '<string>'` of the FORMAT group, as
+ *  declared-name → value. Derived by reading the group off disk: a term
+ *  declared tomorrow is in this set the moment it is written, with no list to
+ *  update. */
+function formatGroupStringExports(): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('format/'))) {
     const code = readFileSync(file, 'utf8');
-    for (const literal of VOCAB_LITERALS) {
-      assert.ok(
-        !code.includes(literal),
-        `${rel(file)} contains the vocabulary literal "${literal}" — capture modules import vocabulary from the format-extension group, never define it.`,
-      );
+    for (const m of code.matchAll(/^export const ([A-Z][A-Z0-9_]*) = '([^']*)';$/gm)) {
+      out.set(m[1]!, m[2]!);
     }
   }
+  return out;
+}
+
+test('boundary: capture modules spell no literal the format group declares as vocabulary', () => {
+  // The universe: the format group's own string constants, filtered to the
+  // ones that are VOCABULARY rather than configuration. The filter is a shape,
+  // not a list — a namespace URI, a urn scheme, a `civic:` term and a compound
+  // profile label all carry a `:`, `/` or `.`; `socrata` (the fallback source
+  // id), `datHere` (the content-profile word) and `ai-assisted-analysis` (the
+  // profile TYPE) do not, and are legitimately spoken elsewhere.
+  //
+  // BOTH ERAS are covered without saying so, because both are declared in
+  // format/vocabulary.ts: after the 2026-08-19 settlement the prior-era terms
+  // are still real, exported vocabulary — frozen inside signed records — so a
+  // capture module could redefine either era and break the boundary the same
+  // way.
+  const vocabulary = [...formatGroupStringExports()].filter(([, value]) =>
+    /[:/.]/.test(value),
+  );
+  assert.ok(
+    vocabulary.length >= 7,
+    `expected the format group to declare several vocabulary literals, found ${vocabulary.length}`,
+  );
+  for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'))) {
+    const literals = stringLiterals(readFileSync(file, 'utf8'));
+    for (const [name, value] of vocabulary) {
+      for (const literal of literals) {
+        assert.ok(
+          !literal.includes(value),
+          `${rel(file)} spells "${value}" (declared in the format group as ${name}) — capture modules import vocabulary from the format-extension group, never define it.`,
+        );
+      }
+    }
+  }
+});
+
+test('boundary: no capture module spells a `civic:` term at all, declared or not', () => {
+  // The other end of the universe. The check above can only see terms the
+  // format group already declares, so a term INVENTED inline — the exact
+  // fourteen this rule was written for — would pass it. This one derives from
+  // what capture spells: any `civic:` literal is a term, whether or not
+  // anything declares it, and the only correct number of them in capture/ is
+  // zero.
+  const offenders: string[] = [];
+  for (const file of shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'))) {
+    for (const literal of stringLiterals(readFileSync(file, 'utf8'))) {
+      if (/civic:[A-Za-z]/.test(literal)) offenders.push(`${rel(file)}: "${literal}"`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `a \`civic:\` property name is vocabulary as much as the namespace it hangs under: declare it in format/vocabulary.ts and import it. Spelled inline: ${offenders.join(', ')}`,
+  );
 });
 
 test('boundary: format-extension modules never walk a trace', () => {

@@ -39,10 +39,24 @@ import {
   PRIOR_ERA_CIVIC_VOCABULARY,
 } from '../format/vocabulary.ts';
 import { CIVIC_SOURCE_REGISTRY } from '../format/sources.ts';
+// Namespace import: the vocabulary guard at the foot of this file derives the
+// declared-term set from the module's exported VALUES, so it must see all of
+// them rather than the handful named above.
+import * as vocabularyModule from '../format/vocabulary.ts';
 
 const FIXTURE = JSON.parse(
   readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), '..', '__fixtures__', 'website-golden.json'),
+    'utf8',
+  ),
+);
+
+/** The OTHER golden fixture — read here only so the byte-stability
+ *  measurement below covers both, rather than the one this file already
+ *  reproduces. */
+const REFERENCE_GOLDEN = JSON.parse(
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '..', '__fixtures__', 'reference-golden.json'),
     'utf8',
   ),
 );
@@ -763,17 +777,31 @@ const REJECTED_DATASET = 'a1b2-c3d4';
  * call it REFUSED, on different datasets. Two calls rather than one so that a
  * builder which marked every activity, or marked the wrong one, fails here.
  *
- * The rejected span carries no `tool.response_hash` (there was no response)
- * and no `tool.duration_ms` — the reference producer measures a duration for
- * a rejected call and does not write it onto the span
- * (civic-ai-tools-website#413, out of scope for this phase), so the
- * conditional `civic:durationMs` simply does not fire. That is the input, not
- * a thing to compensate for.
+ * The rejected span carries no `tool.response_hash` — there was no response.
+ * It carries a `tool.duration_ms` only when `rejectedDurationMs` is passed,
+ * and the two shapes are BOTH real inputs:
+ *
+ *   - WITHOUT it — a producer that stated no elapsed for the rejection. This
+ *     is what the reference producer emitted until
+ *     civic-ai-tools-website#413 shipped (Wave N11 P4, merged `ec7f173`), and
+ *     it is what any other producer that measures nothing still emits. The
+ *     docstring that stood here said the reference producer "does not write
+ *     it onto the span (civic-ai-tools-website#413, out of scope for this
+ *     phase)"; since #413 that sentence is false, and it is corrected rather
+ *     than deleted because the shape it described is still a shape the graph
+ *     must handle — absence stated as absence.
+ *   - WITH it — what the reference producer emits today: the elapsed it
+ *     already measured, written onto the span on the rejection path. That
+ *     puts `civic:durationMs` BESIDE `civic:failed` on one activity, in
+ *     SIGNED bytes, which is the combination
+ *     `the reference producer's rejected call states its elapsed` below
+ *     drives and pins.
  */
 function answeredAndRejectedTrace(options: {
   kind?: string;
   rawText?: string;
   assertion?: boolean;
+  rejectedDurationMs?: string;
 } = {}): Record<string, unknown> {
   const answered: SpanStub = {
     name: 'mcp_tool_call',
@@ -804,6 +832,9 @@ function answeredAndRejectedTrace(options: {
         'tool.arguments': `{"type":"query","dataset_id":"${REJECTED_DATASET}","portal":"${RUN_PORTAL}"}`,
         'tool.dataset_id': REJECTED_DATASET,
         'tool.portal_domain': RUN_PORTAL,
+        ...(options.rejectedDurationMs
+          ? { 'tool.duration_ms': options.rejectedDurationMs }
+          : {}),
         ...(options.kind ? { 'error.kind': options.kind } : {}),
         ...(options.rawText ? { 'error.message': options.rawText } : {}),
       }),
@@ -904,6 +935,116 @@ test('the activity states the rejection: the marker is appended, leaving every k
     [...ACTIVITY_KEYS_0_3_1, 'civic:failed', 'civic:failureKind'],
     'the marker is appended after the keys the activity already carried — insertion order is the hashed byte order',
   );
+});
+
+// --- The rejected call states its elapsed too (Wave N11 P-H2, the seat's
+// fold-in at G25; civic-ai-tools-website#413) ---
+//
+// #413 shipped in the website's Wave N11 P4 (merged `ec7f173`): the reference
+// producer's loop starts its clock outside the `try`, so the elapsed until a
+// rejection was already measured, and the catch-side span now records it
+// instead of discarding it. Two comments in this package — one here, one at
+// the conditional in capture/provenance.ts — said the opposite and cited the
+// issue BY NUMBER as the reason the case could not arise. Both are corrected;
+// this test is the part a comment cannot do.
+//
+// WHY IT MATTERS HERE. `civic:durationMs` and `civic:failed` on ONE activity
+// is a key combination this package exercised nowhere: the driving fixture's
+// rejected span deliberately carried no duration, `reference-golden.json`
+// carries no spans at all, and `website-golden.json`'s nine include one with a
+// duration and none with `error`. The website writes that combination into a
+// SIGNED graph, so the graph's key list for it is a byte contract with no
+// instrument behind it until now.
+
+/** The elapsed the rejected call reports — deliberately NOT the answered
+ *  call's 850, so an activity that read the wrong span's attribute fails. */
+const REJECTED_DURATION_MS = '1420';
+
+test("the reference producer's rejected call states its elapsed: the activity carries the duration BESIDE the marker and its kind, in that order", () => {
+  const graph = buildProvenanceGraph(
+    answeredAndRejectedTrace({ kind: 'timeout', rejectedDurationMs: REJECTED_DURATION_MS }),
+    BASE_INPUT,
+    CIVICAITOOLS_PROVENANCE_CONFIG,
+  );
+  const nodes = graph['@graph'] as GraphNode[];
+  const rejected = activityForSpan(nodes, 'span-rejected');
+  const answered = activityForSpan(nodes, 'span-answered');
+
+  // The value is the rejected span's own, read as a number.
+  assert.equal(
+    rejected['civic:durationMs'],
+    Number(REJECTED_DURATION_MS),
+    'the elapsed the producer measured for the REFUSED call is stated on its activity',
+  );
+  assert.notEqual(
+    rejected['civic:durationMs'],
+    answered['civic:durationMs'],
+    'the two calls report different elapsed values — an activity that read the other span would pass the assertion above',
+  );
+  assert.equal(rejected['civic:failed'], true, 'and the rejection is still stated');
+  assert.equal(rejected['civic:failureKind'], 'timeout', 'with its classified kind');
+
+  // THE KEY ORDER, in full. `civic:durationMs` keeps the position it has held
+  // since 0.3.1 — before the two markers, which are appended last — so a
+  // package whose producer records the elapsed on a rejection hashes the same
+  // key list as one whose rejection carried no duration, plus that one key in
+  // its established place.
+  assert.deepEqual(
+    Object.keys(rejected),
+    [...ACTIVITY_KEYS_0_3_1, 'civic:durationMs', 'civic:failed', 'civic:failureKind'],
+    'the duration sits in its 0.3.1 position and the two markers stay appended after it',
+  );
+
+  // The call that answered is untouched by any of this.
+  assert.deepEqual(
+    Object.keys(answered),
+    [...ACTIVITY_KEYS_0_3_1, 'civic:durationMs'],
+    'the answered activity is the 0.3.1 shape plus its duration, key for key',
+  );
+});
+
+test("the reference producer's rejected call states its elapsed: no golden fixture carries the combination, which is why adding it moves no golden byte", () => {
+  // The measurement behind "no golden byte moves" for the test above, taken
+  // from the fixtures themselves rather than asserted in a report. It walks
+  // EVERY span in both fixtures — the universe is what the files carry, not a
+  // list of the spans someone remembered — and states three facts:
+  // reference-golden has no spans at all, website-golden has spans with a
+  // duration but none with a failure, and neither has one with both. The day a
+  // fixture gains such a span this test fails, and it should: at that point
+  // the golden bytes for it are exactly what has to be re-examined.
+  const spansOf = (fixtureTrace: unknown): SpanStub[] => {
+    const trace = fixtureTrace as {
+      resourceSpans?: Array<{ scopeSpans?: Array<{ spans?: SpanStub[] }> }>;
+    };
+    return (trace.resourceSpans ?? []).flatMap((rs) =>
+      (rs.scopeSpans ?? []).flatMap((ss) => ss.spans ?? []),
+    );
+  };
+  const has = (span: SpanStub, key: string): boolean =>
+    span.attributes.some((a) => a.key === key);
+
+  const referenceSpans = (REFERENCE_GOLDEN.envelopeCases as Array<{ input: { trace: unknown } }>)
+    .flatMap((c) => spansOf(c.input.trace));
+  assert.equal(referenceSpans.length, 0, 'reference-golden.json carries zero spans of any kind');
+
+  const websiteSpans = spansOf(FIXTURE.trace);
+  assert.equal(websiteSpans.length, 9, 'website-golden.json carries nine spans');
+  assert.equal(
+    websiteSpans.filter((s) => has(s, 'tool.duration_ms')).length,
+    1,
+    'exactly one of them carries a duration — so the duration path IS golden-covered',
+  );
+  assert.equal(
+    websiteSpans.filter((s) => has(s, 'error')).length,
+    0,
+    'none of them carries a failure — so the rejection path is not',
+  );
+  for (const span of [...referenceSpans, ...websiteSpans]) {
+    assert.ok(
+      !(has(span, 'error') && has(span, 'tool.duration_ms')),
+      'no golden span carries both, so no golden byte depends on the combination this phase drives',
+    );
+  }
 });
 
 test('absent is absent: a span carrying error: false yields an activity with no failure key at all, not a literal false', () => {
@@ -1115,5 +1256,165 @@ test('byte stability: the golden graph carries two data-response descriptions on
     responses.filter((r) => CIVIC_SOURCE_REGISTRY[r.sourceId] === undefined),
     [{ sourceId: 'euro stat', description: 'Data response from euro stat' }],
     'the unknown-source response states the raw source id',
+  );
+});
+
+// --- Every `civic:` key the builder EMITS is a declared term (#199 §2) ---
+//
+// The third leg of the vocabulary guard. Two static legs live in
+// purity.test.ts — no capture module may spell a literal the format group
+// declares, and no capture module may spell a `civic:` term at all — and
+// between them they can prove that capture/ contains no term literal. Neither
+// can prove the other half: that the terms the builder actually PUTS IN A
+// SIGNED GRAPH are the ones format/vocabulary.ts declares. Only a driven build
+// can, so this one drives one.
+//
+// The universe on both sides is derived. The emitted side is every `civic:`
+// key found by walking a graph built from a trace shaped to reach every
+// branch that emits one; the declared side is every string export of
+// format/vocabulary.ts whose VALUE starts with `civic:` — not a naming
+// convention, not a list. A term added inline tomorrow appears on the emitted
+// side and not the declared side; a term declared and emitted nowhere appears
+// on the declared side and not the emitted side. Both are failures, and both
+// name the term.
+
+/** A trace shaped to reach every branch of the builder that emits a `civic:`
+ *  key: a skill fetch (server URL override), an inference reporting both
+ *  token counts, a dataset-keyed call that answered with rows and an elapsed,
+ *  a call the source REFUSED that also reports its elapsed, and a synthesis. */
+function everyCivicTermTrace(): Record<string, unknown> {
+  const inference: SpanStub = {
+    name: 'llm_inference',
+    spanId: 'span-inference',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '1500000000',
+    attributes: attrs({
+      'gen_ai.inference_index': '0',
+      'gen_ai.response.prompt_tokens': '1200',
+      'gen_ai.response.completion_tokens': '340',
+    }),
+  };
+  const answered: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-answered-all-terms',
+    startTimeUnixNano: '1600000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': `{"type":"query","dataset_id":"${ANSWERED_DATASET}","portal":"${RUN_PORTAL}"}`,
+      'tool.dataset_id': ANSWERED_DATASET,
+      'tool.portal_domain': RUN_PORTAL,
+      'tool.response_hash': 'a0b1c2',
+      'tool.response_rows': '42',
+      'tool.duration_ms': '850',
+    }),
+  };
+  const rejected: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-rejected-all-terms',
+    startTimeUnixNano: '2100000000',
+    endTimeUnixNano: '2500000000',
+    attributes: [
+      ...attrs({
+        'mcp.source': 'socrata',
+        'tool.name': 'get_data',
+        'tool.operation_type': 'query',
+        'tool.arguments': `{"type":"query","dataset_id":"${REJECTED_DATASET}","portal":"${RUN_PORTAL}"}`,
+        'tool.dataset_id': REJECTED_DATASET,
+        'tool.portal_domain': RUN_PORTAL,
+        'tool.duration_ms': REJECTED_DURATION_MS,
+        'error.kind': 'timeout',
+      }),
+      { key: 'error', value: { boolValue: true } },
+    ],
+  };
+  const synthesis: SpanStub = {
+    name: 'synthesis',
+    spanId: 'span-synthesis',
+    startTimeUnixNano: '2600000000',
+    endTimeUnixNano: '2700000000',
+    attributes: [],
+  };
+  return traceOf([skillSpan('5f6e7d'), inference, answered, rejected, synthesis]);
+}
+
+/** Every `civic:` property key anywhere in a graph, nested nodes included. */
+function civicKeysIn(value: unknown, into = new Set<string>()): Set<string> {
+  if (Array.isArray(value)) {
+    for (const item of value) civicKeysIn(item, into);
+  } else if (value && typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) {
+      if (key.startsWith('civic:')) into.add(key);
+      civicKeysIn(child, into);
+    }
+  }
+  return into;
+}
+
+/** Every term format/vocabulary.ts declares, derived from the VALUES it
+ *  exports rather than from the names it gives them. */
+const DECLARED_TERMS = new Map<string, string>(
+  Object.entries(vocabularyModule).flatMap(([name, value]) =>
+    typeof value === 'string' && value.startsWith('civic:')
+      ? [[name, value] as [string, string]]
+      : [],
+  ),
+);
+
+test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', () => {
+  const emitted = civicKeysIn(
+    buildProvenanceGraph(everyCivicTermTrace(), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG),
+  );
+  // Named individually because the value of the two assertions below is
+  // entirely in this fixture reaching the branches. A trace that emitted three
+  // keys would satisfy "every emitted key is declared" and prove nothing.
+  for (const key of [
+    'civic:contentHash',
+    'civic:serverUrl',
+    'civic:sourceId',
+    'civic:url',
+    'civic:promptTokens',
+    'civic:completionTokens',
+    'civic:toolName',
+    'civic:operationType',
+    'civic:datasetId',
+    'civic:portalDomain',
+    'civic:datasetUrl',
+    'civic:croissantMetadataUrl',
+    'civic:responseRows',
+    'civic:durationMs',
+    'civic:failed',
+    'civic:failureKind',
+  ]) {
+    assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
+  }
+});
+
+test('#199 §2: every `civic:` key a driven graph emits is a term declared in format/vocabulary.ts', () => {
+  const emitted = [...civicKeysIn(
+    buildProvenanceGraph(everyCivicTermTrace(), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG),
+  )].sort();
+  const declared = new Set(DECLARED_TERMS.values());
+  const undeclared = emitted.filter((key) => !declared.has(key));
+  assert.deepEqual(
+    undeclared,
+    [],
+    `a signed graph states these keys and format/vocabulary.ts declares none of them: ${undeclared.join(', ')}. A \`civic:\` property name is the word a reader interprets — declare it beside the namespace that gives it meaning.`,
+  );
+});
+
+test('#199 §2: every term format/vocabulary.ts declares is emitted by a driven graph', () => {
+  const emitted = civicKeysIn(
+    buildProvenanceGraph(everyCivicTermTrace(), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG),
+  );
+  const unemitted = [...DECLARED_TERMS]
+    .filter(([, term]) => !emitted.has(term))
+    .map(([name, term]) => `${name} (${term})`);
+  assert.deepEqual(
+    unemitted,
+    [],
+    `declared as civic vocabulary and emitted by no build: ${unemitted.join(', ')}. Either the trace above stopped reaching the branch that emits it — in which case the two checks are weaker than they read — or the term has no producer and should not be in the vocabulary.`,
   );
 });

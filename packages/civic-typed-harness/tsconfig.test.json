@@ -1,0 +1,30 @@
+{
+  // Type-check config for the harness TEST files (civic-ai-tools#197).
+  //
+  // WHY A SECOND CONFIG rather than dropping the exclude from tsconfig.json:
+  // tsconfig.json is the BUILD config — it emits `dist/` with `rootDir: src`
+  // and `declaration: true`, and `files: ["dist"]` is what npm publishes.
+  // Including `src/**/*.test.ts` there would ship every test file, its
+  // fixtures import graph, and their `.d.ts` in the published package. So the
+  // build config keeps the exclude and this config, which emits nothing,
+  // carries the test files.
+  //
+  // WHAT IT CHANGES. `npm run typecheck` runs BOTH configs, so a type error in
+  // a test file now fails the `Typecheck (harness)` step of ci.yml. Measured
+  // before this config existed: `const x: number = "not a number"` in a
+  // harness test file passed `npm test`, `npm run typecheck` AND
+  // `npm run lint` — all three gates were blind to it.
+  //
+  // `types`: the BUILD config sets `"types": []` so that shipped source cannot
+  // reach a Node global and still type-check (the purity contract, enforced
+  // separately by purity.test.ts and eslint.config.mjs). Test files ARE
+  // Node programs — node:test, node:fs, node:url — so this config opts them
+  // back in, and only them.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}
