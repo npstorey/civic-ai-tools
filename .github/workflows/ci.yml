@@ -63,7 +63,12 @@ jobs:
       - name: Test (harness, incl. golden byte-compat)
         run: npm test
 
-      - name: Typecheck (harness)
+      # Runs TWO tsconfigs: the build config, and tsconfig.test.json, which
+      # carries `src/**/*.test.ts` — excluded from the build config because
+      # that one emits the published `dist/`. Before civic-ai-tools#197 the
+      # test files were in neither, and a `const x: number = "not a number"`
+      # in one of them passed `npm test`, this step, AND the lint step.
+      - name: Typecheck (harness, build config + test config)
         run: npm run typecheck
 
       - name: Lint (harness purity config)
@@ -86,6 +91,14 @@ jobs:
 
       - name: Spec-frontmatter check
         run: npm run check:spec-frontmatter
+
+      # Guards AGENTS.md's Commands table: no cell pins a count the runner
+      # outgrows, every command it names is a real script, and its command set
+      # equals THIS FILE's — in both directions, so a gate added here without a
+      # row, or a row without a step, fails. Hermetic (two file reads), so it
+      # sits with the other hermetic checks, ahead of the one networked step.
+      - name: Gate-table check (AGENTS.md ↔ ci.yml)
+        run: npm run check:gate-table
 
       - name: Skill-drift checker self-test
         run: npm run check:skill-drift:self-test

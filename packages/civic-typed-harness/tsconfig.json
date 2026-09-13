@@ -22,8 +22,20 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
+
+    // No ambient @types package is in scope for shipped source. The package is
+    // browser-safe and I/O-free, so a Node global reaching src/ must not
+    // type-check; `@types/node` is a devDependency for the TEST type-check
+    // (tsconfig.test.json opts it back in for src/**/*.test.ts, and only
+    // there). Without this, adding those types for the tests would have
+    // silently made `process`, `Buffer` and friends legal in shipped source.
+    "types": []
   },
+  // Test files are excluded HERE because this config EMITS: `dist/` is what
+  // `files: ["dist"]` publishes, so including them would ship the suite. They
+  // are type-checked by tsconfig.test.json, which emits nothing and which
+  // `npm run typecheck` runs alongside this one (civic-ai-tools#197).
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.test.ts", "dist", "node_modules"]
 }
