@@ -31,3 +31,4 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0025](0025-vocabulary-settlement-evidence-excision.md) | "Evidence" retired from the artifact and infrastructure surface, retained as the epistemic QEC role | Accepted (2026-08-19) |
 | [0026](0026-jsonl-readback-capture-label-vs-mechanism.md) | The `claude-code-jsonl-readback` capture method labels a readback no shipped tool performs or verifies | Proposed (2026-08-22) |
 | [0027](0027-merge-commit-only-vcs-policy.md) | Merge-commit-only across the program's repositories — squash and rebase merge disabled, at both the repo-settings and ruleset layers | Accepted (2026-08-26) |
+| [0028](0028-eval-run-worked-example.md) | A signed record of one AI benchmark evaluation run — self-adoption as a worked example; promotes no node type, vocabulary or spec text | Proposed (2026-09-13) |
