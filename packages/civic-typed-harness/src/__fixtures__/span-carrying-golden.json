@@ -1,0 +1,65 @@
+{
+  "//": [
+    "The ninth golden-reproduction case (civic-ai-tools#199 §1). The other eight live in reference-golden.json, whose eight traces carry ZERO spans of any kind — so until this case existed the byte-compat suite was green for anything the tool-span loop did, and its green was not evidence about the graph builder.",
+    "WHY A SEPARATE FILE. reference-golden.json is a VERBATIM copy of @typedstandards/produce-core's fixture, pinned by sha256 in golden-reproduction.test.ts's header and re-copied when upstream moves. A ninth case added inside it would break that copy relationship. This file is this repository's own, and it adds bytes rather than moving any: no existing case's bytes change, which golden-reproduction.test.ts asserts by still comparing all eight against the frozen copy.",
+    "WHERE THE EXPECTATIONS COME FROM. Only the two hashes below are recorded here. Everything the case is compared against is FROZEN REFERENCE CAPTURE, not this code's output: the trace, the provenance graph and the dataSources come from website-golden.json, captured 2026-08-01 from civic-ai-tools-website src/lib/evidence (provenance.ts, data-sources.ts). The suite composes the expected package from those frozen components and compares it against one the harness derives from the raw trace; the two hashes then pin every byte of the result cryptographically.",
+    "THE ONE SUBSTITUTION. website-golden.json's capture used the synthetic promptHash 'prompthash123', which is not the SHA-256 of any text. An envelope case has a real prompt, so the suite lifts the frozen graph by substituting that literal for the actual hash of the prompt below — a pure string transform of frozen bytes, the same device the settlement-era leg uses for the two Appendix J literals. Measured: after that one substitution the derived graph is byte-identical to the frozen capture, all 5 tool-call activities, 4 data responses and 3 agents included.",
+    "REGENERATING THE HASHES. Only when a change is INTENDED to move them. A hash that moves under a change that was not supposed to touch the emitted bytes is the finding, not the fixture's problem."
+  ],
+  "case": {
+    "name": "website-span-capture",
+    "sourceFixture": "website-golden.json",
+    "promptHashPlaceholder": "prompthash123",
+    "input": {
+      "packageId": "pkg-golden-001",
+      "createdAt": "2026-08-01T00:00:00.000Z",
+      "signingKeyId": "adopter:test-key-1",
+      "prompt": "How many noise complaints were filed in 2025?",
+      "promptVisibility": "full_text",
+      "queries": [
+        {
+          "tool": "get_data",
+          "operationType": "query",
+          "arguments": { "type": "query", "portal": "data.cityofnewyork.us", "dataset_id": "erm2-nwe9" },
+          "datasetId": "erm2-nwe9",
+          "portal": "data.cityofnewyork.us"
+        },
+        {
+          "tool": "get_observations",
+          "operationType": "unknown",
+          "arguments": { "variable_dcid": "Count_Person" }
+        },
+        {
+          "tool": "ckan__aggregate_data",
+          "operationType": "unknown",
+          "arguments": { "resource_id": "abc" }
+        },
+        {
+          "tool": "mystery_tool",
+          "operationType": "unknown",
+          "arguments": { "q": "x" }
+        },
+        {
+          "tool": "get_data",
+          "operationType": "metadata",
+          "arguments": { "type": "metadata", "portal": "data.cityofnewyork.us", "dataset_id": "43nn-pn8j" },
+          "datasetId": "43nn-pn8j",
+          "portal": "data.cityofnewyork.us"
+        }
+      ],
+      "cost": {
+        "promptTokens": 1200,
+        "completionTokens": 340,
+        "totalTokens": 1540,
+        "model": "openai/gpt-4o"
+      },
+      "output": "There were 12 complaints.",
+      "type": "content/analysis/v1",
+      "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1"
+    },
+    "expected": {
+      "contentHashSha256": "cd0365696269fe9ac3955092586df6bc0f20907fb9a2d34b16e5d1e7d70e0202",
+      "envelopeHash": "eaa417556123e8a36f70907a47e657d36b42b7a68f95728d834d9cea92b9b87d"
+    }
+  }
+}
