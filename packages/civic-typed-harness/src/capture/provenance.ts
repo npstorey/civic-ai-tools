@@ -36,8 +36,22 @@ import type { OTelTrace, OTelAttribute } from './trace.ts';
 import {
   CIVIC_VOCABULARY,
   CIVICAITOOLS_PLATFORM_AGENT,
+  CIVIC_TERM_COMPLETION_TOKENS,
+  CIVIC_TERM_CONTENT_HASH,
+  CIVIC_TERM_CROISSANT_METADATA_URL,
+  CIVIC_TERM_DATASET_ID,
+  CIVIC_TERM_DATASET_URL,
+  CIVIC_TERM_DURATION_MS,
   CIVIC_TERM_FAILED,
   CIVIC_TERM_FAILURE_KIND,
+  CIVIC_TERM_OPERATION_TYPE,
+  CIVIC_TERM_PORTAL_DOMAIN,
+  CIVIC_TERM_PROMPT_TOKENS,
+  CIVIC_TERM_RESPONSE_ROWS,
+  CIVIC_TERM_SERVER_URL,
+  CIVIC_TERM_SOURCE_ID,
+  CIVIC_TERM_TOOL_NAME,
+  CIVIC_TERM_URL,
   type CivicVocabulary,
   type PlatformAgentConfig,
 } from '../format/vocabulary.ts';
@@ -188,7 +202,7 @@ export function buildProvenanceGraph(
   // User prompt
   graph.push(
     makeEntityNode(vocab.urn(packageId, 'prompt', promptHash), {
-      'civic:contentHash': `sha256:${promptHash}`,
+      [CIVIC_TERM_CONTENT_HASH]: `sha256:${promptHash}`,
       'dcterms:description': 'User query prompt',
       ...(promptText ? { 'prov:value': promptText } : {}),
     }),
@@ -207,7 +221,7 @@ export function buildProvenanceGraph(
       makeEntityNode(
         vocab.urn(packageId, 'skill', skillHash),
         {
-          'civic:contentHash': `sha256:${skillHash}`,
+          [CIVIC_TERM_CONTENT_HASH]: `sha256:${skillHash}`,
           'dcterms:description': 'Composed MCP skill guidance (system prompt)',
         },
         ['prov:Plan'],
@@ -218,7 +232,7 @@ export function buildProvenanceGraph(
   // Final output
   graph.push(
     makeEntityNode(vocab.urn(packageId, 'output', outputHash), {
-      'civic:contentHash': `sha256:${outputHash}`,
+      [CIVIC_TERM_CONTENT_HASH]: `sha256:${outputHash}`,
       'dcterms:description': 'AI-generated analysis output',
     }),
   );
@@ -276,8 +290,8 @@ export function buildProvenanceGraph(
         meta.urn,
         {
           'dcterms:title': meta.title,
-          'civic:serverUrl': meta.serverUrl,
-          'civic:sourceId': sourceId,
+          [CIVIC_TERM_SERVER_URL]: meta.serverUrl,
+          [CIVIC_TERM_SOURCE_ID]: sourceId,
         },
         ['prov:SoftwareAgent'],
       ),
@@ -302,7 +316,7 @@ export function buildProvenanceGraph(
       vocab.platformUrn(config.platformAgent.id),
       {
         'dcterms:title': config.platformAgent.title,
-        'civic:url': config.platformAgent.url,
+        [CIVIC_TERM_URL]: config.platformAgent.url,
       },
       ['prov:SoftwareAgent'],
     ),
@@ -337,8 +351,8 @@ export function buildProvenanceGraph(
         ...(span.endTimeUnixNano
           ? { 'prov:endedAtTime': xsdDateTime(nanoToIso(span.endTimeUnixNano)) }
           : {}),
-        ...(promptTokens ? { 'civic:promptTokens': Number(promptTokens) } : {}),
-        ...(completionTokens ? { 'civic:completionTokens': Number(completionTokens) } : {}),
+        ...(promptTokens ? { [CIVIC_TERM_PROMPT_TOKENS]: Number(promptTokens) } : {}),
+        ...(completionTokens ? { [CIVIC_TERM_COMPLETION_TOKENS]: Number(completionTokens) } : {}),
       }),
     );
   }
@@ -386,10 +400,10 @@ export function buildProvenanceGraph(
     const queryUrn = vocab.urn(packageId, 'query', queryHash);
     graph.push(
       makeEntityNode(queryUrn, {
-        'civic:contentHash': `sha256:${queryHash}`,
+        [CIVIC_TERM_CONTENT_HASH]: `sha256:${queryHash}`,
         // Omitted — not placeholdered — when the span named no tool.
-        ...(toolName ? { 'civic:toolName': toolName } : {}),
-        'civic:operationType': opType,
+        ...(toolName ? { [CIVIC_TERM_TOOL_NAME]: toolName } : {}),
+        [CIVIC_TERM_OPERATION_TYPE]: opType,
         'dcterms:description': `MCP tool arguments (${opType})`,
         ...(precedingInference
           ? provWasGeneratedBy(vocab.urn(packageId, 'inference', precedingInference.spanId))
@@ -423,9 +437,9 @@ export function buildProvenanceGraph(
 
       graph.push(
         makeEntityNode(dataUrn, {
-          'civic:contentHash': `sha256:${responseHash}`,
+          [CIVIC_TERM_CONTENT_HASH]: `sha256:${responseHash}`,
           'dcterms:description': description,
-          'civic:sourceId': toolSource,
+          [CIVIC_TERM_SOURCE_ID]: toolSource,
           ...provWasGeneratedBy(toolCallUrn),
           // Croissant 1.1 placeholder — only meaningful for dataset-keyed
           // sources today. The dataset id is stated whenever the span carried
@@ -433,17 +447,17 @@ export function buildProvenanceGraph(
           // the portal as well. Key order is the byte contract.
           ...(toolSourceDatasetKeyed && datasetId
             ? {
-                'civic:datasetId': datasetId,
+                [CIVIC_TERM_DATASET_ID]: datasetId,
                 ...(portalDomain
                   ? {
-                      'civic:portalDomain': portalDomain,
-                      'civic:datasetUrl': `https://${portalDomain}/d/${datasetId}`,
+                      [CIVIC_TERM_PORTAL_DOMAIN]: portalDomain,
+                      [CIVIC_TERM_DATASET_URL]: `https://${portalDomain}/d/${datasetId}`,
                     }
                   : {}),
-                'civic:croissantMetadataUrl': null, // hook for future Croissant integration
+                [CIVIC_TERM_CROISSANT_METADATA_URL]: null, // hook for future Croissant integration
               }
             : {}),
-          ...(responseRows ? { 'civic:responseRows': Number(responseRows) } : {}),
+          ...(responseRows ? { [CIVIC_TERM_RESPONSE_ROWS]: Number(responseRows) } : {}),
         }),
       );
     }
@@ -481,7 +495,7 @@ export function buildProvenanceGraph(
         'dcterms:description': toolName
           ? `MCP tool call: ${toolName} (${opType})`
           : `MCP tool call (${opType})`,
-        'civic:sourceId': toolSource,
+        [CIVIC_TERM_SOURCE_ID]: toolSource,
         ...provUsed([queryUrn]),
         ...provWasAssociatedWith(toolAgentUrn),
         ...(span.startTimeUnixNano
@@ -490,16 +504,25 @@ export function buildProvenanceGraph(
         ...(span.endTimeUnixNano
           ? { 'prov:endedAtTime': xsdDateTime(nanoToIso(span.endTimeUnixNano)) }
           : {}),
-        ...(durationMs ? { 'civic:durationMs': Number(durationMs) } : {}),
+        ...(durationMs ? { [CIVIC_TERM_DURATION_MS]: Number(durationMs) } : {}),
         // Appended LAST and spread conditionally, exactly as `civic:durationMs`
         // above is: a span that recorded no rejection yields the key list it
         // yielded at 0.3.1, in the same order, and property insertion order is
         // the legacy chain's byte contract. `false` is never emitted — a
         // producer that stated "not failed" and one that stated nothing must
         // read the same, which is what makes a marker that IS present mean
-        // something. A rejected span carries no `tool.duration_ms` from the
-        // reference producer today (civic-ai-tools-website#413), so
-        // `civic:durationMs` simply does not fire beside these two.
+        // something.
+        //
+        // A REJECTED SPAN NOW CARRIES A DURATION. Until
+        // civic-ai-tools-website#413 shipped (Wave N11 P4, merged `ec7f173`)
+        // the reference producer measured a rejected call's elapsed and
+        // discarded it, so this comment said `civic:durationMs` "simply does
+        // not fire beside these two". It fires: the producer writes
+        // `tool.duration_ms` on the rejection path, and the conditional above
+        // states it — BEFORE the two markers, in the position it has held
+        // since 0.3.1, because that conditional is unchanged and this one is
+        // still appended after it. `capture/provenance.test.ts` drives that
+        // combination and pins the whole key list for it.
         ...(failed === true ? { [CIVIC_TERM_FAILED]: true } : {}),
         ...(failureKind ? { [CIVIC_TERM_FAILURE_KIND]: failureKind } : {}),
       }),

@@ -43,16 +43,25 @@ export const PRIOR_ERA_CIVIC_URN_PREFIX = 'urn:civic-evidence';
 // A `civic:` property name is vocabulary as much as the namespace it hangs
 // under: it is the word a reader of a signed graph interprets, so it is
 // declared here and imported by the builder that emits it, never spelled as a
-// literal inside capture/ (`purity.test.ts` enforces that for the terms below).
-// Both terms are era-independent — the settlement moved the NAMESPACE, not the
-// property names — so they carry no era qualifier and are minted for the first
-// time after it.
+// literal inside capture/. Every term is era-independent — the 2026-08-19
+// settlement moved the NAMESPACE, not the property names — so none carries an
+// era qualifier.
 //
-// The settlement-era property names that predate Wave N10 (`civic:sourceId`,
-// `civic:durationMs`, `civic:datasetId` and their siblings) are still inline
-// literals in the capture-side builder. That is a real inconsistency, recorded
-// rather than fixed in passing: moving them is a byte-sensitive change across
-// every golden fixture and belongs to a phase of its own.
+// COMPLETE, AND GUARDED AS COMPLETE (civic-ai-tools#199 §2). Until this wave
+// two terms were declared here and the other fourteen were spelled inline in
+// capture/provenance.ts and declared nowhere, which the note that stood in
+// this place recorded as "a real inconsistency ... a phase of its own". This
+// is that phase. `purity.test.ts` no longer holds a list of the terms it
+// knows about — it derives the universe from both ends: no string literal
+// anywhere in capture/ may be a `civic:` term, and every `civic:` key a
+// DRIVEN graph emits must be the value of a constant declared here. A term
+// invented inline tomorrow fails both legs without anyone editing a list.
+//
+// NO BYTE MOVES. Naming a key changes no emitted byte: a computed key
+// (`{ [CIVIC_TERM_SOURCE_ID]: v }`) inserts in the same position with the same
+// value as the literal it replaces, and property insertion order is the legacy
+// chain's byte contract. Both golden suites and the span-carrying golden case
+// added in the same phase measure that rather than assume it.
 
 /**
  * `civic:failed` — a tool-call activity whose call the SOURCE REFUSED.
@@ -79,6 +88,97 @@ export const CIVIC_TERM_FAILED = 'civic:failed';
  * wider vocabulary widens this field rather than putting prose in it.
  */
 export const CIVIC_TERM_FAILURE_KIND = 'civic:failureKind';
+
+/**
+ * `civic:contentHash` — the SHA-256 of the bytes an entity stands for, as
+ * `sha256:<hex>`. Emitted on the prompt, skill, output, tool-argument and
+ * data-response entities: a reader hashes the content it holds and compares.
+ */
+export const CIVIC_TERM_CONTENT_HASH = 'civic:contentHash';
+
+/**
+ * `civic:serverUrl` — the MCP server URL an source agent answered from, as
+ * the deployment's source registry states it (or, for the skill source, as
+ * the trace's skill-fetch span carried it).
+ */
+export const CIVIC_TERM_SERVER_URL = 'civic:serverUrl';
+
+/**
+ * `civic:sourceId` — the stable id of the source that answered a call, on
+ * both the tool-call activity and the data-response entity. It is the
+ * registry key, not a display name: a reader resolves it, and the graph never
+ * spells the reader-facing name.
+ */
+export const CIVIC_TERM_SOURCE_ID = 'civic:sourceId';
+
+/**
+ * `civic:url` — the public URL of the platform agent that published the
+ * record (the deployment's own address, a typed config input).
+ */
+export const CIVIC_TERM_URL = 'civic:url';
+
+/** `civic:promptTokens` — prompt tokens the span reported for one inference.
+ *  Emitted only when the span carried the count; never zero-filled. */
+export const CIVIC_TERM_PROMPT_TOKENS = 'civic:promptTokens';
+
+/** `civic:completionTokens` — completion tokens the span reported for one
+ *  inference. Emitted only when the span carried the count. */
+export const CIVIC_TERM_COMPLETION_TOKENS = 'civic:completionTokens';
+
+/**
+ * `civic:toolName` — the tool a call invoked, verbatim from the span.
+ * Omitted, never placeholdered, when the span named no tool: the graph states
+ * absence as absence.
+ */
+export const CIVIC_TERM_TOOL_NAME = 'civic:toolName';
+
+/**
+ * `civic:operationType` — the producer's classification of what a call did
+ * (`query`, `metadata`, `unknown`, …). An open string the graph states
+ * verbatim and never re-derives.
+ */
+export const CIVIC_TERM_OPERATION_TYPE = 'civic:operationType';
+
+/**
+ * `civic:datasetId` — the dataset a data response came from, stated whenever
+ * the span carried one and the source is dataset-keyed.
+ */
+export const CIVIC_TERM_DATASET_ID = 'civic:datasetId';
+
+/**
+ * `civic:portalDomain` — the portal host a tool span carried. Never the run's
+ * selected portal: a call that addressed no portal yields a response
+ * attributed to none.
+ */
+export const CIVIC_TERM_PORTAL_DOMAIN = 'civic:portalDomain';
+
+/**
+ * `civic:datasetUrl` — the canonical dataset URL, minted only when the span
+ * carried BOTH the portal host and the dataset id (a URL needs a host the
+ * span actually stated).
+ */
+export const CIVIC_TERM_DATASET_URL = 'civic:datasetUrl';
+
+/**
+ * `civic:croissantMetadataUrl` — the Croissant 1.1 metadata URL for a
+ * dataset-keyed data response. Emitted as an explicit `null` placeholder for
+ * a future integration; the key is inside signed bytes, so it is stated here
+ * rather than left as an undocumented literal.
+ */
+export const CIVIC_TERM_CROISSANT_METADATA_URL = 'civic:croissantMetadataUrl';
+
+/** `civic:responseRows` — the row count a tool response carried, when the
+ *  span reported one. */
+export const CIVIC_TERM_RESPONSE_ROWS = 'civic:responseRows';
+
+/**
+ * `civic:durationMs` — the elapsed the producer measured for one tool call.
+ * Emitted whenever the span carried it, on a call that answered and on one
+ * the source REFUSED alike: since civic-ai-tools-website#413 the reference
+ * producer records the elapsed on its rejection path too, so this term and
+ * {@link CIVIC_TERM_FAILED} appear together on the same activity.
+ */
+export const CIVIC_TERM_DURATION_MS = 'civic:durationMs';
 
 /**
  * One era of the civic vocabulary: the two literals plus the emitters bound
