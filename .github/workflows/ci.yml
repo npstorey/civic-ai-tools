@@ -5,7 +5,8 @@
 # uses no third-party actions beyond actions/checkout and actions/setup-node.
 # Keep it that way: the audit is a grep for that expression. The only network access
 # beyond the npm registry is the skill-drift step's unauthenticated GET of
-# public raw files from the socrata-mcp-server repo.
+# public raw files from the socrata-mcp-server repo, and the template-env
+# step's unauthenticated shallow clone of that same public repo.
 #
 # NODE VERSION: the root manifest declares no `engines`; the one workspace
 # (packages/civic-typed-harness) declares `node >= 18`. Node 22 is used because
@@ -111,6 +112,19 @@ jobs:
       # quietly, on the principle that a check which cannot run has not passed.
       - name: Skill-drift check
         run: npm run check:skill-drift
+
+      - name: Template-env checker self-test
+        run: npm run check:template-env:self-test
+
+      # Every environment variable a tracked MCP template sets for the Socrata
+      # MCP server must have a reader: the server's own source at main, or a
+      # runtime reader the check names with its reason. The server source comes
+      # from a shallow `git clone` over public HTTPS, not the REST API, which is
+      # rate-limited per IP on shared runners. The clone runs outside this
+      # checkout with global and system git config ignored, so it carries no
+      # credential; a clone failure fails the step (civic-ai-tools-website#434).
+      - name: Template-env check
+        run: npm run check:template-env
 
       # The publish-record skill's tests (45 of them) ran only by hand until
       # this step — the gap recorded at civic-ai-tools#160 G5. They are
