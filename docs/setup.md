@@ -248,7 +248,12 @@ codex mcp add socrata -- node .mcp-servers/socrata-mcp-server/dist/index.js --st
 
 ### Socrata MCP Server
 
-Provides access to NYC Open Data portal (data.cityofnewyork.us) via Socrata API.
+Provides access to Socrata open data portals via the Socrata API. A call can name any portal; the portal used when a call names none is configuration, not something the server chooses:
+
+- **`DATA_PORTAL_URL`** sets that default portal. Every template here sets it to `https://data.cityofnewyork.us`, the example in the server's README.
+- **Unset, there is no default:** a call that names no portal is refused, and `search`, which takes no portal argument, is refused every time.
+
+**Existing copy of a template?** If your `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json` or `.codex/config.toml` sets `DEFAULT_DOMAIN`, `CACHE_ENABLED` or `LOG_LEVEL`, the server reads none of them: replace `DEFAULT_DOMAIN` with `"DATA_PORTAL_URL": "https://data.cityofnewyork.us"` (TOML: `DATA_PORTAL_URL = "https://data.cityofnewyork.us"`) and delete the other two.
 
 **Capabilities:**
 - Query datasets using SoQL

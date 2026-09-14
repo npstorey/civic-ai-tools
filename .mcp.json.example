@@ -5,10 +5,8 @@
       "command": "node",
       "args": [".mcp-servers/socrata-mcp-server/dist/index.js", "--stdio"],
       "env": {
-        "DEFAULT_DOMAIN": "data.cityofnewyork.us",
-        "SOCRATA_APP_TOKEN": "__SOCRATA_APP_TOKEN__",
-        "CACHE_ENABLED": "true",
-        "LOG_LEVEL": "info"
+        "DATA_PORTAL_URL": "https://data.cityofnewyork.us",
+        "SOCRATA_APP_TOKEN": "__SOCRATA_APP_TOKEN__"
       }
     },
     "data-commons": {
