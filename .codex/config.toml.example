@@ -7,10 +7,9 @@ command = "node"
 args = [".mcp-servers/socrata-mcp-server/dist/index.js", "--stdio"]
 
 [mcp_servers.socrata.env]
-DEFAULT_DOMAIN = "data.cityofnewyork.us"
+# DATA_PORTAL_URL is the portal a call uses when it names none; unset, such a call is refused.
+DATA_PORTAL_URL = "https://data.cityofnewyork.us"
 SOCRATA_APP_TOKEN = "your_token_here"
-CACHE_ENABLED = "true"
-LOG_LEVEL = "info"
 
 [mcp_servers.data-commons]
 command = "datacommons-mcp"

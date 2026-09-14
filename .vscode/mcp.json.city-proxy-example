@@ -10,16 +10,18 @@
   //    copy scripts/proxy-wrapper.js .mcp-servers/socrata-mcp-server/
   // 3. Get your Socrata app token from https://data.cityofnewyork.us/profile/edit/developer_settings
   //
+  // Who reads each variable: DATA_PORTAL_URL and SOCRATA_APP_TOKEN, the server;
+  // NODE_TLS_REJECT_UNAUTHORIZED, Node itself; GLOBAL_AGENT_*, global-agent, which
+  // proxy-wrapper.js bootstraps before it starts the server.
+  //
   "servers": {
     "socrata": {
       "type": "stdio",
       "command": "node",
       "args": ["${workspaceFolder}/.mcp-servers/socrata-mcp-server/proxy-wrapper.js", "--stdio"],
       "env": {
-        "DEFAULT_DOMAIN": "data.cityofnewyork.us",
+        "DATA_PORTAL_URL": "https://data.cityofnewyork.us",
         "SOCRATA_APP_TOKEN": "YOUR_SOCRATA_TOKEN_HERE",
-        "CACHE_ENABLED": "true",
-        "LOG_LEVEL": "info",
         "NODE_TLS_REJECT_UNAUTHORIZED": "0",
         "GLOBAL_AGENT_HTTP_PROXY": "http://proxy.example.internal:8080",
         "GLOBAL_AGENT_HTTPS_PROXY": "http://proxy.example.internal:8080",

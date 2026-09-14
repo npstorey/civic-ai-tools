@@ -78,12 +78,10 @@ mkdir -p "$PROJECT_DIR/.vscode"
         echo '      "command": "node",'
         echo "      \"args\": [\"\${workspaceFolder}/.mcp-servers/socrata-mcp-server/dist/index.js\", \"--stdio\"],"
         echo '      "env": {'
-        echo '        "DEFAULT_DOMAIN": "data.cityofnewyork.us",'
         if [ -n "$SOCRATA_TOKEN" ]; then
             echo "        \"SOCRATA_APP_TOKEN\": \"$SOCRATA_TOKEN\","
         fi
-        echo '        "CACHE_ENABLED": "true",'
-        echo '        "LOG_LEVEL": "info"'
+        echo '        "DATA_PORTAL_URL": "https://data.cityofnewyork.us"'
         echo '      }'
         echo -n '    }'
         NEED_COMMA=true
@@ -121,12 +119,10 @@ mkdir -p "$PROJECT_DIR/.vscode"
         echo '      "command": "node",'
         echo "      \"args\": [\".mcp-servers/socrata-mcp-server/dist/index.js\", \"--stdio\"],"
         echo '      "env": {'
-        echo '        "DEFAULT_DOMAIN": "data.cityofnewyork.us",'
         if [ -n "$SOCRATA_TOKEN" ]; then
             echo "        \"SOCRATA_APP_TOKEN\": \"$SOCRATA_TOKEN\","
         fi
-        echo '        "CACHE_ENABLED": "true",'
-        echo '        "LOG_LEVEL": "info"'
+        echo '        "DATA_PORTAL_URL": "https://data.cityofnewyork.us"'
         echo '      }'
         echo -n '    }'
         NEED_COMMA=true

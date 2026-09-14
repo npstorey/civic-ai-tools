@@ -36,6 +36,7 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 | `npm run check:spec-frontmatter` | `Spec-frontmatter check passed.` — twin `check:spec-frontmatter:self-test` → `# fail 0` |
 | `npm run check:gate-table` | `# fail 0` — guards this table: no pinned count, and the same command set as `ci.yml` |
 | `npm run check:skill-drift` | `Skill-drift check passed — every embedded copy matches its source of truth.` — twin `check:skill-drift:self-test` → `# fail 0` |
+| `npm run check:template-env` | `Template-env check passed — every name a template sets for the server has a reader.` — twin `check:template-env:self-test` → `# fail 0` |
 | `python3 .claude/skills/publish-record/test_publish.py` | `OK` (`unittest`; the test total rises as tests are added) |
 
 **No cell above pins a count.** Every pass total, package count and test total in this table was wrong within a wave or
