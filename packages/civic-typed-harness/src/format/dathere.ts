@@ -96,30 +96,69 @@ export function deriveSummaryEmission(
     : undefined;
 }
 
+/** One MCP server the run had available, as the environment extension carries
+ *  it — spec §8.7.1 requirement 3: an object with `url` and optional `name`.
+ *  The CALLER supplies the order and the names; the harness neither sorts nor
+ *  invents them. */
+export interface DatHereMcpServer {
+  /** The server's configured address. */
+  url: string;
+  /** Optional label for the server (the reference caller passes the source
+   *  id). Omitted from the emitted object when absent, so a nameless entry
+   *  stays byte-identical to the pre-0.5.0 single-server shape. */
+  name?: string;
+}
+
+/** Normalize the two accepted `mcpServers` inputs to the emitted array.
+ *
+ *  A bare string is the pre-0.5.0 shape — the trace's skill-fetch URL — and
+ *  yields at most the one `{ url }` entry, exactly as before. A list is
+ *  emitted in the order given, each entry carrying `name` only when the
+ *  caller supplied one. An entry with an empty `url` contributes nothing,
+ *  which is the same rule the single-URL shape always applied: a server with
+ *  no address is stated by absence, never by an empty string. */
+function normalizeMcpServers(
+  servers: string | readonly DatHereMcpServer[] | undefined,
+): Array<{ url: string; name?: string }> {
+  if (servers === undefined) return [];
+  if (typeof servers === 'string') {
+    return servers ? [{ url: servers }] : [];
+  }
+  return servers
+    .filter((server) => Boolean(server.url))
+    .map((server) => ({
+      url: server.url,
+      ...(server.name ? { name: server.name } : {}),
+    }));
+}
+
 /**
  * Build the `org.civicaitools.environment` extension content for a datHere
  * package. Per OES §9.1.1 requirement 3 the extension MUST carry
  * `modelVersion`, `temperature`, `mcpServers`, `toolDefinitions`, `host`.
  *
+ * `mcpServers` accepts EITHER shape (additive since 0.5.0,
+ * civic-ai-tools-website#449): a single URL string — the trace's skill-fetch
+ * span URL, the only server the pre-0.5.0 builder could name — or the list of
+ * servers the run actually had, in the caller's order, each with an optional
+ * `name`. The single-URL shape produces byte-identical output to before, so
+ * an already-signed package still reproduces.
+ *
  * Prototype limitations carried over from the reference implementation
  * (known gaps, tightened in follow-up work): `temperature` placeholder `0`,
- * `toolDefinitions` placeholder `[]`; `mcpServers` derives from the trace's
- * skill-fetch span URL (the analysis's primary MCP server). Fields captured
- * honestly: `modelVersion` and `host`.
+ * `toolDefinitions` placeholder `[]`. Fields captured honestly:
+ * `modelVersion`, `host`, and — when the caller passes the list — the servers
+ * the run had.
  */
 export function buildDatHereEnvironment(
   model: string,
-  skillMcpServerUrl: string | undefined,
+  mcpServers: string | readonly DatHereMcpServer[] | undefined,
   config: DatHereEnvironmentConfig,
 ): Record<string, unknown> {
-  const mcpServers: Array<{ url: string; name?: string }> = [];
-  if (skillMcpServerUrl) {
-    mcpServers.push({ url: skillMcpServerUrl });
-  }
   return {
     modelVersion: model,
     temperature: 0,
-    mcpServers,
+    mcpServers: normalizeMcpServers(mcpServers),
     toolDefinitions: [],
     host: config.host,
   };
@@ -136,8 +175,15 @@ export interface DatHerePolicyInput {
   /** Candidate summary text (emitted only under the datHere profile). */
   summary?: string;
   /** MCP server URL from the trace's skill-fetch span (capture-side
-   *  extraction — see src/capture/skill-metadata.ts). */
+   *  extraction — see src/capture/skill-metadata.ts). Consulted only when
+   *  `mcpServers` is absent, so the pre-0.5.0 call shape keeps producing
+   *  byte-identical envelopes. */
   skillMcpServerUrl?: string;
+  /** Every MCP server the run had available, in the order the caller wants
+   *  them emitted, each with an optional `name`
+   *  (civic-ai-tools-website#449). When supplied this REPLACES
+   *  `skillMcpServerUrl` as the source of `environment.mcpServers`. */
+  mcpServers?: readonly DatHereMcpServer[];
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
 }
@@ -166,7 +212,9 @@ export function deriveDatHereEnvelopeFields(
   if (input.contentProfile === DATHERE_CONTENT_PROFILE) {
     extensions[ENVIRONMENT_EXTENSION_KEY] = buildDatHereEnvironment(
       input.model,
-      input.skillMcpServerUrl,
+      // The list when the caller has one, the single skill-fetch URL
+      // otherwise — an input carrying neither still emits `mcpServers: []`.
+      input.mcpServers ?? input.skillMcpServerUrl,
       config,
     );
   }

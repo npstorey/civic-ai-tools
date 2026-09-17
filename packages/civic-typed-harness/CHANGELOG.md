@@ -3,6 +3,142 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+Everything here is on `main` and in no published version. The list is derived
+from `git log 33a3aff..HEAD -- packages/civic-typed-harness/` — `33a3aff` is
+the 0.4.1 release bump — so it is the commit range rather than a recollection.
+Three commits landed after that bump and had no entry; this phase's two
+changes join them.
+
+**Together, the two changes below make a record name the servers the run
+actually had, and say nothing where it does not know.** They are the harness
+half of
+[civic-ai-tools#205](https://github.com/npstorey/civic-ai-tools/issues/205)
+and
+[civic-ai-tools-website#449](https://github.com/npstorey/civic-ai-tools-website/issues/449);
+the caller half (a registry built from the instance's own configuration, and
+the packager passing the list) lands in the reference application.
+
+### The environment extension can name every server, not only the skill's
+
+- **`buildDatHereEnvironment` accepts a list of MCP servers**, additively. Its
+  second parameter is now `string | readonly DatHereMcpServer[] | undefined`:
+  the bare string is the pre-0.5.0 shape — the trace's skill-fetch URL, the one
+  server the builder could name — and a list is emitted in the order the caller
+  gives, each entry carrying `name` only when the caller supplied one. Spec
+  §8.7.1 requirement 3 always specified `mcpServers` as "an array of objects
+  with `url` and optional `name`"; until now the harness could only ever put
+  one object in it.
+- **The single-URL shape is byte-identical to before**, and a test pins those
+  exact bytes rather than deep-equality, because an already-signed datHere
+  package reproduces through this function. A one-entry list with no `name`
+  produces the same bytes as the string, which is the same statement from the
+  other side.
+- **`DatHerePolicyInput` gains `mcpServers`**, consulted in preference to
+  `skillMcpServerUrl` and falling back to it, so `deriveDatHereEnvelopeFields`
+  carries the list through without any existing caller changing.
+- **New export:** the `DatHereMcpServer` interface. An entry whose `url` is
+  empty contributes nothing — the same rule the single-URL shape always
+  applied: a server with no address is stated by absence, never by an empty
+  string.
+
+### A source agent names the configured address, or names no address at all
+
+- **`CivicSourceInfo.serverUrl` is optional.** The address a run reached is the
+  operator's configuration, not a fact the harness knows. A caller passes a
+  registry whose entries carry the addresses that instance is pointed at.
+- **`buildProvenanceGraph` omits `civic:serverUrl` when it has no address.**
+  Two shapes reach that: a registry entry that carries no `serverUrl`, and a
+  source id the registry does not carry at all. Both now emit an agent with no
+  `civic:serverUrl` key — the key's absence, not an empty string — so the
+  signed bytes say the address is unknown instead of naming a server the
+  analysis may never have contacted. When an address IS known the key keeps its
+  position in the emitted key order, which is the byte contract on the legacy
+  chain.
+- **The source-id fallback is dropped.** An agent for a source outside the
+  registry used to carry `civic:serverUrl` equal to its own source id — a
+  string that was never an address. That is the asserted-default class
+  ([civic-ai-tools#129](https://github.com/npstorey/civic-ai-tools/issues/129)'s
+  family): a stand-in standing in a signed record for a fact the run had and
+  did not write.
+- **`CIVIC_SOURCE_REGISTRY` keeps its three `serverUrl` values**, and the
+  comment now says what they are for: the reference deployment's own default
+  addresses for display, and — on the two aggregate sources — the companions of
+  `aggregatePortalUrl`. They are not what a record asserts about a run.
+- **Type-level consequence, stated rather than glossed.** Widening
+  `serverUrl` to optional is additive for a caller that BUILDS a registry and
+  narrowing for one that READS `info.serverUrl` and expects a `string`. A
+  TypeScript consumer doing the latter has to handle `undefined`.
+
+**Golden bytes.** Two of the three fixtures are untouched;
+`__fixtures__/website-golden.json` and `__fixtures__/reference-golden.json` are
+frozen reference captures and no byte of either is edited. The 2026-08-01
+website capture carries one MCP agent for a source its registry does not know,
+and that agent's `civic:serverUrl` is the dropped fallback, so the suites lift
+the capture over exactly that one key — derived from the registry, with the
+number of lifted nodes asserted, the same device already used for the two
+Appendix J literals and for the synthetic prompt hash. The lifted graph is
+inside the hashed bytes of the ninth golden-reproduction case, so
+`__fixtures__/span-carrying-golden.json`'s two recorded hashes are regenerated,
+intentionally and by that one dropped key: `envelopeHash` `eaa41755…b9b87d` →
+`2a57c911…c0af89`, `contentHashSha256` `cd036569…0e0202` → `e14adecf…a6af5f`.
+The fixture records the reason beside them. **A package signed before this
+change whose graph carried the source-id fallback no longer reproduces at the
+defaults** — that is the intended consequence of dropping an asserted default,
+and it is named here so nobody reads a moved hash as an accident.
+
+### Already on `main` since 0.4.1, and unreleased
+
+- **The test files type-check**
+  ([civic-ai-tools#197](https://github.com/npstorey/civic-ai-tools/issues/197),
+  `0a861b1`). `tsconfig.test.json` extends the build config, emits nothing, and
+  adds the Node types the suite needs; the package's `typecheck` script runs
+  both configs, and `src/the-suite-type-checks.test.ts` guards that every test
+  file is inside the checking config and none is inside the emitting one. The
+  build config now sets `types: []`, so shipped source still cannot reach a
+  Node global and type-check. No runtime export changes.
+- **The `civic:` vocabulary is named, and a rejected call states its elapsed**
+  ([civic-ai-tools#199](https://github.com/npstorey/civic-ai-tools/issues/199)
+  §2, `e4e32e7`). **Fourteen new `CIVIC_TERM_*` exports** —
+  `CIVIC_TERM_CONTENT_HASH`, `CIVIC_TERM_SERVER_URL`, `CIVIC_TERM_SOURCE_ID`,
+  `CIVIC_TERM_URL`, `CIVIC_TERM_PROMPT_TOKENS`, `CIVIC_TERM_COMPLETION_TOKENS`,
+  `CIVIC_TERM_TOOL_NAME`, `CIVIC_TERM_OPERATION_TYPE`, `CIVIC_TERM_DATASET_ID`,
+  `CIVIC_TERM_PORTAL_DOMAIN`, `CIVIC_TERM_DATASET_URL`,
+  `CIVIC_TERM_CROISSANT_METADATA_URL`, `CIVIC_TERM_RESPONSE_ROWS`,
+  `CIVIC_TERM_DURATION_MS` — replacing inline literals at twenty sites in
+  `capture/provenance.ts`, with no byte moving (a computed key inserts in the
+  same position with the same value). `purity.test.ts`'s guard derives its
+  universe rather than listing literals. The same commit corrected two comments
+  that said a rejected span carries no `tool.duration_ms`: the reference
+  producer records it, so a rejected call's activity emits `civic:durationMs`
+  beside `civic:failed`, the duration in its 0.3.1 position and the two markers
+  appended after it.
+- **A golden case that carries `mcp_tool_call` spans**
+  ([civic-ai-tools#199](https://github.com/npstorey/civic-ai-tools/issues/199)
+  §1, `92efbae`). `__fixtures__/span-carrying-golden.json` — a ninth
+  golden-reproduction case, in its own file so the verbatim upstream copy stays
+  a copy. The other eight carry zero spans of any kind, so until it existed the
+  byte-compat suite was green for everything the tool-span loop does. Test-only;
+  no export changes.
+
+**Attribution correction.** The wave charter for this release records the
+fourteen `CIVIC_TERM_*` exports as Wave N10 P-H2's. They are not. P-H2
+(`82d8d95`, 2026-09-04) added **two** — `CIVIC_TERM_FAILED` and
+`CIVIC_TERM_FAILURE_KIND` — and both shipped in 0.4.1, which `82d8d95` precedes.
+The fourteen are `e4e32e7`'s, 2026-09-13, after the 0.4.1 bump. The count was
+right and the commit was not; measured with
+`git diff 82d8d95^ 82d8d95` and `git diff e4e32e7^ e4e32e7` over
+`src/format/vocabulary.ts`.
+
+**Correction to the 0.4.0 entry.** That entry's type-level-gate bullet says
+"`tsconfig.json` excludes `src/**/*.test.ts`, so the suite type-checks nothing
+— a test can drive a field the type does not have and `npm run typecheck` stays
+green." **That has been false since `0a861b1`.** The suite is type-checked by
+`tsconfig.test.json`, `npm run typecheck` runs it, and a type error in a test
+file fails that gate. The sentence is true of 0.4.0 as published and is left in
+place as the record of it; this is the forward correction.
+
 ## 0.4.1 — 2026-09-12
 
 Patch: one existing export changes its output for one input shape, and no
@@ -242,6 +378,12 @@ golden-reproduction cases — is unchanged.
   compile time. `tsconfig.json` excludes `src/**/*.test.ts`, so the suite
   type-checks nothing — a test can drive a field the type does not have and
   `npm run typecheck` stays green.
+  **[Corrected — no longer true of the repository.** The second sentence was
+  true when 0.4.0 shipped and stopped being true at `0a861b1`
+  ([civic-ai-tools#197](https://github.com/npstorey/civic-ai-tools/issues/197)):
+  `tsconfig.test.json` type-checks the suite and `npm run typecheck` runs it.
+  Left in place as the record of what 0.4.0 claimed; see the `Unreleased`
+  section.**]
 
 ## 0.3.1 — 2026-09-02
 
