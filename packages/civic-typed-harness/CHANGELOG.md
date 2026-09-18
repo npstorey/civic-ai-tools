@@ -122,15 +122,6 @@ and it is named here so nobody reads a moved hash as an accident.
   byte-compat suite was green for everything the tool-span loop does. Test-only;
   no export changes.
 
-**Attribution correction.** The wave charter for this release records the
-fourteen `CIVIC_TERM_*` exports as Wave N10 P-H2's. They are not. P-H2
-(`82d8d95`, 2026-09-04) added **two** — `CIVIC_TERM_FAILED` and
-`CIVIC_TERM_FAILURE_KIND` — and both shipped in 0.4.1, which `82d8d95` precedes.
-The fourteen are `e4e32e7`'s, 2026-09-13, after the 0.4.1 bump. The count was
-right and the commit was not; measured with
-`git diff 82d8d95^ 82d8d95` and `git diff e4e32e7^ e4e32e7` over
-`src/format/vocabulary.ts`.
-
 **Correction to the 0.4.0 entry.** That entry's type-level-gate bullet says
 "`tsconfig.json` excludes `src/**/*.test.ts`, so the suite type-checks nothing
 — a test can drive a field the type does not have and `npm run typecheck` stays
@@ -378,12 +369,6 @@ golden-reproduction cases — is unchanged.
   compile time. `tsconfig.json` excludes `src/**/*.test.ts`, so the suite
   type-checks nothing — a test can drive a field the type does not have and
   `npm run typecheck` stays green.
-  **[Corrected — no longer true of the repository.** The second sentence was
-  true when 0.4.0 shipped and stopped being true at `0a861b1`
-  ([civic-ai-tools#197](https://github.com/npstorey/civic-ai-tools/issues/197)):
-  `tsconfig.test.json` type-checks the suite and `npm run typecheck` runs it.
-  Left in place as the record of what 0.4.0 claimed; see the `Unreleased`
-  section.**]
 
 ## 0.3.1 — 2026-09-02
 
