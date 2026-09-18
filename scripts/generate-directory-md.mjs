@@ -72,7 +72,10 @@ const SECTIONS = [
   },
   {
     heading: '## U.S. Economic Data',
-    filter: (e) => e.categories.includes('economic-financial') && !e.included && e.governmentLevel.includes('federal'),
+    // Federal, state and local: a city budget or spending server has no other
+    // section, and would otherwise land under the commercial contracting heading.
+    filter: (e) => e.categories.includes('economic-financial') && !e.included &&
+      ['federal', 'state', 'local'].some((g) => e.governmentLevel.includes(g)),
     hasStatus: true,
   },
   {
@@ -270,7 +273,7 @@ parts.push('| Domain | Data Sources That Could Be Wrapped | Notes |');
 parts.push('|--------|-----------------------------------|-------|');
 parts.push('| **Elections / voting results** | State election boards, AP election data | Campaign finance (FEC) is covered, but actual election results are not |');
 parts.push('| **Universal transit (GTFS)** | GTFS feeds from any transit agency | International coverage exists (mcp-datagovmy includes GTFS for Malaysia) but US-specific coverage is still missing |');
-parts.push('| **Local 311 / permits** | Open311 API, municipal permit databases | No dedicated server found |');
+parts.push('| **Local 311 / permits** | Open311 API, municipal permit databases | NYC only: nyc-311-mcp wraps the NYC 311 Public API (added 2026-09-18). No Open311 or permit server found |');
 parts.push('| **Zoning / land use** | Municipal zoning databases | Highly local, fragmented data |');
 parts.push('| **Property records** | County assessor databases | Parcel data, assessments, ownership |');
 

@@ -1936,7 +1936,7 @@
   {
     "id": "nyc-council-mcp",
     "name": "nyc-council-mcp",
-    "description": "NYC Council legislative data via the Legistar API (bills, hearings, votes, members, committees)",
+    "description": "NYC Council legislative data from the Legistar API and a local SQLite index (bills, hearings, votes, members, committees)",
     "repoUrl": "https://github.com/BetaNYC/nyc-council-mcp",
     "transport": [
       "stdio"
@@ -1951,18 +1951,22 @@
     "status": "active",
     "dateAdded": "2026-05-21",
     "dataSources": [
-      "NYC Council Legistar API"
+      "NYC Council Legistar API",
+      "jehiah/nyc_legislation archive (local index)"
     ],
     "jurisdiction": "New York City",
-    "toolCount": 8,
-    "notes": "Launched 2026-05-21 by BetaNYC. Requires a free LEGISTAR_TOKEN per user. Credits @jehiah / intro.nyc as predecessor work on the Legistar API. Published on npm as @betanyc/nyc-council-mcp.",
+    "toolCount": 20,
+    "notes": "No API key required since 2.0.0. LEGISTAR_TOKEN (free) enables 8 live Legistar tools, LEGISTAR_DB_PATH enables 13 local-index tools, and both together give 20 (get_bill_history is in both sets). The local index is built from a one-time clone of the nyc_legislation archive (~920 MB); local-only mode needs no network after that. Credits @jehiah / intro.nyc as predecessor work on the Legistar API. Published on npm as @betanyc/nyc-council-mcp since 2026-05-19; latest release 2.6.0 (npm and GitHub, 2026-07-27).",
     "npmPackage": "@betanyc/nyc-council-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
-    "apiKeyRequired": true,
+    "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-05-21",
-    "version": "1.0.0"
+    "dateModified": "2026-09-18",
+    "version": "2.6.0",
+    "dataPlatform": [
+      "custom-api"
+    ]
   },
   {
     "id": "nyc-record-mcp",
@@ -1987,14 +1991,14 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 7,
-    "notes": "Launched 2026-05-21 by BetaNYC. No required API key (optional SOCRATA_APP_TOKEN for higher rate limits). README credits socrata-mcp-server as inspiration for its SODA API pattern. Published on npm as @betanyc/nyc-record-mcp.",
+    "notes": "No API key required (optional SOCRATA_APP_TOKEN for higher rate limits). Needs network: every tool queries NYC Open Data. README credits socrata-mcp-server as inspiration for its SODA API pattern. Published on npm as @betanyc/nyc-record-mcp since 2026-05-21; latest release 1.1.0 (npm and GitHub, 2026-07-22).",
     "npmPackage": "@betanyc/nyc-record-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-05-21",
-    "version": "1.0.0",
+    "dateModified": "2026-09-18",
+    "version": "1.1.0",
     "dataPlatform": [
       "socrata"
     ]
@@ -2002,7 +2006,7 @@
   {
     "id": "nyc-charter-laws-rules",
     "name": "nyc-charter-laws-rules",
-    "description": "NYC Charter, Administrative Code, and Rules of the City of New York — 22,050 sections sourced from American Legal Publishing bulk XML",
+    "description": "NYC Charter, Administrative Code, and Rules of the City of New York, sourced from American Legal Publishing bulk XML",
     "repoUrl": "https://github.com/BetaNYC/nyc-charter-laws-rules",
     "transport": [
       "stdio"
@@ -2023,13 +2027,147 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 5,
-    "notes": "Launched 2026-05-21 by BetaNYC. No API key required — JSON index bundled in the npm package (22,050 sections). Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. Published on npm as @betanyc/nyc-charter-laws-rules.",
+    "notes": "No API key required. Runs with no network: the section index ships in the npm package (22,174 sections in 0.2.0, indexed through 2026-07-16). The repository refreshes the index on main from American Legal Publishing (22,185 sections on 2026-09-18); npm 0.2.0 does not include those refreshes. Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. serverInfo reports version 0.1.0; the npm package is 0.2.0. Published on npm as @betanyc/nyc-charter-laws-rules since 2026-05-21; latest release 0.2.0 (npm and GitHub, 2026-07-22).",
     "npmPackage": "@betanyc/nyc-charter-laws-rules",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-05-21",
-    "version": "0.1.0"
+    "dateModified": "2026-09-18",
+    "version": "0.2.0"
+  },
+  {
+    "id": "nyc-checkbook-mcp",
+    "name": "nyc-checkbook-mcp",
+    "description": "NYC Checkbook spending, contracts, budget, payroll, and revenue data via the Checkbook NYC API (NYC Comptroller)",
+    "repoUrl": "https://github.com/BetaNYC/nyc-checkbook-mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "economic-financial",
+      "government-contracting"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-09-18",
+    "dataSources": [
+      "Checkbook NYC API (NYC Comptroller)"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 10,
+    "notes": "No API key required. Needs network: every tool calls the Checkbook NYC API, which the server paces to one request per second. tools/list returns 10 tools; smart_search stays disabled unless CHECKBOOK_ENABLE_SMART_SEARCH=1, and the README documents the other 9. Published on npm as @betanyc/nyc-checkbook-mcp since 2026-05-21; latest release 1.6.1 (npm and GitHub, 2026-08-01).",
+    "npmPackage": "@betanyc/nyc-checkbook-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": false,
+    "verificationStatus": "community",
+    "dateModified": "2026-09-18",
+    "version": "1.6.1",
+    "dataPlatform": [
+      "custom-api"
+    ]
+  },
+  {
+    "id": "nyc-311-mcp",
+    "name": "nyc-311-mcp",
+    "description": "NYC 311 Public API: city-services calendar (alternate side parking, collections, schools), emergency and weather status alerts, and 311 service-request lookup",
+    "repoUrl": "https://github.com/BetaNYC/nyc-311-mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "open-data-portals"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-09-18",
+    "dataSources": [
+      "NYC 311 Public API (NYC API Portal)"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 4,
+    "notes": "Requires a free NYC_311_API_KEY subscription key from api-portal.nyc.gov. Needs network. serverInfo reports version 1.0.0; the npm package is 1.1.0. Published on npm as @betanyc/nyc-311-mcp since 2026-06-22; latest release 1.1.0 (npm and GitHub, 2026-07-22).",
+    "npmPackage": "@betanyc/nyc-311-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": true,
+    "verificationStatus": "community",
+    "dateModified": "2026-09-18",
+    "version": "1.1.0",
+    "dataPlatform": [
+      "custom-api"
+    ]
+  },
+  {
+    "id": "nys-openlegislation-mcp",
+    "name": "nys-openlegislation-mcp",
+    "description": "New York State legislation via the NYS Open Legislation API (bills, votes, laws, members, committees, calendars, agendas, transcripts)",
+    "repoUrl": "https://github.com/BetaNYC/nys-openlegislation-mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "legislation-legal"
+    ],
+    "governmentLevel": [
+      "state"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-09-18",
+    "dataSources": [
+      "NYS Open Legislation API (New York State Senate)"
+    ],
+    "jurisdiction": "New York State",
+    "toolCount": 24,
+    "notes": "Requires a free NYS_LEGISLATION_API_KEY. An optional local SQLite corpus, built with the key from a repository clone (the sync scripts are not in the npm package), enables local-only mode, which needs no network; 6 of the 24 tools have no local coverage. Published on npm as @betanyc/nys-openlegislation-mcp since 2026-05-22; latest release 2.3.0 (npm and GitHub, 2026-07-22).",
+    "npmPackage": "@betanyc/nys-openlegislation-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": true,
+    "verificationStatus": "community",
+    "dateModified": "2026-09-18",
+    "version": "2.3.0",
+    "dataPlatform": [
+      "custom-api"
+    ]
+  },
+  {
+    "id": "nyc-budget-mcp",
+    "name": "nyc-budget-mcp",
+    "description": "NYC Council adopted-budget data: Schedule C discretionary awards, Terms & Conditions, Section 254 capital changes, Transparency Resolutions, and a Legistar crosswalk",
+    "repoUrl": "https://github.com/BetaNYC/New-York-City-Budget/tree/main/mcp",
+    "transport": [
+      "stdio"
+    ],
+    "categories": [
+      "economic-financial"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "BetaNYC",
+    "status": "active",
+    "dateAdded": "2026-09-18",
+    "dataSources": [
+      "NYC Council adopted-budget documents, as structured in BetaNYC/New-York-City-Budget"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 7,
+    "notes": "The MCP server in the New-York-City-Budget repository (mcp/). No API key required. Runs with no network: a SQLite database of the repository's data ships in the npm package. Schedule C awards cover FY2015–FY2027. The npm package is MIT; the repository README licenses its data CC BY-SA 4.0 (LICENSE-DATA). The repository's main branch declares 1.4.0, which is not on npm, so a clone reports a different serverInfo version from npx. Published on npm as @betanyc/nyc-budget-mcp since 2026-07-08; latest release 1.3.1 (npm, and GitHub tag mcp-v1.3.1, 2026-08-11).",
+    "npmPackage": "@betanyc/nyc-budget-mcp",
+    "license": "MIT",
+    "programmingLanguage": "TypeScript",
+    "apiKeyRequired": false,
+    "verificationStatus": "community",
+    "dateModified": "2026-09-18",
+    "version": "1.3.1"
   }
 ]
