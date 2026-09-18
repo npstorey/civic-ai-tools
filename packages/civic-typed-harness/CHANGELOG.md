@@ -3,11 +3,12 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.5.0 — 2026-09-17
 
-Everything here is on `main` and in no published version. The list is derived
-from `git log 33a3aff..HEAD -- packages/civic-typed-harness/` — `33a3aff` is
-the 0.4.1 release bump — so it is the commit range rather than a recollection.
+The list is derived from
+`git log 33a3aff..<this release> -- packages/civic-typed-harness/` — `33a3aff`
+is the 0.4.1 release bump — so it is the commit range rather than a
+recollection.
 Three commits landed after that bump and had no entry; this phase's two
 changes join them.
 
