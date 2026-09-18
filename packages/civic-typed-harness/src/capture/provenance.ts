@@ -94,7 +94,10 @@ export interface ProvenanceInput {
 export interface ProvenanceConfig {
   /** Platform-agent identity — the deployment publishing the record. */
   platformAgent: PlatformAgentConfig;
-  /** Source registry supplying agent titles and MCP server URLs. */
+  /** Source registry supplying agent titles and MCP server URLs. Caller-
+   *  supplied configuration: an instance passes the addresses it is pointed
+   *  at, and an entry with no `serverUrl` makes its agent omit
+   *  `civic:serverUrl` (civic-ai-tools#205). */
   sourceRegistry: CivicSourceRegistry;
   /** Source id untagged tool spans fall back to. Default `socrata`
    *  (pre-source-tagging captures were Socrata-only). */
@@ -262,8 +265,15 @@ export function buildProvenanceGraph(
   // configured fallback source (socrata — the only source at the time) for
   // backwards compatibility. Agent coordinates come from the source registry;
   // the skill-fetch span URL overrides the skill source's server URL.
+  //
+  // THE ADDRESS IS THE OPERATOR'S, OR IT IS ABSENT (civic-ai-tools#205, 0.5.0).
+  // `serverUrl` is optional on a registry entry and there is no stand-in for a
+  // source whose address this run does not know: a source the registry does
+  // not carry, and a registry entry with no address, both emit an agent with
+  // no `civic:serverUrl` key at all. The signed bytes then say the address is
+  // unknown instead of naming a server the analysis may never have contacted.
   const toolSpans = spans.filter(s => s.name === 'mcp_tool_call');
-  const sourceAgentMap: Record<string, { urn: string; title: string; serverUrl: string }> = {};
+  const sourceAgentMap: Record<string, { urn: string; title: string; serverUrl?: string }> = {};
   for (const [id, info] of Object.entries(registry)) {
     sourceAgentMap[id] = {
       urn: vocab.sourceAgentUrn(id),
@@ -283,14 +293,15 @@ export function buildProvenanceGraph(
     const meta = sourceAgentMap[sourceId] ?? {
       urn: vocab.sourceAgentUrn(encodeURIComponent(sourceId)),
       title: `${sourceId} MCP Server`,
-      serverUrl: sourceId,
     };
     graph.push(
       makeAgentNode(
         meta.urn,
         {
           'dcterms:title': meta.title,
-          [CIVIC_TERM_SERVER_URL]: meta.serverUrl,
+          // Conditional spread in place, so a known address keeps its
+          // position in the key order the legacy chain hashes.
+          ...(meta.serverUrl ? { [CIVIC_TERM_SERVER_URL]: meta.serverUrl } : {}),
           [CIVIC_TERM_SOURCE_ID]: sourceId,
         },
         ['prov:SoftwareAgent'],

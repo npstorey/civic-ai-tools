@@ -87,6 +87,129 @@ test('environment extension: host is a config input, not a constant', () => {
   assert.deepEqual(env.mcpServers, []);
 });
 
+// --- #449: the environment names the servers the run had ---
+
+/** The exact bytes today's single-URL call emits, captured from the
+ *  pre-#449 builder at 3d09d99. The additive list parameter must leave these
+ *  untouched: an already-signed datHere package reproduces through this
+ *  function, so a moved byte here is a broken record, not a new feature. */
+const PRE_CHANGE_SINGLE_URL_BYTES =
+  '{"modelVersion":"openai/gpt-4o","temperature":0,'
+  + '"mcpServers":[{"url":"https://socrata-mcp.civicaitools.org"}],'
+  + '"toolDefinitions":[],"host":"civicaitools.org"}';
+
+/** And the bytes when there is no server at all. */
+const PRE_CHANGE_NO_SERVER_BYTES =
+  '{"modelVersion":"openai/gpt-4o","temperature":0,'
+  + '"mcpServers":[],"toolDefinitions":[],"host":"civicaitools.org"}';
+
+test('#449: the single-URL call shape is byte-identical to the pre-change builder', () => {
+  assert.equal(
+    JSON.stringify(
+      buildDatHereEnvironment(
+        'openai/gpt-4o',
+        'https://socrata-mcp.civicaitools.org',
+        CIVICAITOOLS_ENVIRONMENT_CONFIG,
+      ),
+    ),
+    PRE_CHANGE_SINGLE_URL_BYTES,
+  );
+  assert.equal(
+    JSON.stringify(
+      buildDatHereEnvironment('openai/gpt-4o', undefined, CIVICAITOOLS_ENVIRONMENT_CONFIG),
+    ),
+    PRE_CHANGE_NO_SERVER_BYTES,
+  );
+});
+
+test('#449: two servers are listed as two, in the order given, each carrying its name', () => {
+  // Two entries that cannot collapse into one: different urls AND different
+  // names. A builder that kept only the first, de-duplicated, or sorted would
+  // fail here rather than pass on a shape that could not tell.
+  const env = buildDatHereEnvironment(
+    'openai/gpt-4o',
+    [
+      { url: 'https://mcp-warehouse.city.example', name: 'city-warehouse' },
+      { url: 'https://mcp-indicators.city.example', name: 'indicators' },
+    ],
+    CIVICAITOOLS_ENVIRONMENT_CONFIG,
+  );
+  assert.deepEqual(env.mcpServers, [
+    { url: 'https://mcp-warehouse.city.example', name: 'city-warehouse' },
+    { url: 'https://mcp-indicators.city.example', name: 'indicators' },
+  ]);
+  // Order is the caller's, and it is in the hashed bytes.
+  assert.equal(
+    JSON.stringify(env.mcpServers),
+    '[{"url":"https://mcp-warehouse.city.example","name":"city-warehouse"},'
+    + '{"url":"https://mcp-indicators.city.example","name":"indicators"}]',
+  );
+  // The reverse order is a different serialization, so the assertion above is
+  // about order and not merely about membership.
+  assert.notEqual(
+    JSON.stringify(env.mcpServers),
+    JSON.stringify([
+      { url: 'https://mcp-indicators.city.example', name: 'indicators' },
+      { url: 'https://mcp-warehouse.city.example', name: 'city-warehouse' },
+    ]),
+  );
+  // §8.7.1 requirement 3's field set is unchanged by the list shape.
+  assert.deepEqual(Object.keys(env), [
+    'modelVersion',
+    'temperature',
+    'mcpServers',
+    'toolDefinitions',
+    'host',
+  ]);
+});
+
+test('#449: a list entry with no name emits no name key — the single-server bytes are the one-entry list', () => {
+  assert.equal(
+    JSON.stringify(
+      buildDatHereEnvironment(
+        'openai/gpt-4o',
+        [{ url: 'https://socrata-mcp.civicaitools.org' }],
+        CIVICAITOOLS_ENVIRONMENT_CONFIG,
+      ),
+    ),
+    PRE_CHANGE_SINGLE_URL_BYTES,
+  );
+});
+
+test('#449: the composite derivation carries the list, and prefers it over the skill URL', () => {
+  const withList = deriveDatHereEnvelopeFields({
+    model: 'openai/gpt-4o',
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    summary: 'Short summary.',
+    skillMcpServerUrl: 'https://socrata-mcp.civicaitools.org',
+    mcpServers: [
+      { url: 'https://mcp-warehouse.city.example', name: 'city-warehouse' },
+      { url: 'https://mcp-indicators.city.example', name: 'indicators' },
+    ],
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+  const env = (withList.extensions as Record<string, Record<string, unknown>>)[
+    ENVIRONMENT_EXTENSION_KEY
+  ];
+  assert.deepEqual(env.mcpServers, [
+    { url: 'https://mcp-warehouse.city.example', name: 'city-warehouse' },
+    { url: 'https://mcp-indicators.city.example', name: 'indicators' },
+  ]);
+
+  // Without the list, the pre-change input produces the pre-change bytes.
+  const withoutList = deriveDatHereEnvelopeFields({
+    model: 'openai/gpt-4o',
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    summary: 'Short summary.',
+    skillMcpServerUrl: 'https://socrata-mcp.civicaitools.org',
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+  assert.equal(
+    JSON.stringify(
+      (withoutList.extensions as Record<string, unknown>)[ENVIRONMENT_EXTENSION_KEY],
+    ),
+    PRE_CHANGE_SINGLE_URL_BYTES,
+  );
+});
+
 test('composite derivation: datHere input produces all four envelope fields', () => {
   const fields = deriveDatHereEnvelopeFields({
     model: 'openai/gpt-4o',

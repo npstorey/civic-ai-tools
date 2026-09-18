@@ -38,7 +38,7 @@ import {
   PRIOR_ERA_CIVIC_URN_PREFIX,
   PRIOR_ERA_CIVIC_VOCABULARY,
 } from '../format/vocabulary.ts';
-import { CIVIC_SOURCE_REGISTRY } from '../format/sources.ts';
+import { CIVIC_SOURCE_REGISTRY, type CivicSourceRegistry } from '../format/sources.ts';
 // Namespace import: the vocabulary guard at the foot of this file derives the
 // declared-term set from the module's exported VALUES, so it must see all of
 // them rather than the handful named above.
@@ -76,6 +76,59 @@ function toSettlementEra(json: string): string {
     .replaceAll(PRIOR_ERA_CIVIC_NS, CIVIC_NS);
 }
 
+/**
+ * Lift a frozen capture over the ONE behaviour 0.5.0 changed
+ * (civic-ai-tools#205): the 2026-08-01 reference implementation gave a source
+ * the registry did not carry a `civic:serverUrl` equal to its own source id —
+ * the source-id fallback — and the builder now omits the key instead.
+ *
+ * The capture's bytes are NEVER edited. This is a transform OF them, the same
+ * device `toSettlementEra` above applies to the Appendix J literals and
+ * golden-reproduction.test.ts applies to the prompt-hash placeholder. Keeping
+ * the file frozen is what lets it still record what the reference
+ * implementation emitted, which is the only thing that makes it a golden.
+ *
+ * DERIVED, NOT A HAND LIST: it walks every node and lifts each one whose
+ * `civic:sourceId` is in no registry entry. `dropped` is asserted, so a
+ * capture in which the lift finds nothing (or finds more than the one agent
+ * measured at 3d09d99) fails here rather than silently doing nothing. Key
+ * order survives: deleting one key leaves the insertion order of the rest.
+ *
+ * A near-twin of this function lives in golden-reproduction.test.ts, which
+ * lifts the same capture for the ninth envelope case. Test files run in
+ * separate processes, so it is copied rather than imported.
+ */
+function dropUnregisteredServerUrls(
+  graph: { '@graph': Array<Record<string, unknown>> },
+  registry: CivicSourceRegistry,
+  expectedDropped = 1,
+): { '@graph': Array<Record<string, unknown>> } {
+  const lifted = JSON.parse(JSON.stringify(graph)) as {
+    '@graph': Array<Record<string, unknown>>;
+  };
+  let dropped = 0;
+  for (const node of lifted['@graph']) {
+    const sourceId = node['civic:sourceId'];
+    if (typeof sourceId !== 'string') continue;
+    if (!Object.hasOwn(node, 'civic:serverUrl')) continue;
+    if (Object.hasOwn(registry, sourceId)) continue;
+    delete node['civic:serverUrl'];
+    dropped += 1;
+  }
+  assert.equal(
+    dropped,
+    expectedDropped,
+    'the frozen capture no longer carries the source-id fallback this lift exists for — the lift would be silently doing nothing',
+  );
+  return lifted;
+}
+
+/** The frozen reference graph as the 0.5.0 builder reproduces it. */
+const LIFTED_FIXTURE_GRAPH = dropUnregisteredServerUrls(
+  FIXTURE.provenanceGraph,
+  CIVIC_SOURCE_REGISTRY,
+);
+
 // --- Byte parity against the reference implementation (PRIOR era) ---
 
 test('golden parity [prior era]: multi-source trace reproduces the reference graph byte-for-byte', () => {
@@ -86,8 +139,8 @@ test('golden parity [prior era]: multi-source trace reproduces the reference gra
   );
   assert.equal(
     JSON.stringify(graph),
-    JSON.stringify(FIXTURE.provenanceGraph),
-    'harness graph must be byte-identical to the reference implementation output',
+    JSON.stringify(LIFTED_FIXTURE_GRAPH),
+    'harness graph must be byte-identical to the reference implementation output, lifted over the #205 fallback',
   );
 });
 
@@ -114,7 +167,7 @@ test('golden parity [settlement era]: the default vocabulary reproduces the refe
     FIXTURE.provenanceInput,
     CIVICAITOOLS_PROVENANCE_CONFIG,
   );
-  const priorEra = JSON.stringify(FIXTURE.provenanceGraph);
+  const priorEra = JSON.stringify(LIFTED_FIXTURE_GRAPH);
   const expected = toSettlementEra(priorEra);
   // Non-vacuity: the substitution must actually have moved bytes, otherwise
   // this test would pass on a graph that never flipped.
@@ -363,6 +416,130 @@ test('config injection: skill-fetch server URL overrides the configured skill so
     (n) => n['@id'] === 'urn:civic-record:mcp-server:city-warehouse',
   );
   assert.equal(agent!['civic:serverUrl'], 'https://mcp-preview.city.example');
+});
+
+// --- #205: the agent names the CONFIGURED address, or names nothing ---
+
+/** One registry carrying three deliberately different source shapes, plus a
+ *  fourth id the registry has never heard of, driven from the traces below.
+ *  `skillSourceId` is its own source and is never in a tool span, so the
+ *  skill-fetch substitution cannot reach — and cannot rescue — any of the
+ *  three cases under test. */
+const ADDRESS_CONFIG: ProvenanceConfig = {
+  platformAgent: {
+    id: 'city-evidence-portal',
+    title: 'City Evidence Portal',
+    url: 'https://evidence.city.example',
+  },
+  sourceRegistry: {
+    'skill-source': {
+      displayName: 'Skill Source',
+      agentTitle: 'Skill Source MCP Server',
+      serverUrl: 'https://mcp-skill.city.example',
+      catalogType: 'warehouse',
+    },
+    // Shape 1: an entry carrying the address this instance is pointed at,
+    // which is NOT the address any harness constant names.
+    'configured-source': {
+      displayName: 'Configured Source',
+      agentTitle: 'Configured Source MCP Server',
+      serverUrl: 'https://mcp-configured.city.example',
+      catalogType: 'warehouse',
+    },
+    // Shape 2: an entry the registry KNOWS, whose address it does not.
+    'addressless-source': {
+      displayName: 'Addressless Source',
+      agentTitle: 'Addressless Source MCP Server',
+      catalogType: 'warehouse',
+    },
+    // Shape 3 is the absence of an entry — see `unregistered-source` below.
+  },
+  fallbackSourceId: 'skill-source',
+  skillSourceId: 'skill-source',
+};
+
+test('#205 PREMISE: the three cases below are three different shapes', () => {
+  // Without this the two absence cases could be the same case twice, and a
+  // green on both would be one measurement reported as two.
+  assert.equal(
+    ADDRESS_CONFIG.sourceRegistry['configured-source'].serverUrl,
+    'https://mcp-configured.city.example',
+  );
+  assert.ok(Object.hasOwn(ADDRESS_CONFIG.sourceRegistry, 'addressless-source'));
+  assert.equal(ADDRESS_CONFIG.sourceRegistry['addressless-source'].serverUrl, undefined);
+  assert.ok(!Object.hasOwn(ADDRESS_CONFIG.sourceRegistry, 'unregistered-source'));
+  // And the configured address is not a constant the harness could have
+  // supplied: it appears in no entry of the civic reference registry.
+  for (const info of Object.values(CIVIC_SOURCE_REGISTRY)) {
+    assert.notEqual(info.serverUrl, 'https://mcp-configured.city.example');
+  }
+});
+
+test('#205: a non-skill source whose entry carries a configured address names that address', () => {
+  const trace = traceOf([
+    skillSpan('skill-hash'),
+    toolSpan('configured-source', 'warehouse_query', 'span-1'),
+  ]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, ADDRESS_CONFIG);
+  const agent = graph['@graph'].find(
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:configured-source',
+  );
+  assert.ok(agent, 'the configured source agent should be emitted');
+  assert.equal(agent!['civic:serverUrl'], 'https://mcp-configured.city.example');
+  // The skill-fetch span's URL belongs to another source and must not reach
+  // this agent.
+  assert.notEqual(agent!['civic:serverUrl'], 'https://socrata-mcp.civicaitools.org');
+  // Key order is part of the byte contract on the legacy chain.
+  assert.deepEqual(Object.keys(agent!).filter((k) => k !== '@id' && k !== '@type'), [
+    'dcterms:title',
+    'civic:serverUrl',
+    'civic:sourceId',
+  ]);
+});
+
+test('#205: a registry entry with no address emits an agent with NO civic:serverUrl key', () => {
+  const trace = traceOf([
+    skillSpan('skill-hash'),
+    toolSpan('addressless-source', 'warehouse_query', 'span-1'),
+  ]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, ADDRESS_CONFIG);
+  const agent = graph['@graph'].find(
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:addressless-source',
+  );
+  assert.ok(agent, 'the agent is still emitted — the run used the source');
+  // The KEY'S ABSENCE, not an empty string. An empty string is an assertion
+  // about an address, and JSON.stringify keeps it in the signed bytes.
+  assert.equal(Object.hasOwn(agent!, 'civic:serverUrl'), false);
+  assert.ok(!JSON.stringify(agent).includes('civic:serverUrl'));
+  // This is the registry-KNOWN shape: the title comes from the entry.
+  assert.equal(agent!['dcterms:title'], 'Addressless Source MCP Server');
+  assert.equal(agent!['civic:sourceId'], 'addressless-source');
+});
+
+test('#205: a source the registry has never heard of emits an agent with NO civic:serverUrl key', () => {
+  const trace = traceOf([
+    skillSpan('skill-hash'),
+    toolSpan('unregistered-source', 'warehouse_query', 'span-1'),
+  ]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, ADDRESS_CONFIG);
+  const agent = graph['@graph'].find(
+    (n) => n['@id'] === 'urn:civic-record:mcp-server:unregistered-source',
+  );
+  assert.ok(agent, 'the agent is still emitted — the run used the source');
+  assert.equal(Object.hasOwn(agent!, 'civic:serverUrl'), false);
+  assert.ok(!JSON.stringify(agent).includes('civic:serverUrl'));
+  // The dropped fallback, named: before 0.5.0 this node carried
+  // `"civic:serverUrl":"unregistered-source"` — the source id standing in for
+  // an address. That exact string must not be in the bytes.
+  assert.ok(!JSON.stringify(agent).includes('"civic:serverUrl":"unregistered-source"'));
+  // Distinct from the case above: this id is in no registry entry, so the
+  // title is the derived one rather than an entry's agentTitle.
+  assert.equal(agent!['dcterms:title'], 'unregistered-source MCP Server');
+  assert.equal(agent!['civic:sourceId'], 'unregistered-source');
+  assert.deepEqual(Object.keys(agent!).filter((k) => k !== '@id' && k !== '@type'), [
+    'dcterms:title',
+    'civic:sourceId',
+  ]);
 });
 
 test('config injection: model agent description is a config input', () => {
@@ -1149,7 +1326,7 @@ test('byte stability: the golden trace carries no rejected call, so its five too
   }
   assert.equal(
     JSON.stringify(graph),
-    JSON.stringify(FIXTURE.provenanceGraph),
+    JSON.stringify(LIFTED_FIXTURE_GRAPH),
     'a trace that records no failure reproduces the reference bytes exactly',
   );
 });

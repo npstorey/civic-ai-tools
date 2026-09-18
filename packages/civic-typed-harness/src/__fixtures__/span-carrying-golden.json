@@ -4,7 +4,8 @@
     "WHY A SEPARATE FILE. reference-golden.json is a VERBATIM copy of @typedstandards/produce-core's fixture, pinned by sha256 in golden-reproduction.test.ts's header and re-copied when upstream moves. A ninth case added inside it would break that copy relationship. This file is this repository's own, and it adds bytes rather than moving any: no existing case's bytes change, which golden-reproduction.test.ts asserts by still comparing all eight against the frozen copy.",
     "WHERE THE EXPECTATIONS COME FROM. Only the two hashes below are recorded here. Everything the case is compared against is FROZEN REFERENCE CAPTURE, not this code's output: the trace, the provenance graph and the dataSources come from website-golden.json, captured 2026-08-01 from civic-ai-tools-website src/lib/evidence (provenance.ts, data-sources.ts). The suite composes the expected package from those frozen components and compares it against one the harness derives from the raw trace; the two hashes then pin every byte of the result cryptographically.",
     "THE ONE SUBSTITUTION. website-golden.json's capture used the synthetic promptHash 'prompthash123', which is not the SHA-256 of any text. An envelope case has a real prompt, so the suite lifts the frozen graph by substituting that literal for the actual hash of the prompt below — a pure string transform of frozen bytes, the same device the settlement-era leg uses for the two Appendix J literals. Measured: after that one substitution the derived graph is byte-identical to the frozen capture, all 5 tool-call activities, 4 data responses and 3 agents included.",
-    "REGENERATING THE HASHES. Only when a change is INTENDED to move them. A hash that moves under a change that was not supposed to touch the emitted bytes is the finding, not the fixture's problem."
+    "REGENERATING THE HASHES. Only when a change is INTENDED to move them. A hash that moves under a change that was not supposed to touch the emitted bytes is the finding, not the fixture's problem.",
+    "REGENERATED ONCE, FOR 0.5.0 (civic-ai-tools#205). The capture carries one MCP agent for a source the registry does not know; the reference implementation gave it civic:serverUrl equal to its own source id, and 0.5.0 omits the key instead (honest absence over an asserted default). website-golden.json is NOT edited — golden-reproduction.test.ts lifts it, derived from the registry and with the number of lifted nodes asserted. The lifted provenance is inside the hashed bytes, so both hashes below moved, intentionally and by exactly that one dropped key: envelopeHash eaa41755...b9b87d -> 2a57c911...c0af89, contentHashSha256 cd036569...0e0202 -> e14adecf...a6af5f."
   ],
   "case": {
     "name": "website-span-capture",
@@ -58,8 +59,8 @@
       "contentCanonicalization": "https://typedstandards.org/canonicalization/legacy-json/v1"
     },
     "expected": {
-      "contentHashSha256": "cd0365696269fe9ac3955092586df6bc0f20907fb9a2d34b16e5d1e7d70e0202",
-      "envelopeHash": "eaa417556123e8a36f70907a47e657d36b42b7a68f95728d834d9cea92b9b87d"
+      "contentHashSha256": "e14adecf119615d35679f716a05f5720148f044382919d3ba5395952bea6af5f",
+      "envelopeHash": "2a57c911c7933fd1d05520fa14423356f9abbaecce2cc332f04edfeb03c0af89"
     }
   }
 }

@@ -21,8 +21,18 @@ export interface CivicSourceInfo {
   displayName: string;
   /** PROV agent `dcterms:title`, e.g. "Socrata MCP Server". */
   agentTitle: string;
-  /** MCP endpoint URL — the PROV agent's `civic:serverUrl`. */
-  serverUrl: string;
+  /**
+   * MCP endpoint URL — the PROV agent's `civic:serverUrl`, and this source's
+   * display address.
+   *
+   * OPTIONAL since 0.5.0 (civic-ai-tools#205). The address a run reached is
+   * the OPERATOR's configuration, not a fact the harness knows, so a caller
+   * passes a registry whose entries carry the addresses that instance is
+   * pointed at. An entry that carries no address makes the provenance graph
+   * OMIT `civic:serverUrl` from that source's agent entirely, rather than
+   * assert a stand-in: honest absence over an asserted default.
+   */
+  serverUrl?: string;
   /** `dataSources[].catalogType` value for entries from this source. */
   catalogType: string;
   /**
@@ -40,7 +50,14 @@ export interface CivicSourceInfo {
 export type CivicSourceRegistry = Record<string, CivicSourceInfo>;
 
 /** The civic reference registry — the three demo sources. Passed explicitly
- *  by the reference app — never applied as a default. */
+ *  by the reference app — never applied as a default.
+ *
+ *  THE `serverUrl` VALUES BELOW ARE THE REFERENCE DEPLOYMENT'S OWN, and since
+ *  0.5.0 (civic-ai-tools#205) that is the whole of their role: a default
+ *  display address, and — on the two aggregate sources — the companion of
+ *  `aggregatePortalUrl`. They are not what a record asserts about a run. An
+ *  instance pointed at other addresses passes a registry carrying those; an
+ *  entry with no address emits no `civic:serverUrl` at all. */
 export const CIVIC_SOURCE_REGISTRY: CivicSourceRegistry = {
   socrata: {
     displayName: 'Socrata',
