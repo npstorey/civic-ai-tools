@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## 0.5.0 — 2026-09-17
+## 0.5.0 — 2026-09-18
 
 The list is derived from
 `git log 33a3aff..<this release> -- packages/civic-typed-harness/` — `33a3aff`
