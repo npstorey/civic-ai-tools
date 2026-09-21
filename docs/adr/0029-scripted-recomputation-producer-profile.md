@@ -63,7 +63,7 @@ Add the Producer Profile type **`scripted-recomputation`**: a record whose conte
 The `scripted-recomputation` vocabulary has two values, in the manner of §8.6:
 
 - **`script-run`** — a packaging program, run after the content's files already existed on disk, read their bytes into the package; the files are pinned by SHA-256 and no AI conversation is in the path. Verbatim by construction at the file layer; how each file came to exist (a program's run, or a retrieval) is recorded in `queries[]`, not by the label.
-- **`tool-emitted`** — the program that computed the content wrote the package itself, in the same process, hashing the bytes as it wrote them. Verbatim by construction at emission; no step reads the content back from disk between computation and packaging.
+- **`tool-emitted`** — the program that computed the content wrote the package itself, in the same process, hashing the bytes as it wrote them. Verbatim by construction at emission; no step reads the content back from disk between computation and packaging. No package carries `tool-emitted` yet: the value rests on the adopter's published Phase 1 in [dathere/qsv#4448](https://github.com/dathere/qsv/issues/4448#issuecomment-5440060941), not on a package that exists.
 
 The two differ as `chat-flow-stream` and `claude-code-jsonl-readback` do: under `script-run` a file sits on disk between the run and the packaging, and nothing but the package's own signed assertions binds the file to the run that wrote it; under `tool-emitted` that interval does not exist. `script-run` is the value the ADR-0028 packages carry. `tool-emitted` is the shape the adopter's investigation describes for its own Phase 1: the tool will "compute multihash digests … for the dataset and every `--dict-info` bundled sidecar; emit an unsigned JCS envelope (embedded and/or `.package.json` sidecar)".
 
@@ -92,7 +92,7 @@ A package whose `producerProfile` begins `scripted-recomputation/` MUST satisfy 
 
 8. **`summary`** SHOULD be present. **`signer`** follows §8.1.1 and §8.5. This record adds no identity requirement; a signer with no domain is ADR-0030's subject.
 
-**Which checks enforce these.** Items 1-2 are check #15 once the table entry lands. Item 6 is the content-profile check (§5). Items 4-5 are checks #3 and #4 as they stand. Items 3, 7 and 8 are producer obligations that no v0.1 check tests, as the §8.7.1 requirements for `datHere` are today.
+**Which checks enforce these.** Items 1-2 are check #15 once the table entry lands. Item 6 is the content-profile check (§5). Items 4-5 are checks #3 and #4, with #4 extended for `raw-bytes/v1` (§4). Items 3, 7 and 8 are producer obligations that no v0.1 check tests, as the §8.7.1 requirements for `datHere` are today.
 
 ### 4. The raw-bytes content rule
 
@@ -103,10 +103,15 @@ Register the content canonicalization rule **`https://typedstandards.org/canonic
 **Where the bytes live, and how a verifier obtains them with no network.**
 
 - **Inline.** `output` is a JSON string, and the fingerprinted bytes are its UTF-8 encoding. A producer MAY inline a file only when the file is valid UTF-8, since valid UTF-8 round-trips through a JSON string byte for byte and nothing else does. A file that is not valid UTF-8 MUST be supplied by BlobRef. An inline package verifies from the package alone: check #4 hashes the UTF-8 bytes of `output` and compares.
-- **BlobRef (§8.1.5).** `output` is a BlobRef, and the fingerprinted bytes are the bytes it names. `contentHash.sha256` MUST equal the hex part of `output.ref`, which §8.1.5 already defines as the SHA-256 of the same bytes. Check #4 compares the two digests from the package alone, with no fetch. Check #9 establishes that the bytes match `ref` and `size`, and it obtains the bytes through the verifier's injected fetcher. An offline verifier supplies the file as a local copy through that fetcher. ADR-0028's example does this for its retrieval node's evaluation log (15,487,293 bytes, resolved from `data/` with zero network calls). The two checks together bind the file's bytes to the signed `contentHash`.
+- **BlobRef (§8.1.5).** `output` is a BlobRef, and the fingerprinted bytes are the bytes it names. `contentHash.sha256` MUST equal the hex part of `output.ref`, which §8.1.5 already defines as the SHA-256 of the same bytes. Check #4 obtains the file's bytes through the verifier's injected fetcher, the route check #9 uses, and an offline verifier supplies the file as a local copy through that fetcher. ADR-0028's example does this for its retrieval node's evaluation log (15,487,293 bytes, resolved from `data/` with zero network calls). Check #4 then hashes the bytes and compares the SHA-256 with `contentHash.sha256`. Check #4 reports:
+  - `ok` when the bytes are held and their SHA-256 equals `contentHash.sha256`;
+  - `content_hash_mismatch` (tier `alarm`, as today) when the bytes are held and their SHA-256 differs, and also when `contentHash.sha256` differs from the hex part of `output.ref`. The second case is decided from the package alone, because no file can hash to two different signed digests;
+  - **`content_bytes_unavailable`** (tier `attention`) when the bytes cannot be obtained. The status says the bytes were not checked. It is never `ok` and never `verified`-tier, and it is not `alarm`, because a missing file does not show that the content was altered. It takes the tier the site already gives envelope integrity when a named content location cannot be fetched (`unavailable` with reason `unfetchable`, tier `attention`).
+
+  Check #9 still checks the same bytes against `ref` and `size`. Today check #9 reports a blob it cannot fetch as `fetch_failed`, which the site tiers `alarm`. This record does not change check #9, so a verifier that is not given the file still shows that line.
 - **A named external file** outside a BlobRef is not admitted. The file is `output`, and a BlobRef is the one in-envelope way to point at bytes the package does not hold.
 
-A raw-bytes package meant to verify with no side file SHOULD inline its output. For a BlobRef package, check #4 runs offline from the package alone, and check #9 runs offline only when the file travels with the §8.8 bundle; without the file, check #9 reports as §8.1.5 says today. Carrying file bytes inside the commitment bundle is not specified here: it is package-format work under [Q1](../architecture/open-questions.md#q1--package-format).
+A raw-bytes package meant to verify with no side file SHOULD inline its output. A BlobRef package's checks #4 and #9 run offline only when the file travels with the §8.8 bundle. Without the file, check #4 reports `content_bytes_unavailable` and check #9 reports as §8.1.5 says today. Carrying file bytes inside the commitment bundle is not specified here: it is package-format work under [Q1](../architecture/open-questions.md#q1--package-format).
 
 *Illustration, not a conformance claim.* The ADR-0028 recomputation node is signed under `legacy-json/v1` and stays that way. The UTF-8 bytes of its inline `output` (1,632 bytes) hash to `54ab7c6f1817f395d1685c920336e59927cfc1c5a559fd3f883f62a1a3313126`. That is the digest the package's own extension records for `analysis/out/recomputation.json`, and the digest `shasum -a 256` prints for that file in the example repository. Under `raw-bytes/v1` that value would have been its `contentHash`. For the retrieval node it would have been `93a9f3ca91499c42c533a882a04292efedf6218d74749bc0fa28350cfff1270d`, the digest its BlobRef already carries.
 
@@ -167,7 +172,6 @@ Expected verify-core outcomes after Wave N14 P3, on both packages: check #3 `ok`
 - **Require `raw-bytes/v1` under this profile.** Rejected. The signed packages use `legacy-json/v1`, which remains correct for content that is the package itself.
 - **Normalize text in the rule** (line endings, encoding, a trailing newline). Rejected. The rule is useful because its digest equals the file's ordinary SHA-256, which anyone holding the file can check with standard tools. Normalization would break that and add a place for implementations to disagree.
 - **A multi-file rule now.** Rejected for v1 (§4). No package yet needs check #4 to recompute over a set, and the set's manifest shape is a design question in its own right.
-- **Add a check #4 status for "bytes not held".** Not needed. With a BlobRef, check #4 compares digests from the package alone, and the bytes are check #9's.
 - **Implement `blake3`** (the investigation notes the tool "already ships blake3"). Rejected under D5: `sha256` stays the required default, and a verifier would take on a dependency.
 
 ## Consequences
@@ -183,7 +187,7 @@ Expected verify-core outcomes after Wave N14 P3, on both packages: check #3 `ok`
   - §8.7: the second profile's requirements.
   - §9.2: #3, #4 and #15 as amended, and the content-profile check with a number.
   - Appendix G: the revision.
-- **Verifier and site work.** Wave N14 P3 covers the rule registry, the table entry, the content-hash path for `raw-bytes/v1`, and the content-profile check. The site's capture-method labels (`CAPTURE_METHOD_LABELS`, keyed by every `CaptureMethod` value) will need a sentence for each new value once verify-core widens the union.
+- **Verifier and site work.** Wave N14 P3 covers the rule registry, the table entry, and the content-profile check. It also covers the content-hash path for `raw-bytes/v1`, which for a BlobRef is an async path: check #4 fetches through the injected fetcher, as check #9 does. That path adds the status `content_bytes_unavailable` to check #4's list, and the site needs a tier (`attention`) and a sentence for it. The site's capture-method labels (`CAPTURE_METHOD_LABELS`, keyed by every `CaptureMethod` value) will need a sentence for each new value once verify-core widens the union.
 - **Not settled here:** Q32's routing convention; a signer with no domain (ADR-0030); a set-of-files rule; `blake3`; Q7, which closes when the first non-AI profile is built, not when one is proposed.
 
 ## References
