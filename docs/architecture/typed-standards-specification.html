@@ -3247,10 +3247,23 @@ spans.</td>
 profile adds no identity requirement.</p></li>
 </ol>
 <p><strong>Which checks test these.</strong> Requirements 1 and 2 are
-§9.2 check #15. Requirements 4 and 5 are checks #3 and #4. Requirement 6
-is check #16. Requirements 3, 7 and 8 are producer obligations that no
-v0.1 check tests, as the §8.7.1 requirements for <code>datHere</code>
-are.</p>
+§9.2 check #15. Requirement 6 is check #16. Requirement 4 is not tested
+by a check: check #3 resolves whatever rule URI a package names, under
+any profile — a known URI, <code>dathere-ag-jupyter/v1</code> included,
+reports <code>ok</code>, an unknown URI reports
+<code>unknown_canonicalization_rule</code>, and an absent field reports
+<code>implicit</code>, with the rule inferred as for a pre-v0.1 package
+— and check #4 then recomputes the content hash under the rule #3
+resolved. For requirement 5, check #4 recomputes <code>sha256</code>
+when <code>contentHash</code> lists it and reports
+<code>content_hash_mismatch</code> when it differs; a
+<code>contentHash</code> that lists no <code>sha256</code> reports
+<code>contentHash_no_supported_algorithm</code>, which is reported and
+does not reject the node. Requirements 3, 7 and 8, and requirement 4’s
+presence of <code>contentCanonicalization</code> and its restriction to
+<code>legacy-json/v1</code> or <code>raw-bytes/v1</code>, are producer
+obligations that no v0.1 check tests, as the §8.7.1 requirements for
+<code>datHere</code> are.</p>
 <h3 id="cross-host-publication-commitment-view-schema">8.8 Cross-host
 publication: commitment-view schema</h3>
 <p>A <code>datHere</code>-content-profile package MAY be published
@@ -5332,15 +5345,21 @@ bundle</strong> (§8.8). The reference verifier
 <code>@typedstandards/verify-core@0.6.0</code> — a portable,
 browser-safe library carrying no <code>civicaitools.org</code>
 dependency — cryptographically completes every check in §9.2 against a
-self-contained bundle with <strong>zero network access</strong>. The
-bundle inlines both the proofs that previously required the reference
-implementation’s server-composed verify endpoint (#2, #7, #8, #10) and
-the publisher trust registry that the verdict check (#5) previously
-fetched live:</p>
+self-contained bundle with <strong>zero network access</strong> (for the
+two cases v0.1.9 adds, a key-derived signer identifier and a
+<code>raw-bytes/v1</code> BlobRef <code>output</code>, see the #5 entry
+below and the note after the list). The bundle inlines both the proofs
+that previously required the reference implementation’s server-composed
+verify endpoint (#2, #7, #8, #10) and the publisher trust registry that
+the verdict check (#5) previously fetched live:</p>
 <ul>
 <li><strong>#2 signature</strong> and <strong>#5 trust-registry
 verdict</strong> — verified against the trust registry inlined in the
-bundle (no live <code>/.well-known</code> fetch);</li>
+bundle (no live <code>/.well-known</code> fetch). For a key-derived
+<code>signer.identifier</code> (§8.5.1), #5 is decided from the signing
+key: a registry inlined in the bundle can report only a lowering verdict
+(<code>revoked</code>, <code>deprecated_invalid</code>) and never raises
+the status above <code>self_certified</code> (§8.3.3);</li>
 <li><strong>#7 timestamp</strong> — full RFC 3161 TSA-signature
 verification plus X.509 cert-chain validation to a pinned trust anchor
 (§10.3);</li>
@@ -5351,6 +5370,18 @@ entry’s signed checkpoint (§10.3);</li>
 <code>attestation/*</code> chain carried inline, each node’s signature
 verified in-process.</li>
 </ul>
+<p><strong>Raw-bytes content by BlobRef (v0.1.9).</strong> Under
+<code>raw-bytes/v1</code> with a BlobRef <code>output</code> (§8.2),
+check #4 needs the file’s bytes, as check #9 does, and the bundle does
+not carry them (whether it should is <a
+href="open-questions.md#q1--package-format">Q1</a>). An offline verifier
+completes #4 and #9 only when the file travels with the bundle and is
+supplied through the verifier’s fetcher. Without the bytes, check #4
+reports <code>content_bytes_unavailable</code> — the bytes were not
+checked, which is neither a pass nor a finding of alteration — and check
+#9 reports the blob as it reports any BlobRef whose fetch fails
+(§8.1.5). An inline <code>raw-bytes/v1</code> <code>output</code>
+verifies from the package alone.</p>
 <p>The demonstration is the <strong>Q15 offline-bundle harness</strong>
 (<code>apps/web/src/lib/q15-offline-bundle.test.ts</code> in the
 verifier monorepo): it runs the full verify flow over real production
