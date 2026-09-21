@@ -323,9 +323,9 @@ frozen snapshots for cross-reference accuracy.</p>
 <h2 id="status-of-this-document">2. Status of This Document</h2>
 <p><strong>Status:</strong> v0.1 Working Draft — open for external
 review (review window to be scheduled) <strong>Spec name:</strong> Typed
-Standards Specification <strong>Version:</strong> v0.1.8 (patch revision
+Standards Specification <strong>Version:</strong> v0.1.9 (patch revision
 of the v0.1 Working Draft; tag:
-<code>v0.1.8-typed-standards-spec</code>) <strong>License:</strong> CC
+<code>v0.1.9-typed-standards-spec</code>) <strong>License:</strong> CC
 BY 4.0 (see §3; canonical citation form in Appendix A)
 <strong>Maintainer:</strong> Nathan Storey (current; see
 reviewer-orientation document for stewardship and contact details)
@@ -341,7 +341,7 @@ conversations with reviewer organizations have set expectations. Until
 then, the specification lives at HEAD of <code>main</code>. Reviewers
 and integrators embedding a version identifier cite against the
 <strong>current patch-revision tag</strong>
-(<code>v0.1.8-typed-standards-spec</code>), which names the precise
+(<code>v0.1.9-typed-standards-spec</code>), which names the precise
 revision of this document; the consolidation-milestone tag
 (<code>v0.2-typed-standards-rfc</code>) remains for citing the
 consolidation milestone itself, not the current text. The document’s own
@@ -437,7 +437,7 @@ attestation/*</li>
 <li>8.4 Trace capture</li>
 <li>8.5 Identity binding</li>
 <li>8.6 captureMethod</li>
-<li>8.7 Content profile: datHere</li>
+<li>8.7 Profile requirements: datHere and scripted-recomputation</li>
 <li>8.8 Cross-host publication: commitment-view schema</li>
 <li>8.9 Embed-vs-reference policy</li>
 <li>8.10 Lifecycle and location attestations</li>
@@ -808,8 +808,9 @@ descriptively.</p>
 in the system, carrying the structural-primitive fields plus
 sub-type-specific payload fields. Today’s reference implementation
 produces <code>content/analysis/v1</code> nodes (the default content
-sub-type — legacy and <code>datHere</code> shapes both map to it); the
-broader concept is “signed node.” Identified by its envelope hash (see
+sub-type — legacy and <code>datHere</code> shapes both map to it, as
+does <code>scripted-recomputation</code> output, §8.7.5); the broader
+concept is “signed node.” Identified by its envelope hash (see
 <code>nodeId</code>) and stored at a content-addressable URL. See §8.1
 for structure. Named “evidence package” before the 2026-08-19 vocabulary
 settlement (Appendix J): the prior-era name remains valid wherever it is
@@ -831,10 +832,12 @@ construction. Form: <code>content/&lt;noun&gt;/v&lt;N&gt;</code> or
 <em>(normative)</em>: The top-level type family for <strong>standalone
 assertions</strong> — nodes whose payloads do NOT carry
 <code>targetNodeId</code>. Sub-types include
-<code>content/analysis/v1</code> (built; default for AI-Assisted
-Analysis Producer Profile output), <code>content/claim/v1</code>,
-<code>content/question/v1</code>, <code>content/evidence/v1</code>,
-<code>content/host/v1</code>, <code>content/hostPolicy/v1</code>,
+<code>content/analysis/v1</code> (built; the content type of the
+AI-Assisted Analysis Producer Profile’s output and of the
+<code>scripted-recomputation</code> Producer Profile’s output, §8.7.5),
+<code>content/claim/v1</code>, <code>content/question/v1</code>,
+<code>content/evidence/v1</code>, <code>content/host/v1</code>,
+<code>content/hostPolicy/v1</code>,
 <code>content/hostTermsOfUse/v1</code>, <code>content/tool/v1</code>
 (reserved name-only).</li>
 <li><strong><code>attestation/*</code> namespace</strong>
@@ -871,14 +874,19 @@ on the canonical JSON top level carrying identity binding for the party
 that signed the node — <code>bindingTier</code> (one of
 <code>pseudonymous</code>, <code>oauth</code>, <code>orcid</code>,
 <code>did-web</code>, <code>notarized</code> per the §8.5 graded
-identity ladder; extensible), <code>identifier</code> (provider-prefixed
-string), <code>displayName</code>, optional <code>verifiedAt</code>.
-Recommended v0.1; pre-v0.1 packages derive <code>signer</code> from the
-trust registry’s <code>signerIdentity</code> entry for the envelope’s
+identity ladder, or <code>platform</code>, the reference
+implementation’s operator value used in the §8.3.3 registry example;
+extensible), <code>identifier</code> (provider-prefixed string, or a
+key-derived <code>did:key</code> identifier per §8.5.1),
+<code>displayName</code>, optional <code>verifiedAt</code>. Recommended
+v0.1; pre-v0.1 packages derive <code>signer</code> from the trust
+registry’s <code>signerIdentity</code> entry for the envelope’s
 <code>kid</code>. Distinct from the <code>sig</code> (signature
 envelope); the verifier MUST cross-check
 <code>sig.kid → trust-registry signerIdentity</code> against
-<code>signer.identifier</code>.</li>
+<code>signer.identifier</code>, or, when <code>signer.identifier</code>
+is key-derived, recompute the identifier from the envelope’s
+<code>publicKey</code> and compare (§8.5.1).</li>
 <li><strong>Content hash</strong> <em>(normative)</em>: The multihash
 digest set fingerprinting the package’s off-log content, canonicalized
 per the rule named in <code>contentCanonicalization</code>. Serialized
@@ -904,9 +912,11 @@ URI naming the rule by which off-log content reduces to bytes that
 covered by the envelope hash and the platform signature. v0.1 reserved
 URIs:
 <code>https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1</code>
-(datHere A-G/Jupyter content profile) and
+(datHere A-G/Jupyter content profile),
 <code>https://typedstandards.org/canonicalization/legacy-json/v1</code>
-(legacy default content profile).</li>
+(legacy default content profile), and
+<code>https://typedstandards.org/canonicalization/raw-bytes/v1</code> (a
+file’s bytes as it holds them; §8.2).</li>
 <li><strong>Signed envelope</strong> <em>(normative)</em>: The
 envelope-hash hex string, signed with Ed25519ph by a key in the trust
 registry. The envelope JSON object stored alongside the package also
@@ -949,7 +959,9 @@ is <code>chat-flow-stream</code>,
 <code>claude-code-jsonl-readback</code>,
 <code>claude-code-self-report</code> — the three values originally
 enumerated in core by ADR-0003 and relocated to this profile’s guidance
-bundle. See §8.6.</li>
+bundle. For the <code>scripted-recomputation</code> Producer Profile,
+the vocabulary is <code>script-run</code>, <code>tool-emitted</code>.
+See §8.6.</li>
 <li><strong><code>contentProfile</code></strong> <em>(normative)</em>:
 The label identifying <em>what shape</em> the package’s content is in —
 the content-shape property. Orthogonal to <code>captureMethod</code>.
@@ -961,10 +973,12 @@ default) or <code>"datHere"</code> (A-G envelope content profile per
 The Producer Profile the package conforms to. Compound-string value of
 the form <code>&lt;profile-type&gt;/&lt;profile-subtype&gt;</code>. v0.1
 vocabulary includes <code>"ai-assisted-analysis/datHere"</code> (first
-realized subtype; refactor of the <code>datHere</code> content profile).
-Other profile types (<code>human</code>, <code>hybrid</code>,
+realized subtype; refactor of the <code>datHere</code> content profile)
+and the profile type <code>scripted-recomputation</code> (deterministic
+tool output, §8.7.5), whose subtypes the producer names. Other profile
+types (<code>human</code>, <code>hybrid</code>,
 <code>sandbox-only</code>) and subtypes are reserved name-only.
-Consistency invariant:
+Consistency invariant, compared only when both fields are present:
 <code>metadata.contentProfile === "datHere"</code> iff
 <code>producerProfile.startsWith("ai-assisted-analysis/datHere")</code>.</li>
 <li><strong>Trace</strong> <em>(informative)</em>: An
@@ -1541,12 +1555,16 @@ hash and signature.</td>
 <td>optional</td>
 <td>The Producer Profile the package conforms to. Compound-string value
 of the form <code>&lt;profile-type&gt;/&lt;profile-subtype&gt;</code>.
-v0.1 vocabulary includes <code>"ai-assisted-analysis/datHere"</code>.
-Other profile types (<code>human</code>, <code>hybrid</code>,
-<code>sandbox-only</code>) and subtypes are reserved name-only. A
-top-level envelope field; its grandfathered legacy alias
-<code>contentProfile</code> lives inside the <code>metadata</code>
-object (§8.1.2). Consistency invariant:
+v0.1 vocabulary includes <code>"ai-assisted-analysis/datHere"</code> and
+the profile type <code>scripted-recomputation</code>
+(<code>scripted-recomputation/&lt;subtype&gt;</code>, subtype non-empty
+and named by the producer; §8.7.5). Other profile types
+(<code>human</code>, <code>hybrid</code>, <code>sandbox-only</code>) and
+subtypes are reserved name-only. A top-level envelope field; its
+grandfathered legacy alias <code>contentProfile</code> lives inside the
+<code>metadata</code> object (§8.1.2). Consistency invariant, compared
+only when both fields are present (<a
+href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §2):
 <code>metadata.contentProfile === "datHere"</code> iff
 <code>producerProfile.startsWith("ai-assisted-analysis/datHere")</code>.</td>
 </tr>
@@ -1573,12 +1591,13 @@ time.</td>
 <td>URI naming the canonicalization rule by which off-log content
 reduces to bytes that <code>contentHash</code> fingerprints. v0.1
 reserved values:
-<code>https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1</code>
+<code>https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1</code>,
+<code>https://typedstandards.org/canonicalization/legacy-json/v1</code>,
 and
-<code>https://typedstandards.org/canonicalization/legacy-json/v1</code>.
-Resolution semantics out of scope (URI is an identifier, not a fetch
-target); verifiers resolve via a local rule registry. Pre-v0.1 packages
-omit the field; verifiers infer the rule from
+<code>https://typedstandards.org/canonicalization/raw-bytes/v1</code>
+(§8.2). Resolution semantics out of scope (URI is an identifier, not a
+fetch target); verifiers resolve via a local rule registry. Pre-v0.1
+packages omit the field; verifiers infer the rule from
 <code>contentProfile</code> / <code>producerProfile</code>.</td>
 </tr>
 <tr>
@@ -1596,12 +1615,16 @@ the field and are interpreted as <code>content/analysis/v1</code>.</td>
 <td>recommended (v0.1)</td>
 <td>Identity binding for the party that signed the node. Fields:
 <code>bindingTier</code> (required), <code>identifier</code> (required;
-provider-prefixed string), <code>displayName</code> (required),
+provider-prefixed string, or a key-derived <code>did:key</code>
+identifier per §8.5.1), <code>displayName</code> (required),
 <code>verifiedAt</code> (optional; ISO-8601). Distinct from the
 <code>sig</code> envelope (publicKey + algorithm + kid per §8.3.1);
 verifier MUST cross-check that <code>sig.kid</code> resolves via the
 trust registry’s <code>signerIdentity</code> to the same identity
-<code>signer.identifier</code> claims.</td>
+<code>signer.identifier</code> claims, or, when
+<code>signer.identifier</code> is key-derived, that it equals the
+identifier recomputed from the envelope’s <code>publicKey</code>
+(§8.5.1).</td>
 </tr>
 <tr>
 <td><code>vcsRef</code></td>
@@ -1717,24 +1740,33 @@ JSON; therefore covered by the envelope hash.</td>
 <code>ai-assisted-analysis</code> Producer Profile (the v0.1 default),
 the vocabulary is <code>chat-flow-stream</code>,
 <code>claude-code-jsonl-readback</code>,
-<code>claude-code-self-report</code>. Required at the publish route
-since 2026-04-29. pre-v0.1 packages persist with a <code>null</code>
-capture method on the database row and render with an “Unknown
-(pre-v0.1)” label.</td>
+<code>claude-code-self-report</code>; for the
+<code>scripted-recomputation</code> Producer Profile,
+<code>script-run</code>, <code>tool-emitted</code> (§8.6). Required at
+the publish route since 2026-04-29. pre-v0.1 packages persist with a
+<code>null</code> capture method on the database row and render with an
+“Unknown (pre-v0.1)” label.</td>
 </tr>
 <tr>
 <td><code>contentProfile</code></td>
 <td>string</td>
 <td>optional</td>
-<td>The content profile the package conforms to. Values:
+<td>The content profile the package conforms to. Known values:
 <code>"default"</code> (legacy shape; absence treated as default) or
 <code>"datHere"</code> (A-G envelope content profile per §8.7).
 Orthogonal to <code>captureMethod</code>. Extensible — future profiles
-add ADRs. <strong>Retained as legacy alias v0.1</strong>: v0.1 packages
-emit both <code>metadata.contentProfile</code> and the top-level
-<code>producerProfile</code>; verifiers SHOULD prefer
-<code>producerProfile</code> when present; the two MUST be consistent
-(see the <code>producerProfile</code> row in §8.1.1).</td>
+add ADRs; a new Producer Profile says what it is through
+<code>producerProfile</code> and its subtype, not through a new value
+here, and the <code>scripted-recomputation</code> profile adds none
+(§8.7.5). A value that is neither known value is reported by §9.2 check
+#16, not rejected. <strong>Retained as legacy alias v0.1</strong>: a
+package MAY carry both <code>metadata.contentProfile</code> and the
+top-level <code>producerProfile</code>, or only one of them — the signed
+<a href="../adr/0028-eval-run-worked-example.md">ADR-0028</a> packages
+carry only <code>producerProfile</code>; verifiers SHOULD prefer
+<code>producerProfile</code> when present; when both are present, the
+two MUST be consistent (see the <code>producerProfile</code> row in
+§8.1.1).</td>
 </tr>
 </tbody>
 </table>
@@ -1915,6 +1947,11 @@ shape.</p>
 <code>totalTokens</code>, <code>model</code>, <code>durationMs</code>)
 is AI-LLM-specific. It presupposes that the analysis was produced by a
 token-billed language model.</p>
+<p>Under the <code>scripted-recomputation</code> Producer Profile
+(§8.7.5) no token-billed model is in the path, and <code>cost</code> is
+<code>{"model": "none"}</code> with the token fields omitted: zeros
+would state that a model ran and used nothing. <code>durationMs</code>
+MAY be given.</p>
 <blockquote>
 <p>⚠ <strong>Subject to <a
 href="open-questions.md#q7--producer-type-scope">Q7</a> — producer-type
@@ -2061,9 +2098,13 @@ canonicalized bytes — an object keyed by lowercase algorithm name
 <code>blake3</code> registered alternates). v0.1 reserved
 canonicalization-rule URIs are
 <code>https://typedstandards.org/canonicalization/dathere-ag-jupyter/v1</code>
-(datHere A-G/Jupyter) and
+(datHere A-G/Jupyter),
 <code>https://typedstandards.org/canonicalization/legacy-json/v1</code>
-(legacy default).</li>
+(legacy default), and
+<code>https://typedstandards.org/canonicalization/raw-bytes/v1</code> (a
+file’s bytes as it holds them; <a
+href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>
+§4).</li>
 </ul>
 <p><strong>What each v0.1 canonicalization rule
 fingerprints.</strong></p>
@@ -2086,6 +2127,49 @@ nearly identical byte sets, differing only by the
 §8.1.1 requirement rather than fingerprinting genuinely-separate off-log
 content. The off-log-content concept becomes load-bearing only when
 content is supplied by reference (BlobRef) rather than inline.</li>
+<li><code>raw-bytes/v1</code> fingerprints exactly one byte sequence:
+the bytes of the package’s <code>output</code>. The canonicalization is
+the identity — no newline, encoding, byte-order-mark or whitespace
+change — so <code>contentHash.sha256</code> is the SHA-256 of those
+bytes, the same hex string <code>sha256sum</code> prints for the file,
+and a holder of the file can match the signed digest without any Typed
+Standards code. The rule is non-circular without an exclusion, because
+<code>output</code> never contains the package. Where the bytes live:
+<ul>
+<li><strong>Inline.</strong> <code>output</code> is a JSON string, and
+the fingerprinted bytes are its UTF-8 encoding. A producer MAY inline a
+file only when the file is valid UTF-8, since valid UTF-8 round-trips
+through a JSON string byte for byte and nothing else does. A file that
+is not valid UTF-8 MUST be supplied by BlobRef. An inline package
+verifies from the package alone: §9.2 check #4 hashes the UTF-8 bytes of
+<code>output</code> and compares.</li>
+<li><strong>BlobRef (§8.1.5).</strong> <code>output</code> is a BlobRef,
+and the fingerprinted bytes are the bytes it names.
+<code>contentHash.sha256</code> MUST equal the hex part of
+<code>output.ref</code>, which §8.1.5 already defines as the SHA-256 of
+the same bytes. Check #4 obtains the file’s bytes through the verifier’s
+fetcher — the route check #9 uses — and an offline verifier supplies the
+file as a local copy through that route. Check #4 then hashes the bytes
+and compares the SHA-256 with <code>contentHash.sha256</code>. Without
+the bytes, check #4 reports that the bytes were not checked (§9.2).</li>
+<li><strong>A named external file</strong> outside a BlobRef is not
+admitted. The file is <code>output</code>, and a BlobRef is the one
+in-envelope way to point at bytes the package does not hold.</li>
+</ul>
+A raw-bytes package meant to verify with no side file SHOULD inline its
+output. A BlobRef package’s checks #4 and #9 run offline only when the
+file travels with the §8.8 bundle; carrying file bytes inside the
+commitment bundle is not specified here and is package-format work under
+<a href="open-questions.md#q1--package-format">Q1</a>. The rule
+fingerprints one file: a rule over a set of files is not specified, and
+a producer with several inputs fingerprints the primary file and pins
+the others by SHA-256 in <code>queries[].arguments</code> or
+<code>extensions</code> (signed assertions that check #4 does not
+recompute), emits one package per file linked by
+<code>prov:wasDerivedFrom</code>, or archives the set into one file. The
+rule’s definition does not depend on the profile; this revision admits
+it under the <code>scripted-recomputation</code> Producer Profile
+(§8.7.5), and whether other profiles may name it is not decided.</li>
 </ul>
 <p>The two rules are nested:</p>
 <ol type="1">
@@ -2200,12 +2284,19 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The <code>kid</code> and <code>publicKey</code> in the envelope MUST
 match the <code>kid</code> and <code>publicKey</code> of an entry in the
-trust registry. The <code>metadata.signingKeyId</code> field inside the
-package’s canonical JSON MUST equal the envelope’s <code>kid</code>. A
-<code>kid</code> swap on the envelope after publication therefore
-changes neither the envelope hash nor the package itself — the canonical
-JSON is unchanged — but is detectable as an envelope-vs-canonical
-mismatch by any verifier.</p>
+trust registry, except when the package’s <code>signer.identifier</code>
+is key-derived (§8.5.1): the identifier, recomputed from
+<code>publicKey</code>, then names the key, and no registry entry is
+required. Under a key-derived identifier <code>kid</code> is optional;
+when present it MUST equal <code>metadata.signingKeyId</code>, and it
+SHOULD be the identifier string itself, so that the key is named the
+same way in the envelope and in the claim. A <code>kid</code> that
+resolves nowhere is not an error under a key-derived identifier. The
+<code>metadata.signingKeyId</code> field inside the package’s canonical
+JSON MUST equal the envelope’s <code>kid</code>. A <code>kid</code> swap
+on the envelope after publication therefore changes neither the envelope
+hash nor the package itself — the canonical JSON is unchanged — but is
+detectable as an envelope-vs-canonical mismatch by any verifier.</p>
 <p>The signature envelope (<code>sig</code> — publicKey + algorithm +
 kid + signature bytes) is structurally distinct from the envelope-side
 identity claim (<code>signer</code> — bindingTier + identifier +
@@ -2216,8 +2307,14 @@ the envelope’s <code>kid</code> resolves via the trust registry’s
 <code>signerIdentity</code> (per §8.3.3) to the same identity the
 package’s <code>signer.identifier</code> claims. A mismatch MUST cause
 the verifier to report <code>signer_identity_mismatch</code> and reject
-the node. pre-v0.1 packages do not carry an envelope-side
-<code>signer</code> claim; verifiers derive an implicit
+the node. When <code>signer.identifier</code> is key-derived (§8.5.1),
+the verifier MUST instead recompute the identifier from the envelope’s
+<code>publicKey</code> and compare it with
+<code>signer.identifier</code> byte for byte; a mismatch MUST cause the
+verifier to report <code>key_derived_mismatch</code> and reject the
+node, whatever the <code>bindingTier</code> and whether or not a
+registry is supplied (§9.2 check #14). pre-v0.1 packages do not carry an
+envelope-side <code>signer</code> claim; verifiers derive an implicit
 <code>signer</code> from the trust-registry <code>signerIdentity</code>
 entry and apply no mismatch check (there is no envelope-side claim to
 cross-check against). This split prevents an attacker from attaching a
@@ -2311,8 +2408,10 @@ against the registry-recorded identity for the envelope’s
 <code>kid</code>. pre-v0.1 registry entries omit
 <code>signerIdentity</code>; verifiers treat absence as
 <code>signerIdentity: { bindingTier: "legacy_embedded", identifier: "&lt;kid&gt;", displayName: "&lt;kid&gt;" }</code>
-and apply no mismatch check. Post-ADR-0009 registries SHOULD populate
-<code>signerIdentity</code> for every active key.</p>
+and apply no mismatch check. That <code>legacy_embedded</code> value is
+a placeholder a verifier synthesizes, not a rung of the §8.5 ladder.
+Post-ADR-0009 registries SHOULD populate <code>signerIdentity</code> for
+every active key.</p>
 <p>Status values:</p>
 <ul>
 <li><code>active</code> — current authorized signing key.</li>
@@ -2331,12 +2430,76 @@ endpoint reports the verdict via a <code>keyTrust</code> field with
 values <code>active</code>, <code>deprecated_valid</code>,
 <code>deprecated_invalid</code>, <code>revoked</code>,
 <code>unknown_key</code>, <code>registry_unavailable</code>, or
-<code>legacy_embedded</code>.</li>
+<code>legacy_embedded</code>. This revision adds an eighth value,
+<code>self_certified</code> (below); at this revision the reference
+verifier does not yet implement it.</li>
 </ol>
 <p>The <code>legacy_embedded</code> value covers packages predating the
 trust registry: their signature still verifies mathematically against
 the embedded public key, but the registry cannot vouch for the key.
 Surfaces SHOULD render this as a neutral status, not as a failure.</p>
+<p><strong>A key-derived identifier (<a
+href="../adr/0030-self-certifying-signer-did-key.md">ADR-0030</a>
+§3-§4).</strong> The <code>self_certified</code> value is the verdict
+for a signer whose <code>signer.identifier</code> is key-derived
+(§8.5.1), whose <code>bindingTier</code> is <code>pseudonymous</code>,
+and whose identifier equals the one recomputed from the envelope’s
+<code>publicKey</code>. It says the identifier and the signing key
+agree; it does not say that a registry vouched for the key, and like
+<code>legacy_embedded</code> it is not a verified status. A key-derived
+identifier under any other <code>bindingTier</code> is never
+<code>self_certified</code>: it is checked for the match all the same
+(§9.2 check #14), and its verdict follows the registry path above. The
+rules below need both the package’s <code>signer.identifier</code> and
+the envelope’s <code>publicKey</code>; when the package is absent (a
+commitment view verified without its package), no key-derived check runs
+and the verdict is what the envelope alone yields. With the package
+present and a key-derived identifier, a verifier MUST apply the
+following:</p>
+<ol type="1">
+<li><strong>Mismatch.</strong> When the recomputed identifier differs
+from <code>signer.identifier</code>, check #14 reports
+<code>key_derived_mismatch</code> and the node is rejected; the verdict
+here follows the registry path unchanged, because the signature may
+verify under a key that is not the one the identifier names.</li>
+<li><strong>Match, and no registry entry for the key.</strong> When no
+registry is supplied, or the supplied registry has no entry for the
+envelope’s <code>(kid, publicKey)</code>, the verdict is
+<code>self_certified</code>, in place of
+<code>registry_unavailable</code>, <code>unknown_key</code> or
+<code>legacy_embedded</code>.</li>
+<li><strong>Match, and a registry lists the key.</strong> What the
+registry’s verdict may do depends on where the registry came from. Only
+a registry obtained from a declared <code>trustRegistryUrl</code> can
+change the status; a registry carried in the bundle can report
+<code>revoked</code> but never raise the status above
+<code>self_certified</code>.
+<ul>
+<li><strong>Fetched from a declared
+<code>trustRegistryUrl</code></strong> (the view’s
+<code>trustRegistryUrl</code> or <code>trustRegistryUrlLegacy</code>,
+resolved by the verifier): the registry’s verdict — <code>active</code>,
+<code>deprecated_valid</code>, <code>deprecated_invalid</code> or
+<code>revoked</code> — is reported, and <code>self_certified</code> is
+not.</li>
+<li><strong>Carried in the bundle</strong> (the <code>?inline=1</code>
+form’s <code>trustRegistry</code>, or any registry the caller did not
+fetch from the declared URL): a verdict that lowers —
+<code>revoked</code>, or <code>deprecated_invalid</code>, which likewise
+says the key must not be trusted for this signature — is reported. A
+verdict that would raise — <code>active</code> or
+<code>deprecated_valid</code> — leaves the verdict at
+<code>self_certified</code>.</li>
+</ul></li>
+</ol>
+<p>The registry’s provenance is the caller’s to state, as an input
+beside the registry: fetched from the declared
+<code>trustRegistryUrl</code>, or carried in the bundle. A registry
+supplied without a stated provenance is treated as carried in the
+bundle. Rule 3 is the only way a registry can raise a self-certified
+signer’s status, and it raises it only to what that registry says. None
+of these rules changes the verdict for a signer whose identifier is not
+key-derived.</p>
 <p>The rotation runbook for the reference implementation is at
 <code>civic-ai-tools-website/docs/key-rotation.md</code>.</p>
 <h3 id="trace-capture">8.4 Trace capture</h3>
@@ -2396,6 +2559,90 @@ and stay tied to Q3.</p>
 <p>This v0.1 draft documents the GitHub binding as the only
 currently-conformant identity binding; the standard will gain richer
 identity-binding shapes once Q3 lands.</p>
+<p>§8.5.1 specifies a self-certifying form of the ladder’s first rung,
+<code>pseudonymous</code>. It binds no identity and is not an identity
+provider, so it leaves Q3 open.</p>
+<h4 id="self-certifying-signer-the-key-derived-identifier">8.5.1
+Self-certifying signer: the key-derived identifier</h4>
+<p>A signer with no domain has no trust registry to be checked against
+(§8.3.3 places the registry at
+<code>${baseUrl}/.well-known/typed-publisher.json</code>). The
+self-certifying form gives such a signer an identifier derived from its
+signing key, which a verifier checks against the signature’s public key
+with no registry and no network (<a
+href="../adr/0030-self-certifying-signer-did-key.md">ADR-0030</a>).</p>
+<p><strong>The identifier form.</strong> The key-derived identifier is
+<code>did:key</code> in its base58btc (<code>z</code>) form for an
+Ed25519 public key, per <em>The did:key Method v0.9</em> (W3C
+Credentials Community Group draft, <a
+href="https://w3c-ccg.github.io/did-key-spec/"
+class="uri">https://w3c-ccg.github.io/did-key-spec/</a>), the multicodec
+table (<code>ed25519-pub</code>, code <code>0xed</code>) and the
+multibase table (<code>z</code>, base58btc). This specification fixes
+the <code>z</code> form only.</p>
+<p><strong>The trigger is the identifier, never the tier.</strong> A
+<code>signer.identifier</code> that begins <code>did:key:</code> is a
+<strong>key-derived identifier</strong>. The self-certifying check runs
+if and only if the identifier is key-derived; <code>bindingTier</code>
+does not enter that decision. The <code>self_certified</code> trust
+status additionally requires <code>bindingTier: "pseudonymous"</code>
+(§8.3.3).</p>
+<p><strong>Derivation</strong> from the signature envelope’s
+<code>publicKey</code> (§8.3.1: standard base64 of the 44-byte DER
+SubjectPublicKeyInfo; RFC 8410 §3-§4, OID 1.3.101.112, the BIT STRING
+holding the raw RFC 8032 §5.1.2 public key):</p>
+<ol type="1">
+<li>Base64-decode <code>publicKey</code> (RFC 4648 §4) to
+<code>der</code>. The result MUST be 44 bytes whose first 12 are
+<code>30 2a 30 05 06 03 2b 65 70 03 21 00</code>; anything else is a
+malformed key, and the derivation fails.</li>
+<li><code>raw</code> = <code>der[12..44]</code>, 32 bytes.</li>
+<li><code>mc</code> = <code>ed 01</code> ‖ <code>raw</code>, 34 bytes.
+<code>ed 01</code> is the unsigned varint encoding of multicodec
+<code>0xed</code>.</li>
+<li><code>s</code> = base58btc(<code>mc</code>): Bitcoin alphabet
+<code>123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz</code>,
+big-endian base conversion, one leading <code>1</code> per leading zero
+byte (never, here, since <code>mc[0]</code> is <code>0xed</code>).</li>
+<li>identifier = <code>did:key:z</code> ‖ <code>s</code>. For an Ed25519
+key, <code>s</code> is 47 characters and begins <code>6Mk</code>.</li>
+</ol>
+<p>A verifier checks a key-derived identifier by recomputing steps 1-5
+from the envelope’s <code>publicKey</code> and comparing the result with
+<code>signer.identifier</code> byte for byte: case-sensitive, with no
+normalization and no decoding of the claimed string. A mismatch is fatal
+(§8.3.1; §9.2 check #14). A <code>did:key:u…</code> identifier, or a
+<code>did:key:z…</code> identifier for a key type other than Ed25519, is
+key-derived by the prefix rule and never equals an Ed25519 derivation,
+so it is a mismatch: one key has one string, and a verifier never
+decodes a claim to decide whether it might have been truthful under
+another spelling.</p>
+<p><em>Worked example (informative).</em> For the committed public key
+of the eval-run example repository of <a
+href="../adr/0028-eval-run-worked-example.md">ADR-0028</a>
+(<code>package/public-key.txt</code>), the derivation yields</p>
+<pre><code>did:key:z6MktZfoG3M2Navo8Pvbn8DXZAQrYTHk95QbZ7W5gnU9sK1u</code></pre>
+<p>The derivation above is normative; this example is not.</p>
+<p><strong>What it proves.</strong> A key-derived identifier proves that
+the same key signed everything under that identifier. It does not prove
+who holds the key, and no registry vouches for it.</p>
+<p><strong>No rotation and no revocation.</strong> A self-certifying
+signer has no rotation and no revocation. The key lifecycle of §8.3.3
+(<code>active</code>, <code>deprecated</code>, <code>revoked</code>)
+belongs to a registry, and a self-certified signer has none. A
+compromised self-certifying key can only be abandoned; a new key is a
+new identifier with no link to the old one, and nothing in a package
+signed under the old key says it was abandoned (§10.2). The one
+exception is §8.3.3 rule 3: a registry that lists such a key can mark it
+revoked, and a verifier given that registry sees the revocation, whether
+the registry was fetched from a declared <code>trustRegistryUrl</code>
+or carried in the bundle.</p>
+<p><strong>The upgrade path</strong> is an attestation in which a
+domain-bound signer vouches for a key: a signed
+<code>attestation/*</code> node whose signer is on the ladder’s
+<code>did-web</code> or higher rung and whose target is the
+self-certifying key’s identifier. It is named as the path and is
+undecided; this revision does not specify it.</p>
 <h3 id="capturemethod">8.6 captureMethod</h3>
 <p><strong>Readers see exactly which mechanism produced the bytes
 they’re verifying — and that mechanism is itself tamper-evident</strong>
@@ -2450,6 +2697,36 @@ subtype, the reserved <code>civicaitools-default</code> subtype, and any
 future subtypes) unless a subtype’s guidance bundle explicitly
 constrains or extends the parent vocabulary; v0.1 has no subtype-level
 overrides.</p>
+<p>For the <code>scripted-recomputation</code> Producer Profile (§8.7.5;
+<a
+href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>
+§2), the v0.1 vocabulary is:</p>
+<ul>
+<li><strong><code>script-run</code></strong> — a packaging program, run
+after the content’s files already existed on disk, read their bytes into
+the package; the files are pinned by SHA-256 and no AI conversation is
+in the path. Verbatim by construction at the file layer. How each file
+came to exist (a program’s run, or a retrieval) is recorded in
+<code>queries[]</code>, not by the label.</li>
+<li><strong><code>tool-emitted</code></strong> — the program that
+computed the content wrote the package itself, in the same process,
+hashing the bytes as it wrote them. Verbatim by construction at
+emission; no step reads the content back from disk between computation
+and packaging. No package carries <code>tool-emitted</code> yet.</li>
+</ul>
+<p>The two differ as <code>chat-flow-stream</code> and
+<code>claude-code-jsonl-readback</code> do: under
+<code>script-run</code> a file sits on disk between the run and the
+packaging, and nothing but the package’s own signed assertions binds the
+file to the run that wrote it; under <code>tool-emitted</code> that
+interval does not exist. v0.1 verifiers resolve the vocabulary by
+profile type and do not check the subtype. The hardcoded fallback table
+of step 2 above holds one entry per built profile type,
+<code>ai-assisted-analysis</code> and
+<code>scripted-recomputation</code>; it remains a stand-in until the
+bundle routing convention of <a
+href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q32</a>
+is settled.</p>
 <p>The reference publish route enforces the field at request validation;
 a missing or invalid value returns <code>400</code>. The field is part
 of <code>metadata.captureMethod</code> in the canonical JSON and is
@@ -2477,7 +2754,8 @@ href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q
 Non-AI Producer Profiles (Human, Hybrid, Sandbox-only, future adopter
 profiles) declare their own captureMethod vocabularies in their
 respective guidance bundles when promoted from reserved to built.</p>
-<h3 id="content-profile-dathere">8.7 Content profile: datHere</h3>
+<h3 id="profile-requirements-dathere-and-scripted-recomputation">8.7
+Profile requirements: datHere and scripted-recomputation</h3>
 <p>Content profiles specify the normative requirements for packages
 produced under a particular Producer Profile subtype. They sit below the
 captureMethod layer (§8.6) — captureMethod names <em>how</em> content
@@ -2485,12 +2763,16 @@ was captured; a content profile names <em>what additional fields the
 package must carry and how its content is structured</em>. The
 cross-host publication mechanism (§8.8) is the bridge that lets a
 content profile’s packages travel to hosts other than the producing
-host. v0.1 specifies one content profile — <code>datHere</code> — as the
-first realized subtype of the AI-Assisted Analysis Producer Profile.
-Other Producer Profile types (Human, Hybrid, Sandbox-only) are reserved;
-their content profiles will be specified when promoted from reserved to
-built. The remainder of this section specifies the <code>datHere</code>
-content profile.</p>
+host. v0.1 specifies requirements for two profiles: the
+<code>datHere</code> content profile, the first realized subtype of the
+AI-Assisted Analysis Producer Profile (§8.7.1-§8.7.4), and the
+<code>scripted-recomputation</code> Producer Profile for deterministic
+tool output (§8.7.5). The <code>scripted-recomputation</code> profile is
+not the <code>datHere</code> content profile, does not extend it, and
+does not use its canonicalization rule. Other Producer Profile types
+(Human, Hybrid, Sandbox-only) are reserved; their requirements will be
+specified when promoted from reserved to built. §8.7.1-§8.7.4 specify
+the <code>datHere</code> content profile.</p>
 <p>A <code>datHere</code>-content-profile package organizes its content
 as the <strong>A-G envelope</strong>, a profile over the existing
 top-level fields specified in §8.1. The envelope is a content profile,
@@ -2828,20 +3110,20 @@ original values (as constants in source code) and the current values
 (computed at re-execution time) and a printed delta, without any
 introspection of the notebook’s own .ipynb file structure. The canonical
 shape is:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ORIGINAL VALUES (captured at executedAt = &lt;ISO-8601 timestamp&gt;)</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>original <span class="op">=</span> {</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;&lt;metric-name&gt;&quot;</span>: <span class="op">&lt;</span>literal value<span class="op">&gt;</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a> ...</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># CURRENT VALUES (re-computed against live data using the same helpers + queries above)</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>current <span class="op">=</span> recompute_key_metrics()</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># DELTAS</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> original:</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a> delta <span class="op">=</span> (current[k] <span class="op">-</span> original[k]) <span class="cf">if</span> <span class="bu">isinstance</span>(original[k], (<span class="bu">int</span>, <span class="bu">float</span>)) <span class="cf">else</span> (original[k], current[k])</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a> <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">: original=</span><span class="sc">{</span>original[k]<span class="sc">}</span><span class="ss">, current=</span><span class="sc">{</span>current[k]<span class="sc">}</span><span class="ss">, delta=</span><span class="sc">{</span>delta<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ORIGINAL VALUES (captured at executedAt = &lt;ISO-8601 timestamp&gt;)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>original <span class="op">=</span> {</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;&lt;metric-name&gt;&quot;</span>: <span class="op">&lt;</span>literal value<span class="op">&gt;</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> ...</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># CURRENT VALUES (re-computed against live data using the same helpers + queries above)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>current <span class="op">=</span> recompute_key_metrics()</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># DELTAS</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> original:</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a> delta <span class="op">=</span> (current[k] <span class="op">-</span> original[k]) <span class="cf">if</span> <span class="bu">isinstance</span>(original[k], (<span class="bu">int</span>, <span class="bu">float</span>)) <span class="cf">else</span> (original[k], current[k])</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a> <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">: original=</span><span class="sc">{</span>original[k]<span class="sc">}</span><span class="ss">, current=</span><span class="sc">{</span>current[k]<span class="sc">}</span><span class="ss">, delta=</span><span class="sc">{</span>delta<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
 <p>The “prominent metrics to capture” selection is at the publisher’s
 discretion. Conformant publishers SHOULD use a deterministic heuristic
 or an LLM-selected metric set, documented in their reference
@@ -2867,6 +3149,108 @@ synthesis is not.”</em></li>
 <code>datHere</code> packages without these notebook-extension fields
 remain conformant; verifiers treat the omission as
 <code>provenance == "skeleton"</code>.</p>
+<h4 id="the-scripted-recomputation-producer-profile">8.7.5 The
+<code>scripted-recomputation</code> Producer Profile</h4>
+<p>The <code>scripted-recomputation</code> Producer Profile type (<a
+href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>)
+covers a record whose content a program computed from inputs pinned by
+hash, so that running the same program over the same inputs recomputes
+the same bytes, with no AI conversation in the path. The profile states
+what produced the content. It makes no claim about an execution
+environment, which separates it from the reserved
+<code>sandbox-only</code> type. <code>producerProfile</code> takes the
+form <code>scripted-recomputation/&lt;subtype&gt;</code>, with a
+non-empty subtype the producer names; subtype names are open and not
+pre-allocated, and this revision registers none (<code>eval-run</code>,
+carried by the <a
+href="../adr/0028-eval-run-worked-example.md">ADR-0028</a> packages, is
+the first in use).</p>
+<p>A package whose <code>producerProfile</code> begins
+<code>scripted-recomputation/</code> MUST satisfy §8.1 and §8.6, and in
+addition:</p>
+<ol type="1">
+<li><p><strong><code>producerProfile</code></strong> is
+<code>scripted-recomputation/&lt;subtype&gt;</code>, subtype
+non-empty.</p></li>
+<li><p><strong><code>metadata.captureMethod</code></strong> is
+<code>script-run</code> or <code>tool-emitted</code> (§8.6).</p></li>
+<li><p><strong><code>type</code></strong> is
+<code>content/analysis/v1</code>. A later content type for this profile
+needs its own decision record.</p></li>
+<li><p><strong><code>contentCanonicalization</code></strong> is present
+(§8.1.1 recommends the field; this profile requires it) and names
+<code>legacy-json/v1</code> or <code>raw-bytes/v1</code> (§8.2).
+<code>dathere-ag-jupyter/v1</code> is not admitted: this profile carries
+no notebook extension.</p></li>
+<li><p><strong><code>contentHash</code></strong> carries a
+<code>sha256</code> digest. A producer MAY list <code>sha3-256</code> or
+<code>blake3</code> alongside it; v0.1 verifiers recompute
+<code>sha256</code> only, and <code>blake3</code> is not
+implemented.</p></li>
+<li><p><strong><code>metadata.contentProfile</code></strong> SHOULD be
+omitted; when present it MUST be <code>"default"</code>. The consistency
+invariant of §8.1.1 then means <code>metadata.contentProfile</code> is
+never <code>"datHere"</code> under this profile.</p></li>
+<li><p><strong>The AI-shaped required fields</strong> of §8.1.1 are
+present, populated as follows:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Under <code>scripted-recomputation</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prompt</code></td>
+<td>Required as §8.1.3 defines it. <code>prompt.text</code> states the
+task the program performed, or the command that ran it;
+<code>visibility</code> is either value.</td>
+</tr>
+<tr>
+<td><code>queries</code></td>
+<td>At least one entry, recording a step that produced or obtained the
+content: a program run, or a retrieval. Each entry SHOULD name the
+program in <code>tool</code> and SHOULD pin each input it read by
+SHA-256 in <code>arguments</code>. A step that failed is recorded under
+§8.1.8.</td>
+</tr>
+<tr>
+<td><code>cost</code></td>
+<td><code>{"model": "none"}</code>, with the token fields omitted
+(§8.1.7). <code>durationMs</code> MAY be given.</td>
+</tr>
+<tr>
+<td><code>skillMetadata</code></td>
+<td>Present and MAY be empty (<code>{}</code>): no skill guidance and no
+MCP server was in the path.</td>
+</tr>
+<tr>
+<td><code>output</code></td>
+<td>The program’s output: an inline string or a BlobRef (§8.1.5). Under
+<code>raw-bytes/v1</code> it is the fingerprinted file (§8.2).</td>
+</tr>
+<tr>
+<td><code>trace</code></td>
+<td><code>{"resourceSpans": []}</code> when no trace was captured, which
+is the conformant empty OTel-shaped trace. A producer MAY carry real
+spans.</td>
+</tr>
+</tbody>
+</table></li>
+<li><p><strong><code>summary</code></strong> SHOULD be present.
+<strong><code>signer</code></strong> follows §8.1.1 and §8.5; this
+profile adds no identity requirement.</p></li>
+</ol>
+<p><strong>Which checks test these.</strong> Requirements 1 and 2 are
+§9.2 check #15. Requirements 4 and 5 are checks #3 and #4. Requirement 6
+is check #16. Requirements 3, 7 and 8 are producer obligations that no
+v0.1 check tests, as the §8.7.1 requirements for <code>datHere</code>
+are.</p>
 <h3 id="cross-host-publication-commitment-view-schema">8.8 Cross-host
 publication: commitment-view schema</h3>
 <p>A <code>datHere</code>-content-profile package MAY be published
@@ -3024,9 +3408,10 @@ interpreted as <code>content/analysis/v1</code>.</td>
 <td>The envelope-side §8.5 identity claim
 <code>{ bindingTier, identifier, displayName, verifiedAt? }</code>,
 mirrored verbatim from the package — <strong>the subject of §9.2 check
-#14</strong>. Distinct from <code>signerIdentity</code> below; see the
-naming note. Absent on pre-v0.1 packages, which carry no envelope-side
-claim.</td>
+#14</strong>. <code>identifier</code> may be a key-derived
+<code>did:key</code> identifier (§8.5.1). Distinct from
+<code>signerIdentity</code> below; see the naming note. Absent on
+pre-v0.1 packages, which carry no envelope-side claim.</td>
 </tr>
 <tr>
 <td><code>contentHash</code></td>
@@ -3124,12 +3509,17 @@ carry it.</td>
 <tr>
 <td><code>trustRegistryUrl</code></td>
 <td>string (URL)</td>
-<td>yes</td>
+<td>conditional</td>
 <td>The <code>.well-known/typed-publisher.json</code> URL where the
 publisher’s trust registry is served (the <strong>canonical</strong>
 path per §8.3.3). Lets a reader resolve <code>signature.kid</code>
 independently of the publishing host. Per-publisher configuration —
-never a constant.</td>
+never a constant. Required, except that it MAY be absent when
+<code>signer.identifier</code> is key-derived (§8.5.1) and
+<code>signer.bindingTier</code> is <code>pseudonymous</code>; the key is
+then omitted, not <code>null</code>. It is required in every other case:
+no <code>signer</code>, a <code>signer</code> whose identifier is not
+key-derived, or any other <code>bindingTier</code>.</td>
 </tr>
 <tr>
 <td><code>trustRegistryUrlLegacy</code></td>
@@ -3196,10 +3586,15 @@ this same commitment view plus two inlined fields: <code>package</code>
 (the full canonical package JSON, otherwise fetched from
 <code>packageUrl</code>) and <code>trustRegistry</code> (the publisher’s
 trust-registry document with its <code>generatedAt</code> as-of date,
-otherwise fetched from <code>trustRegistryUrl</code>). The RFC 3161
-token, the Rekor entry body + inclusion proof, and the lifecycle chain
-are already inline in the default view, so the inline form verifies with
-zero network access.</p>
+otherwise fetched from <code>trustRegistryUrl</code>). Under a
+key-derived identifier with no <code>trustRegistryUrl</code>,
+<code>trustRegistry</code> is absent too, and a verifier follows §8.3.3
+rule 2; a self-certified signer’s bundle MAY carry a
+<code>trustRegistry</code> it wrote itself, which a verifier treats as
+carried in the bundle (§8.3.3 rule 3: it can lower the status and never
+raise it). The RFC 3161 token, the Rekor entry body + inclusion proof,
+and the lifecycle chain are already inline in the default view, so the
+inline form verifies with zero network access.</p>
 </blockquote>
 <h4 id="notebook-embedded-serialization-.ipynb-outputs">8.8.2
 Notebook-embedded serialization (<code>.ipynb</code> outputs)</h4>
@@ -3215,30 +3610,30 @@ forever. A conformant verifier MUST read either namespace (preferring
 <code>org.civicaitools.record</code> when both are present); a
 publisher’s pre-cutover emissions under the prior-era namespace remain
 conformant.</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;cells&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;org.civicaitools.record&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;0.1.0&quot;</span><span class="fu">,</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;packageHash&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;hex SHA-256&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;packageUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;URL&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;visibility&quot;</span><span class="fu">:</span> <span class="st">&quot;public&quot;</span><span class="fu">,</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;captureMethod&quot;</span><span class="fu">:</span> <span class="st">&quot;chat-flow-stream&quot;</span><span class="fu">,</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;contentProfile&quot;</span><span class="fu">:</span> <span class="st">&quot;datHere&quot;</span><span class="fu">,</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;publicKey&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;algorithm&quot;</span><span class="fu">:</span> <span class="st">&quot;Ed25519ph&quot;</span><span class="fu">,</span> <span class="dt">&quot;kid&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;signer&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;bindingTier&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;displayName&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;trustRegistryUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;URL&gt;&quot;</span><span class="fu">,</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;subjectTitle&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;subjectSummary&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;lifecycleAttestations&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">...</span> <span class="ot">]</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;kernelspec&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;language_info&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">}</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;nbformat&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;nbformat_minor&quot;</span><span class="fu">:</span> <span class="dv">5</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;cells&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;org.civicaitools.record&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;protocolVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;0.1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;packageHash&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;hex SHA-256&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;packageUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;URL&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;visibility&quot;</span><span class="fu">:</span> <span class="st">&quot;public&quot;</span><span class="fu">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;captureMethod&quot;</span><span class="fu">:</span> <span class="st">&quot;chat-flow-stream&quot;</span><span class="fu">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;contentProfile&quot;</span><span class="fu">:</span> <span class="st">&quot;datHere&quot;</span><span class="fu">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;publicKey&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;algorithm&quot;</span><span class="fu">:</span> <span class="st">&quot;Ed25519ph&quot;</span><span class="fu">,</span> <span class="dt">&quot;kid&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;signer&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;bindingTier&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;displayName&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">},</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;trustRegistryUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;&lt;URL&gt;&quot;</span><span class="fu">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;subjectTitle&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;subjectSummary&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;lifecycleAttestations&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">...</span> <span class="ot">]</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;kernelspec&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;language_info&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">}</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;nbformat&quot;</span><span class="fu">:</span> <span class="dv">4</span><span class="fu">,</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;nbformat_minor&quot;</span><span class="fu">:</span> <span class="dv">5</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The commitment-view namespace (<code>org.civicaitools.record</code>;
 <code>org.civicaitools.evidence</code> in prior-era notebooks) lives at
 the notebook’s root <code>metadata</code> level — the location the
@@ -3282,27 +3677,27 @@ filename; new sidecars use <code>.record.yaml</code>. (No emitting code
 existed for this convention at any main when the settlement landed, so
 the rename carries no emitter cutover.) The file’s content is the §8.8.1
 field set serialized as YAML at the top level:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">protocolVersion</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.1.0&quot;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">packageHash</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;hex SHA-256&gt;&quot;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">packageUrl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;URL&gt;&quot;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">visibility</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;public&quot;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">captureMethod</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;chat-flow-stream&quot;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">contentProfile</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;datHere&quot;</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">signature</span><span class="kw">:</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">signature</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;base64&gt;&quot;</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">publicKey</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;base64 DER SPKI&gt;&quot;</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">algorithm</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Ed25519ph&quot;</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">kid</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;key identifier&gt;&quot;</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">signer</span><span class="kw">:</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... identity-binding fields per §8.5 (bindingTier, identifier, displayName)</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">trustRegistryUrl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;URL&gt;&quot;</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">subjectTitle</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;...&quot;</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">subjectSummary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;...&quot;</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="fu">lifecycleAttestations</span><span class="kw">:</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... signed lifecycle envelopes per §8.8.1</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="fu">attestations</span><span class="kw">:</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... non-lifecycle entries per §8.9</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">protocolVersion</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.1.0&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">packageHash</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;hex SHA-256&gt;&quot;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">packageUrl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;URL&gt;&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">visibility</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;public&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">captureMethod</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;chat-flow-stream&quot;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">contentProfile</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;datHere&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">signature</span><span class="kw">:</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">signature</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;base64&gt;&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">publicKey</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;base64 DER SPKI&gt;&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">algorithm</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Ed25519ph&quot;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">kid</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;key identifier&gt;&quot;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">signer</span><span class="kw">:</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... identity-binding fields per §8.5 (bindingTier, identifier, displayName)</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="fu">trustRegistryUrl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&lt;URL&gt;&quot;</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">subjectTitle</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;...&quot;</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="fu">subjectSummary</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;...&quot;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="fu">lifecycleAttestations</span><span class="kw">:</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... signed lifecycle envelopes per §8.8.1</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="fu">attestations</span><span class="kw">:</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co"> # ... non-lifecycle entries per §8.9</span></span></code></pre></div>
 <p>A conformant verifier MUST accept either YAML or JSON shapes at this
 filename (YAML is a superset of JSON; either form is valid). Where the
 published artifact is itself a markdown document, publishers MAY
@@ -3364,11 +3759,11 @@ under the commitment view’s <code>lifecycleAttestations</code> field per
 are the non-lifecycle kinds.)</p>
 <p><strong>Reference form</strong> is the default. A reference entry is
 a JSON object with the following fields:</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> &lt;attestation kind&gt;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">targetHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the package this attestation is about&gt;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the canonical-JSON attestation object&gt;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationUrl</span><span class="kw">:</span><span class="at"> &lt;URL where the canonical-JSON attestation is fetchable&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> &lt;attestation kind&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">targetHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the package this attestation is about&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the canonical-JSON attestation object&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationUrl</span><span class="kw">:</span><span class="at"> &lt;URL where the canonical-JSON attestation is fetchable&gt;</span></span></code></pre></div>
 <p>A reader processing a reference entry fetches the attestation from
 <code>attestationUrl</code>, recomputes its SHA-256 against
 <code>attestationHash</code>, and verifies its signature against the
@@ -3378,12 +3773,12 @@ attestation itself).</p>
 <p><strong>Embed form</strong> is an optimization for attestations that
 are stable and load-bearing for trust evaluation. An embed entry is the
 complete signed attestation envelope, inline:</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> &lt;attestation kind&gt;</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">targetHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the package this attestation is about&gt;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the embedded canonical-JSON&gt;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestation</span><span class="kw">:</span><span class="at"> &lt;inline canonical-JSON attestation object&gt;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">signature</span><span class="kw">:</span><span class="at"> &lt;signed-envelope object matching §8.3.1&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> &lt;attestation kind&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">targetHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the package this attestation is about&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestationHash</span><span class="kw">:</span><span class="at"> &lt;SHA-256 of the embedded canonical-JSON&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">attestation</span><span class="kw">:</span><span class="at"> &lt;inline canonical-JSON attestation object&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="at"> </span><span class="fu">signature</span><span class="kw">:</span><span class="at"> &lt;signed-envelope object matching §8.3.1&gt;</span></span></code></pre></div>
 <p>A reader processing an embed entry verifies the embedded envelope’s
 signature directly without fetching anything. Both forms preserve
 independent verifiability: an embedded attestation carries its own
@@ -4024,21 +4419,21 @@ expressible as separately-signed
 </table>
 <p><strong>Scope: <code>ts:Scope</code>.</strong> Every claim has a
 scope expressing where and when it applies.</p>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span><span class="fu">,</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;geo:hasGeometry&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span><span class="fu">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;geo:hasGeometry&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The Typed Standards Claim Vocabulary defines a small taxonomy of
 <code>ts:GeographicScope</code> subtypes for common civic units. Each
 subtype names the canonical reference standard or authority where one
@@ -4129,15 +4524,15 @@ vocabulary are needed.</p>
 <p><strong>Confidence: <code>ts:ConfidenceStatement</code>.</strong>
 Confidence is structured, not free-form. Every confidence statement MUST
 identify its method.</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The Typed Standards Claim Vocabulary defines a starting set of
 confidence methods:</p>
 <table>
@@ -4194,23 +4589,23 @@ method-derived, traceable to a recorded calculation in the package).</p>
 <p><strong>AnalyticalDerivation.</strong> Every claim MUST link to the
 analytical step that produced it. This is what makes the LLM-to-claim
 translation auditable.</p>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span><span class="fu">,</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:softwareVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span><span class="fu">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:softwareVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>This serves three purposes:</p>
 <ol type="1">
 <li>Makes clear that the structured claim is a <em>translation</em> of
@@ -4745,21 +5140,44 @@ handle them under that legacy chain per §8.3.1.</li>
 <li><strong>Content canonicalization rule resolution</strong>
 <em>(verifies the verifier knows how to canonicalize the off-log content
 for hashing).</em> Read <code>contentCanonicalization</code> from the
-package (v0.1). Resolve the URI via the verifier’s local rule registry.
-An unknown URI reports <code>unknown_canonicalization_rule</code>; an
-absent field on a pre-v0.1 package implies the rule per the package’s
+package (v0.1). Resolve the URI via the verifier’s local rule registry,
+which holds the three v0.1 rules of §8.2
+(<code>dathere-ag-jupyter/v1</code>, <code>legacy-json/v1</code>,
+<code>raw-bytes/v1</code>). An unknown URI reports
+<code>unknown_canonicalization_rule</code>; an absent field on a
+pre-v0.1 package implies the rule per the package’s
 <code>contentProfile</code>.</li>
 <li><strong>Content hash verification</strong> <em>(verifies the off-log
 content bytes match the fingerprint the signature covers).</em> Apply
 the resolved canonicalization rule to the off-log content; multi-hash
 the canonicalized bytes per the algorithms in <code>contentHash</code>
 (v0.1 multihash form). Confirm at least one of the listed algorithms’
-digests matches.</li>
+digests matches. Under <code>raw-bytes/v1</code> (§8.2) the bytes are
+those of <code>output</code>: for an inline <code>output</code>, its
+UTF-8 encoding, verified from the package alone; for a BlobRef
+<code>output</code>, the bytes it names, obtained through the verifier’s
+fetcher (the route check #9 uses). Check #4 then reports <code>ok</code>
+when the bytes are held and their SHA-256 equals
+<code>contentHash.sha256</code>; <code>content_hash_mismatch</code> when
+the bytes are held and their SHA-256 differs, and also when
+<code>contentHash.sha256</code> differs from the hex part of
+<code>output.ref</code>, which is decided from the package alone because
+no file can hash to two different signed digests; and
+<code>content_bytes_unavailable</code> when the bytes cannot be
+obtained. <code>content_bytes_unavailable</code> says the bytes were not
+checked: it is never reported as <code>ok</code>, and it is not a
+finding that the content was altered. Check #9 is unchanged and still
+checks the same bytes against <code>ref</code> and
+<code>size</code>.</li>
 <li><strong>Trust-registry verdict</strong> <em>(verifies the signing
 key is one the publisher currently authorizes — and reports its
 lifecycle status: active, deprecated, revoked).</em> Look up the
 envelope’s <code>(kid, publicKey)</code> pair in the trust registry;
-apply the status semantics from §8.3.3.</li>
+apply the status semantics from §8.3.3. Under a key-derived
+<code>signer.identifier</code> (§8.5.1), apply §8.3.3’s rules for a
+key-derived identifier, whose verdict may be
+<code>self_certified</code>; <code>self_certified</code> is not a
+verified status.</li>
 <li><strong><code>metadata.signingKeyId</code> consistency</strong>
 <em>(verifies the envelope’s <code>kid</code> matches the key id
 embedded in the package’s canonical JSON, ruling out an envelope
@@ -4832,7 +5250,23 @@ kid-swap-with-mismatched-identity attack).</em> Read the package’s
 verifier to report <code>signer_identity_mismatch</code> and reject the
 node. pre-v0.1 packages have no envelope-side
 <code>signer.identifier</code>; verifiers derive <code>signer</code>
-from the registry entry and skip the cross-check.</li>
+from the registry entry and skip the cross-check. <strong>Under a
+key-derived identifier</strong> (§8.5.1), the verifier recomputes the
+identifier from the envelope’s <code>publicKey</code> and compares it
+with <code>signer.identifier</code> byte for byte. A mismatch MUST cause
+the verifier to report <code>key_derived_mismatch</code>, carrying the
+<code>claimed</code> and <code>derived</code> values, and reject the
+node, whatever the <code>bindingTier</code> and whether or not a
+registry is supplied. A match reports <code>key_derived_match</code>.
+Check #14 never reports <code>ok</code> under a key-derived identifier,
+whatever the registry’s source: <code>ok</code> means the identity
+matches a registry’s record. When a supplied registry lists the
+envelope’s <code>(kid, publicKey)</code> with a
+<code>signerIdentity.identifier</code> that differs from the claimed
+identifier, the verifier reports <code>signer_identity_mismatch</code>
+and rejects the node, whether the registry was fetched or carried in the
+bundle. When the package itself is absent, no key-derived check runs and
+check #14 reports nothing.</li>
 <li><strong><code>captureMethod</code> per-profile vocabulary
 conformance</strong> <em>(verifies the <code>captureMethod</code> value
 is one the package’s Producer Profile actually authorizes).</em> Resolve
@@ -4844,8 +5278,31 @@ reports <code>captureMethod_unknown</code> and rejects the node. A
 producerProfile whose bundle cannot be resolved reports
 <code>producerProfile_bundle_unresolved</code> and degrades gracefully —
 the value is preserved verbatim, the structural integrity check (#11)
-still passes, only the vocabulary-conformance assertion is
-unverified.</li>
+still passes, only the vocabulary-conformance assertion is unverified.
+v0.1 verifiers resolve two profile types,
+<code>ai-assisted-analysis</code> and
+<code>scripted-recomputation</code> (§8.6); the subtype is not
+checked.</li>
+<li><strong>Content-profile label</strong> <em>(reads
+<code>metadata.contentProfile</code> and checks it against the known
+values and against <code>producerProfile</code>).</em> Read
+<code>metadata.contentProfile</code> and report one of four statuses:
+<code>ok</code> when the value is <code>"default"</code> or
+<code>"datHere"</code> and consistent with <code>producerProfile</code>
+under the §8.1.1 invariant, or <code>producerProfile</code> is absent;
+<code>contentProfile_absent</code> when the key is absent, read as
+<code>"default"</code> (§8.1.2); <code>contentProfile_unknown</code>
+when the value is neither known value, in which case consistency is not
+judged; <code>contentProfile_inconsistent</code> when the value is
+known, <code>producerProfile</code> is present, and the invariant fails.
+No status of this check rejects the node or alters the
+envelope-integrity or signature verdicts: both labels are inside the
+signed bytes, so an unknown value is an unrecognized identifier and a
+contradiction between the two is a producer error, not evidence of
+tampering. A package reporting <code>contentProfile_inconsistent</code>
+is reported malformed (<a
+href="../adr/0006-producer-profile-architecture.md">ADR-0006</a>
+§2).</li>
 </ol>
 <h3 id="what-a-verifier-cannot-check-today">9.3 What a verifier cannot
 check today</h3>
@@ -5043,6 +5500,14 @@ signatures may have been produced by the legitimate signer or by the
 adversary, and the distinction lives in the timestamp’s relationship to
 the disclosure event — a forensic question, not a protocol
 guarantee.</li>
+<li><strong>Compromised self-certifying key.</strong> A self-certifying
+signer (§8.5.1) has no registry, so its key cannot be rotated or
+revoked. A compromised self-certifying key can only be abandoned: a new
+key is a new identifier with no link to the old one, nothing in a
+package signed under the old key says it was abandoned, and a verifier
+working from a bundle can never learn that the key was compromised. The
+one exception is a registry that lists the key and marks it revoked
+(§8.3.3 rule 3), which a verifier given that registry sees.</li>
 <li><strong>Offline-snapshot revocation staleness.</strong> A verifier
 working from a self-contained bundle (§8.8 <code>?inline=1</code>)
 checks the signing key against the trust registry <em>as of the bundle’s
@@ -5251,6 +5716,9 @@ rule URIs:</p>
 — the datHere A-G/Jupyter content profile (§8.7).</li>
 <li><code>https://typedstandards.org/canonicalization/legacy-json/v1</code>
 — the legacy default content profile.</li>
+<li><code>https://typedstandards.org/canonicalization/raw-bytes/v1</code>
+— the bytes of a package’s <code>output</code> as the file holds them,
+with the identity canonicalization (§8.2).</li>
 </ul>
 <p>These URIs are identifiers; IANA action is not requested.</p>
 <hr />
@@ -5435,82 +5903,82 @@ example: typed claim</h3>
 <code>ts:TrendClaim</code> for noise complaints in Bushwick, 2024
 vs. 2025. The example is illustrative; it does NOT represent a real
 published package.</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;https://typedstandards.org/ns/ts#&quot;</span><span class="ot">,</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ex&quot;</span><span class="fu">:</span> <span class="st">&quot;https://example.gov/datasets/311/&quot;</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@graph&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:TrendClaim&quot;</span><span class="fu">,</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:description&quot;</span><span class="fu">:</span> <span class="st">&quot;Noise complaints rose materially in Bushwick North between 2024 and 2025.&quot;</span><span class="fu">,</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:subject&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span> <span class="fu">},</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:metric&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span><span class="fu">,</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;311 noise complaint count&quot;</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:scope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span></span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:baselinePeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:comparisonPeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:direction&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Increase&quot;</span><span class="fu">,</span></span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:magnitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Magnitude&quot;</span><span class="fu">,</span></span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:percentChange&quot;</span><span class="fu">:</span> <span class="fl">23.0</span><span class="fu">,</span></span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:absoluteChange&quot;</span><span class="fu">:</span> <span class="dv">1842</span></span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:confidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;prov:wasDerivedFrom&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;source-analysis-nodeId#query-result-2&quot;</span> <span class="fu">}</span></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:derivedVia&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
-<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
-<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
-<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
-<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:limitations&quot;</span><span class="fu">:</span> <span class="st">&quot;Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records).&quot;</span></span>
-<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span></span>
-<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;https://typedstandards.org/ns/ts#&quot;</span><span class="ot">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ex&quot;</span><span class="fu">:</span> <span class="st">&quot;https://example.gov/datasets/311/&quot;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@graph&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:TrendClaim&quot;</span><span class="fu">,</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:description&quot;</span><span class="fu">:</span> <span class="st">&quot;Noise complaints rose materially in Bushwick North between 2024 and 2025.&quot;</span><span class="fu">,</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:subject&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:metric&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span><span class="fu">,</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;311 noise complaint count&quot;</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:scope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:baselinePeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:comparisonPeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:direction&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Increase&quot;</span><span class="fu">,</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:magnitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Magnitude&quot;</span><span class="fu">,</span></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:percentChange&quot;</span><span class="fu">:</span> <span class="fl">23.0</span><span class="fu">,</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:absoluteChange&quot;</span><span class="fu">:</span> <span class="dv">1842</span></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:confidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;prov:wasDerivedFrom&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;source-analysis-nodeId#query-result-2&quot;</span> <span class="fu">}</span></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:derivedVia&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:limitations&quot;</span><span class="fu">:</span> <span class="st">&quot;Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records).&quot;</span></span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span></span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The example carries both the core-required <code>ts:subject</code>
 (what the claim is about — here the same metric URI the TrendClaim’s
 <code>ts:metric</code> names; §8.11.4 required-properties table) and the
@@ -5818,6 +6286,91 @@ verification is demonstrated for the self-contained bundle per
 </ul>
 <h3 id="appendix-g.-revision-history">Appendix G. Revision history</h3>
 <ul>
+<li><strong>2026-09-21</strong> — Deterministic-output profile and
+self-certifying signer patch revision (v0.1.9; decision records <a
+href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>
+and <a
+href="../adr/0030-self-certifying-signer-did-key.md">ADR-0030</a>, both
+Accepted 2026-09-21; anchor <a
+href="https://github.com/npstorey/typedstandards/issues/77">typedstandards#77</a>).
+<strong>(1) The <code>scripted-recomputation</code> Producer
+Profile</strong> for a record whose content a program computed from
+inputs pinned by hash, with no AI conversation in the path: new
+<strong>§8.7.5</strong> gives its requirements (§8.7 retitled “Profile
+requirements: datHere and scripted-recomputation”), §8.6 its capture
+vocabulary (<code>script-run</code>, <code>tool-emitted</code>), and
+§8.1.7 its <code>cost</code> rule (<code>{"model": "none"}</code>); the
+§6.2 glossary and §8.1.1-§8.1.2 rows gain the type and its vocabulary.
+<strong>(2) The content canonicalization rule
+<code>raw-bytes/v1</code></strong> (§8.2, §12.3): the bytes of
+<code>output</code> as the file holds them, so
+<code>contentHash.sha256</code> is the file’s ordinary SHA-256; inline
+for valid UTF-8, otherwise by BlobRef. §9.2 check #3’s rule registry
+holds three rules, and check #4 gains the raw-bytes path and the status
+<code>content_bytes_unavailable</code>, which says the bytes were not
+checked and is never <code>ok</code>. <strong>(3) A new §9.2 check
+#16</strong> reads <code>metadata.contentProfile</code> and reports
+<code>ok</code>, <code>contentProfile_absent</code>,
+<code>contentProfile_unknown</code> or
+<code>contentProfile_inconsistent</code>; none rejects the node. Check
+#15 resolves the second profile type. <strong>(4) A self-certifying
+signer for the <code>pseudonymous</code> rung:</strong> new
+<strong>§8.5.1</strong> specifies the key-derived identifier —
+<code>did:key</code> in its base58btc (<code>z</code>) form for an
+Ed25519 key, derived from the envelope’s <code>publicKey</code> and
+compared byte for byte — triggered by the identifier and never by the
+tier, with no rotation and no revocation, and with the
+domain-vouches-for-key attestation named as the upgrade path and
+undecided. §8.3.1 admits the self-certifying case beside the
+registry-match rule and states the <code>kid</code> rule under it;
+§8.3.3 gains the eighth trust status <code>self_certified</code> and the
+rules for a supplied registry (only a registry fetched from a declared
+<code>trustRegistryUrl</code> can raise the status; a registry carried
+in the bundle can lower it and never raise it); §9.2 check #5 can report
+<code>self_certified</code>, and check #14 gains
+<code>key_derived_match</code> and the fatal
+<code>key_derived_mismatch</code> and never reports <code>ok</code>
+under a key-derived identifier; §8.8.1’s <code>trustRegistryUrl</code>
+becomes conditional; §10.2 states that a compromised self-certifying key
+cannot be revoked. §6.2 lists <code>platform</code>, the reference
+implementation’s operator value already used in the §8.3.3 example, and
+§8.3.3 describes the synthesized <code>legacy_embedded</code> value as a
+placeholder, not a rung. <strong>(5) Three corrections:</strong> the
+<code>producerProfile</code> consistency invariant in §6.2 and §8.1.1 is
+compared only when both fields are present, as ADR-0006 §2 states it;
+§8.1.2 no longer says v0.1 packages emit both
+<code>metadata.contentProfile</code> and <code>producerProfile</code>
+(the signed ADR-0028 packages carry only <code>producerProfile</code>);
+and §6.2 no longer describes <code>content/analysis/v1</code> as the AI
+profile’s alone. <strong>Named under the Xanadu doctrine.</strong> The
+packages blocked without the profile are the two signed ADR-0028
+packages (envelopes
+<code>abb93f781ae71480bf8075474facbb272f3dcc38d50eeecda79be33427924a9c</code>
+and
+<code>3637b5952f6a44e050fa0ac84d2ab58454ab7d29507dbbaf09147da7f8b37d48</code>),
+whose <code>scripted-recomputation/eval-run</code> profile the reference
+verifier cannot yet resolve; neither package changes, and neither is
+affected by the self-certifying mechanism. The adopter is the qsv
+project by datHere, through <a
+href="https://github.com/dathere/qsv/issues/4448">dathere/qsv#4448</a>,
+opened 2026-08-20 and labelled <code>revisit-later</code>, whose <a
+href="https://github.com/dathere/qsv/issues/4448#issuecomment-5649582321">comment
+of 2026-09-13</a> reads “Revisit once TypedStandards supports something
+like Decentralized Identifiers” and links <a
+href="https://www.w3.org/TR/did/"
+class="uri">https://www.w3.org/TR/did/</a>. The adopter’s organization
+shares its name with this specification’s <code>datHere</code> content
+profile (§8.7.1-§8.7.4, the A-G envelope for AI-assisted analysis); the
+<code>scripted-recomputation</code> profile is not that content profile.
+Per §6.1 the new requirements correspond to settled decision records; at
+this revision the reference verifier and producer core do not yet
+implement them. No field is removed or retyped;
+<code>trustRegistryUrl</code> relaxes from required to conditional, and
+the <code>contentProfile</code>/<code>producerProfile</code> consistency
+rule applies only when both are present. The signed ADR-0028 packages
+are byte-identical, and the schema version is unchanged
+(<code>0.1.0</code>). The rendered HTML sidecar is regenerated from this
+revision.</li>
 <li><strong>2026-09-04</strong> — Rejected-call disclosure patch
 revision (v0.1.8; <a
 href="https://github.com/npstorey/civic-ai-tools/issues/195">civic-ai-tools#195</a>).
