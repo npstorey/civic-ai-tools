@@ -1,6 +1,6 @@
 # ADR-0029: The `scripted-recomputation` Producer Profile — deterministic tool output, its capture vocabulary, and a raw-bytes content rule
 
-- **Status:** **Proposed** (2026-09-21) — the owner rules on it at gate G1 of Wave N14 (anchor issue typedstandards#77); **this record proposes a decision and does not take one**
+- **Status:** **Accepted** (2026-09-21 — ruled by the owner at gate G1 of Wave N14, anchor issue typedstandards#77, with two amendments applied: §2 states that no package carries `tool-emitted` yet, and §4 has check #4 hash a BlobRef's bytes or report `content_bytes_unavailable`)
 - **Date:** 2026-09-21
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
