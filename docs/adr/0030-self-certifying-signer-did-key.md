@@ -1,6 +1,6 @@
 # ADR-0030: A self-certifying signer for the `pseudonymous` rung — a `did:key` identifier derived from the signing key, checked with no registry, and the trust status `self_certified`
 
-- **Status:** **Proposed** (2026-09-21) — the owner rules on it at gate G2 of Wave N14 (anchor issue typedstandards#77); the ruling settles that wave's D14 (whether decentralized identifiers are adopted); **this record proposes a decision and does not take one**
+- **Status:** **Accepted** (2026-09-21 — ruled by the owner at gate G2 of Wave N14, anchor issue typedstandards#77: the identifier is `did:key` in its `z` form, which settles that wave's D14 — decentralized identifiers are adopted, in this form — with one amendment applied: §4 rule 3 lets only a registry from a declared `trustRegistryUrl` raise a self-certified signer's status)
 - **Date:** 2026-09-21
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
