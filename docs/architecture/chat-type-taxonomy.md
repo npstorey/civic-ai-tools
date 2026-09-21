@@ -1,6 +1,6 @@
 ---
 Status: Doctrine
-Last updated: 2026-08-23
+Last updated: 2026-09-21
 ---
 
 # Chat type taxonomy
@@ -79,7 +79,7 @@ All six run in Claude Code. The surface no longer distinguishes them — **the r
 
 ## The hierarchy — seat, ORCH, IMPL
 
-Three layers, one direction of authority. The seat holds program scope and sets each ORCH's model, erring toward the top tier, because an ORCH's misreading propagates into every phase it contracts. Each ORCH holds one sprint, sets its implementers' models, and discloses each choice in the gate record for that phase, because the tier is a variable in the result and an undisclosed variable cannot be read afterwards. Implementers hold one phase each and set nothing.
+Three layers, one direction of authority. The seat holds program scope and sets each ORCH's model — Opus by default, the top tier when the charter is thin or design-heavy — because an ORCH's misreading propagates into every phase it contracts. Each ORCH holds one sprint, sets its implementers' models, and discloses each choice in the gate record for that phase, because the tier is a variable in the result and an undisclosed variable cannot be read afterwards. Implementers hold one phase each and set nothing.
 
 Reporting runs the other way and stops at the owner: evidence up to the ORCH, gate records up to the seat and the owner, rulings back down. No layer merges its own work in a repository that deploys.
 
@@ -87,13 +87,17 @@ Reporting runs the other way and stops at the owner: evidence up to the ORCH, ga
 
 | Layer | Default | Go up when | Go down when | Why |
 |---|---|---|---|---|
-| Plan seat | The top judgment tier (Fable 5) | — | The next tier down (Opus 5) at a clean seam, when the weekly allowance is spent | One long-lived session in which nearly every token spent is a judgment call |
+| Plan seat | Opus 5 at xhigh | Never the seat itself: a design charter goes to a separate top-tier plan session, which hands its output to the seat | — | Its work is validating claims against artifacts, where the catches come from choosing a measurement, not from breadth; a long attended session on the rationed tier spends what the cold reads need |
 | ORCH (per sprint) | Opus 5 | The top tier when the charter is thin, the sprint is design-heavy, or premise corrections are expected | Never below Opus | A sprint's worth of phase contracts is written here; an error compounds across all of them |
 | IMPL (per phase) | Sonnet 5 for a bounded phase whose contract carries binary criteria with runnable checks; Opus 5 for long-horizon, multi-file or ambiguous phases — never Sonnet for a migration or a single-shot change | Opus 5 when a bounded phase fails its gate twice, or exhausts its output on a long one | Lower the reasoning effort before lowering the tier — the cheaper lever, and the one rarely tried | The quality variable is the contract, not the tier; but an unbounded phase has no contract to carry it |
-| Cold read / verifier | Opus 5, fresh context | — | — | The value is the absence of the authoring context, not the tier |
-| Triage, census, classification | Haiku 4.5 | — | — | Mechanical passes over many items, where the judgment is already written down |
+| Cold read / verifier | The top tier (Fable 5.1), fresh context | — | Opus 5 when the allowance is spent, disclosed in the gate record | Its value is the absent authoring context and breadth: a top-tier cold read found an unmet criterion the phase gates had missed |
+| Design charter, conformance read | The top tier | — | Opus 5 when the allowance is spent | A document written from a corpus rather than a diff, or one artifact read against a large specification: breadth is the work |
+| Broad census | The top tier | — | — | Its output is the classification itself: an inventory, not a verdict on one claim |
+| Triage, classification | Haiku 4.5 | — | — | Mechanical passes over many items, where the judgment is already written down |
 
-The binding constraint is not tokens. It is owner pickups and wall-clock per merged phase, because that is the resource the program runs out of first: a tier that costs a fix-on-top round loses to one that does not, whatever it saved. **This table is re-asked at every model change** — rules do not carry across model generations by default, and one learned on an older model is often scaffolding a newer one does not need.
+The binding constraint is not tokens. It is owner pickups and wall-clock per merged phase, because that is the resource the program runs out of first: a tier that costs a fix-on-top round loses to one that does not, whatever it saved. Of the tiers, only the top one is rationed, so it goes where it changes the outcome rather than where it merely works. **This table is re-asked at every model change** — rules do not carry across model generations by default, and one learned on an older model is often scaffolding a newer one does not need. Last re-asked 2026-09-21, on Fable 5.1, Opus 5, Sonnet 5 and Haiku 4.5.
+
+The operating rule, with the incidents behind it, sits at the global configuration layer; this table is its project statement, and the two change together.
 
 ## Messaging
 
@@ -142,6 +146,8 @@ Three rules carry the rest. **Name the type at startup** — the root directory 
 *2026-08-23.* Version 1 (2026-05-03) described eight types spread across two surfaces. Every type now runs in Claude Code, so the surface distinctions went with it: the three planning variants, split by whether chat-history search was available, no longer distinguish anything any current session does and have become the single plan seat. The one "orchestration chat" had already split in practice into a standing seat and per-sprint ORCHs, and the "implementation chat" is now a subagent under a phase contract, in a worktree, that never pushes.
 
 Seven things the program has run on for months were absent from v1 entirely and are stated here for the first time: the gates and the two-key head-bound merge; the coordinating seat; explicit-only messaging; model policy by layer; owner pickups as the budget; the decision-memo threshold; and the cold read. What v1 got right and this version keeps: closure rules per type, the refusal of an untyped category, the dispositions for chats that resist typing, and the discipline of naming a type before the work starts.
+
+*2026-09-21.* The model table was re-asked. The plan seat moves to Opus, because its work is validating claims and a long attended session on the rationed tier spends what the cold reads need. The cold read moves to the top tier, because a top-tier cold read found an unmet criterion the phase gates had missed. Design charters, conformance reads and broad censuses gain rows of their own, and triage keeps Haiku where the classification is already written down.
 
 ## Companion documents
 
