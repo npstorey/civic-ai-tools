@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ed25519 did:key identifiers (base58btc, multicodec 0xed01) encode a public key; they are not secrets (hub ADR-0030)"
+regexTarget = "match"
+regexes = ['''key:z6Mk[1-9A-HJ-NP-Za-km-z]{44}''']
