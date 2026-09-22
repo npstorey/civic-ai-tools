@@ -6,7 +6,7 @@
 
 ## What this document is, and what it is not
 
-The [Typed Standards Specification](architecture/typed-standards-specification.md) already carries the protocol-level threat model. §10.1 names the adversaries the envelope is designed to detect. §10.2 names the threats it explicitly does not address. §9.2 enumerates the fifteen checks a verifier performs on a node. §9.3 names what no verifier can determine from any combination of public sources.
+The [Typed Standards Specification](architecture/typed-standards-specification.md) already carries the protocol-level threat model. §10.1 names the adversaries the envelope is designed to detect. §10.2 names the threats it explicitly does not address. §9.2 enumerates the sixteen checks a verifier performs on a node (fifteen until v0.1.9 added #16, the content-profile label). §9.3 names what no verifier can determine from any combination of public sources.
 
 This document is the **reference-implementation companion** to those sections. It describes what a signature on a record published by *this* codebase establishes — by capture method, by field, by visibility state, by signing tier — and it **cites the specification rather than restating it**. Nothing here is normative. Where a sentence below and the specification appear to disagree, the specification governs; treat the disagreement as a defect in this document and report it.
 
@@ -21,6 +21,9 @@ Every statement about what the code does was read off source at a fixed point. N
 | `civic-ai-tools` (this repo) | `ec608e6` | 2026-08-22 |
 | `civic-ai-tools-website` (the reference implementation) | `f943e98` | 2026-08-21, re-verified 2026-08-22 |
 | `typedstandards` (the portable verifier) | `08d6af9` | 2026-08-21, re-verified 2026-08-22 |
+| `typedstandards` (both cores, for the self-certified signer and the v0.1.9 additions only) | `fb411a2` | 2026-09-21 |
+
+Passages that cite `fb411a2` say so; they cite specification v0.1.9 by section, and the neutral verifier's code by function name, since its lines were changing when those passages were written.
 
 **Three verifier environments exist, and they are not interchangeable.** Any sentence below of the form "the verifier does X" names which one was read:
 
@@ -50,7 +53,7 @@ Both paths are weaker than their labels read, and they are weaker in *different*
 
 ## Table 1 — what the signature attests, by capture method
 
-Exactly three `captureMethod` values ship for the `ai-assisted-analysis` Producer Profile (`typedstandards/packages/verify-core/src/profiles.ts:10-16`), which the specification also lists at §8.6 `:672-674`. Records published before 2026-04-29 carry no value at all, which is the fourth row.
+Exactly three `captureMethod` values ship for the `ai-assisted-analysis` Producer Profile (`typedstandards/packages/verify-core/src/profiles.ts:10-16`), which the specification also lists at §8.6 `:672-674`. Records published before 2026-04-29 carry no value at all, which is the fourth row. A second Producer Profile, `scripted-recomputation` (hub ADR-0029), has its own two values, `script-run` and `tool-emitted` (`typedstandards` `fb411a2`, `profiles.ts:16-21`); neither publish path in this codebase emits that profile, so it has no row here.
 
 | Capture method | What the signature attests | What it does not attest | Trust root |
 |---|---|---|---|
@@ -59,7 +62,7 @@ Exactly three `captureMethod` values ship for the `ai-assisted-analysis` Produce
 | **`claude-code-self-report`** — deprecated 2026-04-28 (ADR-0003 `:47`) | The same envelope properties | The same, plus: the text is a paraphrase by construction (§8.6, `:674`) | User-attested, with paraphrase by construction |
 | **`null`** — records published before 2026-04-29 | Envelope integrity and signature mathematics still hold; pre-v0.1 packages verify under the legacy canonicalization chain (§9.2 #1–#2; §8.6, `:682`) | Anything about capture. There is no label | Unknown |
 
-**Which check reads the label.** Two of the fifteen §9.2 checks touch `captureMethod`: #11 reads the value and renders it beside the signature verdict (`:1405`), and #15 confirms the value is in the Producer Profile's declared vocabulary (`:1409`). **Neither check tests whether the labeled mechanism actually ran.** For a record with no capture method, #11 reads nothing and #15 reports the explicitly neutral, non-rejecting status `no_capture_method` (`typedstandards/packages/verify-core/src/checks.ts:287-292`).
+**Which check reads the label.** Two of the §9.2 checks touch `captureMethod`: #11 reads the value and renders it beside the signature verdict (`:1405`), and #15 confirms the value is in the Producer Profile's declared vocabulary (`:1409`). **Neither check tests whether the labeled mechanism actually ran.** For a record with no capture method, #11 reads nothing and #15 reports the explicitly neutral, non-rejecting status `no_capture_method` (`typedstandards/packages/verify-core/src/checks.ts:287-292`).
 
 ### What could be changed before signing, by method
 
@@ -146,6 +149,7 @@ Sealing is not a half-measure, and it is not full verification either. Precisely
 
 - **Five run:** #2 signature mathematics (`verify.ts:254-263`) · #5 trust-registry verdict (`:324-329`) · #7 RFC 3161, full cryptographic verification (`:297-300`) · #8 Rekor Merkle inclusion (`:270-292`) · #10 lifecycle state, resolved from the carried signed attestation chain (`:351-358`).
 - **Eight cannot:** #1 envelope integrity, #3 canonicalization resolution, #4 content hash, #9 BlobRef integrity, #12 type resolution, #13 `nodeId`, #14 signer-identity cross-check, #15 vocabulary conformance — all gated on the package bytes being present (`verify.ts:235-244`, `:305`, `:337-347`, `:364`).
+- **A ninth cannot:** #16, the content-profile label that v0.1.9 added, is likewise gated on the package bytes (`typedstandards` `fb411a2`, `verify.ts:376-389`).
 - **One is label-only:** #11 reads a `captureMethod` served from the database row rather than from the signed bytes (`src/lib/evidence/commitment.ts:258`; detail page at `src/app/(app)/evidence/[slug]/page.tsx:940`). For a sealed record you are shown a label you cannot check against the signature that covers it.
 
 Check #1 is worth singling out because it is where a naive implementation would mislead you. When there are no bytes to recompute from, it returns the tri-state `unavailable` with `reason: 'private'` — explicitly **not** `altered` (`verify.ts:239-244`, semantics at `:75-103`). A sealed record does not read as tampered.
@@ -163,7 +167,7 @@ The neutral verifier documents both as not surfaced as discrete status codes (`t
 
 The badge is a worst-tier-wins roll-up over the checks that emit a status (`civic-ai-tools-website/src/lib/evidence/trust-signal.ts:728-737`); if none alarms and none needs attention, and the package is signed, it resolves to `Integrity verified` / "The integrity checks ran cleanly. You can re-run them yourself in the independent verifier." (`:658-662`), rendered as the `verified` tier with a check glyph and the aria-label `Verified` (`:49`, `:81`).
 
-**Eleven of the fifteen checks feed that roll-up** (`:701-717`): #1, #2, #5, #7, #8, #9 always, plus #3, #4, #12, #14, #15 when the package bytes are available. The other four are excluded for three different reasons, and only one of them is a gap:
+**Eleven of the fifteen checks the specification listed when this was measured feed that roll-up** (`:701-717`; v0.1.9's #16 postdates the measurement): #1, #2, #5, #7, #8, #9 always, plus #3, #4, #12, #14, #15 when the package bytes are available. The other four are excluded for three different reasons, and only one of them is a gap:
 
 - **#10 lifecycle** is excluded deliberately — it is a separate axis from cryptographic integrity and has its own page surfaces, the withdrawal banner and the status history (`:697-699`).
 - **#11 capture method** is excluded deliberately — it is a label, never assigned a tier (`:488-493`), for the reasons given earlier in this document.
@@ -185,7 +189,7 @@ So: **the cryptography attributes the record to the instance; the byline attribu
 
 **Why the project labels rather than gatekeeps.** ADR-0003 `:51` chose one signing key across all three capture methods, with the label as the differentiation, and explicitly rejected refusing to sign, hiding legacy records, or issuing a key per method. That choice put the whole weight of the distinction on the label, which is why the label's unbound state (Q70) matters more here than it would in a design that also gatekept. The revisit condition is stated in the same ADR: a separate key returns to the table if a future capture method has "meaningfully different trust properties" (`:56`). That is a condition, not a plan.
 
-**The identity ceiling.** The specification's graded identity-binding ladder is informative; **only GitHub OAuth is built** (§10.3, `:1468`). Higher-tier binding carries stronger signals but, in the specification's own framing, is no substitute for editorial judgment.
+**The identity ceiling.** The specification's graded identity-binding ladder is informative; **only GitHub OAuth is built** (§10.3, `:1468`). Higher-tier binding carries stronger signals but, in the specification's own framing, is no substitute for editorial judgment. Specification v0.1.9 adds a self-certifying form of the ladder's first rung, `pseudonymous` (§8.5.1), built in both portable cores; it binds no identity and is not an identity provider (§8.5), so it does not raise this ceiling. What it establishes is set out under *How to verify a record*.
 
 ## What a verifier cannot record today
 
@@ -230,16 +234,23 @@ Under ADR-0003 `:56`, a capture method with demonstrably different trust propert
 
 ## How to verify a record
 
-**"Verifiable" has a specific, narrow meaning here.** With the package alone and a standard verification tool, anyone can confirm four things: that the package has not been altered since publication, that it was signed by a key listed in the published trust registry, that an independent public timestamp authority saw it at the claimed time, and that an independent transparency log recorded the signature. Those four — and, per everything above, not more.
+**"Verifiable" has a specific, narrow meaning here.** With the package alone and a standard verification tool, anyone can confirm four things: that the package has not been altered since publication, that it was signed by a key listed in the published trust registry (or, for a self-certified signer, by the key its identifier names — see below), that an independent public timestamp authority saw it at the claimed time, and that an independent transparency log recorded the signature. Those four — and, per everything above, not more.
 
 Four independent mechanisms carry them, each checkable without trusting civicaitools.org:
 
-- **Signature.** Ed25519**ph** over canonical JSON (§10.3, `:1465`), verifiable against the `kid` entry in the publisher's trust registry. The canonical location is `<publisher-origin>/.well-known/typed-publisher.json`; the prior-era `evidence-public-keys.json` path remains served as a permanent alias (ADR-0025 §D, ruling D2). Each publisher hosts their own registry at their own well-known path — there is no central key authority (§8.3.3; `src/lib/site-config.ts:364-387` derives both URLs per instance).
+- **Signature.** Ed25519**ph** over canonical JSON (§10.3, `:1465`), verifiable against the `kid` entry in the publisher's trust registry; a self-certified signer has no registry, and is checked against its key (below). The canonical location is `<publisher-origin>/.well-known/typed-publisher.json`; the prior-era `evidence-public-keys.json` path remains served as a permanent alias (ADR-0025 §D, ruling D2). Each publisher hosts their own registry at their own well-known path — there is no central key authority (§8.3.3; `src/lib/site-config.ts:364-387` derives both URLs per instance).
 - **Timestamp.** An RFC 3161 token from FreeTSA, verifiable against FreeTSA's published CA chain. A conformant offline verifier validates the full X.509 chain to a **pinned** FreeTSA root, whose SHA-256 fingerprint the specification records (§10.3, `:1466`).
 - **Transparency.** A Sigstore Rekor entry, resolvable at `rekor.sigstore.dev`, with RFC 6962 Merkle inclusion verified against a **pinned** Rekor log public key (§10.3, `:1467`).
 - **Content-addressing.** The package SHA-256 is in the URL slug; mismatched content cannot round-trip.
 
 **None of those checks require trusting civicaitools.org.** The portable verifier carries no `civicaitools.org` dependency at all (§9.4, `:1422`).
+
+**A self-certified signer.** A record whose `signer.identifier` is a `did:key` derived from its signing key (hub ADR-0030; specification v0.1.9 §8.5.1) is checked against the key itself, with no trust registry and no network. The verifier derives the identifier from the signature's public key and compares it with the claimed one byte for byte; a mismatch rejects the record (§9.2 #14; `typedstandards` `fb411a2`, in `packages/verify-core/src/`: `did-key.ts:62-68`, `checks.ts:427-463`). A match at the `pseudonymous` tier yields the trust status `self_certified` (§8.3.3; `trust-registry.ts:48`, `self-certifying.ts:93-112`). The producer core derives the same identifier from the signing key and builds a commitment view with no registry URL only for this case (`packages/produce-core/src/signing.ts:142-171`, `commitment.ts:195-210`). No publish path in this codebase signs this way today; the signer on its records is the instance operator (Table 2).
+
+- **What it confirms:** the same key signed everything under that identifier (§8.5.1).
+- **What it does not confirm:** who holds the key. No registry vouches for it, and there is no rotation and no revocation: a compromised key can only be abandoned, a new key is a new identifier with no link to the old one, and nothing in a record signed under the old key says it was abandoned (§8.5.1; §10.2).
+- **What can raise it:** only a registry fetched from an `https:` URL the record declares (`trustRegistryUrl`), which can lower the status or raise it to what that registry says. A registry carried in the bundle, or obtained any other way, can only lower it (`revoked`, `deprecated_invalid`) and never raise it above `self_certified` (§8.3.3 rule 3; §9.4). The portable library does not decide where a registry came from: the caller states it, and an unstated source is treated as carried in the bundle (`trust-registry.ts:52-67`; `verify.ts:173-177`, `:347-367`; `self-certifying.ts:64-73`). In the neutral verifier, `registryProvenanceOf` (`apps/web/src/lib/verify-flow.ts`) states it.
+- **How it is shown:** as `self_certified`, never as "Verified". The portable library reports it with `verified: false` (`trust-registry.ts:69-75`; `self-certifying.ts:107-111`). The neutral verifier renders its `self_certified` entry in `KEY_TRUST_SIGNALS` (`apps/web/src/lib/trust-signal.ts`) at the calm `normal` tier, and `rollupVerdict` (`verify-flow.ts`) gives an intact, validly signed self-certified record a `normal` headline that names the self-certified signer, never the `verified` tier or its "Verified" headline.
 
 **Offline verification — the precise scope.** Zero-network, full-depth verification is a **demonstrated property of the self-contained commitment bundle** (the `?inline=1` form), which carries the proofs and the publisher's trust registry inline (§9.4, `:1422`). It is *not* a property of the bare package: the canonical single-blob package "still does not embed its own proofs, so a bare package handed to a verifier without its accompanying commitment view still depends on an out-of-band proof carrier" (§9.4, `:1431`).
 
@@ -298,7 +309,7 @@ An author can withdraw a record: a signed, public action with a stated reason. W
 
 Signing keys rotate per the runbook at `civic-ai-tools-website/docs/key-rotation.md`. Older keys stay in the trust registry indefinitely, and records signed under a **retired** key remain verifiable — the registry's per-key status semantics are what §9.2 #5 applies (`:1399`).
 
-**A compromised key is a different case, and the specification declines it as a threat.** §10.2 (`:1458`) states it plainly: a signing key disclosed to an adversary can produce valid signatures under that `kid` until the registry entry is moved to `revoked` status. The registry's `revoked` status is the mitigation the specification names (§8.3.3), and check #5 reports it — but pre-revocation signatures may have been produced by the legitimate signer or by the adversary, and, in the specification's words, "the distinction lives in the timestamp's relationship to the disclosure event — a forensic question, not a protocol guarantee." An offline verifier working from a bundle generated before the revocation cannot see it at all (§9.4, `:1433`).
+**A compromised key is a different case, and the specification declines it as a threat.** §10.2 (`:1458`) states it plainly: a signing key disclosed to an adversary can produce valid signatures under that `kid` until the registry entry is moved to `revoked` status. The registry's `revoked` status is the mitigation the specification names (§8.3.3), and check #5 reports it — but pre-revocation signatures may have been produced by the legitimate signer or by the adversary, and, in the specification's words, "the distinction lives in the timestamp's relationship to the disclosure event — a forensic question, not a protocol guarantee." An offline verifier working from a bundle generated before the revocation cannot see it at all (§9.4, `:1433`). A self-certified signer (see *How to verify a record*) has no registry entry to revoke, so this mitigation does not reach it unless a registry lists its key (§8.5.1; §10.2).
 
 This document does not state a compromise-response policy, because none is recorded; what is recorded is the revocation mechanism and the boundary around it. The control that bears on a compromised key is operator key custody ([ADR-0020](adr/0020-instance-key-custody.md)) rather than the rotation runbook, which governs planned retirement.
 
