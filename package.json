@@ -22,6 +22,8 @@
     "check:skill-drift:self-test": "node --test scripts/check-skill-drift.test.mjs",
     "check:spec-frontmatter": "node scripts/check-spec-frontmatter.mjs",
     "check:spec-frontmatter:self-test": "node --test scripts/check-spec-frontmatter.test.mjs",
+    "check:spec-subtype-table": "node scripts/check-spec-subtype-table.mjs",
+    "check:spec-subtype-table:self-test": "node --test scripts/check-spec-subtype-table.test.mjs",
     "check:template-env": "node scripts/check-template-env.mjs",
     "check:template-env:self-test": "node --test scripts/check-template-env.test.mjs"
   }

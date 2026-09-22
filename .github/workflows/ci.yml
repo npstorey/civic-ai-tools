@@ -93,6 +93,18 @@ jobs:
       - name: Spec-frontmatter check
         run: npm run check:spec-frontmatter
 
+      # Every statement of the ratified attestation sub-type table in the
+      # specification must list the same sub-types as the §8.12.1 table, read
+      # from the specification's text (civic-ai-tools#230: the §7.4
+      # statements had omitted attestation/revises/v1). A statement the check
+      # expects and cannot find fails, as does a restatement it does not know.
+      # Hermetic (one file read), so it sits with the other hermetic checks.
+      - name: Spec sub-type-table checker self-test
+        run: npm run check:spec-subtype-table:self-test
+
+      - name: Spec sub-type-table check
+        run: npm run check:spec-subtype-table
+
       # Guards AGENTS.md's Commands table: no cell pins a count the runner
       # outgrows, every command it names is a real script, and its command set
       # equals THIS FILE's — in both directions, so a gate added here without a
