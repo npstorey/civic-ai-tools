@@ -2431,8 +2431,8 @@ values <code>active</code>, <code>deprecated_valid</code>,
 <code>deprecated_invalid</code>, <code>revoked</code>,
 <code>unknown_key</code>, <code>registry_unavailable</code>, or
 <code>legacy_embedded</code>. This revision adds an eighth value,
-<code>self_certified</code> (below); at this revision the reference
-verifier does not yet implement it.</li>
+<code>self_certified</code> (below), which the reference verifier
+implements from <code>@typedstandards/verify-core</code> 0.10.0.</li>
 </ol>
 <p>The <code>legacy_embedded</code> value covers packages predating the
 trust registry: their signature still verifies mathematically against
@@ -2473,7 +2473,9 @@ registry’s verdict may do depends on where the registry came from. Only
 a registry obtained from a declared <code>trustRegistryUrl</code> can
 change the status; a registry carried in the bundle can report
 <code>revoked</code> but never raise the status above
-<code>self_certified</code>.
+<code>self_certified</code>. Only an <code>https:</code> URL is a
+declared registry URL: a registry obtained from a URL with any other
+scheme counts as carried in the bundle, and can only lower the status.
 <ul>
 <li><strong>Fetched from a declared
 <code>trustRegistryUrl</code></strong> (the view’s
@@ -5359,7 +5361,10 @@ bundle (no live <code>/.well-known</code> fetch). For a key-derived
 <code>signer.identifier</code> (§8.5.1), #5 is decided from the signing
 key: a registry inlined in the bundle can report only a lowering verdict
 (<code>revoked</code>, <code>deprecated_invalid</code>) and never raises
-the status above <code>self_certified</code> (§8.3.3);</li>
+the status above <code>self_certified</code> (§8.3.3), and so can a
+registry obtained from a URL whose scheme is not <code>https:</code>,
+since only an <code>https:</code> URL is a declared registry URL (§8.3.3
+rule 3);</li>
 <li><strong>#7 timestamp</strong> — full RFC 3161 TSA-signature
 verification plus X.509 cert-chain validation to a pinned trust anchor
 (§10.3);</li>
@@ -6373,16 +6378,24 @@ compared only when both fields are present, as ADR-0006 §2 states it;
 <code>metadata.contentProfile</code> and <code>producerProfile</code>
 (the signed ADR-0028 packages carry only <code>producerProfile</code>);
 and §6.2 no longer describes <code>content/analysis/v1</code> as the AI
-profile’s alone. <strong>Named under the Xanadu doctrine.</strong> The
-packages blocked without the profile are the two signed ADR-0028
-packages (envelopes
+profile’s alone. <strong>(6) Before the tag:</strong> §8.3.3 rule 3 and
+§9.4’s #5 entry state that only an <code>https:</code> URL is a declared
+registry URL, so a registry obtained from a URL with any other scheme
+counts as carried in the bundle and can only lower a self-certified
+signer’s status; this states what “declared URL” means and adds no rule
+beyond ADR-0030 §4. §8.3.3 and this entry name the implementing
+releases, <code>@typedstandards/verify-core</code> 0.10.0 and
+<code>@typedstandards/produce-core</code> 0.5.0. <strong>Named under the
+Xanadu doctrine.</strong> The packages blocked without the profile are
+the two signed ADR-0028 packages (envelopes
 <code>abb93f781ae71480bf8075474facbb272f3dcc38d50eeecda79be33427924a9c</code>
 and
 <code>3637b5952f6a44e050fa0ac84d2ab58454ab7d29507dbbaf09147da7f8b37d48</code>),
 whose <code>scripted-recomputation/eval-run</code> profile the reference
-verifier cannot yet resolve; neither package changes, and neither is
-affected by the self-certifying mechanism. The adopter is the qsv
-project by datHere, through <a
+verifier could not resolve before
+<code>@typedstandards/verify-core</code> 0.10.0; neither package
+changes, and neither is affected by the self-certifying mechanism. The
+adopter is the qsv project by datHere, through <a
 href="https://github.com/dathere/qsv/issues/4448">dathere/qsv#4448</a>,
 opened 2026-08-20 and labelled <code>revisit-later</code>, whose <a
 href="https://github.com/dathere/qsv/issues/4448#issuecomment-5649582321">comment
@@ -6393,11 +6406,13 @@ class="uri">https://www.w3.org/TR/did/</a>. The adopter’s organization
 shares its name with this specification’s <code>datHere</code> content
 profile (§8.7.1-§8.7.4, the A-G envelope for AI-assisted analysis); the
 <code>scripted-recomputation</code> profile is not that content profile.
-Per §6.1 the new requirements correspond to settled decision records; at
-this revision the reference verifier and producer core do not yet
-implement them. No field is removed or retyped;
-<code>trustRegistryUrl</code> relaxes from required to conditional, and
-the <code>contentProfile</code>/<code>producerProfile</code> consistency
+Per §6.1 the new requirements correspond to settled decision records;
+the reference verifier and producer core implement them in
+<code>@typedstandards/verify-core</code> 0.10.0 and
+<code>@typedstandards/produce-core</code> 0.5.0. No field is removed or
+retyped; <code>trustRegistryUrl</code> relaxes from required to
+conditional, and the
+<code>contentProfile</code>/<code>producerProfile</code> consistency
 rule applies only when both are present. The signed ADR-0028 packages
 are byte-identical, and the schema version is unchanged
 (<code>0.1.0</code>). The rendered HTML sidecar is regenerated from this
