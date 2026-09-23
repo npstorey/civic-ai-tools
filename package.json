@@ -24,6 +24,8 @@
     "check:spec-frontmatter:self-test": "node --test scripts/check-spec-frontmatter.test.mjs",
     "check:spec-subtype-table": "node scripts/check-spec-subtype-table.mjs",
     "check:spec-subtype-table:self-test": "node --test scripts/check-spec-subtype-table.test.mjs",
+    "check:verifier-subtype-set": "node scripts/check-verifier-subtype-set.mjs",
+    "check:verifier-subtype-set:self-test": "node --test scripts/check-verifier-subtype-set.test.mjs",
     "check:template-env": "node scripts/check-template-env.mjs",
     "check:template-env:self-test": "node --test scripts/check-template-env.test.mjs"
   }
