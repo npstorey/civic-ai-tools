@@ -38,9 +38,9 @@
  * split across lines, or one naming half the table or fewer, escapes rule (c).
  * The prose enumerations carry no version, so a `v2` of an existing verb
  * would read as the same verb there. The comparison with the reference
- * verifier's registered set is not made here: that set becomes an export of
- * `@typedstandards/verify-core` only in a later release, and this repository
- * installs the published package.
+ * verifier's registered set is not made here; `check:verifier-subtype-set`
+ * (scripts/check-verifier-subtype-set.mjs) makes it against the installed
+ * `@typedstandards/verify-core`.
  *
  * Zero dependencies: Node built-ins only. Run via `npm run check:spec-subtype-table`.
  * Self-test: `npm run check:spec-subtype-table:self-test`.
