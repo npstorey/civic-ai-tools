@@ -3,6 +3,22 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+- **Dependency floor raised:** `@typedstandards/produce-core` `^0.3.0 ||
+  ^0.4.0` → `^0.6.0`, and the `@typedstandards/verify-core` devDependency
+  `^0.9.0` → `^0.11.0`, the version produce-core 0.6.0 resolves. The two move
+  together so the install holds one copy of verify-core: with only the
+  devDependency moved, produce-core 0.3.0 kept verify-core 0.9.0 and the
+  harness tests imported a second copy, 0.11.0. verify-core 0.11.0 is the
+  first release that exports `KNOWN_TYPE_URIS`, which the hub's
+  `check:verifier-subtype-set` compares with the specification's §8.12.1
+  table ([civic-ai-tools#232](https://github.com/npstorey/civic-ai-tools/issues/232)).
+  No harness source changes. The lockfile resolves produce-core 0.6.0 and
+  verify-core 0.11.0, and the golden byte-compat suite passes unchanged.
+  A consumer that pins produce-core 0.3.x or 0.4.x no longer shares its copy
+  with this package.
+
 ## 0.5.0 — 2026-09-18
 
 The list is derived from

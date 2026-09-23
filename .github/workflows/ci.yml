@@ -105,6 +105,18 @@ jobs:
       - name: Spec sub-type-table check
         run: npm run check:spec-subtype-table
 
+      # The attestation/* members of the reference verifier's registered set
+      # (KNOWN_TYPE_URIS, exported by @typedstandards/verify-core from 0.11.0)
+      # must equal the specification's §8.12.1 table (civic-ai-tools#232). The
+      # set is read from the package `npm ci` installed, as the harness resolves
+      # it; an installed release without the export fails rather than skipping.
+      # Hermetic after install (one file read, one local import).
+      - name: Verifier sub-type-set checker self-test
+        run: npm run check:verifier-subtype-set:self-test
+
+      - name: Verifier sub-type-set check
+        run: npm run check:verifier-subtype-set
+
       # Guards AGENTS.md's Commands table: no cell pins a count the runner
       # outgrows, every command it names is a real script, and its command set
       # equals THIS FILE's — in both directions, so a gate added here without a
