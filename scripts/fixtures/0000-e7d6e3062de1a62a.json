@@ -1,0 +1,1 @@
+{"body":{"schema":"org.civicaitools/projection-build-event/v1","sha256":"dc9cc260e4286a8fbe56b0219dd1aaa91d7cd901647d15e1285f1578c7744e87"},"emittedAtUtc":"2026-08-26T00:00:00Z","previousRecordSha256":null,"producer":{"branch":"evidence-record-v1","repo":"npstorey/receipt"},"recordIndex":0,"refs":[],"schemaVersion":"receipt/evidence-record/v1","standing":"non-authorizing"}
