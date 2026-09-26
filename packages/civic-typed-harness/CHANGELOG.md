@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.6.0 — 2026-09-26
 
 The list is derived from
 `git log 65e8a1d..<this release> -- packages/civic-typed-harness/` — `65e8a1d`
