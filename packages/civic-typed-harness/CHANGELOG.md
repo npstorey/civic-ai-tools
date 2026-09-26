@@ -3,21 +3,34 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.6.0 — 2026-09-26
+
+The list is derived from
+`git log 65e8a1d..<this release> -- packages/civic-typed-harness/` — `65e8a1d`
+is the 0.5.0 release's last commit, its dating fix. No harness source changes
+in that range.
 
 - **Dependency floor raised:** `@typedstandards/produce-core` `^0.3.0 ||
-  ^0.4.0` → `^0.6.0`, and the `@typedstandards/verify-core` devDependency
-  `^0.9.0` → `^0.11.0`, the version produce-core 0.6.0 resolves. The two move
+  ^0.4.0` → `^0.7.0`, and the `@typedstandards/verify-core` devDependency
+  `^0.9.0` → `^0.12.0`, the version produce-core 0.7.0 resolves. The two move
   together so the install holds one copy of verify-core: with only the
   devDependency moved, produce-core 0.3.0 kept verify-core 0.9.0 and the
-  harness tests imported a second copy, 0.11.0. verify-core 0.11.0 is the
-  first release that exports `KNOWN_TYPE_URIS`, which the hub's
-  `check:verifier-subtype-set` compares with the specification's §8.12.1
-  table ([civic-ai-tools#232](https://github.com/npstorey/civic-ai-tools/issues/232)).
-  No harness source changes. The lockfile resolves produce-core 0.6.0 and
-  verify-core 0.11.0, and the golden byte-compat suite passes unchanged.
-  A consumer that pins produce-core 0.3.x or 0.4.x no longer shares its copy
-  with this package.
+  harness tests imported a second copy. The raise went to `^0.6.0` /
+  `^0.11.0` first ([civic-ai-tools#232](https://github.com/npstorey/civic-ai-tools/issues/232))
+  and was not published at that range.
+- **What the two releases bring.** verify-core 0.11.0 is the first release
+  that exports `KNOWN_TYPE_URIS`, which the hub's `check:verifier-subtype-set`
+  compares with the specification's §8.12.1 table. verify-core 0.12.0 (the
+  certificate-chain split, typedstandards#100) adds a member to
+  `ChainFailReason` and to `Rfc3161FailReason`; the harness reads neither.
+  produce-core 0.7.0 changes none of its own source.
+- The lockfile resolves produce-core 0.7.0 and verify-core 0.12.0, one copy
+  each, and no other entry moves. The golden byte-compat suite passes
+  unchanged.
+- A consumer that pins produce-core 0.3.x through 0.6.x no longer shares its
+  copy with this package: under 0.x semver `^0.7.0` excludes them.
+- **README:** the runtime-dependency line named produce-core `^0.2.0`, a range
+  this package has not declared since 0.3.0. It names `^0.7.0`.
 
 ## 0.5.0 — 2026-09-18
 
