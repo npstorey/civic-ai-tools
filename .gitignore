@@ -56,3 +56,8 @@ analysis/
 
 # Logs
 *.log
+
+# evidence-projection-v1 harness scratch: the pinned `receipt` clone (optional
+# leg F), the uv cache/toolchain it needs, and re-mint/re-emit scratch output.
+# Everything the harness VERIFIES is committed under scripts/fixtures/.
+.evidence-clones/

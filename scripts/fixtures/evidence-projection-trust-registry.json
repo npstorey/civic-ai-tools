@@ -1,0 +1,24 @@
+{
+  "$comment": "Trust-registry SNAPSHOT carried inline so the commitment bundle verifies with zero network access (spec §8.8.1 self-contained serialization, §9.4). It deliberately does NOT contain this POC's throwaway signing key: the expected verdict is unknown_key, and a registry that made this node green would defeat the point. Copied verbatim from the poc/rulespec-interop fixture so the two POCs share one snapshot.",
+  "generatedAt": "2026-06-07T00:00:00.000Z",
+  "statusSemantics": {
+    "active": "Valid for signing new packages and for verification.",
+    "deprecated": "Cannot sign new packages. Signatures are valid for verification only when the package's Rekor integratedTime precedes deprecatedAt.",
+    "revoked": "Never valid — any signature is treated as suspect regardless of when the package was integrated."
+  },
+  "keys": [
+    {
+      "kid": "platform:evidence-2026-04",
+      "publicKey": "MCowBQYDK2VwAyEAqd/MVdHJFPLi8nxxwmqWsDdgz8yssU76unJMHW3xaAE=",
+      "signerIdentity": {
+        "bindingTier": "platform",
+        "identifier": "platform:civic-ai-tools",
+        "displayName": "Civic AI Tools Platform"
+      },
+      "status": "active",
+      "activatedAt": "2026-04-15T00:00:00.000Z",
+      "deprecatedAt": null,
+      "revokedAt": null
+    }
+  ]
+}

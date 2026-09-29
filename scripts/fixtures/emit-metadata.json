@@ -1,0 +1,20 @@
+{
+  "$comment": "Emission parameters + the derived PUBLIC key, written by scripts/emit-evidence-record.py. No private key material: the signing seed is sha256 of keySeedLabel.",
+  "bodySchema": "org.civicaitools/projection-build-event/v1",
+  "domain": "receipt/evidence-record/v1\u0000",
+  "domainHex": "726563656970742f65766964656e63652d7265636f72642f763100",
+  "emittedAtUtc": "2026-08-26T00:00:00Z",
+  "emitter": "receipt.evidence.emit_evidence_record",
+  "keySeedLabel": "civic-ai-tools/evidence-projection-v1/receipt-producer-throwaway",
+  "producer": {
+    "branch": "evidence-record-v1",
+    "repo": "npstorey/receipt"
+  },
+  "producerPublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAIGdZcAxAa7WvME0Q78i30yKrFqxfVUaS7On0OC+cYKs=\n-----END PUBLIC KEY-----\n",
+  "producerPublicKeySpkiBase64": "MCowBQYDK2VwAyEAIGdZcAxAa7WvME0Q78i30yKrFqxfVUaS7On0OC+cYKs=",
+  "producerSignatureBase64": "Lm59LQHMsqKjNSA03KSffAuBwipPgdoZxp487w2aCm/1h/NAApI4uo1o/S1S2v3jKQ9MhxzNOXNWg/OAmsYeDg==",
+  "recordFilename": "0000-e7d6e3062de1a62a.json",
+  "recordSha256": "e7d6e3062de1a62a079ce2929431bf1397c4afbafe024a73149a929f7cfb5953",
+  "recordsRelative": "evidence-records",
+  "refs": []
+}
