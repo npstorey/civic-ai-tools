@@ -36,7 +36,7 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 | `npm run check:spec-frontmatter` | `Spec-frontmatter check passed.` — twin `check:spec-frontmatter:self-test` → `# fail 0` |
 | `npm run check:spec-subtype-table` | `Spec-subtype-table check passed.` — twin `check:spec-subtype-table:self-test` → `# fail 0` |
 | `npm run check:verifier-subtype-set` | `Verifier-subtype-set check passed.` — twin `check:verifier-subtype-set:self-test` → `# fail 0` |
-| `npm run check:gate-table` | `# fail 0` — guards this table: no pinned count, and the same command set as `ci.yml` |
+| `npm run check:gate-table` | `# fail 0` — guards this table: no pinned count, and the same command set as `ci.yml`; and holds any other gate list in the repository's markdown to that set, so point here rather than copy it |
 | `npm run check:skill-drift` | `Skill-drift check passed — every embedded copy matches its source of truth.` — twin `check:skill-drift:self-test` → `# fail 0` |
 | `npm run check:template-env` | `Template-env check passed — every name a template sets for the server has a reader.` — twin `check:template-env:self-test` → `# fail 0` |
 | `python3 .claude/skills/publish-record/test_publish.py` | `OK` (`unittest`; the test total rises as tests are added) |

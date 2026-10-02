@@ -37,12 +37,10 @@ Ground rules:
 Phase report (your final message, mirrored into the PR body):
 
 - branch + diff stat, with an explicit blast-zone statement;
-- full output of every check CI gates on — `npm run build`, `npm test`, `npm run typecheck`,
-  `npm run lint`, `npm run check:budgets:self-test`, `npm run check:budgets`,
-  `npm run check:spec-frontmatter:self-test`, `npm run check:spec-frontmatter`,
-  `npm run check:skill-drift:self-test`, `npm run check:skill-drift`, and
-  `python3 .claude/skills/publish-record/test_publish.py` — pasted, not summarized. Run `npm ci`
-  first: a stale `node_modules` produces failures that look like code defects;
+- full output of every command in AGENTS.md's Commands table, in the order ci.yml runs them,
+  pasted, not summarized. That table is the one gate list: `npm run check:gate-table` holds it
+  to ci.yml, and fails on a copy of it anywhere else that falls behind. Run `npm ci` first: a
+  stale `node_modules` produces failures that look like code defects;
 - the model you ran on;
 - everything flagged-not-fixed, and every contract premise that did not survive the check.
 

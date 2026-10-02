@@ -1,5 +1,7 @@
 // Guard: AGENTS.md's Commands table pins no count the runner outgrows, and it
-// names exactly the commands ci.yml runs (civic-ai-tools#197).
+// names exactly the commands ci.yml runs (civic-ai-tools#197); and every other
+// markdown passage that lists the CI gates names the same set
+// (civic-ai-tools#225, the last section below).
 //
 // WHY. Two defects of the same class, both live at `232f60e`:
 //
@@ -28,7 +30,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -194,4 +197,203 @@ test('#197: every gate-shaped root script is run by ci.yml — a config nobody r
   const run = new Set(ciRunCommands(CI_YML).filter(isGate).map(normalize));
   const unrun = gateShaped.filter((name) => !run.has(name) && !run.has(`npm ${name}`)).sort();
   assert.deepEqual(unrun, [], `declared as a gate and run by no CI step: ${unrun.join(', ')}`);
+});
+
+// --- Every gate list in the repository, derived (civic-ai-tools#225) ---
+//
+// WHAT WAS MEASURED. `.claude/agents/impl.md` told an IMPL to paste "every
+// check CI gates on" and then listed the checks itself. At `1cdd0c2`, where
+// #225 was filed, the list omitted three of ci.yml's gates; at `78354f2` it
+// omitted seven: both sub-type checkers and their self-tests, this guard, and
+// the template-env check and its self-test. The tests above read AGENTS.md
+// only, so main stayed green while the copy fell behind.
+//
+// THE UNIVERSE. Every markdown file git tracks or would track
+// (`git ls-files --cached --others --exclude-standard`), split into heading
+// sections, frontmatter and fenced code left out. No path is named: a doc
+// that lists the gates is checked the moment it is written, committed or not.
+//
+// WHAT COUNTS AS A GATE LIST. A section whose code spans name three or more
+// distinct gates besides the `npm ci` install. One or two is a passage citing
+// the check it is about (a rule file names the checker that enforces it, a
+// CHANGELOG entry names the build); three or more is an enumeration of CI's
+// gates, which is a claim to be the list. A span names a gate when it is the
+// command ci.yml runs, an npm alias of it (`npm run test`, `npm t`,
+// `npm run-script x`), or a twin's bare script name, written the way the
+// Commands table's output cells write one. The test prints every section it
+// classified, either way.
+//
+// WHAT A GATE LIST MUST SAY. Every gate ci.yml runs, the install aside, and no
+// gate-shaped command ci.yml does not run. The set, not the order, for the
+// reason the header gives. A passage that needs the gates points at the
+// Commands table instead of copying it.
+//
+// BLIND SPOTS, STATED. A list split across headings so that no one section
+// names three gates is not recognised; fenced code and non-markdown files are
+// not read. It errs loud the other way: a section that names three gates
+// without meaning to list CI's fails, and the fix is to name them all or to
+// point at the table.
+
+const GATE_LIST_MIN = 3;
+const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+const HEADING = /^ {0,3}#{1,6}(?:[ \t]|$)/;
+const isInstall = (command) => /^npm ci(?:\s|$)/.test(command);
+const quoted = (commands) => commands.map((c) => `\`${c}\``).join(', ');
+
+/** A markdown file's heading sections as `{ heading, text }`, frontmatter and fenced code left out. */
+export function sectionsOf(markdown) {
+  const lines = markdown.split('\n');
+  let i = 0;
+  if (lines[0] === '---') {
+    const end = lines.indexOf('---', 1);
+    if (end !== -1) i = end + 1;
+  }
+  const sections = [{ heading: '', lines: [] }];
+  let fence = null;
+  for (; i < lines.length; i++) {
+    const open = lines[i].match(FENCE);
+    if (fence) {
+      if (open && open[1][0] === fence[0] && open[1].length >= fence.length) fence = null;
+      continue;
+    }
+    if (open) {
+      fence = open[1];
+      continue;
+    }
+    if (HEADING.test(lines[i])) sections.push({ heading: lines[i].trim(), lines: [] });
+    else sections.at(-1).lines.push(lines[i]);
+  }
+  return sections.map((s) => ({ heading: s.heading, text: s.lines.join('\n').trim() }));
+}
+
+/** `npm t`, `npm tst` and `npm run test` spell `npm test`; `npm run-script x` spells `npm run x`. */
+const spelling = (command) =>
+  command
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^npm run-script /, 'npm run ')
+    .replace(/^npm (?:t|tst|run test)$/, 'npm test');
+
+/** The ci.yml gate a code span names, as ci.yml spells it; undefined if none. */
+export function gateNamedBy(span, gates) {
+  const command = /^[\w-]+:[\w:-]+$/.test(span.trim()) ? `npm run ${span.trim()}` : span;
+  return gates.find((g) => spelling(g) === spelling(command));
+}
+
+/** Every section that names a ci.yml gate, as `{ heading, named, strays }`: the
+ *  gates it names in document order, and the gate-shaped commands it names that
+ *  ci.yml does not run. */
+export function passagesNamingGates(markdown, gates) {
+  const out = [];
+  for (const { heading, text } of sectionsOf(markdown)) {
+    const spans = [...text.matchAll(/`([^`]+)`/g)].map((m) => m[1]);
+    const named = spans.map((s) => gateNamedBy(s, gates)).filter(Boolean);
+    if (named.length === 0) continue;
+    const strays = spans.map(spelling).filter((s) => isGate(s) && !gateNamedBy(s, gates));
+    out.push({ heading, named, strays });
+  }
+  return out;
+}
+
+/** A passage is a gate list when it names enough distinct gates, the install aside. */
+const isGateList = ({ named }) => new Set(named.filter((g) => !isInstall(g))).size >= GATE_LIST_MIN;
+
+/** What a gate list gets wrong against ci.yml's gates; [] when it names exactly their set. */
+export function gateListProblems({ named, strays }, gates) {
+  const omitted = gates.filter((g) => !isInstall(g) && !named.includes(g));
+  const problems = [];
+  if (omitted.length) problems.push(`omits ${quoted(omitted)}`);
+  if (strays.length) problems.push(`names ${quoted(strays)}, which ci.yml does not run`);
+  return problems;
+}
+
+/** Every markdown file git tracks, or would track, that is on disk. */
+function markdownUniverse() {
+  return execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], {
+    cwd: REPO,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter((f) => /\.md$/i.test(f) && existsSync(join(REPO, f)))
+    .sort();
+}
+
+test('#225: the section reader drops frontmatter and fenced code, and a span names a gate by any npm spelling of it', () => {
+  const sample = [
+    '---', 'description: `npm run a`', '---', 'intro `npm run a`',
+    '# One', '`npm run b`', '```sh', '# not a heading', '`npm run c`', '```',
+    '## Two', 'text',
+  ].join('\n');
+  assert.deepEqual(sectionsOf(sample), [
+    { heading: '', text: 'intro `npm run a`' },
+    { heading: '# One', text: '`npm run b`' },
+    { heading: '## Two', text: 'text' },
+  ]);
+  const gates = ['npm ci', 'npm test', 'npm run check:a', 'python3 t.py'];
+  assert.equal(gateNamedBy('npm test', gates), 'npm test');
+  assert.equal(gateNamedBy('npm run test', gates), 'npm test');
+  assert.equal(gateNamedBy('npm t', gates), 'npm test');
+  assert.equal(gateNamedBy('npm run-script check:a', gates), 'npm run check:a');
+  assert.equal(gateNamedBy('check:a', gates), 'npm run check:a', 'a twin written bare, as the Commands table writes one');
+  assert.equal(gateNamedBy('npm run\n  check:a', gates), 'npm run check:a', 'a span broken across lines');
+  assert.equal(gateNamedBy('python3 t.py', gates), 'python3 t.py');
+  assert.equal(gateNamedBy('npm testx', gates), undefined);
+  assert.equal(gateNamedBy('npm run check:a -- --flag', gates), undefined);
+  assert.equal(gateNamedBy('did:key', gates), undefined);
+});
+
+test('#225: a section naming three gates is a gate list, and it must name every gate and nothing ci.yml does not run', () => {
+  const gates = ['npm ci', 'npm run build', 'npm test', 'npm run check:a', 'python3 t.py'];
+  const sample = [
+    '# Cites', '`npm ci`, then `npm run build` and `npm test`; `npm run build` again.',
+    '# Lists', '`npm run build`, `npm t`,', '`check:a` and `npm run check:gone`.',
+    '# Silent', '`npm run lint`',
+  ].join('\n');
+  const passages = passagesNamingGates(sample, gates);
+  assert.deepEqual(passages, [
+    { heading: '# Cites', named: ['npm ci', 'npm run build', 'npm test', 'npm run build'], strays: [] },
+    { heading: '# Lists', named: ['npm run build', 'npm test', 'npm run check:a'], strays: ['npm run check:gone'] },
+  ]);
+  assert.deepEqual(passages.map(isGateList), [false, true], 'the install and a repeat do not count toward a gate list');
+  assert.deepEqual(gateListProblems(passages[1], gates), [
+    'omits `python3 t.py`',
+    'names `npm run check:gone`, which ci.yml does not run',
+  ]);
+  assert.deepEqual(
+    gateListProblems({ named: ['python3 t.py', 'npm run check:a', 'npm test', 'npm run build'], strays: [] }, gates),
+    [],
+    'the set, not the order, and the install may go unnamed',
+  );
+});
+
+test('#225: the markdown universe comes from git, and the Commands table is a gate list by this rule', () => {
+  // The positive control: if the reader stopped recognising gates, the test
+  // below would pass by finding no list to compare.
+  const files = markdownUniverse();
+  assert.ok(files.includes('AGENTS.md'), `git listed ${files.length} markdown files, AGENTS.md not among them`);
+  const commands = passagesNamingGates(AGENTS_MD, ciRunCommands(CI_YML).filter(isGate)).find(
+    (p) => p.heading === '## Commands',
+  );
+  assert.ok(commands && isGateList(commands), 'the Commands table does not classify as a gate list');
+});
+
+test("#225: every gate list in the repository's markdown names exactly the gates ci.yml runs", (t) => {
+  const gates = ciRunCommands(CI_YML).filter(isGate);
+  const problems = [];
+  for (const file of markdownUniverse()) {
+    for (const passage of passagesNamingGates(readFileSync(join(REPO, file), 'utf8'), gates)) {
+      const where = `${file}${passage.heading ? ` § ${passage.heading}` : ''}`;
+      if (!isGateList(passage)) {
+        t.diagnostic(`not a gate list (fewer than ${GATE_LIST_MIN} gates): ${where}`);
+        continue;
+      }
+      t.diagnostic(`gate list: ${where}`);
+      for (const problem of gateListProblems(passage, gates)) problems.push(`${where}: ${problem}`);
+    }
+  }
+  assert.deepEqual(
+    problems,
+    [],
+    'a passage that lists the CI gates must name all of them; point at the AGENTS.md Commands table instead of copying it',
+  );
 });
