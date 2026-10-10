@@ -10,9 +10,9 @@
 //     (civic: vocabulary, source registry, datHere policy, profile constants).
 //   - capture/ — what PRODUCES under it: TraceBuilder, skill-metadata
 //     extraction, data-source population, and the provenance BUILDER. It
-//     imports nothing from outside capture/: the vocabulary, the source
-//     registry and their defaults arrive as parameters. Clock + RNG live
-//     here only.
+//     imports no module from outside capture/ (the produce-core package
+//     aside): the vocabulary, the source registry and their defaults
+//     arrive as parameters. Clock + RNG live here only.
 //   - civic/   — the civic defaults applied over capture: the package's
 //     `buildProvenanceGraph`, `buildDataSources` and `resolveToolSource`
 //     (with their config types and `CIVICAITOOLS_PROVENANCE_CONFIG`), which
