@@ -2,9 +2,9 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.1.0 — 2026-10-10
 
-0.1.0, the first release ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244);
+The first release ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244);
 [ADR-0031](../../docs/adr/0031-civic-typed-router-packaging.md)).
 
 - **A pure move.** What the reference website wired at
