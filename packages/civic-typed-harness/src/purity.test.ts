@@ -10,8 +10,9 @@
 //      timestamps and ids are what capture *is* — and both are injectable.
 //   4. Internal module boundary (structure-for-the-future):
 //      - format-extension and rubric modules never import from capture;
-//      - capture modules import nothing from outside capture/ — not format/,
-//        not the civic layer, type-only imports included: the vocabulary,
+//      - capture modules import no module from outside capture/ — not
+//        format/, not the civic layer, type-only imports included; a package
+//        import (@typedstandards/produce-core) is allowed: the vocabulary,
 //        the source registry and their defaults arrive as parameters, and
 //        src/civic/ applies the civic values one layer up;
 //      - capture modules never DEFINE civic vocabulary (the `urn:` scheme in

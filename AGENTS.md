@@ -28,7 +28,7 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 | Command | Healthy output |
 |---|---|
 | `npm ci` | exit 0, and `packages/civic-typed-harness/dist` and `packages/civic-typed-router/dist` populated. The package and audit counts move with the lockfile; a pre-existing high-severity advisory is reported here and gates nothing |
-| `npm run build` | the `tsc -p tsconfig.json` echo and nothing after it, exit 0 |
+| `npm run build` | each package's `tsc -p tsconfig.json` echo and nothing after them, exit 0 |
 | `npm test` | `# fail 0` (`node --test` TAP; includes the golden byte-compat suite). The pass total rises as tests are added — read it from the latest merge-ref run; `# fail 0` is the gate |
 | `npm run typecheck` | no output, exit 0 — runs the build config AND `tsconfig.test.json`, so a type error in a test file fails here (civic-ai-tools#197) |
 | `npm run lint` | no output, exit 0 |
