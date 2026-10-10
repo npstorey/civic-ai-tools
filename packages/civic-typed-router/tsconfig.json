@@ -1,0 +1,37 @@
+{
+  // Build config for civic-typed-router. Mirrors civic-typed-harness: the
+  // source is browser-safe and imports siblings with explicit `.ts`
+  // extensions, which `rewriteRelativeImportExtensions` turns into `.js` on
+  // emit so the built ESM resolves under Node, bundlers and the browser alike.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
+
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": false,
+
+    // No ambient @types package in scope for shipped source: a Node global
+    // reaching src/ must not type-check. `@types/node` is for the test
+    // type-check only (tsconfig.test.json opts the tests back in).
+    "types": []
+  },
+  // Tests are excluded here because this config EMITS `dist/`, which is what
+  // `files` publishes; tsconfig.test.json type-checks them without emitting.
+  // `src/__fixtures__/` holds JSON and the capture script (`.mjs`), neither of
+  // which this config reads.
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "dist", "node_modules"]
+}

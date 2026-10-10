@@ -1,0 +1,13 @@
+{
+  // Type-check config for the router's TEST files, as the harness has one
+  // (civic-ai-tools#197): the build config excludes them so `dist/` does not
+  // ship them, and this config, which emits nothing, carries them. Test files
+  // are Node programs, so the Node types are opted back in here and only here.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

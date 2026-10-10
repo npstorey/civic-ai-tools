@@ -1,0 +1,65 @@
+{
+  "name": "@typedstandards/civic-typed-router",
+  "version": "0.1.0",
+  "description": "The civic MCP router for Typed Standards applications: one manifest of three sources (Socrata, Google Data Commons, Boston OpenContext) with their tool schemas and guidance, selection by configuration, and the composed system prompt. A domain-free core in src/core/, the civic content in src/civic/. Reads no clock, no environment and no network; the consumer supplies them.",
+  "license": "MIT",
+  "author": "Nathan Storey",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "lint": "eslint .",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@typescript-eslint/parser": "^8",
+    "eslint": "^9",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npstorey/civic-ai-tools.git",
+    "directory": "packages/civic-typed-router"
+  },
+  "homepage": "https://github.com/npstorey/civic-ai-tools/tree/main/packages/civic-typed-router#readme",
+  "bugs": {
+    "url": "https://github.com/npstorey/civic-ai-tools/issues"
+  },
+  "keywords": [
+    "typed-standards",
+    "mcp",
+    "router",
+    "civic",
+    "open-data",
+    "system-prompt",
+    "tools"
+  ]
+}

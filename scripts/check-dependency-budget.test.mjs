@@ -2,7 +2,7 @@
 //
 // Demonstrates BOTH chartered failure modes against committed fixtures
 // (scripts/__fixtures__/budget-check/ — obviously-fake module names, never
-// installed or built) plus the passing case against the real package and the
+// installed or built) plus the passing case against the real packages and the
 // real budget file. Run: node --test scripts/check-dependency-budget.test.mjs
 //
 // Copied from typedstandards@2eebbc5 (PR typedstandards#39) alongside the
@@ -175,14 +175,22 @@ test('the harness does not declare or import verify-core directly', () => {
   assert.deepEqual(violations, [], 'shipped src imports nothing undeclared');
 });
 
-test('passing case: the real package satisfies its budget', () => {
+test('passing case: the real packages satisfy their budgets', () => {
   const doc = JSON.parse(readFileSync(join(here, 'dependency-budgets.json'), 'utf8'));
   const { results, ok } = runBudgetCheck(repoRoot, doc);
-  assert.equal(results.length, 1, 'the one budgeted package is checked');
+  // Derived, not pinned: every package the budget file lists is checked.
+  assert.ok(doc.packages.length >= 2, 'the harness and the router are both budgeted');
+  assert.equal(results.length, doc.packages.length, 'every budgeted package is checked');
   for (const { entry, violations, scanned } of results) {
     assert.deepEqual(violations, [], `${entry.name}: no violations`);
     assert.ok(scanned.files > 0, `${entry.name}: shipped src actually scanned`);
-    assert.ok(scanned.bareImports > 0, `${entry.name}: bare imports actually resolved`);
+    // A package with a budget imports something; one with an empty budget
+    // (civic-typed-router, ADR-0031 §C) imports no package at all.
+    if (entry.budget.length > 0) {
+      assert.ok(scanned.bareImports > 0, `${entry.name}: bare imports actually resolved`);
+    } else {
+      assert.equal(scanned.bareImports, 0, `${entry.name}: an empty budget, and no bare import`);
+    }
   }
   assert.equal(ok, true);
 });
