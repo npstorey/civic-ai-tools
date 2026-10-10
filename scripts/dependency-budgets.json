@@ -13,6 +13,12 @@
       "name": "@typedstandards/civic-typed-harness",
       "budget": ["@typedstandards/produce-core"],
       "source": "ADR-0022 §E as amended by its 2026-08-02 addendum — produce-core 0.2.0 re-exports the harness's whole consumption set (sha256Hex, isBlobRef, the canonicalization-rule URIs, PROFILE_CAPTURE_VOCAB, CaptureMethod), so the harness declares exactly ONE runtime dependency, @typedstandards/produce-core ^0.2.0, and imports nothing undeclared. verify-core arrives transitively and must NOT be declared or imported directly (docs/adr/0022-civic-typed-harness-packaging.md)."
+    },
+    {
+      "path": "packages/civic-typed-router",
+      "name": "@typedstandards/civic-typed-router",
+      "budget": [],
+      "source": "ADR-0031 §C and the router sprint's G0-1 ruling (civic-ai-tools#244) — the router declares NO runtime dependency: its core imports nothing from any package, its civic content imports only its core, and the tool-schema type is structural rather than imported from the openai package (docs/adr/0031-civic-typed-router-packaging.md)."
     }
   ]
 }

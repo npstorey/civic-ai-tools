@@ -2,8 +2,8 @@
 
 The hub repo of a four-repo project: MCP configs and setup tooling for civic open data (NYC Open Data via Socrata, Google
 Data Commons), the Typed Standards Specification and its ADRs, the source of truth for shared skill guidance, and the
-`publish-record` skill. npm workspaces (one package, `packages/civic-typed-harness`) alongside Python examples. Cursor
-and Codex read this file natively; `CLAUDE.md` is a one-line bridge to it.
+`publish-record` skill. npm workspaces (two packages, `packages/civic-typed-harness` and `packages/civic-typed-router`)
+alongside Python examples. Cursor and Codex read this file natively; `CLAUDE.md` is a one-line bridge to it.
 
 ## Boundaries
 
@@ -27,7 +27,7 @@ local-only, revocation is the dashboard. Setup keys belong in `.env`; tell a use
 
 | Command | Healthy output |
 |---|---|
-| `npm ci` | exit 0, and `packages/civic-typed-harness/dist` populated. The package and audit counts move with the lockfile; a pre-existing high-severity advisory is reported here and gates nothing |
+| `npm ci` | exit 0, and `packages/civic-typed-harness/dist` and `packages/civic-typed-router/dist` populated. The package and audit counts move with the lockfile; a pre-existing high-severity advisory is reported here and gates nothing |
 | `npm run build` | the `tsc -p tsconfig.json` echo and nothing after it, exit 0 |
 | `npm test` | `# fail 0` (`node --test` TAP; includes the golden byte-compat suite). The pass total rises as tests are added — read it from the latest merge-ref run; `# fail 0` is the gate |
 | `npm run typecheck` | no output, exit 0 — runs the build config AND `tsconfig.test.json`, so a type error in a test file fails here (civic-ai-tools#197) |

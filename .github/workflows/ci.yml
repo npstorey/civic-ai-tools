@@ -8,21 +8,22 @@
 # public raw files from the socrata-mcp-server repo, and the template-env
 # step's unauthenticated shallow clone of that same public repo.
 #
-# NODE VERSION: the root manifest declares no `engines`; the one workspace
-# (packages/civic-typed-harness) declares `node >= 18`. Node 22 is used because
-# the harness's test script runs `node --test --experimental-strip-types`,
-# which needs >= 22.6, and because 22 is what the phase was verified on
-# (v22.23.1 / npm 10.9.8).
+# NODE VERSION: the root manifest declares no `engines`; both workspaces
+# (packages/civic-typed-harness, packages/civic-typed-router) declare
+# `node >= 18`. Node 22 is used because their test scripts run
+# `node --test --experimental-strip-types`, which needs >= 22.6, and because
+# 22 is what the phases were verified on (v22.23.1 / npm 10.9.8).
 #
-# INSTALL: plain `npm ci`, deliberately WITHOUT --ignore-scripts. The harness
-# manifest carries `prepare: npm run build`, and npm 10.x runs workspace
-# `prepare` scripts even under --ignore-scripts, so the flag would buy nothing
-# here — it would only mask the fact that install builds the package. That
-# `prepare` is benign in this repo (one workspace; its single runtime
-# dependency, @typedstandards/produce-core, resolves from the registry rather
-# than from a sibling workspace's unbuilt dist) and it has consumers outside
-# CI, so it stays. Verified on a fresh clone: `npm ci` succeeds and leaves
-# packages/civic-typed-harness/dist populated.
+# INSTALL: plain `npm ci`, deliberately WITHOUT --ignore-scripts. Both
+# workspace manifests carry `prepare: npm run build`, and npm 10.x runs
+# workspace `prepare` scripts even under --ignore-scripts, so the flag would
+# buy nothing here — it would only mask the fact that install builds the
+# packages. That `prepare` is benign in this repo (neither workspace depends on
+# the other: the harness's single runtime dependency,
+# @typedstandards/produce-core, resolves from the registry, and the router has
+# none) and it has consumers outside CI, so it stays. Verified on a fresh
+# tree: `npm ci` succeeds and leaves packages/civic-typed-harness/dist and
+# packages/civic-typed-router/dist populated.
 
 name: CI
 
@@ -53,8 +54,9 @@ jobs:
         run: npm ci
 
       # The root scripts fan out over `--workspaces --if-present`; today that is
-      # exactly packages/civic-typed-harness. Keeping the fanout form means a
-      # second package is covered the day it lands.
+      # packages/civic-typed-harness and packages/civic-typed-router, each of
+      # which defines build, test, typecheck and lint. The step names below
+      # predate the second package and still say "harness"; they cover both.
       - name: Build (harness)
         run: npm run build
 
