@@ -1,20 +1,21 @@
-// Civic provenance builder (CAPTURE group) — walks an OTel trace and maps the
+// Provenance builder (CAPTURE group) — walks an OTel trace and maps the
 // analysis pipeline (LLM inference, MCP tool calls, data responses) to a
 // W3C PROV-O JSON-LD graph. Relocated whole from civic-ai-tools-website
 // `src/lib/evidence/provenance.ts:65–392` per the S2 brief §1, rebuilt on
 // @typedstandards/produce-core's generic ProvGraph/ProvNode types and
-// node/edge helpers. Every `civic:` term, urn scheme, and agent coordinate is
-// imported from the format-extension group — this module WALKS, it does not
-// define vocabulary (the package's internal module boundary).
+// node/edge helpers.
 //
-// Config-not-constants: the platform-agent identity, the source-agent
-// registry (server URLs), and the model-agent description are typed config
-// inputs, and the config is REQUIRED — no deployment identity is ever
-// applied silently (ADR-0024 posture at the domain layer).
-// `CIVICAITOOLS_PROVENANCE_CONFIG` is the reference deployment's values,
-// which the reference app passes explicitly; with it, the builder reproduces
-// the reference implementation's output byte-for-byte (property insertion
-// order is preserved throughout — the legacy hash chain's byte contract).
+// THE SEAM (civic-ai-tools#244 P2). This module imports nothing civic: the
+// vocabulary (id scheme and `@context`), the term names it keys properties
+// with, the source registry, the fallback and skill source ids and the
+// dataset-keyed fact all arrive in `ProvenanceBuildConfig`, every one of them
+// required. It WALKS; it neither defines vocabulary nor applies a default.
+// The civic values are applied one layer up, in `src/civic/provenance.ts`,
+// which exports the package's `buildProvenanceGraph`, `ProvenanceConfig` and
+// `CIVICAITOOLS_PROVENANCE_CONFIG` under their existing names and
+// signatures. Given the civic values, this builder emits what it emitted
+// before the seam, byte for byte (property insertion order is preserved
+// throughout — the legacy hash chain's byte contract).
 
 import {
   makeProvGraph,
@@ -33,34 +34,6 @@ import {
 } from '@typedstandards/produce-core';
 import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
-import {
-  CIVIC_VOCABULARY,
-  CIVICAITOOLS_PLATFORM_AGENT,
-  CIVIC_TERM_COMPLETION_TOKENS,
-  CIVIC_TERM_CONTENT_HASH,
-  CIVIC_TERM_CROISSANT_METADATA_URL,
-  CIVIC_TERM_DATASET_ID,
-  CIVIC_TERM_DATASET_URL,
-  CIVIC_TERM_DURATION_MS,
-  CIVIC_TERM_FAILED,
-  CIVIC_TERM_FAILURE_KIND,
-  CIVIC_TERM_OPERATION_TYPE,
-  CIVIC_TERM_PORTAL_DOMAIN,
-  CIVIC_TERM_PROMPT_TOKENS,
-  CIVIC_TERM_RESPONSE_ROWS,
-  CIVIC_TERM_SERVER_URL,
-  CIVIC_TERM_SOURCE_ID,
-  CIVIC_TERM_TOOL_NAME,
-  CIVIC_TERM_URL,
-  type CivicVocabulary,
-  type PlatformAgentConfig,
-} from '../format/vocabulary.ts';
-import {
-  CIVIC_SOURCE_REGISTRY,
-  FALLBACK_SOURCE_ID,
-  isDatasetKeyedSource,
-  type CivicSourceRegistry,
-} from '../format/sources.ts';
 
 export type { ProvGraph, ProvNode };
 
@@ -90,46 +63,78 @@ export interface ProvenanceInput {
   portal?: string;
 }
 
-/** Instance configuration for the graph build (config-not-constants). */
-export interface ProvenanceConfig {
-  /** Platform-agent identity — the deployment publishing the record. */
-  platformAgent: PlatformAgentConfig;
-  /** Source registry supplying agent titles and MCP server URLs. Caller-
-   *  supplied configuration: an instance passes the addresses it is pointed
-   *  at, and an entry with no `serverUrl` makes its agent omit
-   *  `civic:serverUrl` (civic-ai-tools#205). */
-  sourceRegistry: CivicSourceRegistry;
-  /** Source id untagged tool spans fall back to. Default `socrata`
-   *  (pre-source-tagging captures were Socrata-only). */
-  fallbackSourceId?: string;
-  /** Source whose agent `civic:serverUrl` the trace's skill-fetch span URL
-   *  overrides when present (the skill is fetched from that source's MCP
-   *  server). Default `socrata`. */
-  skillSourceId?: string;
-  /** `dcterms:description` of the model agent. When unset, the model agent
-   *  carries no `dcterms:description` at all — the field is omitted from the
-   *  graph (honest omission), never filled with a fallback. */
-  modelAgentDescription?: string;
-  /** Vocabulary era to emit (spec Appendix J). Defaults to the settlement-era
-   *  `CIVIC_VOCABULARY` — the only value a new emission may use. Supply
-   *  `PRIOR_ERA_CIVIC_VOCABULARY` ONLY to reproduce or verify a record signed
-   *  before the 2026-08-19 settlement, whose identifiers are frozen under the
-   *  hash it was signed with. Unlike the other fields here this is not
-   *  deployment identity, so it is defaulted rather than required: emitting
-   *  the current vocabulary is never the silent-attribution hazard ADR-0024
-   *  guards against. */
-  vocabulary?: CivicVocabulary;
+/** The id scheme and `@context` the builder emits under. Structural: the
+ *  format group's vocabulary objects satisfy it, and this module never
+ *  imports them. */
+export interface ProvenanceVocabulary {
+  /** The graph's JSON-LD `@context`, in emission order. */
+  context(): Record<string, string>;
+  /** Package-scoped node id. */
+  urn(packageId: string, type: string, id: string): string;
+  /** Model-agent id. */
+  modelUrn(model: string): string;
+  /** MCP source-agent id. The builder encodes an UNKNOWN id with
+   *  `encodeURIComponent` before passing it. */
+  sourceAgentUrn(sourceId: string): string;
+  /** Platform-agent id. */
+  platformUrn(platformId: string): string;
 }
 
-/** The civicaitools.org reference deployment's values. Passed explicitly by
- *  the reference app — never applied as a default, and never spread into
- *  another instance's config, which would assert infrastructure that
- *  instance doesn't run. */
-export const CIVICAITOOLS_PROVENANCE_CONFIG: ProvenanceConfig = {
-  platformAgent: CIVICAITOOLS_PLATFORM_AGENT,
-  sourceRegistry: CIVIC_SOURCE_REGISTRY,
-  modelAgentDescription: 'Large language model via OpenRouter',
-};
+/** The property names the builder keys its domain-specific properties with,
+ *  one per property. The builder spells none of them; the civic layer passes
+ *  the format group's declared terms. */
+export interface ProvenanceTerms {
+  readonly contentHash: string;
+  readonly serverUrl: string;
+  readonly sourceId: string;
+  readonly url: string;
+  readonly promptTokens: string;
+  readonly completionTokens: string;
+  readonly toolName: string;
+  readonly operationType: string;
+  readonly datasetId: string;
+  readonly portalDomain: string;
+  readonly datasetUrl: string;
+  readonly croissantMetadataUrl: string;
+  readonly responseRows: string;
+  readonly durationMs: string;
+  readonly failed: string;
+  readonly failureKind: string;
+}
+
+/** One source the builder can name as an agent. Structural: a format-group
+ *  registry entry satisfies it. */
+export interface ProvenanceSourceInfo {
+  /** The agent's `dcterms:title`. */
+  agentTitle: string;
+  /** The agent's server URL. Absent means the graph states no address for
+   *  the source (civic-ai-tools#205). */
+  serverUrl?: string;
+}
+
+/** Every input the builder reads, each one explicit. */
+export interface ProvenanceBuildConfig {
+  /** Platform-agent identity — the deployment publishing the record. */
+  platformAgent: { id: string; title: string; url: string };
+  /** Source id → agent coordinates. Insertion order is agent order. */
+  sourceRegistry: Record<string, ProvenanceSourceInfo>;
+  /** Is this source dataset-keyed (its data responses carry the dataset id,
+   *  portal and dataset URL)? Supplied by the caller, consistent with
+   *  `sourceRegistry`. */
+  isDatasetKeyed: (sourceId: string) => boolean;
+  /** Source id untagged tool spans fall back to. */
+  fallbackSourceId: string;
+  /** Source whose agent server URL the trace's skill-fetch span URL
+   *  overrides when present. */
+  skillSourceId: string;
+  /** `dcterms:description` of the model agent; omitted from the graph when
+   *  unset, never filled with a fallback. */
+  modelAgentDescription?: string;
+  /** Id scheme and `@context`. */
+  vocabulary: ProvenanceVocabulary;
+  /** Property names. */
+  terms: ProvenanceTerms;
+}
 
 // --- Helpers ---
 
@@ -179,10 +184,10 @@ function nanoToIso(nano: string): string {
  * - Prompt, skill guidance, data responses, output → prov:Entity
  * - LLM model, MCP server, platform → prov:Agent
  */
-export function buildProvenanceGraph(
+export function buildProvenanceGraphWith(
   trace: Record<string, unknown>,
   input: ProvenanceInput,
-  config: ProvenanceConfig,
+  config: ProvenanceBuildConfig,
 ): ProvGraph {
   const otel = trace as unknown as OTelTrace;
   const spans = otel?.resourceSpans?.[0]?.scopeSpans?.[0]?.spans || [];
@@ -191,12 +196,10 @@ export function buildProvenanceGraph(
   const outputHash = input.outputHash ?? hash(outputText ?? '');
 
   const registry = config.sourceRegistry;
-  const fallbackSourceId = config.fallbackSourceId ?? FALLBACK_SOURCE_ID;
-  const skillSourceId = config.skillSourceId ?? FALLBACK_SOURCE_ID;
-  // Vocabulary era — settlement-era unless a prior-era reproduction asks
-  // otherwise. Every id and the `@context` below route through it, so a graph
-  // never mixes eras.
-  const vocab = config.vocabulary ?? CIVIC_VOCABULARY;
+  const { fallbackSourceId, skillSourceId, terms } = config;
+  // Every id and the `@context` below route through the one vocabulary, so a
+  // graph never mixes eras.
+  const vocab = config.vocabulary;
 
   const graph: ProvNode[] = [];
 
@@ -205,7 +208,7 @@ export function buildProvenanceGraph(
   // User prompt
   graph.push(
     makeEntityNode(vocab.urn(packageId, 'prompt', promptHash), {
-      [CIVIC_TERM_CONTENT_HASH]: `sha256:${promptHash}`,
+      [terms.contentHash]: `sha256:${promptHash}`,
       'dcterms:description': 'User query prompt',
       ...(promptText ? { 'prov:value': promptText } : {}),
     }),
@@ -224,7 +227,7 @@ export function buildProvenanceGraph(
       makeEntityNode(
         vocab.urn(packageId, 'skill', skillHash),
         {
-          [CIVIC_TERM_CONTENT_HASH]: `sha256:${skillHash}`,
+          [terms.contentHash]: `sha256:${skillHash}`,
           'dcterms:description': 'Composed MCP skill guidance (system prompt)',
         },
         ['prov:Plan'],
@@ -235,7 +238,7 @@ export function buildProvenanceGraph(
   // Final output
   graph.push(
     makeEntityNode(vocab.urn(packageId, 'output', outputHash), {
-      [CIVIC_TERM_CONTENT_HASH]: `sha256:${outputHash}`,
+      [terms.contentHash]: `sha256:${outputHash}`,
       'dcterms:description': 'AI-generated analysis output',
     }),
   );
@@ -301,8 +304,8 @@ export function buildProvenanceGraph(
           'dcterms:title': meta.title,
           // Conditional spread in place, so a known address keeps its
           // position in the key order the legacy chain hashes.
-          ...(meta.serverUrl ? { [CIVIC_TERM_SERVER_URL]: meta.serverUrl } : {}),
-          [CIVIC_TERM_SOURCE_ID]: sourceId,
+          ...(meta.serverUrl ? { [terms.serverUrl]: meta.serverUrl } : {}),
+          [terms.sourceId]: sourceId,
         },
         ['prov:SoftwareAgent'],
       ),
@@ -327,7 +330,7 @@ export function buildProvenanceGraph(
       vocab.platformUrn(config.platformAgent.id),
       {
         'dcterms:title': config.platformAgent.title,
-        [CIVIC_TERM_URL]: config.platformAgent.url,
+        [terms.url]: config.platformAgent.url,
       },
       ['prov:SoftwareAgent'],
     ),
@@ -362,8 +365,8 @@ export function buildProvenanceGraph(
         ...(span.endTimeUnixNano
           ? { 'prov:endedAtTime': xsdDateTime(nanoToIso(span.endTimeUnixNano)) }
           : {}),
-        ...(promptTokens ? { [CIVIC_TERM_PROMPT_TOKENS]: Number(promptTokens) } : {}),
-        ...(completionTokens ? { [CIVIC_TERM_COMPLETION_TOKENS]: Number(completionTokens) } : {}),
+        ...(promptTokens ? { [terms.promptTokens]: Number(promptTokens) } : {}),
+        ...(completionTokens ? { [terms.completionTokens]: Number(completionTokens) } : {}),
       }),
     );
   }
@@ -399,7 +402,7 @@ export function buildProvenanceGraph(
     const portalDomain = getAttr(span.attributes, 'tool.portal_domain');
     const toolSource = getAttr(span.attributes, 'mcp.source') || fallbackSourceId;
     const toolAgentUrn = agentUrnForSource(toolSource);
-    const toolSourceDatasetKeyed = isDatasetKeyedSource(toolSource, registry);
+    const toolSourceDatasetKeyed = config.isDatasetKeyed(toolSource);
 
     // Query entity (tool arguments). Find the most recent inference span
     // before this tool call to link as generator.
@@ -411,10 +414,10 @@ export function buildProvenanceGraph(
     const queryUrn = vocab.urn(packageId, 'query', queryHash);
     graph.push(
       makeEntityNode(queryUrn, {
-        [CIVIC_TERM_CONTENT_HASH]: `sha256:${queryHash}`,
+        [terms.contentHash]: `sha256:${queryHash}`,
         // Omitted — not placeholdered — when the span named no tool.
-        ...(toolName ? { [CIVIC_TERM_TOOL_NAME]: toolName } : {}),
-        [CIVIC_TERM_OPERATION_TYPE]: opType,
+        ...(toolName ? { [terms.toolName]: toolName } : {}),
+        [terms.operationType]: opType,
         'dcterms:description': `MCP tool arguments (${opType})`,
         ...(precedingInference
           ? provWasGeneratedBy(vocab.urn(packageId, 'inference', precedingInference.spanId))
@@ -448,9 +451,9 @@ export function buildProvenanceGraph(
 
       graph.push(
         makeEntityNode(dataUrn, {
-          [CIVIC_TERM_CONTENT_HASH]: `sha256:${responseHash}`,
+          [terms.contentHash]: `sha256:${responseHash}`,
           'dcterms:description': description,
-          [CIVIC_TERM_SOURCE_ID]: toolSource,
+          [terms.sourceId]: toolSource,
           ...provWasGeneratedBy(toolCallUrn),
           // Croissant 1.1 placeholder — only meaningful for dataset-keyed
           // sources today. The dataset id is stated whenever the span carried
@@ -458,17 +461,17 @@ export function buildProvenanceGraph(
           // the portal as well. Key order is the byte contract.
           ...(toolSourceDatasetKeyed && datasetId
             ? {
-                [CIVIC_TERM_DATASET_ID]: datasetId,
+                [terms.datasetId]: datasetId,
                 ...(portalDomain
                   ? {
-                      [CIVIC_TERM_PORTAL_DOMAIN]: portalDomain,
-                      [CIVIC_TERM_DATASET_URL]: `https://${portalDomain}/d/${datasetId}`,
+                      [terms.portalDomain]: portalDomain,
+                      [terms.datasetUrl]: `https://${portalDomain}/d/${datasetId}`,
                     }
                   : {}),
-                [CIVIC_TERM_CROISSANT_METADATA_URL]: null, // hook for future Croissant integration
+                [terms.croissantMetadataUrl]: null, // hook for future Croissant integration
               }
             : {}),
-          ...(responseRows ? { [CIVIC_TERM_RESPONSE_ROWS]: Number(responseRows) } : {}),
+          ...(responseRows ? { [terms.responseRows]: Number(responseRows) } : {}),
         }),
       );
     }
@@ -506,7 +509,7 @@ export function buildProvenanceGraph(
         'dcterms:description': toolName
           ? `MCP tool call: ${toolName} (${opType})`
           : `MCP tool call (${opType})`,
-        [CIVIC_TERM_SOURCE_ID]: toolSource,
+        [terms.sourceId]: toolSource,
         ...provUsed([queryUrn]),
         ...provWasAssociatedWith(toolAgentUrn),
         ...(span.startTimeUnixNano
@@ -515,7 +518,7 @@ export function buildProvenanceGraph(
         ...(span.endTimeUnixNano
           ? { 'prov:endedAtTime': xsdDateTime(nanoToIso(span.endTimeUnixNano)) }
           : {}),
-        ...(durationMs ? { [CIVIC_TERM_DURATION_MS]: Number(durationMs) } : {}),
+        ...(durationMs ? { [terms.durationMs]: Number(durationMs) } : {}),
         // Appended LAST and spread conditionally, exactly as `civic:durationMs`
         // above is: a span that recorded no rejection yields the key list it
         // yielded at 0.3.1, in the same order, and property insertion order is
@@ -534,8 +537,8 @@ export function buildProvenanceGraph(
         // since 0.3.1, because that conditional is unchanged and this one is
         // still appended after it. `capture/provenance.test.ts` drives that
         // combination and pins the whole key list for it.
-        ...(failed === true ? { [CIVIC_TERM_FAILED]: true } : {}),
-        ...(failureKind ? { [CIVIC_TERM_FAILURE_KIND]: failureKind } : {}),
+        ...(failed === true ? { [terms.failed]: true } : {}),
+        ...(failureKind ? { [terms.failureKind]: failureKind } : {}),
       }),
     );
   }

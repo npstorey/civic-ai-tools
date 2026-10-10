@@ -60,12 +60,12 @@ export default [
       ],
     },
   },
-  // Non-capture groups (format-extension, rubric, index): additionally
+  // Non-capture groups (format-extension, civic layer, rubric, index): additionally
   // deterministic — no clock, no RNG. Capture modules (src/capture/**) are
   // exempt from THIS block only: timestamps and span ids are what capture is,
   // and both are injectable there for tests.
   {
-    files: ['src/format/**/*.ts', 'src/rubric/**/*.ts', 'src/index.ts'],
+    files: ['src/format/**/*.ts', 'src/civic/**/*.ts', 'src/rubric/**/*.ts', 'src/index.ts'],
     ignores: ['src/**/*.test.ts'],
     languageOptions: { parser },
     rules: {

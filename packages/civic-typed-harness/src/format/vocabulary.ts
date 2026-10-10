@@ -5,8 +5,10 @@
 // agent, `:384–391` context) per the S2 brief §1.
 //
 // This module defines vocabulary; it never walks a trace. The capture-side
-// provenance BUILDER (src/capture/provenance.ts) imports its terms from here —
-// that direction is the package's internal module boundary.
+// provenance BUILDER (src/capture/provenance.ts) receives its terms as
+// parameters, and the civic layer (src/civic/provenance.ts) passes the ones
+// declared here — format/ never imports capture/, and capture/ imports nothing
+// from format/ (the package's internal module boundary).
 //
 // TWO ERAS (spec Appendix J — the 2026-08-19 vocabulary settlement, migration
 // class "frozen-in-signed-artifacts"). New emissions mint the SETTLEMENT-era
@@ -42,7 +44,7 @@ export const PRIOR_ERA_CIVIC_URN_PREFIX = 'urn:civic-evidence';
 //
 // A `civic:` property name is vocabulary as much as the namespace it hangs
 // under: it is the word a reader of a signed graph interprets, so it is
-// declared here and imported by the builder that emits it, never spelled as a
+// declared here and passed to the builder that emits it, never spelled as a
 // literal inside capture/. Every term is era-independent — the 2026-08-19
 // settlement moved the NAMESPACE, not the property names — so none carries an
 // era qualifier.

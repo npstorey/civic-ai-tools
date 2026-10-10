@@ -9,8 +9,14 @@
 //   - format/  — the civic FORMAT-EXTENSION: what extends the standard
 //     (civic: vocabulary, source registry, datHere policy, profile constants).
 //   - capture/ — what PRODUCES under it: TraceBuilder, skill-metadata
-//     extraction, data-source population, and the provenance BUILDER (which
-//     imports its vocabulary from format/). Clock + RNG live here only.
+//     extraction, data-source population, and the provenance BUILDER. It
+//     imports nothing from outside capture/: the vocabulary, the source
+//     registry and their defaults arrive as parameters. Clock + RNG live
+//     here only.
+//   - civic/   — the civic defaults applied over capture: the package's
+//     `buildProvenanceGraph`, `buildDataSources` and `resolveToolSource`
+//     (with their config types and `CIVICAITOOLS_PROVENANCE_CONFIG`), which
+//     pass format/'s values to the capture builders (civic-ai-tools#244 P2).
 //   - rubric/  — the adversarial-evaluation pure core (Q26-pinned hash).
 //
 // Purity contract (harness-grade): no I/O and no environment reads anywhere;
@@ -26,8 +32,13 @@ export * from './format/profiles.ts';
 // Capture group
 export * from './capture/trace.ts';
 export * from './capture/skill-metadata.ts';
-export * from './capture/data-sources.ts';
-export * from './capture/provenance.ts';
+// data-sources.ts and provenance.ts are exported through the civic layer,
+// which re-exports their public types and applies the civic defaults; the
+// capture builders it calls are not part of the package's entry.
+
+// Civic layer
+export * from './civic/data-sources.ts';
+export * from './civic/provenance.ts';
 
 // Rubric group
 export * from './rubric/adversarial-eval-core.ts';
