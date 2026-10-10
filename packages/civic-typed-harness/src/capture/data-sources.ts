@@ -2,26 +2,21 @@
 // spans plus the caller-supplied tool-call summary to produce one
 // `dataSources` entry per (source, datasetId) tuple. Relocated from
 // civic-ai-tools-website `src/lib/evidence/data-sources.ts:78–185` per the S2
-// brief §1, with two changes:
-//   - The tool-name → source-id resolver is a CALLER-SUPPLIED input (the
-//     app's MCP registry stays app-side); `civicToolSourceResolver` is the
-//     exported civic default.
-//   - The per-source coordinates (catalog types, endpoints) come from the
-//     format-extension group's source registry instead of module constants —
-//     which sources are dataset-keyed vs aggregate is registry-driven.
+// brief §1.
+//
+// THE SEAM (civic-ai-tools#244 P2). This module imports nothing civic: the
+// tool-name → source-id resolver, the source registry (catalog types,
+// endpoints, the dataset-keyed vs aggregate split), the fallback source id
+// and the dataset-keyed fact all arrive as parameters, every one of them
+// required. The civic defaults are applied one layer up, in
+// `src/civic/data-sources.ts`, which exports the package's `buildDataSources`,
+// `resolveToolSource` and `DataSourceOptions` under their existing names and
+// signatures.
 //
 // `DataSourceEntry` is produce-core's envelope input shape — the harness
 // populates it, never redefines it.
 
 import type { DataSourceEntry } from '@typedstandards/produce-core';
-import {
-  CIVIC_SOURCE_REGISTRY,
-  FALLBACK_SOURCE_ID,
-  civicToolSourceResolver,
-  isDatasetKeyedSource,
-  type CivicSourceRegistry,
-  type ToolSourceResolver,
-} from '../format/sources.ts';
 
 export type { DataSourceEntry };
 
@@ -48,7 +43,9 @@ export interface ToolCallSummary {
   failureKind?: string;
 }
 
-interface TraceSpan {
+/** The span shape the resolver inspects. Exported for the civic layer's
+ *  signatures; the package entry does not export it. */
+export interface TraceSpan {
   name: string;
   attributes?: Array<{ key: string; value?: { stringValue?: string; intValue?: string; boolValue?: boolean } }>;
 }
@@ -70,18 +67,20 @@ function spanAttr(span: TraceSpan | undefined, key: string): string | undefined 
   return attr?.value?.stringValue ?? attr?.value?.intValue ?? undefined;
 }
 
-/** Optional knobs for `resolveToolSource` / `buildDataSources`. Defaults are
- *  the civic demo values. */
-export interface DataSourceOptions {
+/** Every input the population reads besides the calls and the trace, each
+ *  one explicit. */
+export interface DataSourceBuildConfig {
   /** Tool-name → source-id resolver (fallback when a span carries no
-   *  `mcp.source` attribute). Default: the civic map. */
-  resolver?: ToolSourceResolver;
-  /** Source registry driving catalog types, endpoints, and the
-   *  dataset-keyed vs aggregate split. Default: the civic registry. */
-  registry?: CivicSourceRegistry;
-  /** Source id for calls neither the trace nor the resolver can identify.
-   *  Default `socrata` (pre-M9.1 packages predate source tagging). */
-  fallbackSourceId?: string;
+   *  `mcp.source` attribute). */
+  resolver: (toolName: string) => string | undefined;
+  /** Source id → catalog type and, for an aggregate source, the portal URL of
+   *  its single entry. Insertion order is emission order. */
+  registry: Record<string, { catalogType: string; aggregatePortalUrl?: string }>;
+  /** Source id for calls neither the trace nor the resolver can identify. */
+  fallbackSourceId: string;
+  /** Is this source dataset-keyed (one entry per dataset)? Supplied by the
+   *  caller, consistent with `registry`. */
+  isDatasetKeyed: (sourceId: string) => boolean;
 }
 
 /**
@@ -95,11 +94,11 @@ export interface DataSourceOptions {
  * flow. When the counts diverge, the static resolver still identifies the
  * source.
  */
-export function resolveToolSource(
+export function resolveToolSourceWith(
   toolCall: ToolCallSummary,
   span: TraceSpan | undefined,
-  resolver: ToolSourceResolver = civicToolSourceResolver,
-  fallbackSourceId: string = FALLBACK_SOURCE_ID,
+  resolver: (toolName: string) => string | undefined,
+  fallbackSourceId: string,
 ): string {
   return spanAttr(span, 'mcp.source')
     ?? resolver(toolCall.name)
@@ -128,23 +127,17 @@ export function resolveToolSource(
  * activities and in the caller's own `queries[]` — what it is not is an
  * assertion, inside signed bytes, that a source was reached at a timestamp.
  *
- * @param fallbackPortal DEPRECATED, and inert since 0.3.1: an entry states
- * the portal the call carried, never the run's. It stays third of five
- * positional parameters so existing callers keep compiling, and since 0.4.0
- * it also accepts `undefined`, which is what a caller that has stopped
- * consulting it should pass. Dropping it is a breaking change and waits for
- * a major.
+ * The run's portal is not a parameter: an entry states the portal the call
+ * carried, never the run's (the civic layer's `buildDataSources` keeps its
+ * inert `fallbackPortal` positional for existing callers).
  */
-export function buildDataSources(
+export function buildDataSourcesWith(
   toolCalls: ToolCallSummary[],
   trace: Record<string, unknown>,
-  fallbackPortal: string | undefined,
   now: string,
-  options: DataSourceOptions = {},
+  config: DataSourceBuildConfig,
 ): DataSourceEntry[] {
-  const resolver = options.resolver ?? civicToolSourceResolver;
-  const registry = options.registry ?? CIVIC_SOURCE_REGISTRY;
-  const fallbackSourceId = options.fallbackSourceId ?? FALLBACK_SOURCE_ID;
+  const { resolver, registry, fallbackSourceId } = config;
 
   const toolSpans = getToolSpans(trace);
   const datasetKeyed = new Map<string, Map<string, { portalUrl: string; datasetId: string }>>();
@@ -154,11 +147,11 @@ export function buildDataSources(
     const tc = toolCalls[i];
     // A call the producer recorded as rejected reached no data, so it mints
     // no entry on either branch below. The walk keeps its index rather than
-    // filtering the list: `resolveToolSource` pairs a call to `toolSpans[i]`,
+    // filtering the list: `resolveToolSourceWith` pairs a call to `toolSpans[i]`,
     // and a filtered list would shift every later call onto the wrong span.
     if (tc.failed) continue;
-    const source = resolveToolSource(tc, toolSpans[i], resolver, fallbackSourceId);
-    if (isDatasetKeyedSource(source, registry)) {
+    const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
+    if (config.isDatasetKeyed(source)) {
       const datasetId = tc.args.dataset_id as string | undefined;
       const portal = tc.args.portal as string | undefined;
       // An entry is minted only from what the call carried: a dataset id AND

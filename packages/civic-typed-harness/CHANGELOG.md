@@ -3,6 +3,28 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+- **The seam inside the harness** ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244) P2).
+  `src/capture/provenance.ts` and `src/capture/data-sources.ts` import
+  nothing from `src/format/`, type-only imports included. The capture
+  builders take the vocabulary, the sixteen `civic:` term names, the source
+  registry, the fallback and skill source ids and the dataset-keyed fact as
+  required parameters.
+- **What moved.** `buildProvenanceGraph`, `ProvenanceConfig` and
+  `CIVICAITOOLS_PROVENANCE_CONFIG` moved to `src/civic/provenance.ts`;
+  `buildDataSources`, `resolveToolSource` and `DataSourceOptions` moved to
+  `src/civic/data-sources.ts`. These modules apply the civic defaults
+  (`CIVIC_VOCABULARY`, `CIVIC_SOURCE_REGISTRY`, `FALLBACK_SOURCE_ID`,
+  `civicToolSourceResolver`, `isDatasetKeyedSource`) and call the capture
+  builders. The compile-only pin `data-sources.assert.ts` moved with
+  `buildDataSources`, byte-unchanged.
+- **The API is unchanged.** The package entry exports the same names with
+  the same signatures, and the capture builders are not exported. The golden
+  suites pass with no fixture edited.
+- `src/purity.test.ts` gains the rule: a capture module imports nothing from
+  outside `src/capture/`.
+
 ## 0.6.0 — 2026-09-26
 
 The list is derived from

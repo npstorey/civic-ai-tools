@@ -12,7 +12,7 @@ import {
   buildDataSources,
   resolveToolSource,
   type ToolCallSummary,
-} from './data-sources.ts';
+} from '../civic/data-sources.ts';
 import type { CivicSourceRegistry } from '../format/sources.ts';
 
 const FIXTURE = JSON.parse(

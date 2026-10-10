@@ -30,7 +30,7 @@ import {
   buildProvenanceGraph,
   CIVICAITOOLS_PROVENANCE_CONFIG,
   type ProvenanceConfig,
-} from './provenance.ts';
+} from '../civic/provenance.ts';
 import {
   CIVIC_NS,
   CIVIC_URN_PREFIX,

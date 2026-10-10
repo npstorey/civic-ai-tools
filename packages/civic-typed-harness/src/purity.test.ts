@@ -10,6 +10,10 @@
 //      timestamps and ids are what capture *is* — and both are injectable.
 //   4. Internal module boundary (structure-for-the-future):
 //      - format-extension and rubric modules never import from capture;
+//      - capture modules import nothing from outside capture/ — not format/,
+//        not the civic layer, type-only imports included: the vocabulary,
+//        the source registry and their defaults arrive as parameters, and
+//        src/civic/ applies the civic values one layer up;
 //      - capture modules never DEFINE civic vocabulary (the `urn:` scheme in
 //        EITHER era, the civic namespace in either era, and the datHere
 //        profile string all live in format/);
@@ -20,7 +24,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 const SRC_DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -139,6 +143,133 @@ test('boundary: format-extension and rubric modules never import from capture', 
       );
     }
   }
+});
+
+// --- The seam: capture imports nothing from outside capture ---
+//
+// The rule above keeps format/ from reaching into capture/. This one holds the
+// other direction: a capture module takes the vocabulary, the term names, the
+// source registry, the fallback ids and the dataset-keyed fact as parameters,
+// and src/civic/ supplies the civic values. A TYPE-ONLY import counts — it
+// still names a format declaration, and a later split along this line would
+// have to cut it. Importing src/civic/ or src/index.ts is refused too, since
+// both reach format/ in one step. Package specifiers are allowed.
+
+/**
+ * Every import or re-export in a source, comments excluded: its specifier,
+ * the 1-based line the specifier sits on, and the clause between the keyword
+ * and `from` (empty for a side-effect import or a dynamic import). Exported so
+ * the test below can drive it over a sample where the answer is written out.
+ */
+export function importSites(source: string): Array<{ spec: string; line: number; clause: string }> {
+  // Blank every comment character except newlines, so match offsets still map
+  // to the source's own line numbers; string contents are kept as written, and
+  // their spans are recorded so import-shaped text INSIDE a string is skipped.
+  let code = '';
+  const strings: Array<[number, number]> = [];
+  let i = 0;
+  const n = source.length;
+  while (i < n) {
+    const c = source[i]!;
+    const next = i + 1 < n ? source[i + 1] : '';
+    if (c === '/' && next === '/') {
+      while (i < n && source[i] !== '\n') {
+        code += ' ';
+        i++;
+      }
+      continue;
+    }
+    if (c === '/' && next === '*') {
+      const end = source.indexOf('*/', i + 2);
+      const stop = end === -1 ? n : end + 2;
+      for (; i < stop; i++) code += source[i] === '\n' ? '\n' : ' ';
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      const start = i + 1;
+      code += c;
+      i++;
+      while (i < n && source[i] !== c) {
+        if (source[i] === '\\') {
+          code += source[i]! + (source[i + 1] ?? '');
+          i += 2;
+          continue;
+        }
+        code += source[i];
+        i++;
+      }
+      strings.push([start, i]);
+      code += source[i] ?? '';
+      i++;
+      continue;
+    }
+    code += c;
+    i++;
+  }
+  const SITE_RE =
+    /\b(?:import|export)\s([^'"`;]*?)\bfrom\s*(['"])([^'"`]+)\2|\bimport\s*\(\s*(['"])([^'"`]+)\4\s*\)|\bimport\s*(['"])([^'"`]+)\6/g;
+  const out: Array<{ spec: string; line: number; clause: string }> = [];
+  for (const m of code.matchAll(SITE_RE)) {
+    if (strings.some(([s, e]) => m.index! >= s && m.index! < e)) continue;
+    const spec = m[3] ?? m[5] ?? m[7] ?? '';
+    const at = m.index! + m[0].lastIndexOf(spec);
+    out.push({
+      spec,
+      line: code.slice(0, at).split('\n').length,
+      clause: (m[1] ?? '').replace(/\s+/g, ' ').trim(),
+    });
+  }
+  return out;
+}
+
+test('the import-site reader finds every import form and skips comments (the check below is only as good as this)', () => {
+  const sample = [
+    "import { a, type B } from './x.ts';",
+    '// import { c } from \'./from-a-line-comment.ts\';',
+    "/* import d from './from-a-block-comment.ts'; */",
+    'import type {',
+    '  E,',
+    "} from '../format/y.ts';",
+    "export * from './z.ts';",
+    "import './side-effect.ts';",
+    "const f = await import('./dynamic.ts');",
+    "const g = 'import h from \"./in-a-string.ts\"';",
+    "import { i } from '@scope/package';",
+  ].join('\n');
+  assert.deepEqual(
+    importSites(sample).map(({ spec, line }) => `${line}:${spec}`),
+    ['1:./x.ts', '6:../format/y.ts', '7:./z.ts', '8:./side-effect.ts', '9:./dynamic.ts', '11:@scope/package'],
+  );
+  assert.equal(importSites(sample)[1]!.clause, 'type { E, }');
+  // And a real file: the reader must find the imports of the module the check
+  // below scans, or "no offending import" means "no import read".
+  const provenance = shippedSourceFiles().find((f) => rel(f) === 'capture/provenance.ts');
+  assert.ok(provenance, 'capture/provenance.ts is expected in the shipped source');
+  assert.ok(
+    importSites(readFileSync(provenance!, 'utf8')).some((s) => s.spec === '@typedstandards/produce-core'),
+    'the reader reads capture/provenance.ts — its produce-core import must come back',
+  );
+});
+
+test('boundary: capture modules import nothing from format (value or type) — nothing outside capture/ at all', () => {
+  const capture = shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'));
+  assert.ok(capture.length >= 4, 'expected the capture modules');
+  const offenders: string[] = [];
+  for (const file of capture) {
+    for (const { spec, line, clause } of importSites(readFileSync(file, 'utf8'))) {
+      if (!spec.startsWith('.')) continue; // a package specifier
+      const target = relative(SRC_DIR, resolve(dirname(file), spec));
+      if (target.startsWith('capture/')) continue;
+      offenders.push(`${rel(file)}:${line} imports "${spec}"${clause ? ` — ${clause}` : ''}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    'capture modules take the vocabulary, the source registry and their defaults as parameters; ' +
+      'src/civic/ applies the civic values one layer up. Imports from outside capture/:\n  ' +
+      offenders.join('\n  '),
+  );
 });
 
 // --- Vocabulary literals: the universe is derived from both ends ---
