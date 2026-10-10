@@ -22,6 +22,8 @@ to the Typed Standards specification unless noted otherwise.
 - **The API is unchanged.** The package entry exports the same names with
   the same signatures, and the capture builders are not exported. The golden
   suites pass with no fixture edited.
+- `src/purity.test.ts` gains the rule: a capture module imports nothing from
+  outside `src/capture/`.
 
 ## 0.6.0 — 2026-09-26
 
