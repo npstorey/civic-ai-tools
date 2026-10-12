@@ -107,13 +107,13 @@ ORDER BY year
 |--------|----------|--------|-------|--------|
 | `data.cityofnewyork.us` | Full | Full | Full | Fully Compatible |
 | `data.cityofchicago.org` | Full | Full | Full | Fully Compatible |
-| `data.sfgov.org` | Full | Limited | Unknown | Query-Preferred |
+| `data.sf.gov` | Full | Limited | Unknown | Query-Preferred |
 | `data.seattle.gov` | Full | Full | Full | Fully Compatible |
 | `data.lacity.org` | Full | Limited | Fails | Query-Only |
 
 ### Domain-Specific Workarounds
 
-**San Francisco (`data.sfgov.org`):**
+**San Francisco (`data.sf.gov`):**
 - Search tool sometimes returns NYC data instead of SF
 - Use web search to find SF dataset IDs, then use `get_data`
 
