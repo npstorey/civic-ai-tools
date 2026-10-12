@@ -68,7 +68,7 @@ See [docs/setup.md](docs/setup.md) for detailed instructions and troubleshooting
 
 ## Requirements (local setup only)
 
-- Node.js 18+
+- Node.js 22+ (socrata-mcp-server requires it)
 - Python 3.11+
 - [uv](https://github.com/astral-sh/uv) (recommended) — install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
