@@ -16,7 +16,7 @@ Data Commons exposes two tools:
 
 | Tool | Purpose |
 |------|---------|
-| `search_indicators` | Discover the variable DCID matching a natural-language request for a place |
+| `search_indicators` | Discover the variable DCID matching a natural-language request, scoped to places given by name |
 | `get_observations` | Retrieve actual values for a variable DCID at a place DCID (with an optional date range) |
 
 **The default workflow is two-step: search first, then fetch.** Do not skip `search_indicators`. Data Commons has hundreds of thousands of statistical variables with precise, non-obvious names, and guessing a DCID burns tool calls on empty responses.
@@ -25,8 +25,11 @@ Data Commons exposes two tools:
 
 User: *"What was the median household income for Manhattan?"*
 
-1. Call `search_indicators` with "median household income" and place DCID `geoId/36061` (NY County = Manhattan). The response includes candidate variable DCIDs — typically `Median_Income_Household` and close relatives.
+1. Call `search_indicators` with "median household income" and the place "New York County, New York" (Manhattan). The response includes candidate variable DCIDs — typically `Median_Income_Household` and close relatives — and, for each, the DCIDs of the requested places that have data (here `geoId/36061`).
 2. Call `get_observations` with that variable DCID and place DCID. The response is observations from ACS 5-Year Estimates.
+
+`search_indicators` takes places by name, qualified so the name is unambiguous ("New York City, USA", not "New York"); never pass it a DCID, which it answers with "no place found". `get_observations` takes the place DCID.
+
 3. Report the figure with source (ACS 5-Year Estimates) and vintage (e.g., 2020-2024).
 
 Echo the DCID you picked back to the user so variable-selection mistakes get caught before they propagate.
@@ -47,7 +50,7 @@ Every place and every statistical variable in Data Commons has a **DCID** (Data 
 | `geoId/<12-digit FIPS>` | `geoId/360610101001` | US census block group |
 | `zip/XXXXX` | `zip/10001` | ZIP Code Tabulation Area (ZCTA) |
 
-Place hierarchies nest: block group → tract → county → state → country. Always pass the most specific DCID the question permits, and verify with the user whether "Manhattan" means the county (`geoId/36061`), the borough neighborhood, or a narrower slice before committing.
+Place hierarchies nest: block group → tract → county → state → country. Always pass `get_observations` the most specific DCID the question permits, and verify with the user whether "Manhattan" means the county (`geoId/36061`), the borough neighborhood, or a narrower slice before committing.
 
 ### Variable DCIDs
 
@@ -63,6 +66,8 @@ Never invent a variable DCID from pattern-matching against similar-looking ones.
 ## Small-area coverage and limitations
 
 Data Commons natively supports **US census tract**, **US census block group**, **ZCTA** (`zip/XXXXX`), county, state, and country place types.
+
+`get_observations` returns observations for the one place its place DCID names. These tools cannot list a place's children, so "every tract in Manhattan" is not one call: query the specific tracts the question needs, one call per tract DCID, or say that the breakdown is not available here. Never report a parent place's value as if it were each child's.
 
 Data Commons does **NOT** natively support NYC community districts, city council districts, Neighborhood Tabulation Areas, Chicago community areas, or arbitrary municipal boundaries beyond incorporated-place FIPS codes.
 
@@ -103,7 +108,7 @@ When a Data Commons call is part of an analysis published as a record package on
 If `search_indicators` returns empty or obviously irrelevant variables, it usually means one of:
 
 1. The variable exists but is suppressed at that resolution (ACS small-area non-publication)
-2. The place DCID is wrong — re-check the FIPS pattern
+2. The place is wrong — `search_indicators` needs a qualified place name, not a DCID; for `get_observations`, re-check the FIPS pattern
 3. The question cannot be answered from Data Commons and needs a different source (Socrata, a direct API, or web search)
 
 Do not fabricate a value. Report the empty result, state the DCID and query you tried, and suggest a narrower geography or an alternative source.
