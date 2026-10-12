@@ -106,7 +106,7 @@ License: CC0 1.0 — this directory (the curation, descriptions, and field notes
 
 ---
 
-## San Francisco (`data.sfgov.org`)
+## San Francisco (`data.sf.gov`)
 
 ### Public Safety
 

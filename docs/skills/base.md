@@ -194,7 +194,7 @@ These portals have been extensively tested, and each has a dataset table further
 |--------|------|-------------------|
 | `data.cityofnewyork.us` | New York City | Full |
 | `data.cityofchicago.org` | Chicago | Full |
-| `data.sfgov.org` | San Francisco | Full |
+| `data.sf.gov` | San Francisco | Full |
 | `data.seattle.gov` | Seattle | Full |
 | `data.lacity.org` | Los Angeles | Full |
 
@@ -213,9 +213,9 @@ Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platf
 
 ### Domain-Specific Workarounds
 
-**San Francisco (`data.sfgov.org`):**
+**San Francisco (`data.sf.gov`):**
 - `search` covers only the configured portal. On a server configured for a different city it returns that city's datasets, not SF's — results that look like an answer and are not SF data.
-- Discover SF datasets with `get_data`, `type: "catalog"`, `portal: "data.sfgov.org"`, then read them with `type: "query"` and the same portal.
+- Discover SF datasets with `get_data`, `type: "catalog"`, `portal: "data.sf.gov"`, then read them with `type: "query"` and the same portal.
 
 **Los Angeles (`data.lacity.org`):**
 - A bare LA 4x4 handed to `fetch` resolves against the configured portal rather than against LA, so it will not return the LA dataset unless this server is configured for LA.
@@ -276,7 +276,7 @@ A full curated directory with ~20-30 datasets per portal is at [`docs/datasets.m
 | Business Licenses (Active) | `uupf-x98q` | license_number, business_activity, expiration_date |
 | Employee Salaries | `xzkq-xp2w` | name, job_titles, department, annual_salary |
 
-### San Francisco (`data.sfgov.org`)
+### San Francisco (`data.sf.gov`)
 
 | Dataset | ID | Key Fields |
 |---------|----|------------|
