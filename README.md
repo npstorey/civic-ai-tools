@@ -68,7 +68,7 @@ See [docs/setup.md](docs/setup.md) for detailed instructions and troubleshooting
 
 ## Requirements (local setup only)
 
-- Node.js 18+
+- Node.js 22+ (socrata-mcp-server requires it)
 - Python 3.11+
 - [uv](https://github.com/astral-sh/uv) (recommended) — install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
@@ -96,7 +96,12 @@ Civic AI Tools is one of four repositories in this project — see [CONTRIBUTING
 
 ## Packages
 
-This repo is an npm workspace. [packages/civic-typed-harness](packages/civic-typed-harness) publishes as [`@typedstandards/civic-typed-harness`](https://www.npmjs.com/package/@typedstandards/civic-typed-harness) — the civic **domain** harness layered on `@typedstandards/produce-core`'s neutral envelope assembly ([ADR-0021](docs/adr/0021-produce-core-extraction.md), [ADR-0022](docs/adr/0022-civic-typed-harness-packaging.md)).
+This repo is an npm workspace with two packages, both for the civic domain:
+
+- [packages/civic-typed-harness](packages/civic-typed-harness) publishes as [`@typedstandards/civic-typed-harness`](https://www.npmjs.com/package/@typedstandards/civic-typed-harness) — the civic **domain** harness layered on `@typedstandards/produce-core`'s neutral envelope assembly ([ADR-0021](docs/adr/0021-produce-core-extraction.md), [ADR-0022](docs/adr/0022-civic-typed-harness-packaging.md)).
+- [packages/civic-typed-router](packages/civic-typed-router) publishes as [`@typedstandards/civic-typed-router`](https://www.npmjs.com/package/@typedstandards/civic-typed-router) — the app's MCP sources as one manifest: a domain-free core beside its civic content ([ADR-0031](docs/adr/0031-civic-typed-router-packaging.md)).
+
+The standard's own npm packages (`@typedstandards/verify-core`, `produce-core`, `cli`, and `host-core`) are listed in the [typedstandards README](https://github.com/npstorey/typedstandards#packages). The Python package, [`typedstandards` on PyPI](https://pypi.org/project/typedstandards/), lives in [typedstandards-python](https://github.com/npstorey/typedstandards-python).
 
 ## Documentation
 

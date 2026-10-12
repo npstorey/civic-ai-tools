@@ -93,7 +93,7 @@ Displays what was created and provides next steps for using the MCP servers with
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Node.js | 18+ | Runs socrata-mcp-server |
+| Node.js | 22+ | Runs socrata-mcp-server, which requires Node.js 22 or newer |
 | npm | 8+ | Installs Node dependencies |
 | Python | 3.11+ | Required by datacommons-mcp |
 | git | any | Clones MCP server |
