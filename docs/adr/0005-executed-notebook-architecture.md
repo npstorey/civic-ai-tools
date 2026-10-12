@@ -6,6 +6,14 @@
 - **Supersedes:** —
 - **Superseded by:** —
 
+> **2026-10-12 status note (the shipped pipeline departs from Decision §1).** Two statements in §1 describe a pipeline that did not ship as written. Read at `civic-ai-tools-website` `main` (`18f3880`):
+>
+> **Phase B: the notebook is assembled, not written by the model.** No model call builds the notebook. Cells 0–4 and the footer are templated, and each step cell is translated mechanically from a Phase A tool call (`src/lib/notebook-author/synthesize.ts:15-17`). The model's only input is its Phase A answer: a fenced Python block in that answer becomes the synthesis cell's code, wrapped so that a failure falls back to rendering the answer as markdown; an answer with no such block is rendered as markdown (`src/lib/notebook-author/prompt.ts:304`, `:353-356`).
+>
+> **Phase C: a failed run is not retried.** The notebook is executed once (`src/app/api/query-notebook/route.ts:323`). A failure ends the run with a `notebook_execution` error carrying a correlation id (`:382-412`), the model is not shown the failure, and the publish inputs are emitted only on success (`:366-372`). The AWS Lambda executor driver makes one attempt by design, because a retry would run the notebook a second time against live data (`src/lib/sandbox/lambda.ts:44-46`). Execution also sits behind a driver interface ([ADR-0023](0023-notebook-executor-driver.md)), so Vercel Sandbox is the default runtime, not the only one.
+>
+> **What this status note changes about the ADR.** No sentence of §1 is edited; this note records where the shipped code departs from it. It does not re-read §2–§6. [Q29](../architecture/open-questions.md#q29--execution-failure-semantics-for-the-executed-notebook-path) cites §1's retry-once pattern; the behaviour that shipped is the single attempt above.
+
 ## Context
 
 [ADR-0004](0004-dathere-captureMethod-variant.md) introduced the `datHere` content profile and specified the A-G envelope (§9.1 of the Open Evidence Standard). Within that envelope, section E is "an answer notebook — a notebook that, when executed against the documented runtime, produces F" (the rendered answer). ADR-0004 §4 articulates the determinism property: re-execution against the documented runtime + stable upstream data SHOULD reproduce section F. The standard does not specify *how* the publisher produces section E — only the property it must satisfy.
