@@ -12,7 +12,8 @@
 // BOTH VOCABULARY ERAS (spec Appendix J). `website-golden.json` was captured
 // 2026-08-01, before the 2026-08-19 settlement, so its graphs carry the
 // prior-era `urn:civic-record:` / `ns/evidence/` terms. Those bytes are
-// frozen and are never edited: the byte-parity tests inject
+// frozen and are never edited (its sha256 is asserted by
+// frozen-fixtures.test.ts since 0.7.0): the byte-parity tests inject
 // PRIOR_ERA_CIVIC_VOCABULARY and still demand byte-identity, which is what
 // proves the harness can still reproduce an already-signed prior-era record.
 // The settlement-era leg re-derives the same graphs under the DEFAULT

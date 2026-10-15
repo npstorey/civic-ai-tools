@@ -15,7 +15,8 @@
 // hash, and envelope hash.
 //
 // Fixture provenance: `__fixtures__/reference-golden.json` is a VERBATIM copy
-// (sha256 2f5ea4408b19f0ce46204956b29b38aeb92ec183e44c2704b1041cf75cf9f5dd)
+// (sha256 2f5ea4408b19f0ce46204956b29b38aeb92ec183e44c2704b1041cf75cf9f5dd,
+// asserted by frozen-fixtures.test.ts since 0.7.0)
 // of @typedstandards/produce-core@0.1.0 `src/__fixtures__/reference-golden.json`
 // (typedstandards repo — the published npm package ships `dist/` only, so the
 // fixture travels by copy). Its `_meta` records the original capture: the
