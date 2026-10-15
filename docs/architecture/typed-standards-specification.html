@@ -323,9 +323,9 @@ frozen snapshots for cross-reference accuracy.</p>
 <h2 id="status-of-this-document">2. Status of This Document</h2>
 <p><strong>Status:</strong> v0.1 Working Draft — open for external
 review (review window to be scheduled) <strong>Spec name:</strong> Typed
-Standards Specification <strong>Version:</strong> v0.1.11 (patch
+Standards Specification <strong>Version:</strong> v0.1.12 (patch
 revision of the v0.1 Working Draft; tag:
-<code>v0.1.11-typed-standards-spec</code>) <strong>License:</strong> CC
+<code>v0.1.12-typed-standards-spec</code>) <strong>License:</strong> CC
 BY 4.0 (see §3; canonical citation form in Appendix A)
 <strong>Maintainer:</strong> Nathan Storey (current; see
 reviewer-orientation document for stewardship and contact details)
@@ -341,7 +341,7 @@ conversations with reviewer organizations have set expectations. Until
 then, the specification lives at HEAD of <code>main</code>. Reviewers
 and integrators embedding a version identifier cite against the
 <strong>current patch-revision tag</strong>
-(<code>v0.1.11-typed-standards-spec</code>), which names the precise
+(<code>v0.1.12-typed-standards-spec</code>), which names the precise
 revision of this document; the consolidation-milestone tag
 (<code>v0.2-typed-standards-rfc</code>) remains for citing the
 consolidation milestone itself, not the current text. The document’s own
@@ -444,6 +444,7 @@ attestation/*</li>
 <li>8.11 Typed Claims</li>
 <li>8.12 The attestation/* namespace</li>
 <li>8.13 Federation and discoverability</li>
+<li>8.14 The content/layout/v1 sub-type</li>
 </ul>
 <ol start="9" type="1">
 <li>Conformance</li>
@@ -557,7 +558,7 @@ conformant signed node is a signed envelope over a typed payload, drawn
 from <strong>two top-level type families</strong> that share a single
 structural primitive: <strong><code>content/*</code></strong>
 (standalone assertions; no <code>targetNodeId</code> on the payload —
-analyses, typed claims, questions, evidence records, host
+analyses, page layouts, typed claims, questions, evidence records, host
 self-declarations, tool author declarations) and
 <strong><code>attestation/*</code></strong> (assertions about another
 node; <code>targetNodeId</code> required — lifecycle, reference,
@@ -835,6 +836,7 @@ assertions</strong> — nodes whose payloads do NOT carry
 <code>content/analysis/v1</code> (built; the content type of the
 AI-Assisted Analysis Producer Profile’s output and of the
 <code>scripted-recomputation</code> Producer Profile’s output, §8.7.5),
+<code>content/layout/v1</code> (built; §8.14),
 <code>content/claim/v1</code>, <code>content/question/v1</code>,
 <code>content/evidence/v1</code>, <code>content/host/v1</code>,
 <code>content/hostPolicy/v1</code>,
@@ -1097,7 +1099,7 @@ this document and not yet in the existing drafts)</strong>.</p>
 
  subgraph TYPED[&quot;Two-family taxonomy — semantic distinction (per ADR-0009)&quot;]
  direction LR
- CONTENT[&quot;content/* family&lt;br/&gt;(standalone assertions —&lt;br/&gt;no targetNodeId on payload;&lt;br/&gt;&#39;content/analysis/v1&#39; = built;&lt;br/&gt;typed-content sub-types — claim / question / evidence — reserved;&lt;br/&gt;host / hostPolicy / hostTermsOfUse / tool sub-types reserved per Q22)&quot;]:::partial
+ CONTENT[&quot;content/* family&lt;br/&gt;(standalone assertions —&lt;br/&gt;no targetNodeId on payload;&lt;br/&gt;&#39;content/analysis/v1&#39; and &#39;content/layout/v1&#39; = built;&lt;br/&gt;typed-content sub-types — claim / question / evidence — reserved;&lt;br/&gt;host / hostPolicy / hostTermsOfUse / tool sub-types reserved per Q22)&quot;]:::partial
  ATTESTATION[&quot;attestation/* family&lt;br/&gt;(assertions about another node —&lt;br/&gt;targetNodeId required on payload;&lt;br/&gt;v0.1 Q36 sub-type table ratified by ADR-0009 §7;&lt;br/&gt;operationalization per sub-type via downstream ADRs)&quot;]:::partial
  end
 
@@ -1276,12 +1278,13 @@ node belongs to exactly one of two families, distinguished by the
 <ul>
 <li><p><strong><code>content/*</code></strong> — <em>standalone
 assertion.</em> The node asserts something the signer takes
-responsibility for (an analysis, a typed claim, a question, an evidence
-record, a host’s own identity, a tool author’s tool declaration). It
-does NOT carry <code>targetNodeId</code> on its payload; it MAY cite or
-reference other nodes via PROV-O-style <code>wasDerivedFrom</code>
-provenance, but those references are upstream provenance, not the
-assertion’s subject.</p></li>
+responsibility for (an analysis, a page layout for presenting nodes, a
+typed claim, a question, an evidence record, a host’s own identity, a
+tool author’s tool declaration). It does NOT carry
+<code>targetNodeId</code> on its payload; it MAY cite or reference other
+nodes via PROV-O-style <code>wasDerivedFrom</code> provenance, but those
+references are upstream provenance, not the assertion’s
+subject.</p></li>
 <li><p><strong><code>attestation/*</code></strong> — <em>assertion about
 another node.</em> The node carries at least one
 <code>targetNodeId</code> referencing the node it asserts about. It does
@@ -1343,7 +1346,8 @@ sub-type declares its authorization rule (<code>publisher-only</code>,
 and its payload shape; the full table lives in §8.12 of this
 specification. Corresponding ratified <code>content/*</code> sub-types
 are <code>content/analysis/v1</code> (built — the legacy and datHere
-content shapes both map to it), <code>content/claim/v1</code> /
+content shapes both map to it), <code>content/layout/v1</code> (built —
+a page layout, §8.14), <code>content/claim/v1</code> /
 <code>content/question/v1</code> / <code>content/evidence/v1</code>
 (reserved name-only — promotion gated on first typed-content producer),
 <code>content/host/v1</code> / <code>content/hostPolicy/v1</code> /
@@ -3864,8 +3868,10 @@ the prior node by <code>targetNodeId</code> and the successor node by
 <code>publisher-only</code>.</li>
 <li><strong><code>attestation/publishes/v1</code></strong> — references
 target by <code>nodeId</code>; carries <code>publicationHost</code> and
-<code>releasedAt</code>. Authorization rule: <code>publisher-only</code>
-OR <code>delegated-publisher</code> per <a
+<code>releasedAt</code>, and MAY carry <code>layoutNodeId</code>, the
+<code>nodeId</code> of the <code>content/layout/v1</code> node the host
+rendered the target with at release (§8.14). Authorization rule:
+<code>publisher-only</code> OR <code>delegated-publisher</code> per <a
 href="open-questions.md#q20--visibility-lifecycle-and-attestpublish-semantics">Q20</a>
 (delegated-publisher mechanics are a future ADR).</li>
 </ul>
@@ -4865,7 +4871,7 @@ timestamp)</td>
 <td>lifecycle (sealed → public; transitions visibility)</td>
 <td>publisher-only OR delegated-publisher per Q20</td>
 <td><code>targetNodeId</code>, <code>publicationHost</code>,
-<code>releasedAt</code></td>
+<code>releasedAt</code>, optional <code>layoutNodeId</code></td>
 </tr>
 <tr>
 <td><code>attestation/locatedAt/v1</code></td>
@@ -5105,6 +5111,155 @@ verification path (per §7.3). A verifier never queries
 <code>typedstandards.org</code> to verify a package; the index has no
 authority to vouch for or reject any publisher’s content. Inclusion in
 the index is informational.</p>
+<h3 id="the-contentlayoutv1-sub-type">8.14 The
+<code>content/layout/v1</code> sub-type</h3>
+<p>A <strong>layout</strong> is a <code>content/*</code> node that
+states how a host’s page arranges a node’s parts: the order of the
+parts, which part holds the node’s detail behind a heading, where the
+run’s steps sit, and which parts start open (<a
+href="../adr/0034-content-layout-node.md">ADR-0034</a>). It is a
+standalone assertion, signed by whoever publishes the layout: any party
+with a <code>pseudonymous</code>-or-better binding (§8.5), a host’s
+platform key included. A host’s publication attestation can name the
+layout it rendered its target with (<code>layoutNodeId</code>,
+§8.10.1).</p>
+<h4 id="the-layout-payload">8.14.1 The layout payload</h4>
+<p>The payload is seven fields at the canonical-JSON top level, beside
+the structural primitive (§7.4). A layout node carries no
+<code>output</code>. Example payload:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;answer-first&quot;</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;appliesTo&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;default&quot;</span><span class="ot">,</span> <span class="st">&quot;datHere&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;order&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;status&quot;</span><span class="ot">,</span> <span class="st">&quot;answer&quot;</span><span class="ot">,</span> <span class="st">&quot;citation&quot;</span><span class="ot">,</span> <span class="st">&quot;steps&quot;</span><span class="ot">,</span> <span class="st">&quot;sources&quot;</span><span class="ot">,</span> <span class="st">&quot;disclosure&quot;</span><span class="ot">,</span> <span class="st">&quot;actions&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;disclosure&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Learn more about how this analysis was produced&quot;</span><span class="fu">,</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;order&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;A&quot;</span><span class="ot">,</span> <span class="st">&quot;B&quot;</span><span class="ot">,</span> <span class="st">&quot;C&quot;</span><span class="ot">,</span> <span class="st">&quot;D&quot;</span><span class="ot">,</span> <span class="st">&quot;E&quot;</span><span class="ot">,</span> <span class="st">&quot;G&quot;</span><span class="ot">,</span> <span class="st">&quot;signers&quot;</span><span class="ot">,</span> <span class="st">&quot;attestations&quot;</span><span class="ot">,</span> <span class="st">&quot;verification&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;openByDefault&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;steps&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;placement&quot;</span><span class="fu">:</span> <span class="st">&quot;beside&quot;</span><span class="fu">,</span> <span class="dt">&quot;openByDefault&quot;</span><span class="fu">:</span> <span class="kw">true</span> <span class="fu">},</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;rendererVersion&quot;</span><span class="fu">:</span> <span class="st">&quot;answer-view/1&quot;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>yes</td>
+<td>The layout’s name.</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>integer, at least 1</td>
+<td>yes</td>
+<td>The layout’s own version. <code>metadata.schemaVersion</code> stays
+<code>0.1.0</code> (§8.1.2).</td>
+</tr>
+<tr>
+<td><code>appliesTo</code></td>
+<td>non-empty array of strings</td>
+<td>yes</td>
+<td>The <code>metadata.contentProfile</code> values (§8.1.2) of the
+nodes the layout is for, such as <code>"default"</code> and
+<code>"datHere"</code>.</td>
+</tr>
+<tr>
+<td><code>order</code></td>
+<td>non-empty array of strings, no entry repeated</td>
+<td>yes</td>
+<td>The page’s parts, in the order the page shows them.</td>
+</tr>
+<tr>
+<td><code>disclosure</code></td>
+<td>object: <code>label</code> (string), <code>order</code> (array of
+strings), <code>openByDefault</code> (boolean)</td>
+<td>yes</td>
+<td>The part that holds a node’s detail behind a heading: the heading’s
+text, the order of its sections, and whether it starts open.</td>
+</tr>
+<tr>
+<td><code>steps</code></td>
+<td>object: <code>placement</code> (string), <code>openByDefault</code>
+(boolean)</td>
+<td>yes</td>
+<td>The part that shows the run’s steps: where it sits, and whether it
+starts open.</td>
+</tr>
+<tr>
+<td><code>rendererVersion</code></td>
+<td>string</td>
+<td>yes</td>
+<td>The renderer contract the layout was written for (§8.14.4).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="conformance-requirements-for-contentlayoutv1-nodes">8.14.2
+Conformance requirements for content/layout/v1 nodes</h4>
+<p>A conformant <code>content/layout/v1</code> node:</p>
+<ul>
+<li>MUST satisfy the structural-primitive requirements per §8.1
+(envelope hash, content hash, content canonicalization, signature,
+optional timestamp + Rekor proof, <code>type</code>,
+<code>signer</code>, <code>metadata</code>).</li>
+<li>MUST carry <code>type</code> equal to
+<code>content/layout/v1</code>.</li>
+<li>MUST NOT carry <code>targetNodeId</code> (§8.1.1): a layout is a
+standalone assertion, not an assertion about another node.</li>
+<li>MUST carry the seven payload fields of §8.14.1, each of the type the
+table gives: <code>version</code> an integer of at least 1,
+<code>appliesTo</code> and <code>order</code> non-empty, and no entry of
+<code>order</code> repeated.</li>
+<li>SHOULD use the default content-canonicalization rule
+(<code>https://typedstandards.org/canonicalization/legacy-json/v1</code>;
+§8.2, §12.3). With no <code>output</code>, that rule fingerprints the
+node’s canonical JSON with <code>contentHash</code> and the signature
+envelope omitted, as for an <code>attestation/*</code> node.</li>
+</ul>
+<h4 id="a-layout-changes-no-nodes-bytes">8.14.3 A layout changes no
+node’s bytes</h4>
+<p>A layout carries nothing a node needs. Applying a layout to a node
+changes none of the node’s bytes, so its <code>contentHash</code>,
+envelope hash, signature, timestamp and transparency-log entry are
+unchanged, and a record package carries no reference to a layout. A page
+picks the layout it renders a node with by the host’s default, then by
+the reader’s choice, never by anything in the record. The one signed
+statement that names a layout in connection with another node is the
+optional <code>layoutNodeId</code> on the host’s own
+<code>attestation/publishes/v1</code> (§8.10.1), which states what the
+host’s page used at release and leaves the target unchanged.</p>
+<h4 id="the-renderers-vocabulary">8.14.4 The renderer’s vocabulary</h4>
+<p>This specification ratifies the payload’s shape only. The part names
+in <code>order</code> and <code>disclosure.order</code>, the value of
+<code>steps.placement</code>, and <code>rendererVersion</code> itself
+are the renderer’s vocabulary, identified by
+<code>rendererVersion</code>; the specification defines no part name. A
+name a renderer does not know does not make the layout malformed. The
+names in the §8.14.1 example are informative.</p>
+<h4 id="verifier-expectations-for-contentlayoutv1-nodes">8.14.5 Verifier
+expectations for content/layout/v1 nodes</h4>
+<p>A verifier resolves the type at §9.2 check #12 and verifies the
+node’s envelope as it does any node’s. It does not render the layout.
+This revision defines no payload check: the seven fields’ presence and
+types are conformance requirements on the node (§8.14.2), not a §9.2
+check, so no §9.2 status reports a malformed layout. A verifier whose
+local sub-type registry lacks <code>content/layout/v1</code> reports
+<code>unknown_type</code> at check #12 and still verifies the envelope
+(§9.2).</p>
 <hr />
 <h2 id="conformance">9. Conformance</h2>
 <blockquote>
@@ -5947,82 +6102,82 @@ example: typed claim</h3>
 <code>ts:TrendClaim</code> for noise complaints in Bushwick, 2024
 vs. 2025. The example is illustrative; it does NOT represent a real
 published package.</p>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;https://typedstandards.org/ns/ts#&quot;</span><span class="ot">,</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ex&quot;</span><span class="fu">:</span> <span class="st">&quot;https://example.gov/datasets/311/&quot;</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@graph&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:TrendClaim&quot;</span><span class="fu">,</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:description&quot;</span><span class="fu">:</span> <span class="st">&quot;Noise complaints rose materially in Bushwick North between 2024 and 2025.&quot;</span><span class="fu">,</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:subject&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span> <span class="fu">},</span></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:metric&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span><span class="fu">,</span></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;311 noise complaint count&quot;</span></span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:scope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
-<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
-<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
-<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span></span>
-<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
-<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:baselinePeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:comparisonPeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-01-01&quot;</span> <span class="fu">},</span></span>
-<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
-<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:direction&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Increase&quot;</span><span class="fu">,</span></span>
-<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:magnitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Magnitude&quot;</span><span class="fu">,</span></span>
-<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:percentChange&quot;</span><span class="fu">:</span> <span class="fl">23.0</span><span class="fu">,</span></span>
-<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:absoluteChange&quot;</span><span class="fu">:</span> <span class="dv">1842</span></span>
-<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:confidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
-<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
-<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
-<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
-<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
-<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
-<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;prov:wasDerivedFrom&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;source-analysis-nodeId#query-result-2&quot;</span> <span class="fu">}</span></span>
-<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:derivedVia&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
-<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
-<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
-<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
-<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
-<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
-<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
-<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
-<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:limitations&quot;</span><span class="fu">:</span> <span class="st">&quot;Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records).&quot;</span></span>
-<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
-<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span></span>
-<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@context&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> <span class="st">&quot;https://typedstandards.org/ns/ts#&quot;</span><span class="ot">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ex&quot;</span><span class="fu">:</span> <span class="st">&quot;https://example.gov/datasets/311/&quot;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@graph&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:TrendClaim&quot;</span><span class="fu">,</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;claim-001&quot;</span><span class="fu">,</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:description&quot;</span><span class="fu">:</span> <span class="st">&quot;Noise complaints rose materially in Bushwick North between 2024 and 2025.&quot;</span><span class="fu">,</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:subject&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span> <span class="fu">},</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:metric&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;ex:complaint-count&quot;</span><span class="fu">,</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;311 noise complaint count&quot;</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:scope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Scope&quot;</span><span class="fu">,</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:geographicScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:NeighborhoodTabulationArea&quot;</span><span class="fu">,</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;dcterms:identifier&quot;</span><span class="fu">:</span> <span class="st">&quot;BK0801&quot;</span><span class="fu">,</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;Bushwick North&quot;</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:temporalScope&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;time:Interval&quot;</span><span class="fu">,</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:baselinePeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2024-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:comparisonPeriod&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasBeginning&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-01-01&quot;</span> <span class="fu">},</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;time:hasEnd&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;time:inXSDDate&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-12-31&quot;</span> <span class="fu">}</span></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:direction&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Increase&quot;</span><span class="fu">,</span></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:magnitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:Magnitude&quot;</span><span class="fu">,</span></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:percentChange&quot;</span><span class="fu">:</span> <span class="fl">23.0</span><span class="fu">,</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:absoluteChange&quot;</span><span class="fu">:</span> <span class="dv">1842</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:confidence&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:ConfidenceStatement&quot;</span><span class="fu">,</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:method&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:FrequentistInterval&quot;</span><span class="fu">,</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:level&quot;</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:lowerBound&quot;</span><span class="fu">:</span> <span class="fl">18.4</span><span class="fu">,</span></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:upperBound&quot;</span><span class="fu">:</span> <span class="fl">27.6</span><span class="fu">,</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:methodReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-stat-test-3&quot;</span></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;prov:wasDerivedFrom&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a> <span class="fu">{</span> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;source-analysis-nodeId#query-result-2&quot;</span> <span class="fu">}</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:derivedVia&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;ts:AnalyticalDerivation&quot;</span><span class="fu">,</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:traceReference&quot;</span><span class="fu">:</span> <span class="st">&quot;trace.json#step-claim-extraction-1&quot;</span><span class="fu">,</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationModel&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@type&quot;</span><span class="fu">:</span> <span class="st">&quot;schema:SoftwareApplication&quot;</span><span class="fu">,</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;schema:name&quot;</span><span class="fu">:</span> <span class="st">&quot;claude-opus-4-7&quot;</span></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:translationPrompt&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;@id&quot;</span><span class="fu">:</span> <span class="st">&quot;prompt.json#claim-extraction&quot;</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:sourceOutputSpan&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:outputFile&quot;</span><span class="fu">:</span> <span class="st">&quot;output.md&quot;</span><span class="fu">,</span></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:byteRange&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1240</span><span class="ot">,</span> <span class="dv">1487</span><span class="ot">]</span></span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a> <span class="fu">},</span></span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a> <span class="dt">&quot;ts:limitations&quot;</span><span class="fu">:</span> <span class="st">&quot;Excludes complaints recorded against addresses without geocoded NTA assignment (~3.1% of records).&quot;</span></span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a> <span class="fu">}</span></span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a> <span class="ot">]</span></span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>The example carries both the core-required <code>ts:subject</code>
 (what the claim is about — here the same metric URI the TrendClaim’s
 <code>ts:metric</code> names; §8.11.4 required-properties table) and the
@@ -6291,6 +6446,12 @@ surface at typedstandards.org; richer identity tiers beyond GitHub
 verification, listed here as not-yet-a-property in the 2026-05-26
 snapshot, is now a demonstrated property of the self-contained bundle
 per §9.4.)</li>
+<li><strong>Status updated 2026-10-16 (v0.1.12):</strong>
+<code>content/layout/v1</code> is specified at §8.14, and the portable
+cores implement it (<code>@typedstandards/produce-core</code> 0.9.0
+builds the node; <code>@typedstandards/verify-core</code> 0.14.0
+resolves its type). The reference implementation does not yet read or
+publish a layout node.</li>
 </ul>
 <h3 id="appendix-f.-open-questions-pointer">Appendix F. Open questions
 pointer</h3>
@@ -6330,6 +6491,41 @@ verification is demonstrated for the self-contained bundle per
 </ul>
 <h3 id="appendix-g.-revision-history">Appendix G. Revision history</h3>
 <ul>
+<li><strong>2026-10-16</strong> — Layout node patch revision (v0.1.12;
+decision record <a
+href="../adr/0034-content-layout-node.md">ADR-0034</a>, anchor <a
+href="https://github.com/npstorey/civic-ai-tools/issues/260">civic-ai-tools#260</a>).
+<strong>(1)</strong> New <strong>§8.14</strong> ratifies
+<code>content/layout/v1</code>, a <code>content/*</code> sub-type that
+states how a host’s page arranges a node’s parts: seven payload fields
+(<code>name</code>, <code>version</code>, <code>appliesTo</code>,
+<code>order</code>, <code>disclosure</code>, <code>steps</code>,
+<code>rendererVersion</code>) beside the structural primitive; its
+conformance requirements; the rule that a layout changes no node’s bytes
+and that a page picks a layout by the host’s default, then the reader’s
+choice, never by anything in the record; the rule that part names are
+the renderer’s vocabulary, so an unknown name is not malformed; and the
+verifier’s expectations (check #12 resolves the type; no payload check).
+The §4 contents, §5.3’s typed-node ontology item, the §6.2 glossary’s
+<code>content/*</code> entry, the §7.1 diagram, and §7.4’s
+<code>content/*</code> bullet and Q36 paragraph name it.
+<strong>(2)</strong> <code>attestation/publishes/v1</code> MAY carry
+<code>layoutNodeId</code>, the <code>nodeId</code> of the
+<code>content/layout/v1</code> node the host rendered the target with at
+release (§8.10.1, §8.12.1); a publication attestation without it asserts
+nothing about a layout. Per §6.1 the change corresponds to a settled
+decision record; <code>@typedstandards/verify-core</code> 0.14.0
+registers the sub-type, and <code>@typedstandards/produce-core</code>
+0.9.0 builds the node and emits <code>layoutNodeId</code> when supplied.
+<strong>Named under the Xanadu doctrine</strong> (§7.4): the motivating
+adopter is an adopter publishing records on a host it does not operate,
+who needs the layout its readers see to be publishable and verifiable
+apart from that host; ADR-0034 §F records that it is described and not
+named. No field is removed or retyped; <code>layoutNodeId</code> is
+optional. Already-signed packages are byte-identical. Schema version
+unchanged (<code>0.1.0</code> per <a
+href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
+The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-10-15</strong> — Environment honest-absence patch
 revision (v0.1.11; decision record <a
 href="../adr/0033-composed-harness-record-fields.md">ADR-0033</a>,
