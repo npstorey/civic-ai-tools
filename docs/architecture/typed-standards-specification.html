@@ -6463,11 +6463,13 @@ verification, listed here as not-yet-a-property in the 2026-05-26
 snapshot, is now a demonstrated property of the self-contained bundle
 per §9.4.)</li>
 <li><strong>Status updated 2026-10-16 (v0.1.12):</strong>
-<code>content/layout/v1</code> is specified at §8.14, and the portable
-cores implement it (<code>@typedstandards/produce-core</code> 0.9.0
-builds the node; <code>@typedstandards/verify-core</code> 0.14.0
-resolves its type). The reference implementation does not yet read or
-publish a layout node.</li>
+<code>content/layout/v1</code> is specified at §8.14. The portable
+cores’ release in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/260">civic-ai-tools#260</a>
+is to implement it, planned as <code>@typedstandards/produce-core</code>
+0.9.0 (to build the node) and <code>@typedstandards/verify-core</code>
+0.14.0 (to resolve its type). The reference implementation does not yet
+read or publish a layout node.</li>
 </ul>
 <h3 id="appendix-f.-open-questions-pointer">Appendix F. Open questions
 pointer</h3>
@@ -6541,16 +6543,19 @@ where the reference verifier’s refusal is tracked. Per §6.1 parts (1)
 and (2) correspond to <a
 href="../adr/0034-content-layout-node.md">ADR-0034</a> and part (3) to
 <a href="../adr/0035-record-package-input-is-i-json.md">ADR-0035</a>;
-<code>@typedstandards/verify-core</code> 0.14.0 registers the sub-type,
-and <code>@typedstandards/produce-core</code> 0.9.0 builds the node and
-emits <code>layoutNodeId</code> when supplied. <strong>Named under the
-Xanadu doctrine</strong> (§7.4): the motivating adopter is an adopter
-publishing records on a host it does not operate, who needs the layout
-its readers see to be publishable and verifiable apart from that host;
-ADR-0034 §F records that it is described and not named. No field is
-removed or retyped; <code>layoutNodeId</code> is optional.
-Already-signed packages are byte-identical. Schema version unchanged
-(<code>0.1.0</code> per <a
+the portable cores’ release in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/260">civic-ai-tools#260</a>
+is to implement parts (1) and (2), planned as
+<code>@typedstandards/verify-core</code> 0.14.0 (to register the
+sub-type) and <code>@typedstandards/produce-core</code> 0.9.0 (to build
+the node and emit <code>layoutNodeId</code> when supplied).
+<strong>Named under the Xanadu doctrine</strong> (§7.4): the motivating
+adopter is an adopter publishing records on a host it does not operate,
+who needs the layout its readers see to be publishable and verifiable
+apart from that host; ADR-0034 §F records that it is described and not
+named. No field is removed or retyped; <code>layoutNodeId</code> is
+optional. Already-signed packages are byte-identical. Schema version
+unchanged (<code>0.1.0</code> per <a
 href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
 The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-10-15</strong> — Environment honest-absence patch

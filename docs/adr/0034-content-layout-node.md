@@ -58,12 +58,12 @@ The motivating adopter is an adopter publishing records on a host it does not op
 - **A file-backed host setting alone.** It serves one host, and its arrangement cannot be published or checked apart from that host, which is the adopter's need. The setting remains the host's way to hold its built-in layouts; its payload is the node's payload without the envelope, so a host can publish the same bytes as a node later.
 - **A layout reference inside the record.** It would change the record's bytes for a presentation choice, and a node signed before the layout existed could never name one.
 - **Ratifying one renderer's part names as the v1 vocabulary.** It would put one application's user interface in the standard and bind every host to its names, the growth the Xanadu doctrine gates.
-- **A payload check in the verifier** (a status such as `layout_malformed`). Nothing in a layout bears on the integrity of any record, and the cores' builders refuse a malformed payload before it is signed.
+- **A payload check in the verifier** (a status such as `layout_malformed`). Nothing in a layout bears on the integrity of any record, and the planned layout builder is to refuse a malformed payload before it is signed.
 - **Placing the section inside §8.12, or before §8.13.** §8.12 is the attestation namespace, and an insertion before §8.13 would renumber it. The new section is §8.14.
 
 ## Consequences
 
-- **Two core releases implement it.** `@typedstandards/verify-core` 0.14.0 registers `content/layout/v1`, so check #12 reads `ok` for it instead of `unknown_type`. `@typedstandards/produce-core` 0.9.0 builds a layout node and emits `layoutNodeId` on a publication attestation when the caller supplies it, appended after `releasedAt`. A publication attestation built without the field is byte-identical to one built by produce-core 0.8.0, and every already-signed package is unchanged.
+- **Two core releases are to implement it**, planned as `@typedstandards/verify-core` 0.14.0 (to register `content/layout/v1`, so check #12 reads `ok` for it instead of `unknown_type`) and `@typedstandards/produce-core` 0.9.0 (to build a layout node, and to emit `layoutNodeId` on a publication attestation when the caller supplies it, appended after `releasedAt`). A publication attestation built without the field is to stay byte-identical to one built by produce-core 0.8.0, and every already-signed package is unchanged.
 - **The reference app reads layouts later.** Reading a layout from its own configuration or from a published node, the reader's choice between layouts, and passing `layoutNodeId` from its publish route are a later change in that repository.
 - **The reference app's default layout is the first published node of this type**, signed with its platform key, from the same bytes as its built-in default. The specification's §8.14 example is that layout.
 
