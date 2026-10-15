@@ -2112,6 +2112,15 @@ file’s bytes as it holds them; <a
 href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>
 §4).</li>
 </ul>
+<p><strong>Input to canonicalization.</strong> A record package’s JSON
+text is I-JSON (<a href="https://www.rfc-editor.org/rfc/rfc7493">RFC
+7493</a>), the input RFC 8785 JCS requires. A verifier MUST reject a
+package whose JSON text repeats a member name within an object. Parsers
+differ in which occurrence of a repeated name they keep, and the
+envelope hash is computed over the parsed object, so two package files
+that differ only in a repeated name would verify as the same record
+while different readers saw different content in them (§9.2 check
+#1).</p>
 <p><strong>What each v0.1 canonicalization rule
 fingerprints.</strong></p>
 <ul>
@@ -5308,7 +5317,10 @@ the envelope hash over the canonical JSON of the fetched package per
 §8.2’s chain (v0.1: RFC 8785 JCS canonicalization of the unsigned
 envelope + SHA-256; pre-v0.1: <code>JSON.stringify</code>
 insertion-order + SHA-256). The result MUST equal the envelope-hash hex
-string the verify endpoint reports.</li>
+string the verify endpoint reports. A package whose JSON text repeats a
+member name within an object (§8.2) is refused before the envelope hash
+is recomputed, and is not reported as <code>altered</code>: the refusal
+says the text is not I-JSON, not that signed content changed.</li>
 <li><strong>Signature mathematics</strong> <em>(verifies the signature
 was made by the named signing key over the package’s exact bytes).</em>
 Verify the Ed25519ph signature over the envelope-hash hex string against
@@ -5960,6 +5972,10 @@ class="uri">https://www.rfc-editor.org/rfc/rfc2119</a></li>
 Infrastructure Time-Stamp Protocol (TSP)</em> (Adams et al., 2001). Used
 by §8.3.2. <a href="https://www.rfc-editor.org/rfc/rfc3161"
 class="uri">https://www.rfc-editor.org/rfc/rfc3161</a></li>
+<li><strong>RFC 7493</strong> — <em>The I-JSON Message Format</em>
+(Bray, 2015). Used by §8.2 and §9.2. <a
+href="https://www.rfc-editor.org/rfc/rfc7493"
+class="uri">https://www.rfc-editor.org/rfc/rfc7493</a></li>
 <li><strong>RFC 8032</strong> — <em>Edwards-Curve Digital Signature
 Algorithm (EdDSA)</em> (Josefsson &amp; Liusvaara, 2017). Ed25519ph
 variant per §5.1.2; used by §8.3.1. <a
@@ -6513,17 +6529,28 @@ The §4 contents, §5.3’s typed-node ontology item, the §6.2 glossary’s
 <code>layoutNodeId</code>, the <code>nodeId</code> of the
 <code>content/layout/v1</code> node the host rendered the target with at
 release (§8.10.1, §8.12.1); a publication attestation without it asserts
-nothing about a layout. Per §6.1 the change corresponds to a settled
-decision record; <code>@typedstandards/verify-core</code> 0.14.0
-registers the sub-type, and <code>@typedstandards/produce-core</code>
-0.9.0 builds the node and emits <code>layoutNodeId</code> when supplied.
-<strong>Named under the Xanadu doctrine</strong> (§7.4): the motivating
-adopter is an adopter publishing records on a host it does not operate,
-who needs the layout its readers see to be publishable and verifiable
-apart from that host; ADR-0034 §F records that it is described and not
-named. No field is removed or retyped; <code>layoutNodeId</code> is
-optional. Already-signed packages are byte-identical. Schema version
-unchanged (<code>0.1.0</code> per <a
+nothing about a layout. <strong>(3)</strong> §8.2 states that a record
+package’s JSON text is I-JSON (<a
+href="https://www.rfc-editor.org/rfc/rfc7493">RFC 7493</a>), the input
+RFC 8785 requires, and that a verifier MUST reject a package whose text
+repeats a member name within an object; §9.2 check #1 refuses such a
+package before recomputing the envelope hash and does not report it as
+<code>altered</code>; §14.1 lists RFC 7493. The rule answers <a
+href="https://github.com/npstorey/typedstandards/issues/145">typedstandards#145</a>,
+where the reference verifier’s refusal is tracked. Per §6.1 parts (1)
+and (2) correspond to <a
+href="../adr/0034-content-layout-node.md">ADR-0034</a> and part (3) to
+<a href="../adr/0035-record-package-input-is-i-json.md">ADR-0035</a>;
+<code>@typedstandards/verify-core</code> 0.14.0 registers the sub-type,
+and <code>@typedstandards/produce-core</code> 0.9.0 builds the node and
+emits <code>layoutNodeId</code> when supplied. <strong>Named under the
+Xanadu doctrine</strong> (§7.4): the motivating adopter is an adopter
+publishing records on a host it does not operate, who needs the layout
+its readers see to be publishable and verifiable apart from that host;
+ADR-0034 §F records that it is described and not named. No field is
+removed or retyped; <code>layoutNodeId</code> is optional.
+Already-signed packages are byte-identical. Schema version unchanged
+(<code>0.1.0</code> per <a
 href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
 The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-10-15</strong> — Environment honest-absence patch
