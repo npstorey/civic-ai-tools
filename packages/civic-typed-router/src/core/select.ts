@@ -51,10 +51,11 @@ export interface SourceOffered {
 export function offeredReason(
   entry: ManifestEntry<unknown>,
   addresses: ConfiguredAddresses,
-  _selection?: SourceSelection,
+  selection?: SourceSelection,
 ): OfferedReason {
-  // STUB (red tree): the selection is accepted and ignored.
-  return isEntryOffered(entry, addresses) ? 'configured' : 'not-configured';
+  if (!isEntryOffered(entry, addresses)) return 'not-configured';
+  if (selection === undefined) return 'configured';
+  return selection.includes(entry.sourceId) ? 'selected' : 'not-selected';
 }
 
 /** Whether a reason offers the source. */
