@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.2.0 — 2026-10-15
 
 The aliased view, the routing fields, the startup checks, the selection, and a
 fourth source ([ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md)).
