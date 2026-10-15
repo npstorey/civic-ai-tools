@@ -33,6 +33,25 @@ export const DATHERE_PRODUCER_PROFILE = 'ai-assisted-analysis/datHere';
 /** Reverse-DNS key of the auto-emitted environment extension. */
 export const ENVIRONMENT_EXTENSION_KEY = 'org.civicaitools.environment';
 
+/** Reverse-DNS key of the composition extension (ADR-0033 §E): what the run's
+ *  prompt and tools array were composed from. Emitted under every content
+ *  profile, and only when at least one of its fields is passed. */
+export const COMPOSITION_EXTENSION_KEY = 'org.civicaitools.composition';
+
+/** A record-field input the derivation refuses (ADR-0033): a value that would
+ *  land inside signed bytes in a form the record does not define. Refused
+ *  rather than dropped, because dropping it would state absence for a value
+ *  the caller did pass. */
+export class RecordFieldError extends Error {
+  /** The input field the value was passed in. */
+  readonly field: string;
+  constructor(field: string, message: string) {
+    super(`${field}: ${message}`);
+    this.name = 'RecordFieldError';
+    this.field = field;
+  }
+}
+
 /** The civicaitools.org reference deployment's value for the environment
  *  extension's `host` field. Config-not-constants — every instance supplies
  *  its own via `DatHereEnvironmentConfig`; the `host` lands under the
@@ -132,10 +151,23 @@ function normalizeMcpServers(
     }));
 }
 
+/** The two environment fields stated only when the caller knows them
+ *  (ADR-0033 §C, civic-ai-tools#240). */
+export interface DatHereRunSettings {
+  /** The temperature the model request SENT. Absent when none was sent: the
+   *  key is then omitted, never filled. */
+  temperature?: number;
+  /** The tools array as offered to the model (chat-completions function
+   *  tools), in offered order, stated verbatim. Absent when not passed: the
+   *  key is then omitted, never `[]`. */
+  toolDefinitions?: readonly Record<string, unknown>[];
+}
+
 /**
  * Build the `org.civicaitools.environment` extension content for a datHere
- * package. Per OES §9.1.1 requirement 3 the extension MUST carry
- * `modelVersion`, `temperature`, `mcpServers`, `toolDefinitions`, `host`.
+ * package. Spec §8.7.1 requirement 3 (as amended in v0.1.11, ADR-0033 §C):
+ * `modelVersion`, `mcpServers` and `host` always; `temperature` and
+ * `toolDefinitions` when the producer knows them.
  *
  * `mcpServers` accepts EITHER shape (additive since 0.5.0,
  * civic-ai-tools-website#449): a single URL string — the trace's skill-fetch
@@ -154,6 +186,8 @@ export function buildDatHereEnvironment(
   model: string,
   mcpServers: string | readonly DatHereMcpServer[] | undefined,
   config: DatHereEnvironmentConfig,
+  // STUB (H2 red tree): accepted and not yet read.
+  _run: DatHereRunSettings = {},
 ): Record<string, unknown> {
   return {
     modelVersion: model,
@@ -184,8 +218,85 @@ export interface DatHerePolicyInput {
    *  (civic-ai-tools-website#449). When supplied this REPLACES
    *  `skillMcpServerUrl` as the source of `environment.mcpServers`. */
   mcpServers?: readonly DatHereMcpServer[];
+  /** The servers the run HAD, as the trace's root span recorded them at run
+   *  time (`analysis.mcp_servers`, read by `extractRunAttributes`;
+   *  civic-ai-tools-website#495). When supplied it wins over `mcpServers`
+   *  (packaging-time) and `skillMcpServerUrl`. */
+  runMcpServers?: readonly DatHereMcpServer[];
+  /** The temperature the request sent (environment block; omitted when
+   *  absent). */
+  temperature?: number;
+  /** The tools array as offered (environment block; omitted when absent). */
+  toolDefinitions?: readonly Record<string, unknown>[];
+  /** The `today` the composed prompt stated, `YYYY-MM-DD` (composition block;
+   *  civic-ai-tools-website#475). */
+  assertedDate?: string;
+  /** Every manifest source with the reason it was or was not offered
+   *  (composition block). */
+  sourcesOffered?: readonly SourceOfferedInput[];
+  /** What composed the prompt (composition block). */
+  components?: readonly CompositionComponentInput[];
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
+}
+
+/** Why a source was or was not offered to the model (ADR-0033 §E). A source
+ *  was offered exactly when its reason is `configured` or `selected`. */
+export type SourceOfferedReason = 'configured' | 'not-configured' | 'selected' | 'not-selected';
+
+/** The four reasons, in the order ADR-0033 §E states them. */
+export const SOURCE_OFFERED_REASONS: readonly SourceOfferedReason[] = [
+  'configured',
+  'not-configured',
+  'selected',
+  'not-selected',
+];
+
+/** One `sourcesOffered` entry as a caller passes it. `reason` is a string so
+ *  the trace extractor's output is accepted as is; the derivation refuses a
+ *  value outside `SOURCE_OFFERED_REASONS`. */
+export interface SourceOfferedInput {
+  sourceId: string;
+  alias: string;
+  reason: string;
+}
+
+/** Where a component's guidance text came from (Q65's three kinds):
+ *  `endpoint`, fetched from the source's server at run time; `inline`,
+ *  carried in the manifest or composing package; `fallback`, the composer's
+ *  stand-in after a fetch failed. */
+export type GuidanceOrigin = 'endpoint' | 'inline' | 'fallback';
+
+/** The three origins. */
+export const GUIDANCE_ORIGINS: readonly GuidanceOrigin[] = ['endpoint', 'inline', 'fallback'];
+
+/** One `components` entry as a caller passes it. `id` is the manifest
+ *  entry's id (or the composing package's name); `version` is omitted when
+ *  unknown; `guidanceHash` (lowercase hex SHA-256 of the component's guidance
+ *  as composed) and `guidanceOrigin` are present together or not at all. */
+export interface CompositionComponentInput {
+  id: string;
+  version?: string;
+  guidanceHash?: string;
+  guidanceOrigin?: string;
+}
+
+/** The composition block's inputs (ADR-0033 §E). */
+export interface CompositionInput {
+  assertedDate?: string;
+  sourcesOffered?: readonly SourceOfferedInput[];
+  components?: readonly CompositionComponentInput[];
+}
+
+/**
+ * Build the `org.civicaitools.composition` extension content, or `undefined`
+ * when no field is passed (the block is then not emitted).
+ */
+export function buildCompositionExtension(
+  // STUB (H2 red tree): accepted and not yet read.
+  _input: CompositionInput,
+): Record<string, unknown> | undefined {
+  return undefined;
 }
 
 /** The derived envelope-field values, ready to spread into produce-core's

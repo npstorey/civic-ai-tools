@@ -123,9 +123,68 @@ function dropUnregisteredServerUrls(
   return lifted;
 }
 
-/** The frozen reference graph as the 0.5.0 builder reproduces it. */
-const LIFTED_FIXTURE_GRAPH = dropUnregisteredServerUrls(
-  FIXTURE.provenanceGraph,
+
+/**
+ * Lift a frozen capture over the ONE behaviour 0.7.0 changed in the graph
+ * (ADR-0033 §A, civic-ai-tools-website#599 G0 card 3): the 2026-08-01
+ * reference implementation attributed a call whose source the registry did
+ * not carry to the FALLBACK source's agent (`mcp-server:socrata`), while
+ * emitting an agent node of the call's own source beside it; the builder now
+ * attributes the call to its own source's agent.
+ *
+ * The capture's bytes are NEVER edited — this is a transform OF them, applied
+ * after `dropUnregisteredServerUrls`. DERIVED, NOT A HAND LIST: it walks every
+ * node carrying a `civic:sourceId` the registry lacks and a
+ * `prov:wasAssociatedWith`, and points the association at the graph's OWN
+ * agent node for that source id (found by `civic:sourceId` among the
+ * `prov:Agent` nodes, so the lift is era-agnostic). Assigning an existing key
+ * keeps its position, so key order survives. `moved` is asserted, so a
+ * capture in which the lift finds nothing, or more than the one call measured
+ * at 6483894, fails here.
+ *
+ * A near-twin lives in golden-reproduction.test.ts (separate processes, so it
+ * is copied rather than imported).
+ */
+function reattributeUnregisteredCalls(
+  graph: { '@graph': Array<Record<string, unknown>> },
+  registry: Record<string, unknown>,
+  expectedMoved = 1,
+): { '@graph': Array<Record<string, unknown>> } {
+  const lifted = JSON.parse(JSON.stringify(graph)) as {
+    '@graph': Array<Record<string, unknown>>;
+  };
+  const agentOf = new Map<string, string>();
+  for (const node of lifted['@graph']) {
+    const type = node['@type'];
+    const isAgent = Array.isArray(type) ? type.includes('prov:Agent') : type === 'prov:Agent';
+    if (isAgent && typeof node['civic:sourceId'] === 'string') {
+      agentOf.set(node['civic:sourceId'] as string, node['@id'] as string);
+    }
+  }
+  let moved = 0;
+  for (const node of lifted['@graph']) {
+    const sourceId = node['civic:sourceId'];
+    if (typeof sourceId !== 'string') continue;
+    if (!Object.hasOwn(node, 'prov:wasAssociatedWith')) continue;
+    if (Object.hasOwn(registry, sourceId)) continue;
+    const own = agentOf.get(sourceId);
+    assert.ok(own, `the frozen capture has no agent node for the unregistered source ${sourceId}`);
+    if ((node['prov:wasAssociatedWith'] as { '@id': string })['@id'] === own) continue;
+    node['prov:wasAssociatedWith'] = { '@id': own };
+    moved += 1;
+  }
+  assert.equal(
+    moved,
+    expectedMoved,
+    'the frozen capture no longer carries the fallback attribution this lift exists for — the lift would be silently doing nothing',
+  );
+  return lifted;
+}
+
+/** The frozen reference graph as the 0.7.0 builder reproduces it: lifted over
+ *  the #205 fallback (0.5.0), then over the fallback attribution (0.7.0). */
+const LIFTED_FIXTURE_GRAPH = reattributeUnregisteredCalls(
+  dropUnregisteredServerUrls(FIXTURE.provenanceGraph, CIVIC_SOURCE_REGISTRY),
   CIVIC_SOURCE_REGISTRY,
 );
 
@@ -346,6 +405,134 @@ test('Pre-M9.1 Socrata span without mcp.source attribute still emits the socrata
   const trace = traceOf([skillSpan('skill-hash'), legacyToolSpan]);
   const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
   assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:socrata']);
+});
+
+
+// --- Every call is attributed to its own source (ADR-0033 §A, G0 card 3) ---
+//
+// The RED for these is the call's ATTRIBUTION — `prov:wasAssociatedWith` on
+// the tool-call activity — and not the agent node: an agent node for an
+// unregistered tagged source already existed at 0.6.0, while the call itself
+// was attributed to Socrata's agent (`capture/provenance.ts:322` at 6483894).
+
+type GraphNodeLike = { '@id': string; [k: string]: unknown };
+
+function callAttribution(graph: { '@graph': GraphNodeLike[] }, spanId: string): string {
+  const activity = graph['@graph'].find((n) => n['@id'].endsWith(`:tool-call:${spanId}`));
+  assert.ok(activity, `no tool-call activity for span ${spanId}`);
+  return (activity!['prov:wasAssociatedWith'] as { '@id': string })['@id'];
+}
+
+function untaggedToolSpan(toolName: string, spanId: string): SpanStub {
+  return {
+    name: 'mcp_tool_call',
+    spanId,
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'tool.name': toolName,
+      'tool.operation_type': 'unknown',
+      'tool.arguments': '{}',
+    }),
+  };
+}
+
+test('ADR-0033 §A (a): a call tagged with a source the registry lacks is attributed to that source, never to socrata', () => {
+  const trace = traceOf([skillSpan('skill-hash'), toolSpan('example', 'lookup', 'span-example')]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  assert.equal(callAttribution(graph, 'span-example'), 'urn:civic-record:mcp-server:example');
+  const activity = graph['@graph'].find((n) => n['@id'].endsWith(':tool-call:span-example'));
+  assert.equal(activity!['civic:sourceId'], 'example');
+});
+
+test('ADR-0033 §A (b): an untagged call whose tool name does not resolve is attributed to an unknown agent, never to socrata', () => {
+  const trace = traceOf([skillSpan('skill-hash'), untaggedToolSpan('mystery_tool', 'span-mystery')]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  assert.equal(callAttribution(graph, 'span-mystery'), 'urn:civic-record:mcp-server:unknown');
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:unknown']);
+  const agent = graph['@graph'].find((n) => n['@id'] === 'urn:civic-record:mcp-server:unknown');
+  assert.equal(agent!['dcterms:title'], 'unknown MCP Server');
+  assert.equal(agent!['civic:sourceId'], 'unknown');
+  assert.equal(Object.hasOwn(agent!, 'civic:serverUrl'), false);
+});
+
+test('ADR-0033 §A: an untagged call resolves by its tool name — get_data stays socrata, get_observations is data-commons', () => {
+  const trace = traceOf([untaggedToolSpan('get_data', 'span-legacy'), untaggedToolSpan('get_observations', 'span-dc')]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  assert.equal(callAttribution(graph, 'span-legacy'), 'urn:civic-record:mcp-server:socrata');
+  assert.equal(callAttribution(graph, 'span-dc'), 'urn:civic-record:mcp-server:data-commons');
+});
+
+test('ADR-0033 §A: a caller resolver and an explicit fallbackSourceId are honoured', () => {
+  const trace = traceOf([untaggedToolSpan('warehouse_query', 'span-w'), untaggedToolSpan('nothing_known', 'span-n')]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, {
+    ...CIVICAITOOLS_PROVENANCE_CONFIG,
+    resolver: (name) => (name === 'warehouse_query' ? 'data-commons' : undefined),
+    // Reproducing a pre-0.7.0 record of an untagged, unresolved span: the
+    // caller states the id; it is never the default.
+    fallbackSourceId: 'socrata',
+  });
+  assert.equal(callAttribution(graph, 'span-w'), 'urn:civic-record:mcp-server:data-commons');
+  assert.equal(callAttribution(graph, 'span-n'), 'urn:civic-record:mcp-server:socrata');
+});
+
+test('ADR-0033 §A: every call names an agent the graph contains', () => {
+  // At 0.6.0 a call tagged with an unregistered source, in a run where
+  // Socrata made no call, was associated with `mcp-server:socrata` — an agent
+  // the graph did not contain.
+  const trace = traceOf([
+    toolSpan('example', 'lookup', 'span-1'),
+    untaggedToolSpan('mystery_tool', 'span-2'),
+    toolSpan('data-commons', 'get_observations', 'span-3'),
+  ]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  const agents = new Set(mcpAgents(graph['@graph']));
+  for (const spanId of ['span-1', 'span-2', 'span-3']) {
+    const target = callAttribution(graph, spanId);
+    assert.ok(agents.has(target), `${spanId} is associated with ${target}, which is not an agent of this graph`);
+  }
+});
+
+// --- Each call states both its names, its alias and its server (ADR-0033 §B) ---
+
+function aliasedToolSpan(spanId: string): SpanStub {
+  return {
+    name: 'mcp_tool_call',
+    spanId,
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.name': 'socrata__get_data',
+      'tool.upstream_name': 'get_data',
+      'mcp.alias': 'socrata',
+      'mcp.server.id': 'io.github.example/socrata-mcp-server',
+      'tool.operation_type': 'query',
+      'tool.arguments': '{}',
+      'tool.duration_ms': '12',
+    }),
+  };
+}
+
+test('ADR-0033 §B: a span carrying the upstream name, the alias and the server id states all three on the activity, appended in that order', () => {
+  const graph = buildProvenanceGraph(traceOf([aliasedToolSpan('span-aliased')]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  const activity = graph['@graph'].find((n) => n['@id'].endsWith(':tool-call:span-aliased'))!;
+  assert.equal(activity['civic:upstreamToolName'], 'get_data');
+  assert.equal(activity['civic:sourceAlias'], 'socrata');
+  assert.equal(activity['civic:serverId'], 'io.github.example/socrata-mcp-server');
+  const keys = Object.keys(activity);
+  assert.deepEqual(keys.slice(-3), ['civic:upstreamToolName', 'civic:sourceAlias', 'civic:serverId']);
+  // The exposed name stays the span's tool.name, verbatim, on the query entity.
+  const query = graph['@graph'].find((n) => n['@id'].includes(':query:'))!;
+  assert.equal(query['civic:toolName'], 'socrata__get_data');
+});
+
+test('ADR-0033 §B: a span without the three attributes yields the 0.6.0 key list', () => {
+  const graph = buildProvenanceGraph(traceOf([toolSpan('socrata', 'get_data', 'span-plain')]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  const activity = graph['@graph'].find((n) => n['@id'].endsWith(':tool-call:span-plain'))!;
+  for (const key of ['civic:upstreamToolName', 'civic:sourceAlias', 'civic:serverId']) {
+    assert.equal(Object.hasOwn(activity, key), false, `${key} emitted for a span that carried no such attribute`);
+  }
 });
 
 // --- Config injection (config-not-constants) ---
@@ -1486,6 +1673,9 @@ function everyCivicTermTrace(): Record<string, unknown> {
       'tool.response_hash': 'a0b1c2',
       'tool.response_rows': '42',
       'tool.duration_ms': '850',
+      'tool.upstream_name': 'get_data',
+      'mcp.alias': 'socrata',
+      'mcp.server.id': 'io.github.example/socrata-mcp-server',
     }),
   };
   const rejected: SpanStub = {
@@ -1564,6 +1754,9 @@ test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', (
     'civic:durationMs',
     'civic:failed',
     'civic:failureKind',
+    'civic:upstreamToolName',
+    'civic:sourceAlias',
+    'civic:serverId',
   ]) {
     assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
   }

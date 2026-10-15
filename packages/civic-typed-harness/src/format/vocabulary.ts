@@ -183,6 +183,30 @@ export const CIVIC_TERM_RESPONSE_ROWS = 'civic:responseRows';
 export const CIVIC_TERM_DURATION_MS = 'civic:durationMs';
 
 /**
+ * `civic:upstreamToolName` — the name the call was SENT under on the wire,
+ * the server's own tool name, when the name the model called (stated as
+ * `civic:toolName`) is an aliased one (ADR-0033 §B). Emitted only when the
+ * span carried `tool.upstream_name`.
+ */
+export const CIVIC_TERM_UPSTREAM_TOOL_NAME = 'civic:upstreamToolName';
+
+/**
+ * `civic:sourceAlias` — the operator-facing alias of the source that answered
+ * the call, the prefix of an aliased tool name (ADR-0033 §B). Emitted only
+ * when the span carried `mcp.alias`.
+ */
+export const CIVIC_TERM_SOURCE_ALIAS = 'civic:sourceAlias';
+
+/**
+ * `civic:serverId` — the identity of the server that answered: the router
+ * manifest entry's `id` (its MCP Registry name where it has one, otherwise
+ * its package or service name and address), which a record's
+ * `org.civicaitools.composition` `components[].id` also carries (ADR-0033
+ * §B). Emitted only when the span carried `mcp.server.id`.
+ */
+export const CIVIC_TERM_SERVER_ID = 'civic:serverId';
+
+/**
  * One era of the civic vocabulary: the two literals plus the emitters bound
  * to them. The vocabulary is not deployment configuration (a deployment does
  * not choose its own term set); this seam exists only so a prior-era package

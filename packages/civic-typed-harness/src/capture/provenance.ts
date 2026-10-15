@@ -100,6 +100,12 @@ export interface ProvenanceTerms {
   readonly durationMs: string;
   readonly failed: string;
   readonly failureKind: string;
+  /** The wire name of a call whose exposed name is aliased (ADR-0033 §B). */
+  readonly upstreamToolName: string;
+  /** The alias of the source that answered a call. */
+  readonly sourceAlias: string;
+  /** The identity of the server that answered a call. */
+  readonly serverId: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -122,7 +128,10 @@ export interface ProvenanceBuildConfig {
    *  portal and dataset URL)? Supplied by the caller, consistent with
    *  `sourceRegistry`. */
   isDatasetKeyed: (sourceId: string) => boolean;
-  /** Source id untagged tool spans fall back to. */
+  /** Tool-name → source-id resolver, consulted for a span that carries no
+   *  `mcp.source` tag. */
+  resolver: (toolName: string) => string | undefined;
+  /** Source id for a span neither its tag nor the resolver identifies. */
   fallbackSourceId: string;
   /** Source whose agent server URL the trace's skill-fetch span URL
    *  overrides when present. */

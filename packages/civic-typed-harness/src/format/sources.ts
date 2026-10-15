@@ -85,6 +85,13 @@ export const CIVIC_SOURCE_REGISTRY: CivicSourceRegistry = {
  *  only source when those packages were written. */
 export const FALLBACK_SOURCE_ID = 'socrata';
 
+/** The source id a call is attributed to when neither its span's
+ *  `mcp.source` tag nor the tool-name resolver identifies it (ADR-0033 §A):
+ *  the value the reference app itself writes for a tool it cannot resolve.
+ *  Not a registry entry, so such a call mints no `dataSources` entry, and the
+ *  graph names it as an agent of its own. */
+export const UNKNOWN_SOURCE_ID = 'unknown';
+
 /** Is this source dataset-keyed (one `dataSources` entry per dataset) rather
  *  than aggregate? Unknown ids are neither — they contribute no entry. */
 export function isDatasetKeyedSource(

@@ -39,9 +39,12 @@ import {
   CIVIC_TERM_PORTAL_DOMAIN,
   CIVIC_TERM_PROMPT_TOKENS,
   CIVIC_TERM_RESPONSE_ROWS,
+  CIVIC_TERM_SERVER_ID,
   CIVIC_TERM_SERVER_URL,
+  CIVIC_TERM_SOURCE_ALIAS,
   CIVIC_TERM_SOURCE_ID,
   CIVIC_TERM_TOOL_NAME,
+  CIVIC_TERM_UPSTREAM_TOOL_NAME,
   CIVIC_TERM_URL,
   type CivicVocabulary,
   type PlatformAgentConfig,
@@ -49,8 +52,10 @@ import {
 import {
   CIVIC_SOURCE_REGISTRY,
   FALLBACK_SOURCE_ID,
+  civicToolSourceResolver,
   isDatasetKeyedSource,
   type CivicSourceRegistry,
+  type ToolSourceResolver,
 } from '../format/sources.ts';
 
 // The public surface capture/provenance.ts carried before the seam, re-exported
@@ -69,6 +74,9 @@ export interface ProvenanceConfig {
   /** Source id untagged tool spans fall back to. Default `socrata`
    *  (pre-source-tagging captures were Socrata-only). */
   fallbackSourceId?: string;
+  /** Tool-name → source-id resolver for a span with no `mcp.source` tag.
+   *  Default: the civic map, `civicToolSourceResolver`. */
+  resolver?: ToolSourceResolver;
   /** Source whose agent `civic:serverUrl` the trace's skill-fetch span URL
    *  overrides when present (the skill is fetched from that source's MCP
    *  server). Default `socrata`. */
@@ -118,6 +126,9 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
   durationMs: CIVIC_TERM_DURATION_MS,
   failed: CIVIC_TERM_FAILED,
   failureKind: CIVIC_TERM_FAILURE_KIND,
+  upstreamToolName: CIVIC_TERM_UPSTREAM_TOOL_NAME,
+  sourceAlias: CIVIC_TERM_SOURCE_ALIAS,
+  serverId: CIVIC_TERM_SERVER_ID,
 };
 
 /**
@@ -145,6 +156,7 @@ export function buildProvenanceGraph(
     platformAgent: config.platformAgent,
     sourceRegistry: registry,
     isDatasetKeyed: (sourceId) => isDatasetKeyedSource(sourceId, registry),
+    resolver: config.resolver ?? civicToolSourceResolver,
     fallbackSourceId: config.fallbackSourceId ?? FALLBACK_SOURCE_ID,
     skillSourceId: config.skillSourceId ?? FALLBACK_SOURCE_ID,
     modelAgentDescription: config.modelAgentDescription,

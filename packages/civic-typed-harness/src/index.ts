@@ -32,6 +32,7 @@ export * from './format/profiles.ts';
 // Capture group
 export * from './capture/trace.ts';
 export * from './capture/skill-metadata.ts';
+export * from './capture/run-attributes.ts';
 // data-sources.ts and provenance.ts are exported through the civic layer,
 // which re-exports their public types and applies the civic defaults; the
 // capture builders it calls are not part of the package's entry.
@@ -39,6 +40,7 @@ export * from './capture/skill-metadata.ts';
 // Civic layer
 export * from './civic/data-sources.ts';
 export * from './civic/provenance.ts';
+export * from './civic/run-servers.ts';
 
 // Rubric group
 export * from './rubric/adversarial-eval-core.ts';
