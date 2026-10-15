@@ -11,163 +11,176 @@
 // upstream server's `ckan__` prefix. The source is optional: a run is offered
 // it only when the instance configures its address.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import { BARE_VIEW } from '../core/alias.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 import type { CivicGuidanceContext, CivicManifestEntry } from './context.ts';
 import { BOSTON_OPENCONTEXT_ADDRESS_VARIABLE } from './env.ts';
+import { civicCitation, civicPreambleEntry } from './prompt-frame.ts';
+
+/** The Boston OpenContext source's id, as the website's registry keys it. */
+const SOURCE_ID = 'boston-opencontext';
+
+/** A Boston OpenContext tool's name in `view`. */
+const namer =
+  (view: SourceView) =>
+  (name: string): string =>
+    view.toolName(SOURCE_ID, name);
 
 // --- Boston OpenContext MCP (CKAN-native, data.boston.gov) ---
-export const BOSTON_OPENCONTEXT_TOOLS: FunctionToolSchema[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__search_datasets',
-      description: `Natural-language dataset discovery against Boston's CKAN portal (data.boston.gov). Returns candidate datasets with their CKAN UUID resource ids, titles, and descriptions.
+export function bostonTools(view: SourceView = BARE_VIEW): FunctionToolSchema[] {
+  const b = namer(view);
+  return [
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__search_datasets'),
+        description: `Natural-language dataset discovery against Boston's CKAN portal (data.boston.gov). Returns candidate datasets with their CKAN UUID resource ids, titles, and descriptions.
 
-Use this first when the user asks about Boston civic data and you don't already know the resource UUID. Pair with ckan__get_dataset to inspect a specific candidate or ckan__get_schema to fetch field names for querying.
+Use this first when the user asks about Boston civic data and you don't already know the resource UUID. Pair with ${b('ckan__get_dataset')} to inspect a specific candidate or ${b('ckan__get_schema')} to fetch field names for querying.
 
 Examples:
 - { "query": "311 pothole requests", "limit": 5 }
 - { "query": "building permits" }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: 'Free-text search query (e.g., "311 pothole requests", "building permits", "assessing values")',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Free-text search query (e.g., "311 pothole requests", "building permits", "assessing values")',
+            },
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of results (default: 20)',
+            },
           },
-          limit: {
-            type: 'integer',
-            description: 'Maximum number of results (default: 20)',
-          },
+          required: ['query'],
         },
-        required: ['query'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__get_dataset',
-      description: `Fetch detailed metadata for a specific Boston dataset — title, publisher, update cadence, description, and the list of CKAN resources attached to it. Use after ckan__search_datasets when you need to pick the right resource within a dataset that bundles several.
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__get_dataset'),
+        description: `Fetch detailed metadata for a specific Boston dataset — title, publisher, update cadence, description, and the list of CKAN resources attached to it. Use after ${b('ckan__search_datasets')} when you need to pick the right resource within a dataset that bundles several.
 
 Example:
 - { "dataset_id": "311-service-requests" }
 - { "dataset_id": "8048697b-ad64-4bfc-b090-ee00169f2323" }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          dataset_id: {
-            type: 'string',
-            description: 'CKAN dataset ID or slug (UUID or human-readable name)',
+        parameters: {
+          type: 'object',
+          properties: {
+            dataset_id: {
+              type: 'string',
+              description: 'CKAN dataset ID or slug (UUID or human-readable name)',
+            },
           },
+          required: ['dataset_id'],
         },
-        required: ['dataset_id'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__get_schema',
-      description: `Fetch the field names and types for a specific Boston CKAN resource. Always run this before querying an unfamiliar resource — Boston follows CKAN field-naming conventions that differ from Socrata portals (NYC, Chicago, etc.), and guessing a field name can silently return zero rows.
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__get_schema'),
+        description: `Fetch the field names and types for a specific Boston CKAN resource. Always run this before querying an unfamiliar resource — Boston follows CKAN field-naming conventions that differ from Socrata portals (NYC, Chicago, etc.), and guessing a field name can silently return zero rows.
 
 Example:
 - { "resource_id": "8048697b-ad64-4bfc-b090-ee00169f2323" }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          resource_id: {
-            type: 'string',
-            description: 'CKAN resource UUID (e.g., "8048697b-ad64-4bfc-b090-ee00169f2323")',
+        parameters: {
+          type: 'object',
+          properties: {
+            resource_id: {
+              type: 'string',
+              description: 'CKAN resource UUID (e.g., "8048697b-ad64-4bfc-b090-ee00169f2323")',
+            },
           },
+          required: ['resource_id'],
         },
-        required: ['resource_id'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__query_data',
-      description: `Simple equality-filter query against a Boston CKAN resource. Supports exact-match filtering on one or more fields. For GROUP BY / aggregation, use ckan__aggregate_data. For complex SQL (CTEs, window functions, JOINs), use ckan__execute_sql.
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__query_data'),
+        description: `Simple equality-filter query against a Boston CKAN resource. Supports exact-match filtering on one or more fields. For GROUP BY / aggregation, use ${b('ckan__aggregate_data')}. For complex SQL (CTEs, window functions, JOINs), use ${b('ckan__execute_sql')}.
 
 Example:
 - { "resource_id": "8048697b-ad64-4bfc-b090-ee00169f2323", "filters": { "neighborhood": "Dorchester" }, "limit": 100 }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          resource_id: {
-            type: 'string',
-            description: 'CKAN resource UUID to query',
+        parameters: {
+          type: 'object',
+          properties: {
+            resource_id: {
+              type: 'string',
+              description: 'CKAN resource UUID to query',
+            },
+            filters: {
+              type: 'object',
+              description: 'Optional exact-match filters as field: value pairs (e.g., { "neighborhood": "Dorchester" })',
+            },
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of records (default: 100)',
+            },
           },
-          filters: {
-            type: 'object',
-            description: 'Optional exact-match filters as field: value pairs (e.g., { "neighborhood": "Dorchester" })',
-          },
-          limit: {
-            type: 'integer',
-            description: 'Maximum number of records (default: 100)',
-          },
+          required: ['resource_id'],
         },
-        required: ['resource_id'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__aggregate_data',
-      description: `Structured GROUP BY + aggregation against a Boston CKAN resource. The server compiles a safe SQL query from a JSON spec — prefer this over ckan__execute_sql whenever the question is countable / summable / averageable. Supports count(*), sum(), avg(), min(), max(), stddev().
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__aggregate_data'),
+        description: `Structured GROUP BY + aggregation against a Boston CKAN resource. The server compiles a safe SQL query from a JSON spec — prefer this over ${b('ckan__execute_sql')} whenever the question is countable / summable / averageable. Supports count(*), sum(), avg(), min(), max(), stddev().
 
-Run ckan__get_schema first to confirm field names.
+Run ${b('ckan__get_schema')} first to confirm field names.
 
 Examples:
 - Count 311 requests by neighborhood:
   { "resource_id": "8048697b-ad64-4bfc-b090-ee00169f2323", "group_by": ["neighborhood"], "metrics": { "count": "count(*)" }, "order_by": "count DESC", "limit": 25 }
 - Requests matching a specific case type grouped by year:
   { "resource_id": "...", "group_by": ["year"], "metrics": { "total": "count(*)" }, "filters": { "case_title": "Request for Pothole Repair" } }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          resource_id: {
-            type: 'string',
-            description: 'CKAN resource UUID',
+        parameters: {
+          type: 'object',
+          properties: {
+            resource_id: {
+              type: 'string',
+              description: 'CKAN resource UUID',
+            },
+            group_by: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Fields to group by',
+            },
+            metrics: {
+              type: 'object',
+              description: 'Aggregation metrics as alias: expression pairs (e.g., { "count": "count(*)", "avg_val": "avg(amount)" })',
+            },
+            filters: {
+              type: 'object',
+              description: 'Optional exact-match filters before aggregation',
+            },
+            having: {
+              type: 'object',
+              description: 'Optional post-aggregation filters',
+            },
+            order_by: {
+              type: 'string',
+              description: 'Optional ORDER BY clause (e.g., "count DESC")',
+            },
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of groups to return (default: 100)',
+            },
           },
-          group_by: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Fields to group by',
-          },
-          metrics: {
-            type: 'object',
-            description: 'Aggregation metrics as alias: expression pairs (e.g., { "count": "count(*)", "avg_val": "avg(amount)" })',
-          },
-          filters: {
-            type: 'object',
-            description: 'Optional exact-match filters before aggregation',
-          },
-          having: {
-            type: 'object',
-            description: 'Optional post-aggregation filters',
-          },
-          order_by: {
-            type: 'string',
-            description: 'Optional ORDER BY clause (e.g., "count DESC")',
-          },
-          limit: {
-            type: 'integer',
-            description: 'Maximum number of groups to return (default: 100)',
-          },
+          required: ['resource_id', 'metrics'],
         },
-        required: ['resource_id', 'metrics'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'ckan__execute_sql',
-      description: `Execute a raw PostgreSQL SELECT against a Boston CKAN resource. For complex queries only — prefer ckan__query_data or ckan__aggregate_data first.
+    {
+      type: 'function',
+      function: {
+        name: b('ckan__execute_sql'),
+        description: `Execute a raw PostgreSQL SELECT against a Boston CKAN resource. For complex queries only — prefer ${b('ckan__query_data')} or ${b('ckan__aggregate_data')} first.
 
 CRITICAL:
 - Only SELECT is allowed. INSERT / UPDATE / DELETE / DDL are rejected server-side.
@@ -177,19 +190,23 @@ Supports CTEs (WITH ...), window functions (RANK() OVER (...)), percentile aggre
 
 Example:
 - { "sql": "SELECT neighborhood, count(*) AS requests FROM \\"8048697b-ad64-4bfc-b090-ee00169f2323\\" WHERE open_dt >= '2024-01-01' GROUP BY neighborhood ORDER BY requests DESC LIMIT 10" }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          sql: {
-            type: 'string',
-            description: 'PostgreSQL SELECT statement. Resource UUIDs must be double-quoted in FROM.',
+        parameters: {
+          type: 'object',
+          properties: {
+            sql: {
+              type: 'string',
+              description: 'PostgreSQL SELECT statement. Resource UUIDs must be double-quoted in FROM.',
+            },
           },
+          required: ['sql'],
         },
-        required: ['sql'],
       },
     },
-  },
-];
+  ];
+}
+
+/** The six Boston OpenContext tool schemas in the bare view. */
+export const BOSTON_OPENCONTEXT_TOOLS: FunctionToolSchema[] = bostonTools();
 
 /**
  * The routing list, in the order the website's registry routes it
@@ -205,9 +222,15 @@ export const BOSTON_OPENCONTEXT_TOOL_NAMES: readonly string[] = [
   'ckan__aggregate_data',
 ];
 
-/** The embedded Boston OpenContext guidance. The source of truth is the hub's
- *  `docs/skills/boston.md`; this is the website's hand-synced copy at 3a0c894. */
-export const BOSTON_OPENCONTEXT_SKILL = `
+/** The embedded Boston OpenContext guidance, every tool named through `view`
+ *  (Socrata's `get_data` included). The source of truth is the hub's
+ *  `docs/skills/boston.md`; this is the website's hand-synced copy at 3a0c894.
+ *  "Re-run search/get_dataset" is a short form of two tool names, not a tool
+ *  name; both views keep it as written. */
+export function bostonSkill(view: SourceView = BARE_VIEW): string {
+  const b = namer(view);
+  const socrata = (name: string): string => view.toolName('socrata', name);
+  return `
 # Boston OpenContext Companion Skill — Base Guidance
 
 Guidance for querying Boston civic open data through the OpenContext MCP server at data-mcp.boston.gov/mcp. OpenContext is a CKAN-native MCP framework maintained by the City of Boston; it fronts the CKAN DataStore powering Analyze Boston (data.boston.gov).
@@ -229,18 +252,18 @@ Boston runs CKAN, not Socrata:
 | Query language | SoQL (SQL-like but dialectal) | PostgreSQL SELECT |
 | Dataset identity | 4x4 code (erm2-nwe9) | UUID resource id (8048697b-ad64-4bfc-b090-ee00169f2323) |
 | Identifier quoting in SQL | not required | UUIDs MUST be double-quoted: FROM "uuid-here" |
-| Schema discovery | get_data with LIMIT 1 | ckan__get_schema (explicit) |
-| Aggregation | SELECT ... GROUP BY via get_data | ckan__aggregate_data or ckan__execute_sql |
+| Schema discovery | ${socrata('get_data')} with LIMIT 1 | ${b('ckan__get_schema')} (explicit) |
+| Aggregation | SELECT ... GROUP BY via ${socrata('get_data')} | ${b('ckan__aggregate_data')} or ${b('ckan__execute_sql')} |
 | Writes | Not exposed | Blocked server-side — only SELECT passes |
 
 ## Typical workflow chain
 
-1. **ckan__search_datasets** — natural-language discovery. Returns candidate datasets with their UUID resource ids.
-2. **ckan__get_dataset** — inspect a dataset's full metadata; pick the right resource when a dataset bundles several.
-3. **ckan__get_schema** — fetch field names/types. Run this before querying unfamiliar data — Boston uses CKAN field conventions, not the NYC/Chicago conventions a model may have memorized.
-4. **ckan__query_data** — simple equality-filter queries. Good for "rows where field = value" patterns.
-5. **ckan__aggregate_data** — structured GROUP BY + metrics. Prefer this over raw SQL for countable/summable questions; the server compiles safe SQL from a JSON spec (group_by, metrics, filters, having, order_by).
-6. **ckan__execute_sql** — raw SELECT for CTEs, window functions, JOINs, percentile aggregates.
+1. **${b('ckan__search_datasets')}** — natural-language discovery. Returns candidate datasets with their UUID resource ids.
+2. **${b('ckan__get_dataset')}** — inspect a dataset's full metadata; pick the right resource when a dataset bundles several.
+3. **${b('ckan__get_schema')}** — fetch field names/types. Run this before querying unfamiliar data — Boston uses CKAN field conventions, not the NYC/Chicago conventions a model may have memorized.
+4. **${b('ckan__query_data')}** — simple equality-filter queries. Good for "rows where field = value" patterns.
+5. **${b('ckan__aggregate_data')}** — structured GROUP BY + metrics. Prefer this over raw SQL for countable/summable questions; the server compiles safe SQL from a JSON spec (group_by, metrics, filters, having, order_by).
+6. **${b('ckan__execute_sql')}** — raw SELECT for CTEs, window functions, JOINs, percentile aggregates.
 
 Don't skip steps 1-3 on an unfamiliar dataset — guessing a field name against a 500-column CKAN resource silently returns zero rows or a SQL error.
 
@@ -265,14 +288,21 @@ Neighborhoods do NOT map cleanly to Census tracts. When joining Boston operation
 
 Cite Boston OpenContext analyses with: dataset title, resource UUID, data.boston.gov portal URL, and the SQL / aggregation spec that produced the number. The record-package layer captures tool calls and args automatically; your job in the text output is to make the citation human-readable.
 `;
+}
 
-/** The Boston OpenContext block of the composed prompt. */
-export async function bostonGuidanceText(ctx: CivicGuidanceContext): Promise<string> {
-  const instructions = await ctx.fetchInstructions('boston-opencontext');
+/** The embedded Boston OpenContext guidance in the bare view. */
+export const BOSTON_OPENCONTEXT_SKILL = bostonSkill();
+
+/** The Boston OpenContext block of the composed prompt, in `view` (the bare
+ *  view when absent). The server's instructions are text the router does not
+ *  own: the view gives them its treatment of a source's own text. The pattern
+ *  `ckan__*` names every Boston tool, so it takes the alias too. */
+export async function bostonGuidanceText(ctx: CivicGuidanceContext, view: SourceView = BARE_VIEW): Promise<string> {
+  const instructions = await ctx.fetchInstructions(SOURCE_ID);
   const instructionsBlock = instructions
-    ? `# Boston OpenContext server instructions (from initialize response)\n\n${instructions}`
-    : '# Boston OpenContext server instructions\n\n(The OpenContext MCP server did not advertise per-server instructions on initialize — composing with the embedded Boston skill only; per-tool guidance is carried inline on each ckan__* tool description.)';
-  return `${instructionsBlock}\n\n---\n\n${BOSTON_OPENCONTEXT_SKILL}`;
+    ? `# Boston OpenContext server instructions (from initialize response)\n\n${view.sourceText(SOURCE_ID, instructions)}`
+    : `# Boston OpenContext server instructions\n\n(The OpenContext MCP server did not advertise per-server instructions on initialize — composing with the embedded Boston skill only; per-tool guidance is carried inline on each ${view.toolName(SOURCE_ID, 'ckan__*')} tool description.)`;
+  return `${instructionsBlock}\n\n---\n\n${bostonSkill(view)}`;
 }
 
 /**
@@ -287,11 +317,23 @@ export const BOSTON_OPENCONTEXT_ENTRY: CivicManifestEntry = {
   alias: 'boston',
   sourceId: 'boston-opencontext',
   displayName: 'Boston OpenContext MCP Server',
+  description:
+    "Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics.",
+  freshness:
+    "Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually).",
+  freshnessSource:
+    'The Boston guidance this package embeds (src/civic/boston.ts, hand-synced from the hub\'s docs/skills/boston.md): OpenContext "fronts the CKAN DataStore powering Analyze Boston (data.boston.gov)"; "Update cadence varies. 311 daily, assessor annually, crime weekly."',
   configuration: {
     addressVariable: BOSTON_OPENCONTEXT_ADDRESS_VARIABLE,
     requirement: 'optional',
   },
   tools: BOSTON_OPENCONTEXT_TOOLS,
+  toolsFor: bostonTools,
   toolNames: BOSTON_OPENCONTEXT_TOOL_NAMES,
   guidance: { fetchText: bostonGuidanceText },
+  prompt: {
+    preambleEntry: (view) => civicPreambleEntry('boston-opencontext', view),
+    citation: civicCitation('boston-opencontext'),
+    lockMention: 'Boston OpenContext for Boston',
+  },
 };

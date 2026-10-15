@@ -47,29 +47,66 @@ export interface SourceConfiguration {
   readonly defaultAddress?: string;
 }
 
+/**
+ * How text names a tool in one view of the router's output (ADR-0032).
+ *
+ * The bare view names every tool by its upstream name: the bytes of 0.1.0.
+ * The aliased view names it `<alias>__<upstream name>`, normalized where the
+ * upstream name needs it (`exposedToolName`).
+ */
+export interface SourceView {
+  /** The name the tool `upstreamName` of source `sourceId` has in this view.
+   *  Text the router owns names every tool through this function. */
+  toolName(sourceId: string, upstreamName: string): string;
+  /** Text the router does not own (fetched guidance, a server's initialize
+   *  instructions), as this view presents it: in the aliased view, the
+   *  anchored rewrite of `sourceId`'s own tool names (`anchoredRewrite`). */
+  sourceText(sourceId: string, text: string): string;
+}
+
 /** A source's contribution to the composed prompt. `fetchText` receives the
  *  consumer's context, which carries any fetchers it needs; the router itself
  *  performs no I/O. A text that is blank, or a call that throws, leaves the
- *  source out of the prompt. */
+ *  source out of the prompt. `view` is the view the text is composed in;
+ *  absent, the bare view. */
 export interface GuidanceEntry<Context> {
-  fetchText(context: Context): Promise<string>;
+  fetchText(context: Context, view?: SourceView): Promise<string>;
 }
 
 /** One source in a manifest. */
 export interface ManifestEntry<Context = unknown> {
   /** The source's global identity: its MCP Registry name where it is
    *  published there, otherwise its package or service name and address.
-   *  Carried, never read by 0.1.0. */
+   *  Carried, never read by the router. */
   readonly id: string;
-  /** The operator-facing short name. Carried, never read by 0.1.0. */
+  /** The operator's short name for the source, and the prefix of every tool
+   *  name the aliased view exposes: `<alias>__<upstream name>`. It starts
+   *  with a letter or an underscore, holds only `[A-Za-z0-9_-]`, contains no
+   *  `__`, and is at most 32 characters (`checkToolNames`). */
   readonly alias: string;
   /** The key the source is routed, traced and recorded under. */
   readonly sourceId: string;
   /** The human-readable name of the source's server. */
   readonly displayName: string;
+  /** One line, written for routing: what the source covers, for which
+   *  places, and what it cannot do. No build or status notes. */
+  readonly description: string;
+  /** One line: how current the source's data is. Model-facing, so it carries
+   *  no citation; the citation is `freshnessSource`. */
+  readonly freshness: string;
+  /** Where the `freshness` line comes from: a public source, never a
+   *  deployment's address. A record of the claim, never model-facing. */
+  readonly freshnessSource?: string;
   readonly configuration: SourceConfiguration;
-  /** The source's tool schemas, in the order the model is offered them. */
+  /** The source's tool schemas, in the order the model is offered them, in
+   *  the bare view. */
   readonly tools: readonly FunctionToolSchema[];
+  /** The source's tool schemas in a view, when the router owns their text:
+   *  every tool named in a name or a description goes through
+   *  `view.toolName`. `tools` is this function in the bare view. Absent, the
+   *  aliased view renames each schema and applies the anchored rewrite to its
+   *  descriptions (`entryToolsInView`). */
+  readonly toolsFor?: (view: SourceView) => readonly FunctionToolSchema[];
   /** The server's tool names in the order its routing lists them. The same
    *  set as `tools` (`toolNamesMatchSchemas`); the order may differ, and the
    *  withheld-tools list follows this one. */

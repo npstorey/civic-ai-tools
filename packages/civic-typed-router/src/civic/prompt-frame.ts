@@ -3,6 +3,15 @@
 //
 // Moved from the reference website at 3a0c894,
 // `src/lib/mcp/socrata-skill.ts:462-590`.
+//
+// The preamble and the outro are composed from the offered entries (F4): each
+// entry brings its own preamble entry and citation, and an entry that brings
+// none (a fourth source) gets them composed from its `displayName` and
+// `description`. The three civic sources' texts below are kept byte for byte,
+// with every tool they name going through the view.
+
+import { BARE_VIEW } from '../core/alias.ts';
+import type { SourceView } from '../core/types.ts';
 
 /** The civic source ids, as the website's registry keys them. */
 export type SourceId = 'socrata' | 'data-commons' | 'boston-opencontext';
@@ -10,15 +19,25 @@ export type SourceId = 'socrata' | 'data-commons' | 'boston-opencontext';
 /** Every civic source, in the order the prompt names them. */
 export const ALL_SOURCES: readonly SourceId[] = ['socrata', 'data-commons', 'boston-opencontext'];
 
-/** Each source's numbered entry in the cross-source preamble. */
-const PREAMBLE_ENTRIES: Record<SourceId, string> = {
-  socrata:
-    '**Socrata open data portals** — city operational data such as 311 requests, building permits, inspections, crime, housing violations, payroll, and licenses. Covers NYC, Chicago, SF, Seattle, LA, and hundreds of other portals — but not Boston. Tools: get_data.',
-  'data-commons':
-    '**Google Data Commons** — authoritative federal and international statistical data from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, Department of Education, EPA, and other official agencies. Tools: search_indicators, get_observations.',
-  'boston-opencontext':
-    "**Boston OpenContext** — the City of Boston's CKAN-native open-data MCP, fronting data.boston.gov. 311, permits, crime, inspections, property, elections, schools, parcels, and neighborhoods for Boston specifically. Tools: ckan__search_datasets, ckan__get_dataset, ckan__query_data, ckan__get_schema, ckan__execute_sql, ckan__aggregate_data.",
+/** A `Tools:` list: each name through the view, comma-separated. */
+const toolsList = (view: SourceView, sourceId: string, names: readonly string[]): string =>
+  names.map((name) => view.toolName(sourceId, name)).join(', ');
+
+/** Each civic source's numbered entry in the cross-source preamble, in a
+ *  view. */
+const PREAMBLE_ENTRIES: Record<SourceId, (view: SourceView) => string> = {
+  socrata: (view) =>
+    `**Socrata open data portals** — city operational data such as 311 requests, building permits, inspections, crime, housing violations, payroll, and licenses. Covers NYC, Chicago, SF, Seattle, LA, and hundreds of other portals — but not Boston. Tools: ${toolsList(view, 'socrata', ['get_data'])}.`,
+  'data-commons': (view) =>
+    `**Google Data Commons** — authoritative federal and international statistical data from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, Department of Education, EPA, and other official agencies. Tools: ${toolsList(view, 'data-commons', ['search_indicators', 'get_observations'])}.`,
+  'boston-opencontext': (view) =>
+    `**Boston OpenContext** — the City of Boston's CKAN-native open-data MCP, fronting data.boston.gov. 311, permits, crime, inspections, property, elections, schools, parcels, and neighborhoods for Boston specifically. Tools: ${toolsList(view, 'boston-opencontext', ['ckan__search_datasets', 'ckan__get_dataset', 'ckan__query_data', 'ckan__get_schema', 'ckan__execute_sql', 'ckan__aggregate_data'])}.`,
 };
+
+/** A civic source's preamble entry (without its number), in `view`. */
+export function civicPreambleEntry(sourceId: SourceId, view: SourceView = BARE_VIEW): string {
+  return PREAMBLE_ENTRIES[sourceId](view);
+}
 
 /** The preamble's source-selection rules, in order; a rule that routes to a
  *  source is stated only when that source is offered. */
@@ -29,18 +48,31 @@ const PREAMBLE_RULES: ReadonlyArray<{ routesTo?: SourceId; text: string }> = [
   { text: '- **Multi-source equity questions** that join operational data against demographic context → plan a multi-step analysis, attribute each figure to its source, and mind geography alignment (Boston neighborhoods and city council districts are not standard census geographies — state the mismatch rather than silently imputing).' },
 ];
 
-const SOURCE_COUNT_WORDS = ['NO', 'ONE', 'TWO', 'THREE'];
+const SOURCE_COUNT_WORDS = ['NO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'];
+
+/** The count the preamble states: a word up to ten, then the numeral. */
+export function sourceCountWord(count: number): string {
+  return SOURCE_COUNT_WORDS[count] ?? String(count);
+}
+
+/** One source as the preamble and the outro name it. */
+export interface PromptSource {
+  readonly sourceId: string;
+  /** Its preamble entry, without the number. */
+  readonly preambleEntry: string;
+  /** What the outro asks the model to cite for it. */
+  readonly citation: string;
+}
 
 /**
- * The cross-source preamble for exactly these sources: one numbered entry per
- * source, and the selection rules that route to a source listed. Every line it
- * can produce is a line of `CROSS_SOURCE_PREAMBLE` except the first, which
- * states the count.
+ * The cross-source preamble for exactly these sources, in order: one numbered
+ * entry per source, and the selection rules that route to a source listed.
  */
-export function crossSourcePreamble(sources: readonly SourceId[]): string {
-  const entries = sources.map((sourceId, i) => `${i + 1}. ${PREAMBLE_ENTRIES[sourceId]}`);
-  const rules = PREAMBLE_RULES.filter((rule) => rule.routesTo === undefined || sources.includes(rule.routesTo)).map((rule) => rule.text);
-  return `You have access to ${SOURCE_COUNT_WORDS[sources.length]} MCP data sources through the tools below.
+export function composePreamble(sources: readonly Pick<PromptSource, 'sourceId' | 'preambleEntry'>[]): string {
+  const ids = sources.map((source) => source.sourceId);
+  const entries = sources.map((source, i) => `${i + 1}. ${source.preambleEntry}`);
+  const rules = PREAMBLE_RULES.filter((rule) => rule.routesTo === undefined || ids.includes(rule.routesTo)).map((rule) => rule.text);
+  return `You have access to ${sourceCountWord(sources.length)} MCP data sources through the tools below.
 
 ${entries.join('\n')}
 
@@ -48,6 +80,18 @@ Source selection rules:
 ${rules.join('\n')}
 
 See the Cross-source decision logic section in the Data Commons guidance below for the join pattern.`;
+}
+
+/**
+ * The cross-source preamble for exactly these civic sources, in the bare
+ * view: one numbered entry per source, and the selection rules that route to
+ * a source listed. Every line it can produce is a line of
+ * `CROSS_SOURCE_PREAMBLE` except the first, which states the count.
+ */
+export function crossSourcePreamble(sources: readonly SourceId[]): string {
+  return composePreamble(
+    sources.map((sourceId) => ({ sourceId, preambleEntry: `${PREAMBLE_ENTRIES[sourceId]?.(BARE_VIEW)}` })),
+  );
 }
 
 /** The preamble with every source this codebase has — what an instance that
@@ -60,19 +104,28 @@ export const introFor = (today: string): string =>
 
 Today's date is ${today}. Always use this as the current date for interpreting relative time expressions like "last year" or "past two months."`;
 
-/** What the outro asks the model to cite, per source. */
+/** What the outro asks the model to cite, per civic source. */
 const OUTRO_CITATIONS: Record<SourceId, string> = {
   socrata: 'the dataset ID (for Socrata)',
   'data-commons': 'the variable DCID + source dataset (for Data Commons)',
   'boston-opencontext': 'the resource UUID + dataset title (for Boston OpenContext)',
 };
 
-/** The closing instruction, citing exactly these sources. */
-export function outroFor(sources: readonly SourceId[]): string {
-  const citations = sources.map((sourceId) => OUTRO_CITATIONS[sourceId]);
+/** A civic source's outro citation. */
+export function civicCitation(sourceId: SourceId): string {
+  return OUTRO_CITATIONS[sourceId];
+}
+
+/** The closing instruction, citing these, in order. */
+export function composeOutro(citations: readonly string[]): string {
   const list =
     citations.length <= 2
       ? citations.join(' or ')
       : `${citations.slice(0, -1).join(', ')}, or ${citations[citations.length - 1]}`;
   return `When you get results, summarize clearly and cite ${list}.`;
+}
+
+/** The closing instruction, citing exactly these civic sources. */
+export function outroFor(sources: readonly SourceId[]): string {
+  return composeOutro(sources.map((sourceId) => OUTRO_CITATIONS[sourceId]));
 }

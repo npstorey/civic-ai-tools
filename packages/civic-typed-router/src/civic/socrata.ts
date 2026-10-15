@@ -1,23 +1,40 @@
 // The Socrata source: its tool schemas, its guidance block, the fallback
 // guidance and the per-portal table.
 //
-// Moved from the reference website at 3a0c894: the schemas from
+// Moved from the reference website at 3a0c894, and brought up to its text at
+// d1919a8 (San Francisco's portal as data.sf.gov, website #587): the schemas from
 // `src/lib/mcp/tools.ts:9-148`, `SOCRATA_SKILL_FALLBACK` and
 // `getSkillForPortal` from `src/lib/mcp/socrata-skill.ts:54-436`, and the
 // registry entry's text from `:599-609`. The text is the website's, byte for
 // byte; `router-goldens.test.ts` holds it to the captured outputs.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import { BARE_VIEW } from '../core/alias.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 import type { CivicGuidanceContext, CivicManifestEntry, PromptFetcher } from './context.ts';
 import { SOCRATA_ADDRESS_VARIABLE } from './env.ts';
+import { lockSocrataTools, portalLockSectionFor } from './portal-lock.ts';
+import { civicCitation, civicPreambleEntry } from './prompt-frame.ts';
+
+/** The Socrata source's id, as the website's registry keys it. */
+const SOURCE_ID = 'socrata';
+
+/** A Socrata tool's name in `view`. */
+const namer =
+  (view: SourceView) =>
+  (name: string): string =>
+    view.toolName(SOURCE_ID, name);
 
 // --- Socrata MCP (city open data portals) ---
-export const SOCRATA_TOOLS: FunctionToolSchema[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'get_data',
-      description: `Unified Socrata open data access tool. Supports multiple operation types:
+/** The three Socrata tool schemas, every tool named through `view` (in a name
+ *  or in a description). The bare view is `SOCRATA_TOOLS`. */
+export function socrataTools(view: SourceView = BARE_VIEW): FunctionToolSchema[] {
+  const s = namer(view);
+  return [
+    {
+      type: 'function',
+      function: {
+        name: s('get_data'),
+        description: `Unified Socrata open data access tool. Supports multiple operation types:
 - catalog: Search the catalog for datasets matching a query on a Socrata portal
 - metadata: Get detailed metadata about a specific dataset
 - query: Execute a SoQL query against a dataset to fetch and filter data
@@ -35,123 +52,127 @@ Examples:
 - Get metrics: { "type": "metrics", "portal": "data.cityofnewyork.us", "dataset_id": "erm2-nwe9" }
 - Fetch sample data first: { "type": "query", "portal": "data.cityofnewyork.us", "dataset_id": "erm2-nwe9", "limit": 5 }
 - Query with filter: { "type": "query", "portal": "data.cityofnewyork.us", "dataset_id": "erm2-nwe9", "select": "complaint_type, COUNT(*) as count", "group": "complaint_type", "order": "count DESC", "limit": 10 }`,
-      parameters: {
-        type: 'object',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['catalog', 'metadata', 'query', 'metrics'],
-            description: 'The type of operation to perform',
+        parameters: {
+          type: 'object',
+          properties: {
+            type: {
+              type: 'string',
+              enum: ['catalog', 'metadata', 'query', 'metrics'],
+              description: 'The type of operation to perform',
+            },
+            portal: {
+              type: 'string',
+              description: 'Socrata portal domain (e.g., data.cityofnewyork.us, data.sf.gov)',
+            },
+            query: {
+              type: 'string',
+              // website #340: this used to describe only the $q branch. The data-access
+              // handler splits on whether the value starts with SELECT, and the
+              // SoQL branch supersedes the individual clauses AND drops
+              // limit/offset — so a model reading the old text could send both a
+              // SELECT and a limit and be silently given neither bound it asked
+              // for. Both branches are stated here because both are reachable.
+              description: 'For type=catalog: search query. For type=metadata: the dataset ID. For type=query: either a full SoQL statement starting with SELECT, which is applied as the entire query and supersedes select/where/order/group (limit and offset are not applied either — bound the rows with the statement\'s own LIMIT), or a search phrase, applied as a full-text search within the data alongside the other clauses.',
+            },
+            dataset_id: {
+              type: 'string',
+              description: 'Dataset identifier (required for type=query, metadata, and metrics)',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of rows to return (default: 10)',
+            },
+            offset: {
+              type: 'number',
+              description: 'Number of rows to skip (for pagination)',
+            },
+            select: {
+              type: 'string',
+              description: 'SoQL select clause (for type=query)',
+            },
+            where: {
+              type: 'string',
+              description: 'SoQL where clause (for type=query)',
+            },
+            order: {
+              type: 'string',
+              description: 'SoQL order clause (for type=query)',
+            },
+            group: {
+              type: 'string',
+              description: 'SoQL group clause (for type=query)',
+            },
           },
-          portal: {
-            type: 'string',
-            description: 'Socrata portal domain (e.g., data.cityofnewyork.us, data.sfgov.org)',
-          },
-          query: {
-            type: 'string',
-            // website #340: this used to describe only the $q branch. The data-access
-            // handler splits on whether the value starts with SELECT, and the
-            // SoQL branch supersedes the individual clauses AND drops
-            // limit/offset — so a model reading the old text could send both a
-            // SELECT and a limit and be silently given neither bound it asked
-            // for. Both branches are stated here because both are reachable.
-            description: 'For type=catalog: search query. For type=metadata: the dataset ID. For type=query: either a full SoQL statement starting with SELECT, which is applied as the entire query and supersedes select/where/order/group (limit and offset are not applied either — bound the rows with the statement\'s own LIMIT), or a search phrase, applied as a full-text search within the data alongside the other clauses.',
-          },
-          dataset_id: {
-            type: 'string',
-            description: 'Dataset identifier (required for type=query, metadata, and metrics)',
-          },
-          limit: {
-            type: 'number',
-            description: 'Maximum number of rows to return (default: 10)',
-          },
-          offset: {
-            type: 'number',
-            description: 'Number of rows to skip (for pagination)',
-          },
-          select: {
-            type: 'string',
-            description: 'SoQL select clause (for type=query)',
-          },
-          where: {
-            type: 'string',
-            description: 'SoQL where clause (for type=query)',
-          },
-          order: {
-            type: 'string',
-            description: 'SoQL order clause (for type=query)',
-          },
-          group: {
-            type: 'string',
-            description: 'SoQL group clause (for type=query)',
-          },
+          required: ['type'],
         },
-        required: ['type'],
       },
     },
-  },
-  // website #323: `search` and `fetch` are the Socrata MCP server's other two tools.
-  // The website's `registry.ts` has routed all three names since it was written
-  // (`SOCRATA_TOOLS = ['get_data', 'search', 'fetch']`) and the skill text has
-  // always described them — only the schemas were missing, so the model was
-  // told about two capabilities it had no way to invoke. Measured in the
-  // server's source and against the deployed endpoint: `tools/list` returns
-  // exactly `get_data, search, fetch`.
-  //
-  // The two schemas below MIRROR the server's, which are deliberately narrow —
-  // one required property each and `additionalProperties: false`. That is not
-  // an omission to be helpfully filled in: neither tool accepts a portal or
-  // domain, so anything else sent here is rejected upstream. The narrowness is
-  // also why the loop core's portal injection stays scoped to `get_data`
-  // (the website's `run-tool-loop.ts`) — an injected portal would be stripped by the server
-  // and would still corrupt the arguments recorded in the signed package.
-  {
-    type: 'function',
-    function: {
-      name: 'search',
-      description: `Search the Socrata portal this instance's MCP server is configured for, returning matching datasets with identifiers that "fetch" accepts.
+    // website #323: `search` and `fetch` are the Socrata MCP server's other two tools.
+    // The website's `registry.ts` has routed all three names since it was written
+    // (`SOCRATA_TOOLS = ['get_data', 'search', 'fetch']`) and the skill text has
+    // always described them — only the schemas were missing, so the model was
+    // told about two capabilities it had no way to invoke. Measured in the
+    // server's source and against the deployed endpoint: `tools/list` returns
+    // exactly `get_data, search, fetch`.
+    //
+    // The two schemas below MIRROR the server's, which are deliberately narrow —
+    // one required property each and `additionalProperties: false`. That is not
+    // an omission to be helpfully filled in: neither tool accepts a portal or
+    // domain, so anything else sent here is rejected upstream. The narrowness is
+    // also why the loop core's portal injection stays scoped to `get_data`
+    // (the website's `run-tool-loop.ts`) — an injected portal would be stripped by the server
+    // and would still corrupt the arguments recorded in the signed package.
+    {
+      type: 'function',
+      function: {
+        name: s('search'),
+        description: `Search the Socrata portal this instance's MCP server is configured for, returning matching datasets with identifiers that "${s('fetch')}" accepts.
 
 Returns, per hit: an "id" of the form dataset:<portal>:<dataset_id>, the title, the portal URL, a description snippet, and — where the dataset allows it — its column list and a few preview rows.
 
 WHICH TOOL TO USE:
 - This tool searches ONE portal: the one the server is configured with. It takes no portal argument.
-- To search any OTHER portal, use get_data with { "type": "catalog", "portal": "...", "query": "..." }, which does take a portal.`,
-      parameters: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          query: {
-            type: 'string',
-            description: 'Full-text search phrase, e.g. "311 noise complaints"',
+- To search any OTHER portal, use ${s('get_data')} with { "type": "catalog", "portal": "...", "query": "..." }, which does take a portal.`,
+        parameters: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Full-text search phrase, e.g. "311 noise complaints"',
+            },
           },
+          required: ['query'],
         },
-        required: ['query'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'fetch',
-      description: `Retrieve a dataset's full metadata, or a single record, by the identifier "search" returned.
+    {
+      type: 'function',
+      function: {
+        name: s('fetch'),
+        description: `Retrieve a dataset's full metadata, or a single record, by the identifier "${s('search')}" returned.
 
-The identifier is normally taken verbatim from a search hit: dataset:<portal>:<dataset_id> for a dataset, record:<portal>:<dataset_id>:<row_id> for one row. A Socrata dataset URL is also accepted and names its own portal (the URL's hostname). A bare 4x4 dataset ID (or 4x4:<row_id> for one row) names no portal and resolves against the server's configured portal.
+The identifier is normally taken verbatim from a ${s('search')} hit: dataset:<portal>:<dataset_id> for a dataset, record:<portal>:<dataset_id>:<row_id> for one row. A Socrata dataset URL is also accepted and names its own portal (the URL's hostname). A bare 4x4 dataset ID (or 4x4:<row_id> for one row) names no portal and resolves against the server's configured portal.
 
-WHICH TOOL TO USE: this returns metadata and columns, not query results. To read or aggregate rows, use get_data with type=query.`,
-      parameters: {
-        type: 'object',
-        additionalProperties: false,
-        properties: {
-          id: {
-            type: 'string',
-            description: 'Identifier returned by the search tool, e.g. "dataset:data.cityofnewyork.us:erm2-nwe9"',
+WHICH TOOL TO USE: this returns metadata and columns, not query results. To read or aggregate rows, use ${s('get_data')} with type=query.`,
+        parameters: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            id: {
+              type: 'string',
+              description: `Identifier returned by the ${s('search')} tool, e.g. "dataset:data.cityofnewyork.us:erm2-nwe9"`,
+            },
           },
+          required: ['id'],
         },
-        required: ['id'],
       },
     },
-  },
-];
+  ];
+}
+
+/** The three Socrata tool schemas in the bare view. */
+export const SOCRATA_TOOLS: FunctionToolSchema[] = socrataTools();
 
 /** The routing list: the server's tool names in the order the website's
  *  registry routes them (`src/lib/mcp/registry.ts:53`). */
@@ -161,8 +182,10 @@ export const SOCRATA_TOOL_NAMES: readonly string[] = ['get_data', 'search', 'fet
 // carries no deployment posture (no host names, no deployment limits, no
 // links); the Socrata MCP server appends posture when it serves the live text.
 // The website keeps it in step with the hub's docs/skills/ claims by hand,
-// under its own tests; this copy is the website's at 3a0c894.
-export const SOCRATA_SKILL_FALLBACK = `
+// under its own tests; this copy is the website's at d1919a8.
+export function socrataSkillFallback(view: SourceView = BARE_VIEW): string {
+  const s = namer(view);
+  return `
 # Socrata MCP Companion Skill — Base Guidance
 
 Universal guidance for querying Socrata open data portals through the Socrata MCP Server.
@@ -223,7 +246,7 @@ Evaluate complexity before executing, proceed silently if low risk.
 Before querying ANY unfamiliar dataset, discover the schema first:
 
 \`\`\`
-Tool: get_data
+Tool: ${s('get_data')}
 Type: "query"
 Domain: [domain]
 Dataset_id: [dataset-id]
@@ -272,37 +295,37 @@ ORDER BY year
 
 ## Domain Support
 
-**Any Socrata open data portal can be queried with get_data.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use get_data with type "catalog" and that portal to discover its datasets, then get_data with type "query" to read them. Do NOT refuse a query just because a city isn't listed below.
+**Any Socrata open data portal can be queried with ${s('get_data')}.** There are 500+ Socrata portals across the US and internationally. If the user asks about a city, state, or county, try it — use ${s('get_data')} with type "catalog" and that portal to discover its datasets, then ${s('get_data')} with type "query" to read them. Do NOT refuse a query just because a city isn't listed below.
 
-To find a portal domain for a city, use common patterns: data.cityofX.us, data.X.gov, data.Xcounty.gov, data.state.X.us. If you aren't sure which domain is right, try a candidate with get_data and type "catalog" — one call either returns that portal's datasets or shows the portal isn't reachable.
+To find a portal domain for a city, use common patterns: data.cityofX.us, data.X.gov, data.Xcounty.gov, data.state.X.us. If you aren't sure which domain is right, try a candidate with ${s('get_data')} and type "catalog" — one call either returns that portal's datasets or shows the portal isn't reachable.
 
 ### Which Tool Reaches Which Portal
 
-get_data is the only tool that takes a portal. Settle that before choosing a tool:
+${s('get_data')} is the only tool that takes a portal. Settle that before choosing a tool:
 
-- **get_data** accepts a portal argument (domain is an accepted spelling of the same thing) and works against any Socrata portal. With type "catalog" it is the cross-portal discovery path; with type "query" it runs SoQL against the portal you name.
-- **search** takes exactly one argument, query, and searches only the portal this server is configured for. It has no portal argument. Reach for it when the portal you want is the configured one; use get_data with type "catalog" for every other portal.
-- **fetch** takes only one argument, id, and the portal travels inside that identifier — a search hit's dataset:portal:dataset_id form (or a full dataset URL) names its portal, but a bare 4x4 ID names none, so it resolves against the portal this server is configured for.
+- **${s('get_data')}** accepts a portal argument (domain is an accepted spelling of the same thing) and works against any Socrata portal. With type "catalog" it is the cross-portal discovery path; with type "query" it runs SoQL against the portal you name.
+- **${s('search')}** takes exactly one argument, query, and searches only the portal this server is configured for. It has no portal argument. Reach for it when the portal you want is the configured one; use ${s('get_data')} with type "catalog" for every other portal.
+- **${s('fetch')}** takes only one argument, id, and the portal travels inside that identifier — a ${s('search')} hit's dataset:portal:dataset_id form (or a full dataset URL) names its portal, but a bare 4x4 ID names none, so it resolves against the portal this server is configured for.
 
-So a dataset ID you learned somewhere else — the tables below, a curated directory, a web search — is reached with get_data and an explicit portal argument, not handed to fetch as a bare ID.
+So a dataset ID you learned somewhere else — the tables below, a curated directory, a web search — is reached with ${s('get_data')} and an explicit portal argument, not handed to ${s('fetch')} as a bare ID.
 
 ### Well-Tested Domains
 
-get_data has been extensively tested against these portals:
+${s('get_data')} has been extensively tested against these portals:
 
 | Domain | Notes |
 |--------|-------|
 | data.cityofnewyork.us | NYC — see Key Datasets below |
 | data.cityofchicago.org | Chicago — see Key Datasets below |
-| data.sfgov.org | San Francisco — see Key Datasets below |
+| data.sf.gov | San Francisco — see Key Datasets below |
 | data.seattle.gov | Seattle — see Key Datasets below |
 | data.lacity.org | Los Angeles — see Key Datasets below |
 
-search and fetch aren't in this table: they only ever reach the portal this server is configured for, so "compatibility" isn't something that varies by domain the way it does for get_data.
+${s('search')} and ${s('fetch')} aren't in this table: they only ever reach the portal this server is configured for, so "compatibility" isn't something that varies by domain the way it does for ${s('get_data')}.
 
 ### Other Portals
 
-For portals not listed above, use get_data with type "catalog" and that portal to discover available datasets, then get_data with type "query" to read them. search and fetch won't help here — whichever portal this server is configured for, that's the only one they reach.
+For portals not listed above, use ${s('get_data')} with type "catalog" and that portal to discover available datasets, then ${s('get_data')} with type "query" to read them. ${s('search')} and ${s('fetch')} won't help here — whichever portal this server is configured for, that's the only one they reach.
 
 ### When a Portal Doesn't Work
 
@@ -313,9 +336,9 @@ Not every city uses Socrata — some use ESRI/ArcGIS, CKAN, or proprietary platf
 
 ### Working With a Portal Other Than the Configured One
 
-search and fetch only ever reach the portal this server is configured for — that isn't a per-domain quirk to work around, it's what those two tools do. If the user asks about San Francisco, Los Angeles, or anywhere else that isn't the configured portal, reach it with get_data and an explicit portal argument plus dataset ID — from the tables below, a web search, or get_data with type "catalog" on that portal.
+${s('search')} and ${s('fetch')} only ever reach the portal this server is configured for — that isn't a per-domain quirk to work around, it's what those two tools do. If the user asks about San Francisco, Los Angeles, or anywhere else that isn't the configured portal, reach it with ${s('get_data')} and an explicit portal argument plus dataset ID — from the tables below, a web search, or ${s('get_data')} with type "catalog" on that portal.
 
-**Known LA Dataset IDs** (once you're pointed at data.lacity.org with get_data):
+**Known LA Dataset IDs** (once you're pointed at data.lacity.org with ${s('get_data')}):
 - MyLA311 2025: h73f-gn57
 - MyLA311 2022: i5ke-k6by
 - MyLA311 2020: rq3b-xjk8
@@ -343,7 +366,7 @@ search and fetch only ever reach the portal this server is configured for — th
 
 ## Key Datasets by Portal
 
-Below are the most-used datasets per portal for quick reference. For a dataset not listed here, use get_data with type "catalog" and the portal to discover it — search only covers the portal this server is configured for.
+Below are the most-used datasets per portal for quick reference. For a dataset not listed here, use ${s('get_data')} with type "catalog" and the portal to discover it — ${s('search')} only covers the portal this server is configured for.
 
 ### NYC (data.cityofnewyork.us)
 
@@ -370,7 +393,7 @@ Below are the most-used datasets per portal for quick reference. For a dataset n
 | Business Licenses (Active) | uupf-x98q | license_number, business_activity, expiration_date |
 | Employee Salaries | xzkq-xp2w | name, job_titles, department, annual_salary |
 
-### San Francisco (data.sfgov.org)
+### San Francisco (data.sf.gov)
 
 | Dataset | ID | Key Fields |
 |---------|----|------------|
@@ -395,7 +418,7 @@ Below are the most-used datasets per portal for quick reference. For a dataset n
 
 ### Los Angeles (data.lacity.org)
 
-Note: reach LA with get_data and portal "data.lacity.org" unless that happens to be the configured portal — search and fetch only cover the configured portal.
+Note: reach LA with ${s('get_data')} and portal "data.lacity.org" unless that happens to be the configured portal — ${s('search')} and ${s('fetch')} only cover the configured portal.
 
 | Dataset | ID | Key Fields |
 |---------|----|------------|
@@ -433,9 +456,9 @@ Note: reach LA with get_data and portal "data.lacity.org" unless that happens to
 
 | Tool | Arguments | Purpose | Returns |
 |------|-----------|---------|---------|
-| **search** | query only — no portal argument | Find datasets on the portal this server is configured for | Encoded IDs, e.g. dataset:portal:dataset_id |
-| **fetch** | id only — the portal travels in the identifier; a bare 4x4 resolves against the configured portal | Retrieve full metadata or one record | Complete data with metadata |
-| **get_data** | type, portal (any portal), plus SoQL parameters | Catalog discovery and SoQL queries — the only tool that reaches a portal other than the configured one | Raw query results |
+| **${s('search')}** | query only — no portal argument | Find datasets on the portal this server is configured for | Encoded IDs, e.g. dataset:portal:dataset_id |
+| **${s('fetch')}** | id only — the portal travels in the identifier; a bare 4x4 resolves against the configured portal | Retrieve full metadata or one record | Complete data with metadata |
+| **${s('get_data')}** | type, portal (any portal), plus SoQL parameters | Catalog discovery and SoQL queries — the only tool that reaches a portal other than the configured one | Raw query results |
 
 ## Output Format Guidelines
 
@@ -527,16 +550,22 @@ Follow the limits your deployment declares; where none are declared, prefer cons
 
 When a user hits a limit (complex multi-city query, long date range, deep analysis), suggest a local (stdio) client for heavier analysis — local clients connect directly to the same data sources without web-environment constraints. Keep the suggestion neutral unless your deployment declares a specific alternative.
 `;
+}
+
+/** The fallback guidance in the bare view. */
+export const SOCRATA_SKILL_FALLBACK = socrataSkillFallback();
 
 /**
- * Portal-specific guidance for the run's Socrata portal, or `''`.
+ * Portal-specific guidance for the run's Socrata portal, or `''`, with every
+ * tool named through `view`.
  *
  * The lookup is a property read on a plain object, as the website's is: a
  * portal string that is also an `Object.prototype` property (`constructor`,
  * say) reads that property. Kept as it is, because the move changes no
  * output, including outputs the captured goldens do not cover.
  */
-export const getSkillForPortal = (portal: string): string => {
+export const getSkillForPortal = (portal: string, view: SourceView = BARE_VIEW): string => {
+  const s = namer(view);
   const portalSpecificGuidance: Record<string, string> = {
     'data.cityofnewyork.us': `
 Use these NYC dataset IDs directly:
@@ -546,33 +575,37 @@ Use these NYC dataset IDs directly:
     'data.cityofchicago.org': `
 Use these Chicago dataset IDs directly:
 - 311 requests: v6vf-nfxy (fields: sr_type, created_date, community_area)`,
-    'data.sfgov.org': `
-Note: search only covers the portal this server is configured for — if that isn't data.sfgov.org, reach SF with get_data and portal: "data.sfgov.org" instead. Use dataset IDs directly:
-- 311 cases: vw6y-z8j6 (fields: service_name, opened, neighborhood)`,
+    'data.sf.gov': `
+Note: ${s('search')} only covers the portal this server is configured for — if that isn't data.sf.gov, reach SF with ${s('get_data')} and portal: "data.sf.gov" instead. Use dataset IDs directly:
+- 311 cases: vw6y-z8j6 (fields: requested_datetime, service_name, analysis_neighborhood)`,
   };
 
   return portalSpecificGuidance[portal] || '';
 };
 
-/** The Socrata guidance as fetched, or the fallback when the fetch throws. */
-async function fetchSkillGuidance(fetchPrompt: PromptFetcher): Promise<string> {
+/** The Socrata guidance in `view`: as fetched, with the view's treatment of
+ *  text the server sent (the anchored rewrite, in the aliased view); or the
+ *  fallback, which this package owns, when the fetch throws. */
+async function fetchSkillGuidance(fetchPrompt: PromptFetcher, view: SourceView): Promise<string> {
+  let guidance: string;
   try {
-    const guidance = await fetchPrompt('skill-guidance', { modality: 'web' });
+    guidance = await fetchPrompt('skill-guidance', { modality: 'web' });
     // The website read `guidance.length` here, for a log line, inside this
     // `try`: a nullish result therefore threw and fell back. The read is
     // kept, without the log.
     void guidance.length;
-    return guidance;
   } catch {
-    return SOCRATA_SKILL_FALLBACK;
+    return socrataSkillFallback(view);
   }
+  return view.sourceText(SOURCE_ID, guidance);
 }
 
-/** The Socrata block of the composed prompt. */
-export async function socrataGuidanceText(ctx: CivicGuidanceContext): Promise<string> {
-  const guidance = await fetchSkillGuidance(ctx.fetchPrompt);
+/** The Socrata block of the composed prompt, in `view` (the bare view when
+ *  absent). */
+export async function socrataGuidanceText(ctx: CivicGuidanceContext, view: SourceView = BARE_VIEW): Promise<string> {
+  const guidance = await fetchSkillGuidance(ctx.fetchPrompt, view);
   const portalSection = ctx.portal
-    ? `\n\n## PORTAL-SPECIFIC GUIDANCE\nDefault portal: ${ctx.portal}\n${getSkillForPortal(ctx.portal)}`
+    ? `\n\n## PORTAL-SPECIFIC GUIDANCE\nDefault portal: ${ctx.portal}\n${getSkillForPortal(ctx.portal, view)}`
     : '';
   return `# Socrata skill guidance\n\n${guidance}${portalSection}`;
 }
@@ -587,11 +620,23 @@ export const SOCRATA_ENTRY: CivicManifestEntry = {
   alias: 'socrata',
   sourceId: 'socrata',
   displayName: 'Socrata MCP Server',
+  description:
+    "Socrata open data portals: records that cities and states publish, such as 311 requests, building permits, inspections, crime, housing violations, payroll, licenses and transit ridership. Covers NYC, Chicago, SF, Seattle, LA, state portals such as data.ny.gov, and hundreds of other portals. Cannot reach Boston's city data, and returns only the datasets each portal's publisher posts, so it is not the source for census demographics.",
+  freshness:
+    "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+  freshnessSource:
+    'socrata-mcp-server at 3163601 (0.9.2), the hosted Socrata server: get_data sends its catalog, query and metrics requests to the portal on each call (src/tools/socrata-tools.ts); fetch keeps a result for five minutes (src/utils/cache.ts, documentCache).',
   configuration: {
     addressVariable: SOCRATA_ADDRESS_VARIABLE,
     requirement: 'required',
   },
   tools: SOCRATA_TOOLS,
+  toolsFor: socrataTools,
   toolNames: SOCRATA_TOOL_NAMES,
   guidance: { fetchText: socrataGuidanceText },
+  prompt: {
+    preambleEntry: (view) => civicPreambleEntry('socrata', view),
+    citation: civicCitation('socrata'),
+  },
+  portalLock: { lockTools: lockSocrataTools, section: portalLockSectionFor },
 };

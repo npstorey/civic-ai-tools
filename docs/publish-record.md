@@ -172,6 +172,8 @@ https://civicaitools.org/records/manhattan-311-noise-complaints-2025-<hash>
 
 The published package will have `dataSources[]` listing Socrata with the NYC portal, `queries[]` containing the `get_data` call, and a PROV-O graph with one `urn:civic-record:mcp-server:socrata` agent. (Records published before 2026-08-19 carry the prior-era `urn:civic-evidence:` form; those identifiers are frozen inside the signature and stay valid forever — verifiers accept both eras.)
 
+**Tool names and source aliases.** A `toolCalls[].name` is the tool's upstream name: the name the MCP server itself declares, which Claude Code shows behind its own `mcp__<server>__` prefix (`mcp__socrata__get_data` is `get_data`), with the server in `source`. The reference web app names tools for its model by the rule of [ADR-0032](./adr/0032-tool-naming-across-sources.md): each tool is exposed as `<alias>__<upstream name>` (`socrata__get_data`, `data_commons__search_indicators`, `boston__ckan__search_datasets`), while the call to the server keeps the upstream name. That alias is the app's naming for its model, not a rename of the server's tool, so the skill sends the upstream name as it always has.
+
 ## Direct script invocation (optional)
 
 If you're scripting around the skill or want to publish without a Claude conversation in the loop, you can run the publish script directly:

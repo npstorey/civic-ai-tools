@@ -69,7 +69,7 @@ const UNKNOWN_TOOL_NAME = 'fixture_unknown_tool';
 
 const PORTAL_NYC = 'data.cityofnewyork.us';
 const PORTAL_CHICAGO = 'data.cityofchicago.org';
-const PORTAL_SF = 'data.sfgov.org';
+const PORTAL_SF = 'data.sf.gov';
 const PORTAL_UNLISTED = 'data.example.org';
 
 // The three network inputs, as fixture text. Synthetic and neutral. Each holds

@@ -12,7 +12,11 @@
 // property differ. No portal hostname is written here: the locked portal is
 // the instance's configuration, interpolated at call time.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import { BARE_VIEW } from '../core/alias.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
+
+/** A Socrata tool's name in `view`. */
+const socrataName = (view: SourceView, name: string): string => view.toolName('socrata', name);
 
 type ParametersWithProperties = { properties: Record<string, unknown> } & Record<string, unknown>;
 
@@ -56,23 +60,27 @@ Examples:
   };
 }
 
-export function lockedSearch(base: FunctionToolSchema, lockedPortal: string): FunctionToolSchema {
+/** `search` rewritten for one portal, every tool named through `view`.
+ *  `base` is the unlocked schema in the same view. */
+export function lockedSearch(base: FunctionToolSchema, lockedPortal: string, view: SourceView = BARE_VIEW): FunctionToolSchema {
   return {
     ...base,
     function: {
       ...base.function,
-      description: `Search the Socrata portal this instance's MCP server is configured for, returning matching datasets with identifiers that "fetch" accepts.
+      description: `Search the Socrata portal this instance's MCP server is configured for, returning matching datasets with identifiers that "${socrataName(view, 'fetch')}" accepts.
 
 Returns, per hit: an "id" of the form dataset:<portal>:<dataset_id>, the title, the portal URL, a description snippet, and — where the dataset allows it — its column list and a few preview rows.
 
 WHICH TOOL TO USE:
 - This tool searches ONE portal: the one the server is configured with. It takes no portal argument.
-- This instance queries one Socrata portal only, ${lockedPortal}. To search its catalog by name, get_data with { "type": "catalog", "query": "..." } also works. No other Socrata portal can be queried here.`,
+- This instance queries one Socrata portal only, ${lockedPortal}. To search its catalog by name, ${socrataName(view, 'get_data')} with { "type": "catalog", "query": "..." } also works. No other Socrata portal can be queried here.`,
     },
   };
 }
 
-export function lockedFetch(base: FunctionToolSchema, lockedPortal: string): FunctionToolSchema {
+/** `fetch` rewritten for one portal, every tool named through `view`.
+ *  `base` is the unlocked schema in the same view. */
+export function lockedFetch(base: FunctionToolSchema, lockedPortal: string, view: SourceView = BARE_VIEW): FunctionToolSchema {
   const baseParameters = base.function.parameters as ParametersWithProperties;
   return {
     ...base,
@@ -88,7 +96,7 @@ This instance queries one Socrata portal only, ${lockedPortal}: an identifier or
           // The unlocked example names a real portal; this one names the portal served.
           id: {
             type: 'string',
-            description: `Identifier returned by the search tool, e.g. "dataset:${lockedPortal}:<dataset-id>"`,
+            description: `Identifier returned by the ${socrataName(view, 'search')} tool, e.g. "dataset:${lockedPortal}:<dataset-id>"`,
           },
         },
       },
@@ -97,7 +105,34 @@ This instance queries one Socrata portal only, ${lockedPortal}: an identifier or
 }
 
 /**
- * The section a locked instance appends to the composed prompt.
+ * The three Socrata schemas of `tools` (the Socrata entry's, in `view`)
+ * rewritten for one portal; any other tool is returned as it is. Throws when
+ * one of the three is missing.
+ */
+export function lockSocrataTools(
+  tools: readonly FunctionToolSchema[],
+  lockedPortal: string,
+  view: SourceView = BARE_VIEW,
+): FunctionToolSchema[] {
+  const find = (name: string): FunctionToolSchema => {
+    const exposed = socrataName(view, name);
+    const tool = tools.find((t) => t.type === 'function' && t.function.name === exposed);
+    if (!tool) throw new Error(`mcpToolsFor: no Socrata tool named ${name}`);
+    return tool;
+  };
+  const locked = [
+    lockedGetData(find('get_data'), lockedPortal),
+    lockedSearch(find('search'), lockedPortal, view),
+    lockedFetch(find('fetch'), lockedPortal, view),
+  ];
+  const byName = new Map(locked.map((tool) => [tool.function.name, tool]));
+  return tools.map((tool) => (tool.type === 'function' && byName.get(tool.function.name)) || tool);
+}
+
+/**
+ * The section a locked instance appends to the composed prompt, naming the
+ * other sources the run is offered (`others`, each as the lock names it, in
+ * order) and every Socrata tool through `view`.
  *
  * A superseding section rather than an edit: several sentences that reach the
  * model are false under the lock (the fallback's "Any Socrata open data
@@ -109,16 +144,31 @@ This instance queries one Socrata portal only, ${lockedPortal}: an identifier or
  * The closing sentence names the other sources the instance offers: Data
  * Commons, and Boston OpenContext only where it is offered.
  */
-export function portalLockSection(lockedPortal: string, bostonOffered: boolean): string {
-  const others = bostonOffered
-    ? 'the other data sources described above (Data Commons, and Boston OpenContext for Boston) are separate, remain available, and keep their own scope'
-    : 'the other data source described above (Data Commons) is separate, remains available, and keeps its own scope';
+export function portalLockSectionFor(lockedPortal: string, others: readonly string[], view: SourceView = BARE_VIEW): string {
+  const n = (name: string): string => socrataName(view, name);
+  const listed =
+    others.length <= 1 ? others.join('') : `${others.slice(0, -1).join(', ')}, and ${others[others.length - 1]}`;
+  const remainder =
+    others.length === 0
+      ? ''
+      : others.length === 1
+        ? `; the other data source described above (${listed}) is separate, remains available, and keeps its own scope`
+        : `; the other data sources described above (${listed}) are separate, remain available, and keep their own scope`;
   return `## ONE SOCRATA PORTAL ONLY
 
-This instance answers questions against one Socrata portal only: ${lockedPortal}. Anything above that describes querying other Socrata portals (any portal being reachable with get_data, naming patterns for other cities' portals, the tables of other portals and their datasets) does not apply on this instance:
-- get_data reaches ${lockedPortal} only. Leave its portal argument out; a call naming any other portal is refused and returns no data.
-- fetch accepts identifiers and URLs on ${lockedPortal} only; one naming any other portal is refused.
-- search covers the portal the data server is configured for.
+This instance answers questions against one Socrata portal only: ${lockedPortal}. Anything above that describes querying other Socrata portals (any portal being reachable with ${n('get_data')}, naming patterns for other cities' portals, the tables of other portals and their datasets) does not apply on this instance:
+- ${n('get_data')} reaches ${lockedPortal} only. Leave its portal argument out; a call naming any other portal is refused and returns no data.
+- ${n('fetch')} accepts identifiers and URLs on ${lockedPortal} only; one naming any other portal is refused.
+- ${n('search')} covers the portal the data server is configured for.
 
-If a question asks for Socrata data about a place ${lockedPortal} does not cover, say so plainly instead of answering from another Socrata portal. This limit applies to Socrata portals only; ${others}.`;
+If a question asks for Socrata data about a place ${lockedPortal} does not cover, say so plainly instead of answering from another Socrata portal. This limit applies to Socrata portals only${remainder}.`;
+}
+
+/** The section in the bare view, for the civic sources: Data Commons, and
+ *  Boston OpenContext where it is offered. */
+export function portalLockSection(lockedPortal: string, bostonOffered: boolean): string {
+  return portalLockSectionFor(
+    lockedPortal,
+    bostonOffered ? ['Data Commons', 'Boston OpenContext for Boston'] : ['Data Commons'],
+  );
 }

@@ -239,6 +239,7 @@ Servers ranked by value to civic-ai-tools users, considering data breadth, quali
 
 - **53 of the 74 servers listed are stdio-only** — they work with Claude Code, Cursor, and VS Code Copilot out of the box, but not with web applications. The other 21 document an HTTP or SSE transport; see the Transport column above for which.
 - Adding a new server to civic-ai-tools requires: (1) adding it to `claude_desktop_config.json`, (2) writing a skill guidance doc in `docs/skills/`, and (3) testing with representative queries.
+- In the reference web app, each source's tools reach the model as `<alias>__<upstream name>` (`socrata__get_data`); the call to the server keeps the server's own name. See [ADR-0032](adr/0032-tool-naming-across-sources.md).
 - The **us-gov-open-data-mcp** server's modular loading pattern is worth studying — it lets users enable only the APIs they need, avoiding tool overload.
 - **Two official U.S. federal agencies** (Census Bureau, GPO) and **two national governments** (France, India) now maintain MCP servers. This is a strong legitimacy signal for the ecosystem.
 
