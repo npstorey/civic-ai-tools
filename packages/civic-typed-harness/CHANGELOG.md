@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.7.0 — 2026-10-15
 
 - **The seam inside the harness** ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244) P2).
   `src/capture/provenance.ts` and `src/capture/data-sources.ts` import
@@ -83,6 +83,26 @@ block that no longer states two placeholders.
   the bytes without them.
 - `capture/data-sources.test.ts`'s "Unknown tool with no trace span defaults
   to socrata (pre-M9.1 backward compat)" is rewritten: the tool is `unknown`.
+
+The dependency floor (sprint R2, G4).
+
+- **Dependency floor raised:** `@typedstandards/produce-core` `^0.7.0` →
+  `^0.8.0`, and the `@typedstandards/verify-core` devDependency `^0.12.0` →
+  `^0.13.0`, the version produce-core 0.8.0 resolves. Under 0.x semver
+  `^0.7.0` excludes 0.8.0, so a consumer that pins produce-core `^0.8.0`
+  would install a second copy of each core beside this package's.
+- **What the two releases bring.** produce-core 0.8.0 emits four more
+  attestation sub-types and adds `EnvelopeInput.vcsRef` and raw-bytes/v1 over
+  a BlobRef; an input that supplies none of them builds the same bytes.
+  verify-core 0.13.0 adds the `superseded` lifecycle status, the key binding
+  in `verifyLifecycleChain` and `checkAttestationNode`. The harness reads none
+  of these.
+- The lockfile resolves produce-core 0.8.0 and verify-core 0.13.0, one copy
+  each, and no other entry moves. The golden byte-compat suite passes
+  unchanged.
+- A consumer that pins produce-core 0.7.x no longer shares its copy with this
+  package.
+- **README:** the runtime-dependency line names `^0.8.0`.
 
 ## 0.6.0 — 2026-09-26
 
