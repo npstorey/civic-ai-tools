@@ -2,11 +2,10 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.2.0 — 2026-10-15
 
 The aliased view, the routing fields, the startup checks, the selection, and a
 fourth source ([ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md)).
-`version` stays `0.1.0` until the release change dates this heading.
 
 - **The civic text at the website's `d1919a8`.** San Francisco's portal is
   `data.sf.gov` in the `get_data` schema, the fallback's portal table and the
