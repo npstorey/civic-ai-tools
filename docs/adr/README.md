@@ -36,3 +36,4 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0030](0030-self-certifying-signer-did-key.md) | A self-certifying signer for the `pseudonymous` rung — a `did:key` identifier derived from the signing key, checked with no registry, and the trust status `self_certified` | Accepted (2026-09-21) |
 | [0031](0031-civic-typed-router-packaging.md) | Civic-router packaging — `@typedstandards/civic-typed-router`, a domain-free core beside its civic content | Accepted (2026-10-09) |
 | [0032](0032-tool-naming-across-sources.md) | Tool naming across sources — `<alias>__<upstream name>`, applied by the router, checked at startup, dispatched by a map | Accepted (2026-10-15) |
+| [0033](0033-composed-harness-record-fields.md) | The composed-harness record fields — what a record states about how its prompt and tools were composed, and who answered each call | Accepted (2026-10-15) |

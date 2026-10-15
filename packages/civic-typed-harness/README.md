@@ -9,8 +9,8 @@ The civic **domain harness** for [Typed Standards](../../docs/architecture/typed
 | Module group | Modules | What it is |
 |---|---|---|
 | **`src/format/`** — the civic format-extension | `vocabulary.ts`, `sources.ts`, `dathere.ts`, `profiles.ts` | What extends the *standard*: the `civic:` JSON-LD namespace and `urn:civic-record:` id scheme (both in two eras — new emissions mint the settlement-era terms, the prior-era terms stay exported and reproducible because they are frozen inside already-signed records; spec Appendix J), the civic source registry, the datHere envelope-policy derivations (producerProfile, canonicalization rule, summary emission, environment extension), and the captureMethod vocabulary surface. |
-| **`src/capture/`** — the capture machinery | `trace.ts`, `skill-metadata.ts`, `data-sources.ts`, `provenance.ts` | What *produces* under it: the OTel `TraceBuilder`, skill-metadata extraction, data-source population, and the provenance **builder**, which walks the trace. Capture imports no module from outside `src/capture/`; its one import beyond it is the `@typedstandards/produce-core` package. The vocabulary, the term names, the source registry and their defaults arrive as parameters. |
-| **`src/civic/`** — the civic defaults over capture | `data-sources.ts`, `provenance.ts` | The package's `buildDataSources`, `resolveToolSource` and `buildProvenanceGraph`, with `DataSourceOptions`, `ProvenanceConfig` and `CIVICAITOOLS_PROVENANCE_CONFIG`: they pass the format group's vocabulary, terms and registry to the capture builders and apply the civic defaults. |
+| **`src/capture/`** — the capture machinery | `trace.ts`, `skill-metadata.ts`, `run-attributes.ts`, `data-sources.ts`, `provenance.ts` | What *produces* under it: the OTel `TraceBuilder`, skill-metadata extraction, run-attribute extraction (`extractRunAttributes`), data-source population, and the provenance **builder**, which walks the trace. Capture imports no module from outside `src/capture/`; its one import beyond it is the `@typedstandards/produce-core` package. The vocabulary, the term names, the source registry and their defaults arrive as parameters, and capture defines no deployment value (it exports no `const`). |
+| **`src/civic/`** — the civic defaults over capture | `data-sources.ts`, `provenance.ts`, `run-servers.ts`, `trace.ts` | The package's `buildDataSources`, `resolveToolSource` and `buildProvenanceGraph`, with `DataSourceOptions`, `ProvenanceConfig` and `CIVICAITOOLS_PROVENANCE_CONFIG`: they pass the format group's vocabulary, terms and registry to the capture builders and apply the civic defaults. Also `withRunServerAddresses` and the reference deployment's trace identity, `CIVICAITOOLS_TRACE_CONFIG`. |
 | **`src/rubric/`** — the adversarial rubric | `adversarial-eval-core.ts` | The civic six-criterion evaluation rubric (pure core: rubric text, pinned version hash, prompt builder, response parser). The model runner and result emission stay implementation-side. |
 
 **The internal boundary is load-bearing:** no capture module defines vocabulary or imports a module from outside `src/capture/` (a package import, `@typedstandards/produce-core`, is allowed), and no format-extension module walks a trace — this sentence reserves a future split of the format-extension group into its own package (a civic extension *of Typed Standards*, distinct from the civic *harness* proper) as a mechanical move rather than a re-partition. The boundary is enforced by `src/purity.test.ts`.
@@ -46,6 +46,33 @@ const graph = buildProvenanceGraph(trace, input, CIVICAITOOLS_PROVENANCE_CONFIG)
 
 Likewise: `buildDatHereEnvironment` / `deriveDatHereEnvelopeFields` take `CIVICAITOOLS_ENVIRONMENT_CONFIG`, `new TraceBuilder(...)` takes `CIVICAITOOLS_TRACE_CONFIG`, and `isDatasetKeyedSource` / `displayNameForSource` / `formatDataSourcesSummary` take `CIVIC_SOURCE_REGISTRY`. The acceptance condition is encoded in `src/required-config.assert.ts`: reintroducing any of the removed defaults fails `npm run typecheck`.
 
+## What a record states about its run (0.7.0, [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md))
+
+**Every call is attributed to its own source.** A tool span's source is its `mcp.source` tag; an untagged span resolves by its tool name through the resolver (`ProvenanceConfig.resolver`, default `civicToolSourceResolver`); a span neither identifies is attributed to `UNKNOWN_SOURCE_ID` (`'unknown'`), never to Socrata. The same order holds in `dataSources[]`, where an unknown call mints no entry. A caller may still pass `fallbackSourceId` explicitly, for example `'socrata'` to reproduce an earlier record of an untagged span.
+
+**Each call states both its names, its alias and its server**, when the span carries them: `tool.upstream_name`, `mcp.alias` and `mcp.server.id` become `civic:upstreamToolName`, `civic:sourceAlias` and `civic:serverId` on the tool-call activity. `civic:toolName` stays the name the model called.
+
+**The environment block states only what is known.** `temperature` and `toolDefinitions` are emitted only when passed (`DatHerePolicyInput.temperature`, `.toolDefinitions`; spec §8.7.1 requirement 3 as amended in v0.1.11). To reproduce a package made before 0.7.0, pass the values it recorded (`temperature: 0`, `toolDefinitions: []`); its bytes come back exactly.
+
+**Run-time facts come from the trace.** The producer writes them on the trace's root span at run time, and `extractRunAttributes(trace)` returns them under the derivation's input names:
+
+| Root-span attribute (JSON text unless noted) | Input | Lands in |
+|---|---|---|
+| `analysis.asserted_date` (plain `YYYY-MM-DD`) | `assertedDate` | `extensions["org.civicaitools.composition"].assertedDate` |
+| `analysis.mcp_servers` | `runMcpServers` | `org.civicaitools.environment.mcpServers` (wins over `mcpServers` and `skillMcpServerUrl`); `withRunServerAddresses(registry, servers)` gives the graph's agents the run's addresses |
+| `analysis.tool_definitions` | `toolDefinitions` | `org.civicaitools.environment.toolDefinitions` |
+| `analysis.sources_offered` | `sourcesOffered` | `org.civicaitools.composition.sourcesOffered` |
+| `analysis.components` | `components` | `org.civicaitools.composition.components` |
+
+```ts
+const fields = deriveDatHereEnvelopeFields(
+  { model, contentProfile, summary, extensions, ...extractRunAttributes(trace) },
+  { host },
+);
+```
+
+An absent attribute is an absent field. A present attribute that does not parse is refused (`RunAttributeError`), and a value outside the record's form — a date that is not a calendar date, a reason outside `configured` / `not-configured` / `selected` / `not-selected`, a guidance hash that is not lowercase hex SHA-256, an origin outside `endpoint` / `inline` / `fallback` — is refused by the derivation (`RecordFieldError`), never dropped. The `org.civicaitools.composition` block is emitted under every content profile, appended after the other extensions, and only when one of its fields is passed: a package built with none of these inputs has 0.6.0's extensions bytes, except that a datHere environment block no longer states the two placeholders.
+
 ## Purity contract (harness-grade)
 
 No I/O, no network, no environment reads, no Node built-ins, browser-safe — anywhere in the package. Clock and RNG are permitted **in capture modules only** (span timestamps and ids are what capture *is*) and are injectable for deterministic tests. Enforced mechanically twice: `eslint.config.mjs` (`no-restricted-imports` / `-globals` / `-properties` / `-syntax`) and `src/purity.test.ts` (browser-safety + determinism + module-boundary checks under `node --test`).
@@ -56,7 +83,7 @@ Runtime dependency: **`@typedstandards/produce-core` (`^0.7.0`) only.** The veri
 
 ## Byte-compatibility
 
-The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the reference config passed explicitly, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Both captured fixtures predate the 2026-08-19 vocabulary settlement, so their byte-parity legs run with `PRIOR_ERA_CIVIC_VOCABULARY` injected — the fixtures are never rewritten — beside a settlement-era leg asserting the same bytes with exactly the two Appendix J literals substituted. Fixture-level byte-compat against produce-core's `reference-golden.json` (`src/golden-reproduction.test.ts`) and the produce→verify composition round-trip (`src/composition-roundtrip.test.ts`) landed in S2 P2 and run with the suite.
+The port is tested for **byte parity** against golden outputs captured from the reference implementation (`src/__fixtures__/website-golden.json`): with the reference config passed explicitly, `buildProvenanceGraph` and `buildDataSources` reproduce the app's output byte-for-byte, lifted over the two behaviours the harness has deliberately changed since (the #205 address fallback in 0.5.0 and the fallback attribution in 0.7.0, each a named transform of the frozen bytes with its node count asserted; both frozen fixtures' sha256 is asserted by `src/frozen-fixtures.test.ts`), and `RUBRIC_VERSION_SHA256` is asserted against the exact reference digest (moving the rubric changes no hashes). Both captured fixtures predate the 2026-08-19 vocabulary settlement, so their byte-parity legs run with `PRIOR_ERA_CIVIC_VOCABULARY` injected — the fixtures are never rewritten — beside a settlement-era leg asserting the same bytes with exactly the two Appendix J literals substituted. Fixture-level byte-compat against produce-core's `reference-golden.json` (`src/golden-reproduction.test.ts`) and the produce→verify composition round-trip (`src/composition-roundtrip.test.ts`) landed in S2 P2 and run with the suite.
 
 ## Develop
 

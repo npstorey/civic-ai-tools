@@ -291,9 +291,23 @@ test('Trace span mcp.source wins over tool-name mapping when they disagree', () 
   assert.equal(resolveToolSource(tc, span), 'data-commons');
 });
 
-test('Unknown tool with no trace span defaults to socrata (pre-M9.1 backward compat)', () => {
+test('ADR-0033 §A (c): an unknown tool with no trace span is attributed to unknown, never to socrata', () => {
+  // Until 0.7.0 this resolved to `socrata` (the pre-M9.1 fallback, asserted
+  // here as "backward compat"). A default that names a source inside signed
+  // bytes is the asserted-default class (ADR-0024 §B): the call is unknown,
+  // and says so.
   const tc: ToolCallSummary = { name: 'mystery_tool', args: {} };
-  assert.equal(resolveToolSource(tc, undefined), 'socrata');
+  assert.equal(resolveToolSource(tc, undefined), 'unknown');
+});
+
+test('ADR-0033 §A (c): an unresolved call carrying a dataset id and a portal mints no dataSources entry', () => {
+  // At 0.6.0 the socrata fallback made this call dataset-keyed, so it minted
+  // a Socrata entry for a dataset no Socrata call was recorded as reading.
+  const tc: ToolCallSummary = {
+    name: 'mystery_tool',
+    args: { dataset_id: 'abcd-1234', portal: 'data.cityofnewyork.us' },
+  };
+  assert.deepEqual(buildDataSources([tc], { resourceSpans: [] }, undefined, NOW), []);
 });
 
 // --- Harness additions: caller-supplied resolver + registry injection ---
@@ -314,7 +328,7 @@ test('caller-supplied resolver overrides the civic default map', () => {
   assert.equal(entries[0].sourceId, 'data-commons');
 });
 
-test('caller-supplied fallbackSourceId replaces the socrata default', () => {
+test('caller-supplied fallbackSourceId replaces the unknown default', () => {
   const tc: ToolCallSummary = { name: 'mystery_tool', args: {} };
   assert.equal(resolveToolSource(tc, undefined, () => undefined, 'data-commons'), 'data-commons');
 });

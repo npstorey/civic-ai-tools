@@ -26,6 +26,64 @@ to the Typed Standards specification unless noted otherwise.
   outside `src/capture/`. A package import, such as
   `@typedstandards/produce-core`, is allowed.
 
+The record fields of [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
+(sprint R2, H2). Signed bytes move only where one of these inputs is passed,
+where a call's source is not in the registry, and in a datHere environment
+block that no longer states two placeholders.
+
+- **Every call is attributed to its own source** (ADR-0033 §A). A call tagged
+  with a source the registry lacks was attributed to Socrata's agent — in a
+  run where Socrata made no call, an agent the graph did not contain — and is
+  now attributed to its own source's agent. An untagged span resolves by its
+  tool name, as `dataSources` already did (`ProvenanceConfig.resolver`, new,
+  default `civicToolSourceResolver`). A span neither identifies is attributed
+  to the new `UNKNOWN_SOURCE_ID` (`'unknown'`), the value the reference app
+  writes for a tool it cannot resolve; `resolveToolSource` and
+  `buildDataSources` default to it too, so an unknown call mints no
+  `dataSources` entry. `FALLBACK_SOURCE_ID` (`'socrata'`) stays exported and is
+  no longer a default for attribution. The capture builder's
+  `ProvenanceBuildConfig` gains a required `resolver`.
+- **Each call states its upstream name, alias and server** (§B): the span
+  attributes `tool.upstream_name`, `mcp.alias` and `mcp.server.id` become
+  three new terms, `civic:upstreamToolName`, `civic:sourceAlias` and
+  `civic:serverId`, appended to the tool-call activity when present.
+  `ProvenanceTerms` gains the three keys.
+- **The environment block states `temperature` and `toolDefinitions` only
+  when passed** (§C; [civic-ai-tools#240](https://github.com/npstorey/civic-ai-tools/issues/240)):
+  `buildDatHereEnvironment` takes an optional fourth argument and
+  `DatHerePolicyInput` two optional fields. Both keep their 0.6.0 key
+  positions, so passing the recorded `0` and `[]` reproduces an earlier
+  package byte for byte. Specification §8.7.1 requirement 3 is amended in
+  v0.1.11 to match.
+- **The run-time servers win** (§D; civic-ai-tools-website#495):
+  `DatHerePolicyInput.runMcpServers` is preferred over `mcpServers` and
+  `skillMcpServerUrl`; `withRunServerAddresses(registry, servers)` (new) gives
+  the graph's source agents the run's addresses.
+- **A new `org.civicaitools.composition` block** (§E;
+  civic-ai-tools-website#475): `assertedDate`, `sourcesOffered` and
+  `components`, under every content profile, emitted only when one is
+  passed. `COMPOSITION_EXTENSION_KEY`, `SOURCE_OFFERED_REASONS`,
+  `GUIDANCE_ORIGINS`, `buildCompositionExtension` and `RecordFieldError`
+  (new). A value outside the record's form is refused, never dropped.
+- **`extractRunAttributes(trace)`** (new, capture): reads `analysis.asserted_date`,
+  `analysis.mcp_servers`, `analysis.tool_definitions`,
+  `analysis.sources_offered` and `analysis.components` from the trace's root
+  span; a present attribute that does not parse throws `RunAttributeError`.
+- **`CIVICAITOOLS_TRACE_CONFIG` moved to `src/civic/trace.ts`**
+  ([civic-ai-tools#246](https://github.com/npstorey/civic-ai-tools/issues/246)),
+  re-exported under the same name. `src/purity.test.ts` gains the rule: no
+  capture module exports a value binding.
+- **The goldens.** No frozen fixture is edited, and `src/frozen-fixtures.test.ts`
+  (new) pins the sha256 of `website-golden.json` and `reference-golden.json`.
+  The website golden's derived graph moves in one field (tool-4's
+  `prov:wasAssociatedWith`), reached by a second named lift with its count
+  asserted; `span-carrying-golden.json`'s two recorded hashes are regenerated
+  with a dated note. `reference-golden.json`'s eight cases reproduce byte for
+  byte given their recorded environment values, and a new-default leg pins
+  the bytes without them.
+- `capture/data-sources.test.ts`'s "Unknown tool with no trace span defaults
+  to socrata (pre-M9.1 backward compat)" is rewritten: the tool is `unknown`.
+
 ## 0.6.0 — 2026-09-26
 
 The list is derived from

@@ -8,9 +8,9 @@ import crypto from 'node:crypto';
 import {
   TraceBuilder,
   hash,
-  CIVICAITOOLS_TRACE_CONFIG,
   type TraceBuilderConfig,
 } from './trace.ts';
+import { CIVICAITOOLS_TRACE_CONFIG } from '../civic/trace.ts';
 
 // Fixture convention: synthetic timestamps stay under 13 digits and seeded
 // ids start in the hex-letter range (0xa0…) so no fixture value can

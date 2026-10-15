@@ -16,7 +16,9 @@
 //   - civic/   — the civic defaults applied over capture: the package's
 //     `buildProvenanceGraph`, `buildDataSources` and `resolveToolSource`
 //     (with their config types and `CIVICAITOOLS_PROVENANCE_CONFIG`), which
-//     pass format/'s values to the capture builders (civic-ai-tools#244 P2).
+//     pass format/'s values to the capture builders (civic-ai-tools#244 P2);
+//     `withRunServerAddresses`; and the reference deployment's trace
+//     identity, `CIVICAITOOLS_TRACE_CONFIG` (civic-ai-tools#246).
 //   - rubric/  — the adversarial-evaluation pure core (Q26-pinned hash).
 //
 // Purity contract (harness-grade): no I/O and no environment reads anywhere;
@@ -32,6 +34,7 @@ export * from './format/profiles.ts';
 // Capture group
 export * from './capture/trace.ts';
 export * from './capture/skill-metadata.ts';
+export * from './capture/run-attributes.ts';
 // data-sources.ts and provenance.ts are exported through the civic layer,
 // which re-exports their public types and applies the civic defaults; the
 // capture builders it calls are not part of the package's entry.
@@ -39,6 +42,8 @@ export * from './capture/skill-metadata.ts';
 // Civic layer
 export * from './civic/data-sources.ts';
 export * from './civic/provenance.ts';
+export * from './civic/run-servers.ts';
+export * from './civic/trace.ts';
 
 // Rubric group
 export * from './rubric/adversarial-eval-core.ts';

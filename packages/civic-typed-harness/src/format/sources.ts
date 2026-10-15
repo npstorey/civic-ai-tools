@@ -81,9 +81,20 @@ export const CIVIC_SOURCE_REGISTRY: CivicSourceRegistry = {
   },
 };
 
-/** The source id untagged/pre-M9.1 captures fall back to. Socrata was the
- *  only source when those packages were written. */
+/** The source id untagged/pre-M9.1 captures fell back to until 0.7.0 —
+ *  Socrata was the only source when those packages were written. Since
+ *  0.7.0 it attributes no call by default (ADR-0033 §A): it is the default
+ *  skill source (`ProvenanceConfig.skillSourceId`) and `displayNameForSource`'s
+ *  label for a missing id (civic-ai-tools#256), and a caller may still pass
+ *  it explicitly to reproduce an earlier record. */
 export const FALLBACK_SOURCE_ID = 'socrata';
+
+/** The source id a call is attributed to when neither its span's
+ *  `mcp.source` tag nor the tool-name resolver identifies it (ADR-0033 §A):
+ *  the value the reference app itself writes for a tool it cannot resolve.
+ *  Not a registry entry, so such a call mints no `dataSources` entry, and the
+ *  graph names it as an agent of its own. */
+export const UNKNOWN_SOURCE_ID = 'unknown';
 
 /** Is this source dataset-keyed (one `dataSources` entry per dataset) rather
  *  than aggregate? Unknown ids are neither — they contribute no entry. */

@@ -100,6 +100,12 @@ export interface ProvenanceTerms {
   readonly durationMs: string;
   readonly failed: string;
   readonly failureKind: string;
+  /** The wire name of a call whose exposed name is aliased (ADR-0033 §B). */
+  readonly upstreamToolName: string;
+  /** The alias of the source that answered a call. */
+  readonly sourceAlias: string;
+  /** The identity of the server that answered a call. */
+  readonly serverId: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -122,7 +128,10 @@ export interface ProvenanceBuildConfig {
    *  portal and dataset URL)? Supplied by the caller, consistent with
    *  `sourceRegistry`. */
   isDatasetKeyed: (sourceId: string) => boolean;
-  /** Source id untagged tool spans fall back to. */
+  /** Tool-name → source-id resolver, consulted for a span that carries no
+   *  `mcp.source` tag. */
+  resolver: (toolName: string) => string | undefined;
+  /** Source id for a span neither its tag nor the resolver identifies. */
   fallbackSourceId: string;
   /** Source whose agent server URL the trace's skill-fetch span URL
    *  overrides when present. */
@@ -263,11 +272,13 @@ export function buildProvenanceGraphWith(
   );
 
   // MCP server agents — one per distinct data source that appears in the
-  // trace. Tool spans carry `mcp.source`; records captured before
-  // source tagging have no source attribute, so they fall back to the
-  // configured fallback source (socrata — the only source at the time) for
-  // backwards compatibility. Agent coordinates come from the source registry;
-  // the skill-fetch span URL overrides the skill source's server URL.
+  // trace. A tool span's source is its `mcp.source` tag; a span with no tag
+  // (records captured before source tagging) resolves by its tool name
+  // through the caller's resolver; a span neither identifies takes the
+  // caller's `fallbackSourceId` (the civic layer's default is `unknown`, the
+  // value the reference app writes for a tool it cannot resolve — ADR-0033
+  // §A). Agent coordinates come from the source registry; the skill-fetch
+  // span URL overrides the skill source's server URL.
   //
   // THE ADDRESS IS THE OPERATOR'S, OR IT IS ABSENT (civic-ai-tools#205, 0.5.0).
   // `serverUrl` is optional on a registry entry and there is no stand-in for a
@@ -286,10 +297,18 @@ export function buildProvenanceGraphWith(
     };
   }
 
+  // The ONE resolution of a span's source, used for its agent node, its
+  // attribution and its `civic:sourceId` alike.
+  function sourceOfSpan(attributes: OTelAttribute[]): string {
+    const tagged = getAttr(attributes, 'mcp.source');
+    if (tagged) return tagged;
+    const toolName = getAttr(attributes, 'tool.name');
+    return (toolName ? config.resolver(toolName) : undefined) || fallbackSourceId;
+  }
+
   const sourcesInTrace = new Set<string>();
   for (const span of toolSpans) {
-    const source = getAttr(span.attributes, 'mcp.source') || fallbackSourceId;
-    sourcesInTrace.add(source);
+    sourcesInTrace.add(sourceOfSpan(span.attributes));
   }
 
   for (const sourceId of sourcesInTrace) {
@@ -312,16 +331,13 @@ export function buildProvenanceGraphWith(
     );
   }
 
-  // Resolve a source id to its agent URN, falling back to the configured
-  // fallback source for records that never tagged the span. (Reference
-  // behavior preserved: unknown ids resolve to the fallback source's agent.)
-  function agentUrnForSource(sourceId: string | undefined): string {
-    const id = sourceId || fallbackSourceId;
-    return (
-      sourceAgentMap[id]?.urn
-      ?? sourceAgentMap[fallbackSourceId]?.urn
-      ?? vocab.sourceAgentUrn(encodeURIComponent(id))
-    );
+  // A call is attributed to ITS OWN source's agent: the registry's agent
+  // when the registry carries the source, otherwise the agent node emitted
+  // above for it (ADR-0033 §A). Until 0.7.0 an id the registry lacked was
+  // attributed to the fallback source's agent instead — which, in a run where
+  // that source made no call, named an agent the graph did not contain.
+  function agentUrnForSource(sourceId: string): string {
+    return sourceAgentMap[sourceId]?.urn ?? vocab.sourceAgentUrn(encodeURIComponent(sourceId));
   }
 
   // Platform
@@ -400,8 +416,14 @@ export function buildProvenanceGraphWith(
     const datasetId = getAttr(span.attributes, 'tool.dataset_id');
     // Absent when the span carried none — never the run's portal.
     const portalDomain = getAttr(span.attributes, 'tool.portal_domain');
-    const toolSource = getAttr(span.attributes, 'mcp.source') || fallbackSourceId;
+    const toolSource = sourceOfSpan(span.attributes);
     const toolAgentUrn = agentUrnForSource(toolSource);
+    // The call's other identities (ADR-0033 §B): the name sent on the wire,
+    // the alias of the source and the server's id. Absent when the span
+    // carried none — never derived from the exposed name.
+    const upstreamToolName = getAttr(span.attributes, 'tool.upstream_name');
+    const sourceAlias = getAttr(span.attributes, 'mcp.alias');
+    const serverId = getAttr(span.attributes, 'mcp.server.id');
     const toolSourceDatasetKeyed = config.isDatasetKeyed(toolSource);
 
     // Query entity (tool arguments). Find the most recent inference span
@@ -539,6 +561,11 @@ export function buildProvenanceGraphWith(
         // combination and pins the whole key list for it.
         ...(failed === true ? { [terms.failed]: true } : {}),
         ...(failureKind ? { [terms.failureKind]: failureKind } : {}),
+        // Appended after everything above, each only when the span carried
+        // it, so a span without them yields the 0.6.0 key list (ADR-0033 §B).
+        ...(upstreamToolName ? { [terms.upstreamToolName]: upstreamToolName } : {}),
+        ...(sourceAlias ? { [terms.sourceAlias]: sourceAlias } : {}),
+        ...(serverId ? { [terms.serverId]: serverId } : {}),
       }),
     );
   }

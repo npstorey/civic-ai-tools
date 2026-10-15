@@ -27,6 +27,9 @@ const TERMS: ProvenanceTerms = {
   durationMs: 'ex:durationMs',
   failed: 'ex:failed',
   failureKind: 'ex:failureKind',
+  upstreamToolName: 'ex:upstreamToolName',
+  sourceAlias: 'ex:sourceAlias',
+  serverId: 'ex:serverId',
 };
 
 const VOCABULARY = {
@@ -75,6 +78,9 @@ const TRACE = {
                 attr('tool.portal_domain', 'portal.example'),
                 attr('tool.duration_ms', '5'),
                 attr('tool.response_rows', '3'),
+                attr('tool.upstream_name', 'lookup_v2'),
+                attr('mcp.alias', 'lib'),
+                attr('mcp.server.id', 'example.org/library-server'),
                 { key: 'error', value: { boolValue: true } },
                 attr('error.kind', 'timeout'),
               ],
@@ -95,6 +101,7 @@ function build(isDatasetKeyed: (id: string) => boolean): string {
         platformAgent: { id: 'plat', title: 'Platform', url: 'https://platform.example' },
         sourceRegistry: { library: { agentTitle: 'Library Server', serverUrl: 'https://library.example' } },
         isDatasetKeyed,
+        resolver: () => undefined,
         fallbackSourceId: 'library',
         skillSourceId: 'library',
         vocabulary: VOCABULARY,
@@ -118,6 +125,34 @@ test('seam: the provenance builder takes the dataset-keyed fact from its caller'
   for (const term of [TERMS.datasetId, TERMS.portalDomain, TERMS.datasetUrl, TERMS.croissantMetadataUrl]) {
     assert.ok(!json.includes(`"${term}":`), `${term} was emitted for a source the caller says is not dataset-keyed`);
   }
+});
+
+test('seam: the provenance builder resolves an untagged span through the resolver it is given, and falls back to the id it is given', () => {
+  const untagged = (spanId: string, toolName: string) => ({
+    name: 'mcp_tool_call',
+    spanId,
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: [attr('tool.name', toolName), attr('tool.arguments', '{}')],
+  });
+  const graph = buildProvenanceGraphWith(
+    { resourceSpans: [{ scopeSpans: [{ spans: [untagged('u1', 'lookup'), untagged('u2', 'other')] }] }] },
+    { packageId: 'pkg', promptHash: 'dd', outputText: 'out', model: 'model-x' },
+    {
+      platformAgent: { id: 'plat', title: 'Platform', url: 'https://platform.example' },
+      sourceRegistry: { library: { agentTitle: 'Library Server' } },
+      isDatasetKeyed: () => false,
+      resolver: (name) => (name === 'lookup' ? 'library' : undefined),
+      fallbackSourceId: 'nobody',
+      skillSourceId: 'library',
+      vocabulary: VOCABULARY,
+      terms: TERMS,
+    },
+  );
+  const assoc = (spanId: string) =>
+    (graph['@graph'].find((n) => n['@id'] === `urn:ex:pkg:tool-call:${spanId}`)!['prov:wasAssociatedWith'] as { '@id': string })['@id'];
+  assert.equal(assoc('u1'), 'urn:ex:source:library');
+  assert.equal(assoc('u2'), 'urn:ex:source:nobody');
 });
 
 test('seam: data-source population runs on a caller registry, resolver and dataset-keyed predicate', () => {

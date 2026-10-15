@@ -18,6 +18,8 @@
 //      - capture modules never DEFINE civic vocabulary (the `urn:` scheme in
 //        EITHER era, the civic namespace in either era, and the datHere
 //        profile string all live in format/);
+//      - capture modules define no deployment constant: they export no value
+//        binding at all (civic-ai-tools#246, ADR-0033 §F);
 //      - format-extension modules never WALK a trace.
 // Test files are exempt: they legitimately use node:test / node:fs / node:crypto.
 
@@ -270,6 +272,55 @@ test('boundary: capture modules import nothing from format (value or type) — n
     'capture modules take the vocabulary, the source registry and their defaults as parameters; ' +
       'src/civic/ applies the civic values one layer up. Imports from outside capture/:\n  ' +
       offenders.join('\n  '),
+  );
+});
+
+// --- No deployment constant in capture (civic-ai-tools#246, ADR-0033 §F) ---
+//
+// The seam rule above keeps capture from IMPORTING a deployment's values; it
+// cannot see one DEFINED there. Until 0.7.0 one was: the reference
+// deployment's trace identity, `CIVICAITOOLS_TRACE_CONFIG`, lived in
+// capture/trace.ts. The rule is a shape, not a list: a capture module exports
+// types, functions and classes, and no `const`, `let` or `var` binding — a
+// deployment's values live in src/civic/, the vocabulary in src/format/.
+// Comments are blanked first (`importSites`' reader is not reused: this reads
+// declarations, not specifiers), so prose naming a constant does not count.
+
+/** Every top-level exported value binding in a source, comments excluded:
+ *  `export const|let|var NAME`. Exported so the test below drives it over a
+ *  sample where the answer is written out. */
+export function exportedValueBindings(source: string): string[] {
+  const code = source
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/\/\/[^\n]*/g, '');
+  return [...code.matchAll(/^export\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]!);
+}
+
+test('the value-binding reader finds exported bindings and nothing in comments (the check below is only as good as this)', () => {
+  const sample = [
+    "export const A = { serviceName: 'x' };",
+    'export let b = 1;',
+    '// export const C = 2;',
+    '/* export const D = 3; */',
+    'export function e() {}',
+    'export class F {}',
+    'export interface G { x: string }',
+    'const H = 4;',
+    'export type I = string;',
+  ].join('\n');
+  assert.deepEqual(exportedValueBindings(sample), ['A', 'b']);
+});
+
+test('boundary: no capture module exports a value binding — a deployment constant belongs in src/civic/', () => {
+  const capture = shippedSourceFiles().filter((f) => rel(f).startsWith('capture/'));
+  assert.ok(capture.length >= 4, 'expected the capture modules');
+  const offenders = capture.flatMap((file) =>
+    exportedValueBindings(readFileSync(file, 'utf8')).map((name) => `${rel(file)}: ${name}`),
+  );
+  assert.deepEqual(
+    offenders,
+    [],
+    `capture modules export types, functions and classes only; a deployment's values live in src/civic/. Exported value bindings: ${offenders.join(', ')}`,
   );
 });
 
