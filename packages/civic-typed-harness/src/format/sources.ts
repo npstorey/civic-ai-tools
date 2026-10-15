@@ -81,8 +81,12 @@ export const CIVIC_SOURCE_REGISTRY: CivicSourceRegistry = {
   },
 };
 
-/** The source id untagged/pre-M9.1 captures fall back to. Socrata was the
- *  only source when those packages were written. */
+/** The source id untagged/pre-M9.1 captures fell back to until 0.7.0 —
+ *  Socrata was the only source when those packages were written. Since
+ *  0.7.0 it attributes no call by default (ADR-0033 §A): it is the default
+ *  skill source (`ProvenanceConfig.skillSourceId`) and `displayNameForSource`'s
+ *  label for a missing id (civic-ai-tools#256), and a caller may still pass
+ *  it explicitly to reproduce an earlier record. */
 export const FALLBACK_SOURCE_ID = 'socrata';
 
 /** The source id a call is attributed to when neither its span's

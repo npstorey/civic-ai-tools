@@ -52,6 +52,7 @@ import {
 import {
   CIVIC_SOURCE_REGISTRY,
   FALLBACK_SOURCE_ID,
+  UNKNOWN_SOURCE_ID,
   civicToolSourceResolver,
   isDatasetKeyedSource,
   type CivicSourceRegistry,
@@ -71,8 +72,11 @@ export interface ProvenanceConfig {
    *  at, and an entry with no `serverUrl` makes its agent omit
    *  `civic:serverUrl` (civic-ai-tools#205). */
   sourceRegistry: CivicSourceRegistry;
-  /** Source id untagged tool spans fall back to. Default `socrata`
-   *  (pre-source-tagging captures were Socrata-only). */
+  /** Source id for a tool span that neither its `mcp.source` tag nor the
+   *  resolver identifies. Default `unknown` (`UNKNOWN_SOURCE_ID`, ADR-0033
+   *  §A) — never a real source. A caller may pass an id explicitly, e.g.
+   *  `socrata` to reproduce a record made before 0.7.0 of an untagged span
+   *  whose tool name does not resolve. */
   fallbackSourceId?: string;
   /** Tool-name → source-id resolver for a span with no `mcp.source` tag.
    *  Default: the civic map, `civicToolSourceResolver`. */
@@ -140,8 +144,10 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
  * - Prompt, skill guidance, data responses, output → prov:Entity
  * - LLM model, MCP server, platform → prov:Agent
  *
- * The civic defaults applied here and nowhere else: the fallback and skill
- * source ids default to `FALLBACK_SOURCE_ID`, the vocabulary to the
+ * The civic defaults applied here and nowhere else: the resolver defaults to
+ * `civicToolSourceResolver`, the fallback source id to `UNKNOWN_SOURCE_ID`,
+ * the skill source id to `FALLBACK_SOURCE_ID` (it names whose agent the
+ * skill-fetch URL overrides, and attributes no call), the vocabulary to the
  * settlement-era `CIVIC_VOCABULARY`, and the property names are the format
  * group's `civic:` terms. The dataset-keyed fact is the format group's
  * `isDatasetKeyedSource` over the config's own registry.
@@ -157,7 +163,7 @@ export function buildProvenanceGraph(
     sourceRegistry: registry,
     isDatasetKeyed: (sourceId) => isDatasetKeyedSource(sourceId, registry),
     resolver: config.resolver ?? civicToolSourceResolver,
-    fallbackSourceId: config.fallbackSourceId ?? FALLBACK_SOURCE_ID,
+    fallbackSourceId: config.fallbackSourceId ?? UNKNOWN_SOURCE_ID,
     skillSourceId: config.skillSourceId ?? FALLBACK_SOURCE_ID,
     modelAgentDescription: config.modelAgentDescription,
     vocabulary: config.vocabulary ?? CIVIC_VOCABULARY,

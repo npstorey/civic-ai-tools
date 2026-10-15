@@ -8,7 +8,9 @@
 //     name/version, semconv version) are REQUIRED typed config inputs
 //     (config-not-constants, S2 brief §2); the reference deployment's values
 //     are exported as `CIVICAITOOLS_TRACE_CONFIG` for explicit use, never
-//     applied as a default.
+//     applied as a default. Since 0.7.0 that constant lives in
+//     src/civic/trace.ts (civic-ai-tools#246): capture defines no deployment
+//     value.
 //
 // Clock + RNG are INHERENT to capture (span timestamps and ids are what
 // capture *is*): this module is the sanctioned exception to the package's
@@ -89,7 +91,8 @@ export type TraceRandomBytes = (byteLength: number) => Uint8Array;
 /**
  * TraceBuilder identity + determinism inputs. The identity strings name the
  * capturing service, so they are per-instance config (config-not-constants);
- * the reference deployment's values are `CIVICAITOOLS_TRACE_CONFIG` below.
+ * the reference deployment's values are `CIVICAITOOLS_TRACE_CONFIG`
+ * (src/civic/trace.ts).
  * The identity fields are required; `now`/`randomBytes` are operational
  * fallbacks, not identity, and default to the runtime's clock and CSPRNG.
  */
@@ -108,15 +111,6 @@ export interface TraceBuilderConfig {
    *  `crypto.getRandomValues` (Web Crypto — Node 18+ and every browser). */
   randomBytes?: TraceRandomBytes;
 }
-
-/** The civicaitools.org reference deployment's capture identity. Passed
- *  explicitly by the reference app — never applied as a default. */
-export const CIVICAITOOLS_TRACE_CONFIG: TraceBuilderConfig = {
-  serviceName: 'civic-ai-tools-website',
-  scopeName: 'civic-ai-tools-evidence',
-  scopeVersion: '0.1.0',
-  semconvVersion: '1.30.0',
-};
 
 function defaultRandomBytes(byteLength: number): Uint8Array {
   const buf = new Uint8Array(byteLength);

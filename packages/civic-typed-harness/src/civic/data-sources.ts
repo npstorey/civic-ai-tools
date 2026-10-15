@@ -5,7 +5,7 @@
 // The seam (civic-ai-tools#244 P2): capture/data-sources.ts walks the calls
 // and the trace and takes every civic input as a parameter; this module
 // supplies the civic defaults — `civicToolSourceResolver`,
-// `CIVIC_SOURCE_REGISTRY`, `FALLBACK_SOURCE_ID` and the format group's
+// `CIVIC_SOURCE_REGISTRY`, `UNKNOWN_SOURCE_ID` and the format group's
 // `isDatasetKeyedSource` — wherever the caller leaves one out.
 
 import {
@@ -17,7 +17,7 @@ import {
 } from '../capture/data-sources.ts';
 import {
   CIVIC_SOURCE_REGISTRY,
-  FALLBACK_SOURCE_ID,
+  UNKNOWN_SOURCE_ID,
   civicToolSourceResolver,
   isDatasetKeyedSource,
   type CivicSourceRegistry,
@@ -38,7 +38,9 @@ export interface DataSourceOptions {
    *  dataset-keyed vs aggregate split. Default: the civic registry. */
   registry?: CivicSourceRegistry;
   /** Source id for calls neither the trace nor the resolver can identify.
-   *  Default `socrata` (pre-M9.1 packages predate source tagging). */
+   *  Default `unknown` (`UNKNOWN_SOURCE_ID`, ADR-0033 §A): not a registry
+   *  entry, so such a call mints no entry. Until 0.7.0 the default was
+   *  `socrata`. */
   fallbackSourceId?: string;
 }
 
@@ -57,7 +59,7 @@ export function resolveToolSource(
   toolCall: ToolCallSummary,
   span: TraceSpan | undefined,
   resolver: ToolSourceResolver = civicToolSourceResolver,
-  fallbackSourceId: string = FALLBACK_SOURCE_ID,
+  fallbackSourceId: string = UNKNOWN_SOURCE_ID,
 ): string {
   return resolveToolSourceWith(toolCall, span, resolver, fallbackSourceId);
 }
@@ -98,7 +100,7 @@ export function buildDataSources(
 ): DataSourceEntry[] {
   const resolver = options.resolver ?? civicToolSourceResolver;
   const registry = options.registry ?? CIVIC_SOURCE_REGISTRY;
-  const fallbackSourceId = options.fallbackSourceId ?? FALLBACK_SOURCE_ID;
+  const fallbackSourceId = options.fallbackSourceId ?? UNKNOWN_SOURCE_ID;
   return buildDataSourcesWith(toolCalls, trace, now, {
     resolver,
     registry,
