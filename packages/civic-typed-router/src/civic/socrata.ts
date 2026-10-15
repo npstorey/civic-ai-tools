@@ -1,7 +1,8 @@
 // The Socrata source: its tool schemas, its guidance block, the fallback
 // guidance and the per-portal table.
 //
-// Moved from the reference website at 3a0c894: the schemas from
+// Moved from the reference website at 3a0c894, and brought up to its text at
+// d1919a8 (San Francisco's portal as data.sf.gov, website #587): the schemas from
 // `src/lib/mcp/tools.ts:9-148`, `SOCRATA_SKILL_FALLBACK` and
 // `getSkillForPortal` from `src/lib/mcp/socrata-skill.ts:54-436`, and the
 // registry entry's text from `:599-609`. The text is the website's, byte for
@@ -45,7 +46,7 @@ Examples:
           },
           portal: {
             type: 'string',
-            description: 'Socrata portal domain (e.g., data.cityofnewyork.us, data.sfgov.org)',
+            description: 'Socrata portal domain (e.g., data.cityofnewyork.us, data.sf.gov)',
           },
           query: {
             type: 'string',
@@ -161,7 +162,7 @@ export const SOCRATA_TOOL_NAMES: readonly string[] = ['get_data', 'search', 'fet
 // carries no deployment posture (no host names, no deployment limits, no
 // links); the Socrata MCP server appends posture when it serves the live text.
 // The website keeps it in step with the hub's docs/skills/ claims by hand,
-// under its own tests; this copy is the website's at 3a0c894.
+// under its own tests; this copy is the website's at d1919a8.
 export const SOCRATA_SKILL_FALLBACK = `
 # Socrata MCP Companion Skill — Base Guidance
 
@@ -294,7 +295,7 @@ get_data has been extensively tested against these portals:
 |--------|-------|
 | data.cityofnewyork.us | NYC — see Key Datasets below |
 | data.cityofchicago.org | Chicago — see Key Datasets below |
-| data.sfgov.org | San Francisco — see Key Datasets below |
+| data.sf.gov | San Francisco — see Key Datasets below |
 | data.seattle.gov | Seattle — see Key Datasets below |
 | data.lacity.org | Los Angeles — see Key Datasets below |
 
@@ -370,7 +371,7 @@ Below are the most-used datasets per portal for quick reference. For a dataset n
 | Business Licenses (Active) | uupf-x98q | license_number, business_activity, expiration_date |
 | Employee Salaries | xzkq-xp2w | name, job_titles, department, annual_salary |
 
-### San Francisco (data.sfgov.org)
+### San Francisco (data.sf.gov)
 
 | Dataset | ID | Key Fields |
 |---------|----|------------|
@@ -546,9 +547,9 @@ Use these NYC dataset IDs directly:
     'data.cityofchicago.org': `
 Use these Chicago dataset IDs directly:
 - 311 requests: v6vf-nfxy (fields: sr_type, created_date, community_area)`,
-    'data.sfgov.org': `
-Note: search only covers the portal this server is configured for — if that isn't data.sfgov.org, reach SF with get_data and portal: "data.sfgov.org" instead. Use dataset IDs directly:
-- 311 cases: vw6y-z8j6 (fields: service_name, opened, neighborhood)`,
+    'data.sf.gov': `
+Note: search only covers the portal this server is configured for — if that isn't data.sf.gov, reach SF with get_data and portal: "data.sf.gov" instead. Use dataset IDs directly:
+- 311 cases: vw6y-z8j6 (fields: requested_datetime, service_name, analysis_neighborhood)`,
   };
 
   return portalSpecificGuidance[portal] || '';

@@ -1,5 +1,5 @@
 // The pure-move bar: every output captured from the reference website at
-// 3a0c894 (`__fixtures__/app-goldens.json`) is reproduced byte for byte, with
+// d1919a8 (`__fixtures__/app-goldens.json`; 0.1.0 captured at 3a0c894) is reproduced byte for byte, with
 // each capture's own inputs, driving the router only through the package
 // entry (`./index.ts`).
 //
@@ -244,8 +244,8 @@ function checkConfigurationReading(capture: { id: string; env: Record<string, st
 
 // --- The fixture is what this suite expects --------------------------------
 
-test('goldens: the fixture is the website capture at 3a0c894, 42 prompts and 5 tools arrays', () => {
-  assert.equal(goldens._meta.website.commit, '3a0c894701e8e75161c85c567eb1c11efc06da71');
+test('goldens: the fixture is the website capture at d1919a8, 42 prompts and 5 tools arrays', () => {
+  assert.equal(goldens._meta.website.commit, 'd1919a86cc826c0870c8cfbc4c902791c6f9086d');
   assert.equal(goldens.prompts.length, goldens._meta.counts.prompts);
   assert.equal(goldens.tools.length, goldens._meta.counts.tools);
   assert.equal(goldens.prompts.length, 42);

@@ -1,7 +1,9 @@
 // The Google Data Commons source: its tool schemas, its guidance block and the
 // embedded Data Commons guidance.
 //
-// Moved from the reference website at 3a0c894: the schemas from
+// Moved from the reference website at 3a0c894, and brought up to its text and
+// schemas at d1919a8 (places by name, website #578; only the arguments the
+// server reads, website #579): the schemas from
 // `src/lib/mcp/tools.ts:150-264`, the guidance from
 // `src/lib/mcp/data-commons-skill.ts:21-131`, and the registry entry's text
 // from `src/lib/mcp/socrata-skill.ts:610-619`.
@@ -36,9 +38,10 @@ Use this first when the user asks for demographic, economic, health, education, 
 
 IMPORTANT: Data Commons uses DCIDs (Data Commons identifiers) rather than raw Census field names. Always discover the variable DCID via search_indicators before calling get_observations — guessing the DCID silently returns wrong data.
 
+Places are passed to this tool by name, not by DCID: a DCID in places is answered "no place found". get_observations is the one that takes a place DCID.
+
 Examples:
-- { "query": "median household income", "places": ["geoId/3604600637"] }  // search near a NYC census tract
-- { "query": "poverty rate", "parent_place": "geoId/36061" }  // search indicators scoped to New York County
+- { "query": "median household income", "places": ["Kings County, New York"] }  // search scoped to Brooklyn, by name
 - { "query": "asthma prevalence adults" }  // free-text topic search`,
       parameters: {
         type: 'object',
@@ -50,11 +53,7 @@ Examples:
           places: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Optional list of place DCIDs to scope the search to — the tool returns variables that have observations for those places.',
-          },
-          parent_place: {
-            type: 'string',
-            description: 'Optional parent place DCID — the tool returns variables that cover children of this place.',
+            description: 'Optional list of place names to scope the search to, qualified so they are unambiguous (e.g., "Kings County, New York", "New York City, USA") — never DCIDs. The tool returns variables that have observations for those places, and each result\'s placesWithData lists the DCIDs of the requested places that have data: pass one of those to get_observations.',
           },
           per_search_limit: {
             type: 'number',
@@ -63,10 +62,6 @@ Examples:
           include_topics: {
             type: 'boolean',
             description: 'Include topic-level results alongside individual variables (default: true)',
-          },
-          maybe_bilateral: {
-            type: 'boolean',
-            description: 'Include bilateral (two-place) variables such as trade flows (default: false)',
           },
         },
         required: ['query'],
@@ -86,15 +81,15 @@ Requires a variable_dcid (discovered via search_indicators) and a place_dcid. Co
 - Census Tract: "geoId/36061013700" (state + county + tract FIPS)
 - ZCTA: "zip/10001"
 
-Use child_place_type to fetch observations for all children of a place at a given geography level (e.g., all tracts within a county).
+One call returns observations for the one place named in place_dcid. This tool cannot list a place's children: a question about every tract (or every county) in a place needs one call per child DCID, or an answer that says the breakdown is not available here. Never report a parent place's value as if it were each child's.
 
 CRITICAL: Data Commons returns wrong data silently if you pick the wrong variable, time range, or place type. Always prefer the latest vintage unless the user explicitly asks for a historical series. Cite the variable DCID and observation date in your summary.
 
 Examples:
 - Latest median household income for a NYC census tract:
   { "variable_dcid": "Median_Income_Household", "place_dcid": "geoId/36061013700" }
-- All tracts in New York County (Manhattan):
-  { "variable_dcid": "Median_Income_Household", "place_dcid": "geoId/36061", "child_place_type": "CensusTract" }
+- New York County (Manhattan) as a whole:
+  { "variable_dcid": "Median_Income_Household", "place_dcid": "geoId/36061" }
 - Historical range:
   { "variable_dcid": "Count_Person", "place_dcid": "country/USA", "date_range_start": "2015", "date_range_end": "2023" }`,
       parameters: {
@@ -107,10 +102,6 @@ Examples:
           place_dcid: {
             type: 'string',
             description: 'Data Commons identifier for the place (e.g., "geoId/36061" for New York County, "country/USA", "zip/10001")',
-          },
-          child_place_type: {
-            type: 'string',
-            description: 'Optional child geography to enumerate (e.g., "CensusTract", "County", "State"). Returns observations for every child of place_dcid at this level.',
           },
           source_override: {
             type: 'string',
@@ -140,7 +131,7 @@ export const DATA_COMMONS_TOOL_NAMES: readonly string[] = ['search_indicators', 
 
 /** The embedded Data Commons guidance, naming `publicationHost` when it is
  *  non-empty. The source of truth is the hub's `docs/skills/data-commons.md`;
- *  this is the website's hand-synced copy at 3a0c894. */
+ *  this is the website's hand-synced copy at d1919a8. */
 export function dataCommonsSkill(publicationHost: string | null): string {
   return `
 # Data Commons Companion Skill — Base Guidance
@@ -161,7 +152,7 @@ Data Commons exposes two tools:
 
 | Tool | Purpose |
 |------|---------|
-| search_indicators | Discover the variable DCID matching a natural-language request for a place |
+| search_indicators | Discover the variable DCID matching a natural-language request, scoped to places given by name |
 | get_observations | Retrieve actual values for a variable DCID at a place DCID (with an optional date range) |
 
 **The default workflow is two-step: search first, then fetch.** Do not skip search_indicators. Data Commons has hundreds of thousands of statistical variables with precise, non-obvious names, and guessing a DCID burns tool calls on empty responses.
@@ -170,8 +161,10 @@ Data Commons exposes two tools:
 
 User: *"What was the median household income for Manhattan?"*
 
-1. Call search_indicators with "median household income" and place DCID geoId/36061 (NY County = Manhattan). The response includes candidate variable DCIDs — typically Median_Income_Household and close relatives.
+1. Call search_indicators with "median household income" and the place "New York County, New York" (Manhattan). The response includes candidate variable DCIDs — typically Median_Income_Household and close relatives — and, for each, the DCIDs of the requested places that have data (here geoId/36061).
 2. Call get_observations with that variable DCID and place DCID. The response is observations from ACS 5-Year Estimates.
+
+search_indicators takes places by name, qualified so the name is unambiguous ("New York City, USA", not "New York"); never pass it a DCID, which it answers with "no place found". get_observations takes the place DCID.
 3. Report the figure with source (ACS 5-Year Estimates) and vintage (e.g., 2020-2024).
 
 Echo the DCID you picked back to the user so variable-selection mistakes get caught before they propagate.
@@ -192,7 +185,7 @@ Every place and every statistical variable in Data Commons has a **DCID** (Data 
 | geoId/<12-digit FIPS> | geoId/360610101001 | US census block group |
 | zip/XXXXX | zip/10001 | ZIP Code Tabulation Area (ZCTA) |
 
-Place hierarchies nest: block group → tract → county → state → country. Always pass the most specific DCID the question permits, and verify with the user whether "Manhattan" means the county (geoId/36061), the borough neighborhood, or a narrower slice before committing.
+Place hierarchies nest: block group → tract → county → state → country. Always pass get_observations the most specific DCID the question permits, and verify with the user whether "Manhattan" means the county (geoId/36061), the borough neighborhood, or a narrower slice before committing.
 
 ### Variable DCIDs
 
@@ -208,6 +201,8 @@ Never invent a variable DCID from pattern-matching against similar-looking ones.
 ## Small-area coverage and limitations
 
 Data Commons natively supports **US census tract**, **US census block group**, **ZCTA** (zip/XXXXX), county, state, and country place types.
+
+get_observations returns observations for the one place its place DCID names. These tools cannot list a place's children, so "every tract in Manhattan" is not one call: query the specific tracts the question needs, one call per tract DCID, or say that the breakdown is not available here. Never report a parent place's value as if it were each child's.
 
 Data Commons does **NOT** natively support NYC community districts, city council districts, Neighborhood Tabulation Areas, Chicago community areas, or arbitrary municipal boundaries beyond incorporated-place FIPS codes.
 
@@ -248,7 +243,7 @@ When a Data Commons call is part of an analysis published as a record package${p
 If search_indicators returns empty or obviously irrelevant variables, it usually means one of:
 
 1. The variable exists but is suppressed at that resolution (ACS small-area non-publication)
-2. The place DCID is wrong — re-check the FIPS pattern
+2. The place is wrong — search_indicators needs a qualified place name, not a DCID; for get_observations, re-check the FIPS pattern
 3. The question cannot be answered from Data Commons and needs a different source (Socrata, a direct API, or web search)
 
 Do not fabricate a value. Report the empty result, state the DCID and query you tried, and suggest a narrower geography or an alternative source.
