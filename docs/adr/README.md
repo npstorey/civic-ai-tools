@@ -37,3 +37,5 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0031](0031-civic-typed-router-packaging.md) | Civic-router packaging — `@typedstandards/civic-typed-router`, a domain-free core beside its civic content | Accepted (2026-10-09) |
 | [0032](0032-tool-naming-across-sources.md) | Tool naming across sources — `<alias>__<upstream name>`, applied by the router, checked at startup, dispatched by a map | Accepted (2026-10-15) |
 | [0033](0033-composed-harness-record-fields.md) | The composed-harness record fields — what a record states about how its prompt and tools were composed, and who answered each call | Accepted (2026-10-15) |
+| [0034](0034-content-layout-node.md) | The `content/layout/v1` node — a page layout published and verified apart from the host that renders it, and the optional `layoutNodeId` on publication | Accepted (2026-10-15) |
+| [0035](0035-record-package-input-is-i-json.md) | A record package's JSON text is I-JSON — a repeated member name is refused before any hash is computed | Accepted (2026-10-15) |
