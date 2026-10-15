@@ -1,7 +1,7 @@
 # ADR-0035: A record package's JSON text is I-JSON — a repeated member name is refused before any hash is computed
 
 - **Status:** **Accepted** (ruling D1 = A by the owner at gate G0 of anchor [civic-ai-tools#260](https://github.com/npstorey/civic-ai-tools/issues/260), 2026-10-15: [typedstandards#145](https://github.com/npstorey/typedstandards/issues/145) is carried in the same sprint, with the §8.2 sentence and §9.2 check #1's clause in specification v0.1.12 and the verifier's change under a drop rule that lets it leave the release; recorded in the [G0 record](https://github.com/npstorey/civic-ai-tools/issues/260#issuecomment-6202752527))
-- **Date:** 2026-10-16
+- **Date:** 2026-10-15
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —

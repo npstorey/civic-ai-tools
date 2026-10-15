@@ -1,7 +1,7 @@
 # ADR-0034: The `content/layout/v1` node — a page layout published and verified apart from the host that renders it, and the optional `layoutNodeId` on publication
 
 - **Status:** **Accepted** (the signed node: the answer-layout design's ruling D3 = B, 2026-10-14; the optional `layoutNodeId`: the sequencing ruling D4 = A, 2026-10-15; gate G0 of anchor [civic-ai-tools#260](https://github.com/npstorey/civic-ai-tools/issues/260): D1-D3 ruled A and C1-C2 confirmed by the owner, 2026-10-15, among them the payload shape (C1), the vocabulary rule (D2) and the adopter sentence (D3), recorded in the [G0 record](https://github.com/npstorey/civic-ai-tools/issues/260#issuecomment-6202752527))
-- **Date:** 2026-10-16
+- **Date:** 2026-10-15
 - **Decision-maker:** Solo maintainer
 - **Supersedes:** —
 - **Superseded by:** —
