@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.7.0 — 2026-10-15
 
 - **The seam inside the harness** ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244) P2).
   `src/capture/provenance.ts` and `src/capture/data-sources.ts` import
