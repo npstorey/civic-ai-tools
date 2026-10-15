@@ -1,7 +1,7 @@
 // The composer's join: an intro, an optional preamble, one block per source,
 // and an outro. Every sentence arrives as a value; this file holds none.
 
-import type { Manifest } from './types.ts';
+import type { ManifestEntry } from './types.ts';
 
 /** What separates the blocks of a composed prompt. */
 export const BLOCK_SEPARATOR = '\n\n---\n\n';
@@ -53,9 +53,9 @@ export async function composePrompt(
 }
 
 /** `composePrompt` with one block per entry, each the entry's guidance text
- *  for `context`, in manifest order. */
+ *  for `context`, in manifest order. Reads only each entry's `guidance`. */
 export function composeManifestPrompt<Context>(
-  entries: Manifest<Context>,
+  entries: readonly Pick<ManifestEntry<Context>, 'guidance'>[],
   context: Context,
   frame: PromptFrame,
 ): Promise<string> {

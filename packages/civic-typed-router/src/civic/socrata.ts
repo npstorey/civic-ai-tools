@@ -8,9 +8,10 @@
 // registry entry's text from `:599-609`. The text is the website's, byte for
 // byte; `router-goldens.test.ts` holds it to the captured outputs.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 import type { CivicGuidanceContext, CivicManifestEntry, PromptFetcher } from './context.ts';
 import { SOCRATA_ADDRESS_VARIABLE } from './env.ts';
+import { civicCitation, civicPreambleEntry } from './prompt-frame.ts';
 
 // --- Socrata MCP (city open data portals) ---
 export const SOCRATA_TOOLS: FunctionToolSchema[] = [
@@ -153,6 +154,11 @@ WHICH TOOL TO USE: this returns metadata and columns, not query results. To read
     },
   },
 ];
+
+/** STUB (red tree): the view is ignored. */
+export function socrataTools(_view?: SourceView): FunctionToolSchema[] {
+  return SOCRATA_TOOLS;
+}
 
 /** The routing list: the server's tool names in the order the website's
  *  registry routes them (`src/lib/mcp/registry.ts:53`). */
@@ -537,7 +543,7 @@ When a user hits a limit (complex multi-city query, long date range, deep analys
  * say) reads that property. Kept as it is, because the move changes no
  * output, including outputs the captured goldens do not cover.
  */
-export const getSkillForPortal = (portal: string): string => {
+export const getSkillForPortal = (portal: string, _view?: SourceView): string => {
   const portalSpecificGuidance: Record<string, string> = {
     'data.cityofnewyork.us': `
 Use these NYC dataset IDs directly:
@@ -554,6 +560,11 @@ Note: search only covers the portal this server is configured for — if that is
 
   return portalSpecificGuidance[portal] || '';
 };
+
+/** STUB (red tree): the view is ignored. */
+export function socrataSkillFallback(_view?: SourceView): string {
+  return SOCRATA_SKILL_FALLBACK;
+}
 
 /** The Socrata guidance as fetched, or the fallback when the fetch throws. */
 async function fetchSkillGuidance(fetchPrompt: PromptFetcher): Promise<string> {
@@ -588,11 +599,19 @@ export const SOCRATA_ENTRY: CivicManifestEntry = {
   alias: 'socrata',
   sourceId: 'socrata',
   displayName: 'Socrata MCP Server',
+  description:
+    "Socrata open data portals: records that cities and states publish, such as 311 requests, building permits, inspections, crime, housing violations, payroll, licenses and transit ridership. Covers NYC, Chicago, SF, Seattle, LA, state portals such as data.ny.gov, and hundreds of other portals. Cannot reach Boston's city data, and returns only the datasets each portal's publisher posts, so it is not the source for census demographics.",
+  freshness:
+    "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+  freshnessSource:
+    'socrata-mcp-server at 3163601 (0.9.2), the hosted Socrata server: get_data sends its catalog, query and metrics requests to the portal on each call (src/tools/socrata-tools.ts); fetch keeps a result for five minutes (src/utils/cache.ts, documentCache).',
   configuration: {
     addressVariable: SOCRATA_ADDRESS_VARIABLE,
     requirement: 'required',
   },
   tools: SOCRATA_TOOLS,
+  toolsFor: () => [],
+  prompt: { preambleEntry: (view) => civicPreambleEntry('socrata', view), citation: civicCitation('socrata') },
   toolNames: SOCRATA_TOOL_NAMES,
   guidance: { fetchText: socrataGuidanceText },
 };

@@ -4,6 +4,8 @@
 // Moved from the reference website at 3a0c894,
 // `src/lib/mcp/socrata-skill.ts:462-590`.
 
+import type { SourceView } from '../core/types.ts';
+
 /** The civic source ids, as the website's registry keys them. */
 export type SourceId = 'socrata' | 'data-commons' | 'boston-opencontext';
 
@@ -30,6 +32,18 @@ const PREAMBLE_RULES: ReadonlyArray<{ routesTo?: SourceId; text: string }> = [
 ];
 
 const SOURCE_COUNT_WORDS = ['NO', 'ONE', 'TWO', 'THREE'];
+
+// STUB (red tree): the entry-composed preamble and outro, typed, with no
+// behaviour.
+export interface PromptSource {
+  readonly sourceId: string;
+  readonly preambleEntry: string;
+  readonly citation: string;
+}
+export const sourceCountWord = (count: number): string => SOURCE_COUNT_WORDS[count]!;
+export const civicPreambleEntry = (sourceId: SourceId, _view?: SourceView): string => PREAMBLE_ENTRIES[sourceId];
+export const composePreamble = (_sources: readonly Pick<PromptSource, 'sourceId' | 'preambleEntry'>[]): string => '';
+export const composeOutro = (_citations: readonly string[]): string => '';
 
 /**
  * The cross-source preamble for exactly these sources: one numbered entry per
@@ -66,6 +80,8 @@ const OUTRO_CITATIONS: Record<SourceId, string> = {
   'data-commons': 'the variable DCID + source dataset (for Data Commons)',
   'boston-opencontext': 'the resource UUID + dataset title (for Boston OpenContext)',
 };
+
+export const civicCitation = (sourceId: SourceId): string => OUTRO_CITATIONS[sourceId];
 
 /** The closing instruction, citing exactly these sources. */
 export function outroFor(sources: readonly SourceId[]): string {

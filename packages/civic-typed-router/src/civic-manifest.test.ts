@@ -7,11 +7,17 @@ import assert from 'node:assert/strict';
 import {
   assertUniqueToolNames,
   CIVIC_MANIFEST,
+  civicRouter,
   configuredAddresses,
   createCivicRouter,
   getSkillForPortal,
   readMcpEnv,
+  socrataTools,
+  dataCommonsTools,
+  bostonTools,
+  BARE_VIEW,
   toolNamesMatchSchemas,
+  ToolNameError,
   type CivicManifest,
 } from './index.ts';
 
@@ -49,11 +55,35 @@ test('manifest: each entry\'s address variable is the one the configuration read
   }
 });
 
-test('0.1.0 invokes no validation: a manifest with a duplicate tool name still builds a router', () => {
+test('startup checks: the civic manifest passes them, and its dispatch map holds the eleven', () => {
+  assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
+  assert.equal(civicRouter.dispatchMap.size, 11);
+  assert.deepEqual(
+    [...civicRouter.dispatchMap.values()].map((t) => [t.exposedName, t.upstreamName]),
+    civicRouter.mcpTools.map((t) => [`${CIVIC_MANIFEST.find((e) => e.tools.includes(t))!.alias}__${t.function.name}`, t.function.name]),
+  );
+});
+
+test('startup checks: a name two sources share builds (their exposed names differ); one source declaring a name twice is refused', () => {
   const [socrata, dataCommons, boston] = CIVIC_MANIFEST;
-  const duplicated: CivicManifest = [socrata!, { ...dataCommons!, tools: [...dataCommons!.tools, socrata!.tools[0]!] }, boston!];
-  assert.throws(() => assertUniqueToolNames(duplicated));
-  assert.doesNotThrow(() => createCivicRouter(duplicated));
+  // Data Commons also declares `get_data`: the bare names collide, the exposed ones do not.
+  const shared: CivicManifest = [socrata!, { ...dataCommons!, tools: [...dataCommons!.tools, socrata!.tools[0]!] }, boston!];
+  assert.throws(() => assertUniqueToolNames(shared), 'the bare names do collide');
+  assert.doesNotThrow(() => createCivicRouter(shared));
+  // Data Commons declares `search_indicators` twice: refused at construction.
+  const twice: CivicManifest = [socrata!, { ...dataCommons!, tools: [...dataCommons!.tools, dataCommons!.tools[0]!] }, boston!];
+  assert.throws(
+    () => createCivicRouter(twice),
+    (err: unknown) => err instanceof ToolNameError && /both exposed as "data_commons__search_indicators"/.test(err.message),
+  );
+});
+
+test('views: each civic entry\'s tools are its toolsFor in the bare view, byte for byte', () => {
+  const [socrata, dataCommons, boston] = CIVIC_MANIFEST;
+  assert.equal(JSON.stringify(socrataTools(BARE_VIEW)), JSON.stringify(socrata!.tools));
+  assert.equal(JSON.stringify(dataCommonsTools(BARE_VIEW)), JSON.stringify(dataCommons!.tools));
+  assert.equal(JSON.stringify(bostonTools(BARE_VIEW)), JSON.stringify(boston!.tools));
+  for (const entry of CIVIC_MANIFEST) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
 });
 
 test('kept from the website: the portal table is a plain-object lookup, so a prototype key reads the prototype', () => {

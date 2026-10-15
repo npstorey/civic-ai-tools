@@ -1,11 +1,15 @@
 // The tool-to-source index, derived from each entry's schemas, and two
 // validations over a manifest.
 //
-// The validations are defined here and tested, but 0.1.0 invokes neither:
-// refusing a manifest at load is a behaviour change, and this release changes
-// no behaviour. A consumer may call them.
+// 0.1.0 defined the validations and invoked neither. Since 0.2.0 the civic
+// router runs `assertUniqueToolNames` at construction over the names the
+// aliased view exposes (two sources may share an upstream name; their exposed
+// names differ). `toolNamesMatchSchemas` is still the consumer's to call.
 
 import type { Manifest, ManifestEntry } from './types.ts';
+
+/** What the duplicate check reads of an entry. */
+type NamedTools = Pick<ManifestEntry<unknown>, 'sourceId' | 'tools'>;
 
 /** Tool name to `sourceId`, for every function tool in the manifest.
  *
@@ -32,7 +36,7 @@ export interface DuplicateToolName {
 }
 
 /** Every tool name declared by more than one source, in first-seen order. */
-export function findDuplicateToolNames(manifest: Manifest<unknown>): DuplicateToolName[] {
+export function findDuplicateToolNames(manifest: Manifest<unknown> | readonly NamedTools[]): DuplicateToolName[] {
   const owners = new Map<string, string[]>();
   for (const entry of manifest) {
     for (const tool of entry.tools) {
@@ -67,7 +71,7 @@ export class DuplicateToolNameError extends Error {
 }
 
 /** Refuse a manifest in which two sources declare the same tool name. */
-export function assertUniqueToolNames(manifest: Manifest<unknown>): void {
+export function assertUniqueToolNames(manifest: Manifest<unknown> | readonly NamedTools[]): void {
   const duplicates = findDuplicateToolNames(manifest);
   if (duplicates.length > 0) throw new DuplicateToolNameError(duplicates);
 }

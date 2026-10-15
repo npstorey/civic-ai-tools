@@ -19,6 +19,7 @@ import {
   isEntryOffered,
   offeredEntries,
   offerTools,
+  sourcesOffered,
   toolNamesMatchSchemas,
   toolSourceIndex,
   withheldToolNames,
@@ -41,6 +42,8 @@ function entry(
     alias: `${sourceId}-alias`,
     sourceId,
     displayName: `${sourceId} server`,
+    description: `${sourceId}: a synthetic source.`,
+    freshness: 'Synthetic.',
     configuration: { addressVariable: `${sourceId.toUpperCase()}_URL`, requirement },
     tools: names.map(tool),
     toolNames,
@@ -139,6 +142,32 @@ test('select: an address is read only from the object\'s own keys', () => {
 test('select: withheld tools follow manifest order and each source\'s routing order', () => {
   assert.deepEqual(withheldToolNames(MANIFEST, {}), ['b3', 'b1', 'b2', 'c1']);
   assert.deepEqual(withheldToolNames(MANIFEST, { b: 'u', c: 'u' }), []);
+});
+
+test('select: a selection narrows the configured sources; a source not configured stays out whatever it says', () => {
+  const addresses = { b: 'https://b.example.org' };
+  // No selection: every configured source, reason `configured`.
+  assert.deepEqual(
+    sourcesOffered(MANIFEST, addresses).map((s) => [s.sourceId, s.alias, s.reason]),
+    [
+      ['a', 'a-alias', 'configured'],
+      ['b', 'b-alias', 'configured'],
+      ['c', 'c-alias', 'not-configured'],
+    ],
+  );
+  // A selection naming `a` and `c`: `b` is not selected, `c` is still not configured.
+  assert.deepEqual(
+    sourcesOffered(MANIFEST, addresses, ['a', 'c']).map((s) => s.reason),
+    ['selected', 'not-selected', 'not-configured'],
+  );
+  assert.deepEqual(offeredEntries(MANIFEST, addresses, ['a', 'c']).map((e) => e.sourceId), ['a']);
+  assert.deepEqual(withheldToolNames(MANIFEST, addresses, ['a', 'c']), ['b3', 'b1', 'b2', 'c1']);
+  // An empty selection offers nothing; an id the manifest does not hold is ignored.
+  assert.deepEqual(offeredEntries(MANIFEST, addresses, []).map((e) => e.sourceId), []);
+  assert.deepEqual(offeredEntries(MANIFEST, addresses, ['b', 'zz']).map((e) => e.sourceId), ['b']);
+  // The default is the 0.1.0 answer.
+  assert.deepEqual(offeredEntries(MANIFEST, addresses, undefined), offeredEntries(MANIFEST, addresses));
+  assert.deepEqual(withheldToolNames(MANIFEST, addresses, undefined), withheldToolNames(MANIFEST, addresses));
 });
 
 test('offerTools: nothing withheld returns the same array; otherwise function tools by name are dropped', () => {

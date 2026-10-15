@@ -13,6 +13,8 @@ export type {
   CivicGuidanceContext,
   CivicManifest,
   CivicManifestEntry,
+  CivicPortalLock,
+  CivicPromptParts,
   InstructionsFetcher,
   PromptFetcher,
 } from './context.ts';
@@ -34,6 +36,8 @@ export {
   SOCRATA_TOOL_NAMES,
   SOCRATA_TOOLS,
   socrataGuidanceText,
+  socrataSkillFallback,
+  socrataTools,
 } from './socrata.ts';
 export {
   DATA_COMMONS_ENTRY,
@@ -41,6 +45,7 @@ export {
   DATA_COMMONS_TOOLS,
   dataCommonsGuidanceText,
   dataCommonsSkill,
+  dataCommonsTools,
 } from './data-commons.ts';
 export {
   BOSTON_OPENCONTEXT_ENTRY,
@@ -48,13 +53,28 @@ export {
   BOSTON_OPENCONTEXT_TOOL_NAMES,
   BOSTON_OPENCONTEXT_TOOLS,
   bostonGuidanceText,
+  bostonSkill,
+  bostonTools,
 } from './boston.ts';
-export { lockedFetch, lockedGetData, lockedSearch, portalLockSection } from './portal-lock.ts';
+export {
+  lockedFetch,
+  lockedGetData,
+  lockedSearch,
+  lockSocrataTools,
+  portalLockSection,
+  portalLockSectionFor,
+} from './portal-lock.ts';
 export {
   ALL_SOURCES,
+  civicCitation,
+  civicPreambleEntry,
+  composeOutro,
+  composePreamble,
   CROSS_SOURCE_PREAMBLE,
   crossSourcePreamble,
   introFor,
   outroFor,
+  sourceCountWord,
+  type PromptSource,
   type SourceId,
 } from './prompt-frame.ts';

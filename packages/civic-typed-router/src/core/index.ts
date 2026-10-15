@@ -11,9 +11,22 @@ export type {
   ManifestEntry,
   Requirement,
   SourceConfiguration,
+  SourceView,
   ToolLike,
 } from './types.ts';
-export { configuredAddress, isEntryOffered, offeredEntries, offerTools, withheldToolNames } from './select.ts';
+export {
+  configuredAddress,
+  isEntryOffered,
+  isOfferedReason,
+  offeredEntries,
+  offeredReason,
+  offerTools,
+  sourcesOffered,
+  withheldToolNames,
+  type OfferedReason,
+  type SourceOffered,
+  type SourceSelection,
+} from './select.ts';
 export { BLOCK_SEPARATOR, composeManifestPrompt, composePrompt, type PromptFrame } from './compose.ts';
 export {
   assertUniqueToolNames,
@@ -24,3 +37,31 @@ export {
   type DuplicateToolName,
   type ToolSourceIndex,
 } from './tool-index.ts';
+export {
+  ALIAS_PATTERN,
+  ALIAS_SEPARATOR,
+  aliasedGuidance,
+  aliasedToolName,
+  aliasedTools,
+  aliasedView,
+  aliasedWithheldToolNames,
+  anchoredRewrite,
+  BARE_VIEW,
+  checkToolNames,
+  dispatchMap,
+  entryToolsInView,
+  exposedToolName,
+  findToolNameProblems,
+  MAX_TOOL_NAME_LENGTH,
+  normalizeToolName,
+  resolveCalledName,
+  sourceForAliasedName,
+  TOOL_NAME_PATTERN,
+  ToolNameError,
+  unaliasText,
+  upstreamToolName,
+  type CalledNameResolution,
+  type DispatchMap,
+  type DispatchTarget,
+  type ToolNameProblem,
+} from './alias.ts';

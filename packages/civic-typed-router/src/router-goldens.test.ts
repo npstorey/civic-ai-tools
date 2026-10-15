@@ -12,8 +12,9 @@
 //   - every fact: tool to source, the offered sources and withheld tools, and
 //     the configuration reading at its edges.
 //
-// Then all of it again with every entry's `id` and `alias` replaced: once by a
-// sentinel value, once by a getter that throws. Nothing reads either field.
+// Then all of it again with every entry's `id` and `alias` replaced: once by
+// other values, once behind getters. Nothing reads `id`; the bare view does
+// not read `alias` (only the startup checks and the aliased view do).
 //
 // The fixture is read, never written: its two files' blobs are pinned at the
 // gate, and the capture script beside it is how they are regenerated.
@@ -287,34 +288,46 @@ async function checkEverything(router: CivicRouter): Promise<void> {
   checkFacts(router);
 }
 
-const SENTINEL = 'sentinel: id and alias are carried, never read';
+const SENTINEL = 'sentinel: id is carried, never read';
 
-test('id and alias are never read: every golden holds with both replaced by one sentinel', async () => {
-  const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => ({ ...entry, id: SENTINEL, alias: SENTINEL }));
-  assert.ok(manifest.every((e) => e.id === SENTINEL && e.alias === SENTINEL));
+test('id is never read and the bare view does not depend on alias: every golden holds with id a sentinel and every alias another', async () => {
+  // An alias must pass the startup checks, so each is replaced by another
+  // well-formed one rather than by the sentinel.
+  const manifest: CivicManifest = CIVIC_MANIFEST.map((entry, i) => ({ ...entry, id: SENTINEL, alias: `other_alias_${i}` }));
+  assert.ok(manifest.every((e) => e.id === SENTINEL && e.alias.startsWith('other_alias_')));
   assert.notEqual(manifest, CIVIC_MANIFEST);
   await checkEverything(createCivicRouter(manifest));
 });
 
-test('id and alias are never read: every golden holds with both behind a getter that throws', async () => {
+test('id is never read, and alias only at construction: every golden holds with id behind a getter that throws', async () => {
   const reads: string[] = [];
   const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => {
     const trapped = { ...entry } as CivicManifestEntry;
-    for (const field of ['id', 'alias'] as const) {
-      Object.defineProperty(trapped, field, {
-        enumerable: true,
-        get() {
-          reads.push(`${entry.sourceId}.${field}`);
-          throw new Error(`${entry.sourceId}.${field} was read`);
-        },
-      });
-    }
+    Object.defineProperty(trapped, 'id', {
+      enumerable: true,
+      get() {
+        reads.push(`${entry.sourceId}.id`);
+        throw new Error(`${entry.sourceId}.id was read`);
+      },
+    });
+    Object.defineProperty(trapped, 'alias', {
+      enumerable: true,
+      get() {
+        reads.push(`${entry.sourceId}.alias`);
+        return entry.alias;
+      },
+    });
     return trapped;
   });
-  // The trap works: a read throws and is recorded.
+  // The traps work: a read of id throws, and each read is recorded.
   assert.throws(() => manifest[0]!.id, /was read/);
+  assert.equal(manifest[0]!.alias, 'socrata');
   reads.length = 0;
 
-  await checkEverything(createCivicRouter(manifest));
-  assert.deepEqual(reads, [], 'no code path read an entry\'s id or alias');
+  const router = createCivicRouter(manifest);
+  assert.ok(reads.length > 0 && reads.every((r) => r.endsWith('.alias')), 'construction reads alias (the checks and the map), never id');
+  reads.length = 0;
+
+  await checkEverything(router);
+  assert.deepEqual(reads, [], 'no bare output read an entry\'s id or alias');
 });

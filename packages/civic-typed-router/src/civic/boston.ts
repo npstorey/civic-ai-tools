@@ -11,9 +11,10 @@
 // upstream server's `ckan__` prefix. The source is optional: a run is offered
 // it only when the instance configures its address.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 import type { CivicGuidanceContext, CivicManifestEntry } from './context.ts';
 import { BOSTON_OPENCONTEXT_ADDRESS_VARIABLE } from './env.ts';
+import { civicCitation, civicPreambleEntry } from './prompt-frame.ts';
 
 // --- Boston OpenContext MCP (CKAN-native, data.boston.gov) ---
 export const BOSTON_OPENCONTEXT_TOOLS: FunctionToolSchema[] = [
@@ -191,6 +192,11 @@ Example:
   },
 ];
 
+/** STUB (red tree): the view is ignored. */
+export function bostonTools(_view?: SourceView): FunctionToolSchema[] {
+  return BOSTON_OPENCONTEXT_TOOLS;
+}
+
 /**
  * The routing list, in the order the website's registry routes it
  * (`src/lib/mcp/registry.ts:55-62`). It is the same six names as the schemas
@@ -266,6 +272,11 @@ Neighborhoods do NOT map cleanly to Census tracts. When joining Boston operation
 Cite Boston OpenContext analyses with: dataset title, resource UUID, data.boston.gov portal URL, and the SQL / aggregation spec that produced the number. The record-package layer captures tool calls and args automatically; your job in the text output is to make the citation human-readable.
 `;
 
+/** STUB (red tree): the view is ignored. */
+export function bostonSkill(_view?: SourceView): string {
+  return BOSTON_OPENCONTEXT_SKILL;
+}
+
 /** The Boston OpenContext block of the composed prompt. */
 export async function bostonGuidanceText(ctx: CivicGuidanceContext): Promise<string> {
   const instructions = await ctx.fetchInstructions('boston-opencontext');
@@ -287,11 +298,19 @@ export const BOSTON_OPENCONTEXT_ENTRY: CivicManifestEntry = {
   alias: 'boston',
   sourceId: 'boston-opencontext',
   displayName: 'Boston OpenContext MCP Server',
+  description:
+    "Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics.",
+  freshness:
+    "Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually).",
+  freshnessSource:
+    'The Boston guidance this package embeds (src/civic/boston.ts, hand-synced from the hub\'s docs/skills/boston.md): OpenContext "fronts the CKAN DataStore powering Analyze Boston (data.boston.gov)"; "Update cadence varies. 311 daily, assessor annually, crime weekly."',
   configuration: {
     addressVariable: BOSTON_OPENCONTEXT_ADDRESS_VARIABLE,
     requirement: 'optional',
   },
   tools: BOSTON_OPENCONTEXT_TOOLS,
+  toolsFor: () => [],
+  prompt: { preambleEntry: (view) => civicPreambleEntry('boston-opencontext', view), citation: civicCitation('boston-opencontext') },
   toolNames: BOSTON_OPENCONTEXT_TOOL_NAMES,
   guidance: { fetchText: bostonGuidanceText },
 };

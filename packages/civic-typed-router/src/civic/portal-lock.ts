@@ -12,7 +12,7 @@
 // property differ. No portal hostname is written here: the locked portal is
 // the instance's configuration, interpolated at call time.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 
 type ParametersWithProperties = { properties: Record<string, unknown> } & Record<string, unknown>;
 
@@ -56,7 +56,7 @@ Examples:
   };
 }
 
-export function lockedSearch(base: FunctionToolSchema, lockedPortal: string): FunctionToolSchema {
+export function lockedSearch(base: FunctionToolSchema, lockedPortal: string, _view?: SourceView): FunctionToolSchema {
   return {
     ...base,
     function: {
@@ -72,7 +72,7 @@ WHICH TOOL TO USE:
   };
 }
 
-export function lockedFetch(base: FunctionToolSchema, lockedPortal: string): FunctionToolSchema {
+export function lockedFetch(base: FunctionToolSchema, lockedPortal: string, _view?: SourceView): FunctionToolSchema {
   const baseParameters = base.function.parameters as ParametersWithProperties;
   return {
     ...base,
@@ -94,6 +94,16 @@ This instance queries one Socrata portal only, ${lockedPortal}: an identifier or
       },
     },
   };
+}
+
+/** STUB (red tree): the tools are returned as they are. */
+export function lockSocrataTools(tools: readonly FunctionToolSchema[], _lockedPortal: string, _view?: SourceView): FunctionToolSchema[] {
+  return [...tools];
+}
+
+/** STUB (red tree): no section. */
+export function portalLockSectionFor(_lockedPortal: string, _others: readonly string[], _view?: SourceView): string {
+  return '';
 }
 
 /**

@@ -13,8 +13,9 @@
 // input (`CivicGuidanceContext.publicationHost`), and the text is built per
 // call. With no host, the mention is left out, as before.
 
-import type { FunctionToolSchema } from '../core/types.ts';
+import type { FunctionToolSchema, SourceView } from '../core/types.ts';
 import type { CivicGuidanceContext, CivicManifestEntry } from './context.ts';
+import { civicCitation, civicPreambleEntry } from './prompt-frame.ts';
 import {
   DATA_COMMONS_ADDRESS_VARIABLE,
   DATA_COMMONS_DEFAULT_ADDRESS,
@@ -126,13 +127,18 @@ Examples:
   },
 ];
 
+/** STUB (red tree): the view is ignored. */
+export function dataCommonsTools(_view?: SourceView): FunctionToolSchema[] {
+  return DATA_COMMONS_TOOLS;
+}
+
 /** The routing list (`src/lib/mcp/registry.ts:54`). */
 export const DATA_COMMONS_TOOL_NAMES: readonly string[] = ['search_indicators', 'get_observations'];
 
 /** The embedded Data Commons guidance, naming `publicationHost` when it is
  *  non-empty. The source of truth is the hub's `docs/skills/data-commons.md`;
  *  this is the website's hand-synced copy at d1919a8. */
-export function dataCommonsSkill(publicationHost: string | null): string {
+export function dataCommonsSkill(publicationHost: string | null, _view?: SourceView): string {
   return `
 # Data Commons Companion Skill — Base Guidance
 
@@ -271,6 +277,12 @@ export const DATA_COMMONS_ENTRY: CivicManifestEntry = {
   alias: 'data_commons',
   sourceId: 'data-commons',
   displayName: 'Google Data Commons MCP Server',
+  description:
+    'Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods.',
+  freshness:
+    'Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).',
+  freshnessSource:
+    'The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub\'s docs/skills/data-commons.md): "ACS releases annually" and "Surface the vintage". The server is Google\'s datacommons-mcp (github.com/datacommonsorg/agent-toolkit).',
   configuration: {
     addressVariable: DATA_COMMONS_ADDRESS_VARIABLE,
     keyVariable: DATA_COMMONS_KEY_VARIABLE,
@@ -278,6 +290,8 @@ export const DATA_COMMONS_ENTRY: CivicManifestEntry = {
     defaultAddress: DATA_COMMONS_DEFAULT_ADDRESS,
   },
   tools: DATA_COMMONS_TOOLS,
+  toolsFor: () => [],
+  prompt: { preambleEntry: (view) => civicPreambleEntry('data-commons', view), citation: civicCitation('data-commons') },
   toolNames: DATA_COMMONS_TOOL_NAMES,
   guidance: { fetchText: dataCommonsGuidanceText },
 };
