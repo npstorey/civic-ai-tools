@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.8.0 — 2026-10-16
 
 The dependency floor (sprint LAYOUT-WEB, F0).
 
