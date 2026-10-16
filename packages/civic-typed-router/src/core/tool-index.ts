@@ -16,14 +16,21 @@ type NamedTools = Pick<ManifestEntry<unknown>, 'sourceId' | 'tools'>;
  *  A plain object, so a lookup reads it the way a property read does: a name
  *  no tool has yields `undefined`, and a name that is also an `Object.prototype`
  *  property yields that property. That is the lookup the reference app's
- *  static map performs; it is kept so the move changes no answer. */
+ *  static map performs; it is kept so the move changes no answer.
+ *
+ *  A bare name two sources declare belongs to the first entry that declares
+ *  it, in manifest order, whatever is configured: a source added after
+ *  another never takes a name from it. Through 0.2.0 the last entry won,
+ *  which no manifest exercised (no two of its sources shared a name). This
+ *  index answers by name alone; which source a call reached is the dispatch
+ *  rule's answer (`resolveCalledName`), which reads the offered sources. */
 export type ToolSourceIndex = Record<string, string>;
 
 export function toolSourceIndex(manifest: Manifest<unknown>): ToolSourceIndex {
   const index: ToolSourceIndex = {};
   for (const entry of manifest) {
     for (const tool of entry.tools) {
-      index[tool.function.name] = entry.sourceId;
+      if (!Object.hasOwn(index, tool.function.name)) index[tool.function.name] = entry.sourceId;
     }
   }
   return index;
