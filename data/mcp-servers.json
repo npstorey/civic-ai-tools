@@ -2169,5 +2169,44 @@
     "verificationStatus": "community",
     "dateModified": "2026-09-18",
     "version": "1.3.1"
+  },
+  {
+    "id": "databook-nyc-mcp",
+    "name": "Databook NYC",
+    "description": "NYC government data in one server: agencies and their people, procurement contracts, vendors, solicitations, capital projects, budgets, City Record notices, Council legislation and hearings, schools, and the City's technology contracts (Databook's Digital Services analysis)",
+    "repoUrl": "https://github.com/sarapis/databook",
+    "transport": [
+      "http"
+    ],
+    "categories": [
+      "economic-financial",
+      "government-contracting"
+    ],
+    "governmentLevel": [
+      "local"
+    ],
+    "maintainer": "Sarapis",
+    "status": "active",
+    "dateAdded": "2026-10-07",
+    "dataSources": [
+      "PASSPort (NYC Mayor's Office of Contract Services)",
+      "Checkbook NYC (NYC Comptroller)",
+      "City Record Online",
+      "NYC Open Data",
+      "NYC Council Legistar"
+    ],
+    "jurisdiction": "New York City",
+    "toolCount": 53,
+    "notes": "Hosted at https://api.databook.nyc/mcp (Streamable HTTP; read-only database role). No API key required: 60 requests a minute per address, or 300 with a free personal key from databook.nyc. tools/list returns 53 tools and prompts/list 6 prompts (serverInfo DatabookNYC 1.29.0, read 2026-10-07). Contract figures follow the City's grain: one PASSPort row per amendment, merged to 41,345 registered contracts; a master agreement's figure is an authorized limit, never added to committed money. Source: the public snapshot sarapis/databook, synced from the deployed code periodically, so the hosted server can be ahead of it. Databook also publishes signed Typed Standards records at https://databook.nyc/typed/.",
+    "license": "MIT",
+    "programmingLanguage": "Python",
+    "apiKeyRequired": false,
+    "verificationStatus": "community",
+    "dateModified": "2026-10-07",
+    "version": "1.29.0",
+    "dataPlatform": [
+      "custom-api"
+    ],
+    "endpointUrl": "https://api.databook.nyc/mcp"
   }
 ]
