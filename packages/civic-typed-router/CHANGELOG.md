@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.3.0 — 2026-10-16
 
 A fourth source the instance runs itself, the minimal hosting field and its
 switch, and the tool-to-source index for a shared bare name.
