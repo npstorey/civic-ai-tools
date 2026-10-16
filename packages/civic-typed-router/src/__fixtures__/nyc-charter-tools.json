@@ -1,0 +1,158 @@
+{
+  "_meta": {
+    "description": "The NYC Charter, Laws and Rules MCP server's tool schemas, as its tools/list returns them at the pinned version, and its get_version currency lines at the same capture. The router's NYC Charter entry carries the same schemas as code.",
+    "package": "@betanyc/nyc-charter-laws-rules",
+    "version": "0.3.1",
+    "gitHead": "b784cb763ec0d953139eef4ed366e8ec4de72625",
+    "integrity": "sha512-F4U1stFAODsih4NUtTCGkVP8vDzdMJsVbtkrZcDVj3RWMgp0gX1BoGyOM4Le1Js9D9Wo+6S7TTYOgz2yDPRGSw==",
+    "repository": "git+https://github.com/BetaNYC/nyc-charter-laws-rules.git",
+    "bin": "dist/index.js",
+    "script": {
+      "path": "packages/civic-typed-router/src/__fixtures__/pin-nyc-charter-tools.mjs",
+      "sha256": "51893a567f3942307d53809ab22d94018e04842a4b5ff41284cc79b2b8be3279"
+    },
+    "captureDate": "2026-10-16",
+    "node": "v22.23.1",
+    "resolved": {
+      "@modelcontextprotocol/sdk": "1.32.1",
+      "zod": "3.25.76"
+    },
+    "install": "npm install --ignore-scripts into a fresh directory under the OS temporary directory; the server started over stdio with an empty environment"
+  },
+  "initialize": {
+    "requestedProtocolVersion": "2025-06-18",
+    "protocolVersion": "2025-06-18",
+    "serverInfo": {
+      "name": "nyc-charter-laws-rules",
+      "version": "0.3.1"
+    },
+    "capabilities": {
+      "tools": {}
+    },
+    "instructions": null
+  },
+  "tools": [
+    {
+      "name": "search",
+      "description": "Search across the NYC Charter, Administrative Code, and Rules of the City of New York by keyword or phrase. Results are relevance-ranked: heading matches rank above citation matches, which rank above body-text matches, and whole-word matches rank above substring matches. For informational purposes only. Not legal advice. Verify against official sources at codelibrary.amlegal.com before relying on any result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search term or phrase"
+          },
+          "corpus": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "admin_code",
+              "rules",
+              "all"
+            ],
+            "description": "Which document to search (default: all)"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results to return (default 10, max 50)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "get_section",
+      "description": "Retrieve a specific section by its citation (e.g. '§ 259', 'Section 259', '11-602.1', 'Chapter 11'). Input is normalized (with or without '§', any case). Pass 'corpus' to disambiguate when the same citation exists in multiple documents (e.g. charter 'Chapter 3' vs a rules chapter); if multiple sections still match, a disambiguation list is returned. For informational purposes only. Not legal advice. Verify against official sources at codelibrary.amlegal.com before relying on any result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "citation": {
+            "type": "string",
+            "description": "Section citation or heading"
+          },
+          "corpus": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "admin_code",
+              "rules"
+            ],
+            "description": "Which document to look in (default: all three)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "citation"
+        ]
+      }
+    },
+    {
+      "name": "list_titles",
+      "description": "List the top-level chapters or titles of a document. For informational purposes only. Not legal advice. Verify against official sources at codelibrary.amlegal.com before relying on any result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "admin_code",
+              "rules"
+            ],
+            "description": "Which document to list"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "corpus"
+        ]
+      }
+    },
+    {
+      "name": "get_title",
+      "description": "Retrieve chapter/title records matching an identifier (whole-token match: 'Chapter 1' does not match 'Chapter 10'). Note: the index is flat — deep hierarchy (every section nested within a title) is not indexed, so this returns matching chapter/title-level records, not full title contents. For informational purposes only. Not legal advice. Verify against official sources at codelibrary.amlegal.com before relying on any result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "enum": [
+              "charter",
+              "admin_code",
+              "rules"
+            ],
+            "description": "Which document"
+          },
+          "title": {
+            "type": "string",
+            "description": "Chapter or title identifier (e.g. 'Chapter 11')"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "corpus",
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "get_version",
+      "description": "Return the currency date for each document — how current the Charter, Administrative Code, and Rules are. Each corpus updates on its own schedule. Always call this tool before answering legal questions so responses are grounded in the correct version of the law. For informational purposes only. Not legal advice. Verify against official sources at codelibrary.amlegal.com before relying on any result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  ],
+  "getVersion": {
+    "lines": [
+      "NYC Charter:           Current through Local Law 2026/147, enacted September 12, 2026, (856 sections; indexed 2026-09-17T11:10:53.649Z)",
+      "Administrative Code:   Current through Local Law 2026/147, enacted September 12, 2026, (12616 sections; indexed 2026-09-17T11:11:02.630Z)",
+      "Rules of NYC:          Current through rules effective October 4, 2026. (8713 sections; indexed 2026-10-06T11:11:25.208Z)"
+    ]
+  }
+}

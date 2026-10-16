@@ -42,6 +42,14 @@
 //     `resolveRunPortal(undefined)` with SITE_PORTAL_LOCKED and
 //     SITE_DEFAULT_PORTAL, as a route does for a request that names no portal.
 //
+// WHICH WEBSITE TREES IT CAPTURES. This is the instrument for the website at
+// d1919a8 and before, whose MCP layer held its own sources. Since #599 W2 the
+// website's `src/lib/mcp/` imports this package, and since W3 its outputs are
+// the package's aliased view: a capture of such a tree would record the
+// router's own output as the bar the router is held to. So before anything
+// else the script refuses a tree whose `src/lib/mcp/` imports
+// `@typedstandards/civic-typed-router`, naming the files.
+//
 // ENCODING. JSON drops `undefined`; a value that is `undefined` (including an
 // own key whose value is `undefined`) is written as {"$undefined": true}.
 
@@ -194,6 +202,8 @@ const ENV_EDGE_CASES = [
 ];
 
 // Where the two outputs reach the model, verified against the exported tree.
+// The lines are the website's at d1919a8 (d1919a86cc826c0870c8cfbc4c902791c6f9086d),
+// the last tree this instrument captures (above).
 const CALL_SITES = {
   prompt: [
     { path: 'src/app/api/compare/route.ts', line: 140 },
@@ -453,6 +463,34 @@ function exportTree(website, commit) {
   return { fullSha, tmp, tree };
 }
 
+const ROUTER_PACKAGE = '@typedstandards/civic-typed-router';
+const ROUTER_IMPORT = new RegExp(`(?:from\\s*|import\\s*\\(\\s*|import\\s+)['"]${ROUTER_PACKAGE.replace(/[/.]/g, '\\$&')}(?:/[^'"]*)?['"]`);
+
+/** Refuse a tree whose MCP layer imports the router: its outputs are the
+ *  router's own, so capturing them as the router's bar is circular. */
+function refuseRouterImportingTree(tree) {
+  const root = path.join(tree, 'src/lib/mcp');
+  if (!fs.existsSync(root)) return;
+  const importing = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(?:[cm]?[jt]s|tsx|jsx)$/.test(entry.name) && ROUTER_IMPORT.test(fs.readFileSync(full, 'utf8'))) {
+        importing.push(path.relative(tree, full));
+      }
+    }
+  };
+  walk(root);
+  if (importing.length > 0) {
+    throw new Error(
+      `refused: the website tree's src/lib/mcp/ imports ${ROUTER_PACKAGE} (${importing.sort().join(', ')}). ` +
+        "Its prompt and tools are the router's own output, so capturing them as the router's goldens is circular. " +
+        'This instrument captures the website at d1919a8 and before.',
+    );
+  }
+}
+
 function verifyCallSites(tree) {
   const check = (sites, needle) =>
     sites.map(({ path: rel, line }) => {
@@ -486,6 +524,7 @@ function main() {
   const scriptBytes = fs.readFileSync(SCRIPT_FILE);
   const { fullSha, tmp, tree } = exportTree(args.website, args.commit);
   try {
+    refuseRouterImportingTree(tree);
     const callSites = verifyCallSites(tree);
     const prompts = promptConfigurations();
     const toolsConfigs = toolsConfigurations();

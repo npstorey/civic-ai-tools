@@ -7,7 +7,7 @@
     },
     "script": {
       "path": "packages/civic-typed-router/src/__fixtures__/capture-app-goldens.mjs",
-      "sha256": "a7c980c06b6dd2f3b88dc008e315714d8c4e8dbe1ba03c5374cba57db158569e"
+      "sha256": "037f437479f075c5b2301ac7074a9775f953623d44691d9f13a1762d4f28ed23"
     },
     "captureDate": "2026-10-15",
     "node": "v22.23.1",

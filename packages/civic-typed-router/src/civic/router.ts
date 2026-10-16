@@ -1,4 +1,4 @@
-// The civic router: the three sources' manifest, bound to core.
+// The civic router: the civic sources' manifest, bound to core.
 //
 // Each function here reproduces one of the reference website's at 3a0c894,
 // with what that function read from its environment, its clock or its network
@@ -30,8 +30,12 @@
 // sources may share an upstream name: their exposed names differ, and a bare
 // call of that name is refused at dispatch (`resolveCalledName`).
 //
-// Nothing here reads an entry's `id`. The bare view reads no `alias` either:
-// only the checks, the dispatch map and the aliased view do.
+// Nothing here reads an entry's `id` or its `hosting`. The bare view reads no
+// `alias` either: only the checks, the dispatch map and the aliased view do.
+//
+// Selection reads `configuredSources(configured)`: each source's configured
+// address, and a hosted source's switch while it is on (`./env.ts`). A hosted
+// source is offered by its switch, never by an address.
 
 import {
   aliasedTools,
@@ -63,13 +67,15 @@ import type { FunctionToolSchema, SourceView, ToolLike } from '../core/types.ts'
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
-import { configuredAddresses, type McpRegistryEnv } from './env.ts';
+import { configuredSources, type McpRegistryEnv } from './env.ts';
+import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
 import { composeOutro, composePreamble, introFor } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
-/** The three civic sources, in the order the prompt and the tools array name
- *  them. */
-export const CIVIC_MANIFEST: CivicManifest = [SOCRATA_ENTRY, DATA_COMMONS_ENTRY, BOSTON_OPENCONTEXT_ENTRY];
+/** The civic sources, in the order the prompt and the tools array name them.
+ *  NYC Charter, Laws and Rules is last: optional and off unless its switch is
+ *  on, so with the switch off every output of the three before it is 0.2.0's. */
+export const CIVIC_MANIFEST: CivicManifest = [SOCRATA_ENTRY, DATA_COMMONS_ENTRY, BOSTON_OPENCONTEXT_ENTRY, NYC_CHARTER_ENTRY];
 
 /** What one composed prompt needs from the consumer. */
 export interface BuildSystemPromptInput {
@@ -215,13 +221,13 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
   const isSourceOffered = (configured: McpRegistryEnv, sourceId: string): boolean => {
     const entry = manifest.find((e) => e.sourceId === sourceId);
-    return entry === undefined || isEntryOffered(entry, configuredAddresses(configured));
+    return entry === undefined || isEntryOffered(entry, configuredSources(configured));
   };
 
   const lockGuidance = (view: SourceView, lockedPortal: string, configured: McpRegistryEnv, selection?: SourceSelection): string => {
     if (!lockEntry?.portalLock) throw new Error('portalLockGuidance: no source in the manifest takes a portal lock');
     // `offeredEntries` keeps manifest entries as they are: these are civic ones.
-    const others = (offeredEntries(manifest, configuredAddresses(configured), selection) as CivicManifestEntry[])
+    const others = (offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[])
       .filter((entry) => entry !== lockEntry)
       .map((entry) => entry.prompt?.lockMention ?? entry.displayName);
     return lockEntry.portalLock.section(lockedPortal, others, view);
@@ -237,7 +243,7 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     lockedPortal ? `${systemPrompt}\n\n---\n\n${lockGuidance(view, lockedPortal, configured, selection)}` : systemPrompt;
 
   const compose = (view: SourceView, input: BuildSystemPromptInput): Promise<string> => {
-    const entries = offeredEntries(manifest, configuredAddresses(input.configured), input.selection) as CivicManifestEntry[];
+    const entries = offeredEntries(manifest, configuredSources(input.configured), input.selection) as CivicManifestEntry[];
     const sources = entries.map((entry) => ({
       sourceId: entry.sourceId,
       preambleEntry: preambleEntryOf(entry, view),
@@ -265,8 +271,27 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
         );
   };
 
+  // The bare view names a tool by its upstream name alone, so a name two
+  // sources share (NYC Charter's `search` and Socrata's) cannot be withheld by
+  // name without withholding the offered source's tool as well. The bare
+  // filter withholds each function tool that is one of a not-offered source's
+  // own schema objects (the objects `mcpTools` and `mcpToolsFor` hand out),
+  // and any other function tool whose name only not-offered sources declare.
+  // For a manifest whose sources share no name, that is exactly the 0.2.0
+  // filter by name. With nothing withheld, `tools` itself is returned.
+  const bareOfferedTools = <T extends ToolLike>(tools: T[], configured: McpRegistryEnv, selection?: SourceSelection): T[] => {
+    const addresses = configuredSources(configured);
+    const withheld = withheldToolNames(manifest, addresses, selection);
+    if (withheld.length === 0) return tools;
+    const offered = new Set(offeredEntries(manifest, addresses, selection));
+    const offeredNames = new Set([...offered].flatMap((entry) => entry.tools.map((tool) => tool.function.name)));
+    const notOfferedSchemas = new Set<unknown>(manifest.filter((entry) => !offered.has(entry)).flatMap((entry) => entry.tools));
+    const byName = offerTools(tools, withheld.filter((name) => !offeredNames.has(name)));
+    return byName.filter((tool) => !(tool.type === 'function' && notOfferedSchemas.has(tool)));
+  };
+
   const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] =>
-    offeredEntries(manifest, configuredAddresses(configured), selection).map((entry) => entry.sourceId);
+    offeredEntries(manifest, configuredSources(configured), selection).map((entry) => entry.sourceId);
 
   return {
     manifest,
@@ -277,11 +302,11 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     offeredMcpTools(tools, configured, selection) {
-      return offerTools(tools, withheldToolNames(manifest, configuredAddresses(configured), selection));
+      return bareOfferedTools(tools, configured, selection);
     },
 
     withheldToolNames(configured, selection) {
-      return withheldToolNames(manifest, configuredAddresses(configured), selection);
+      return withheldToolNames(manifest, configuredSources(configured), selection);
     },
 
     isSourceOffered,
@@ -307,7 +332,7 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     sourcesOffered(configured, selection) {
-      return sourcesOffered(manifest, configuredAddresses(configured), selection);
+      return sourcesOffered(manifest, configuredSources(configured), selection);
     },
 
     dispatchMap: map,
@@ -319,11 +344,11 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     aliasedOfferedMcpTools(tools, configured, selection) {
-      return offerTools(tools, aliasedWithheldToolNames(manifest, configuredAddresses(configured), selection, aliased));
+      return offerTools(tools, aliasedWithheldToolNames(manifest, configuredSources(configured), selection, aliased));
     },
 
     aliasedWithheldToolNames(configured, selection) {
-      return aliasedWithheldToolNames(manifest, configuredAddresses(configured), selection, aliased);
+      return aliasedWithheldToolNames(manifest, configuredSources(configured), selection, aliased);
     },
 
     aliasedBuildSystemPrompt(input) {

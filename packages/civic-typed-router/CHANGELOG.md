@@ -2,6 +2,79 @@
 
 Factual record of what changed per published version.
 
+## 0.3.0 — 2026-10-16
+
+A fourth source the instance runs itself, the minimal hosting field and its
+switch, and the tool-to-source index for a shared bare name.
+
+- **NYC Charter, Laws and Rules** (`NYC_CHARTER_ENTRY`, last in
+  `CIVIC_MANIFEST`): `@betanyc/nyc-charter-laws-rules` on npm, published by
+  BetaNYC, pinned at 0.3.1. `id`
+  `@betanyc/nyc-charter-laws-rules@https://github.com/BetaNYC/nyc-charter-laws-rules`,
+  alias `nyc_charter`, source id `nyc-charter`, optional. Its five tools are
+  exposed as `nyc_charter__search`, `nyc_charter__get_section`,
+  `nyc_charter__list_titles`, `nyc_charter__get_title` and
+  `nyc_charter__get_version`; their schemas are the server's own at 0.3.1,
+  captured by `src/__fixtures__/pin-nyc-charter-tools.mjs` into
+  `nyc-charter-tools.json` and carried as code (`NYC_CHARTER_TOOLS`). Its
+  guidance returns `''` and calls neither fetcher. New exports:
+  `NYC_CHARTER_ENTRY`, `NYC_CHARTER_HOSTING`, `NYC_CHARTER_TOOLS`,
+  `NYC_CHARTER_TOOL_NAMES`.
+- **The hosting field, minimal.** `SourceHosting` (core) and
+  `ManifestEntry.hosting?`: `kind: 'npm-package'`, `package`, `version` and
+  `commit` as separate strings, and `outbound` (the hosts the source may
+  reach; NYC Charter's is `[]`, none). No address, command or port. Carried,
+  never read by the router. The full field, with its variants and the
+  logging posture, is later work (R6).
+- **The switch rule.** `readMcpEnv` reads `NYC_CHARTER_HOSTING`
+  (`NYC_CHARTER_HOSTING_VARIABLE`): when its trimmed value is exactly
+  `sandbox` (`NYC_CHARTER_HOSTING_SANDBOX`), the result gains
+  `nycCharterHosting: 'sandbox'`; unset, blank or any other value, and the
+  key is absent. `McpRegistryEnv` gains the optional field. With the switch
+  unset every configuration reading is 0.2.0's, key for key.
+  `configuredAddresses` gains no key; selection reads the new
+  `configuredSources`, which adds a hosted source's switch while it is on.
+  The entry's `configuration.addressVariable` names the switch.
+- **The index rule.** `toolSourceIndex` (and so `sourceIdForToolName`) gives
+  a bare name two sources declare to the first entry that declares it,
+  whatever is configured: `search` is Socrata's. Through 0.2.0 the last entry
+  won; no manifest then shared a name.
+- **The bare filter.** `offeredMcpTools` withholds a not-offered source's own
+  schema objects as well as the names only not-offered sources declare, so
+  withholding NYC Charter's `search` keeps Socrata's. With the switch on, the
+  bare tools array holds two tools named `search`: the bare view cannot name
+  them apart, and the aliased view is the one to use.
+- **With the switch unset**, every bare and aliased prompt and tools array is
+  0.2.0's byte for byte (the 42 and the 5 goldens). The facts that move, each
+  asserted as a stated delta in `src/router-goldens.test.ts`:
+  - `mcpTools` and `aliasedMcpTools`, the vocabulary (replay's tools, the
+    bare and aliased `mcpToolsFor`), gain NYC Charter's five schemas at the
+    end;
+  - `withheldToolNames` and `aliasedWithheldToolNames` gain its five names in
+    every configuration, and so the offered array is never the vocabulary
+    object (`offeredIsBare`, `offeredIsMcpTools` false where every other
+    source is configured);
+  - `sourcesOffered` gains a row `{ sourceId: 'nyc-charter', alias:
+    'nyc_charter', reason: 'not-configured' }`;
+  - `sourceIdForToolName` answers `nyc-charter` for `get_section`,
+    `list_titles`, `get_title` and `get_version`, names no source had;
+  - the dispatch map holds sixteen names;
+  - a bare `search` still resolves to `socrata__search`.
+- **With the switch on**, the aliased tools array gains the five after every
+  other source's, and the prompt gains the count word, one preamble entry,
+  one outro citation and one lock-section mention, and no block. A bare
+  `search` is refused as ambiguous, naming `socrata__search` and
+  `nyc_charter__search`.
+- **For a consumer's records.** At the pin bump to this version, the
+  router's own `components[]` entry in every new record moves from `0.2.0`
+  to `0.3.0`, and every new record's `sourcesOffered` gains the
+  `nyc-charter` row above.
+- **The goldens capture refuses a circular tree.**
+  `capture-app-goldens.mjs` refuses a website tree whose `src/lib/mcp/`
+  imports this package; its call sites stay the website's at `d1919a8`. The
+  committed goldens are re-captured at `d1919a8` with the changed script:
+  `_meta.script.sha256` is the only byte that moves.
+
 ## 0.2.0 — 2026-10-15
 
 The aliased view, the routing fields, the startup checks, the selection, and a

@@ -10,6 +10,7 @@ import {
   civicRouter,
   configuredAddresses,
   createCivicRouter,
+  findDuplicateToolNames,
   getSkillForPortal,
   readMcpEnv,
   socrataTools,
@@ -21,13 +22,15 @@ import {
   type CivicManifest,
 } from './index.ts';
 
-test('manifest: three entries, each carrying identity, alias, configuration, schemas and guidance', () => {
+test('manifest: four entries, each carrying identity, alias, configuration, schemas and guidance', () => {
+  // 0.3.0 adds NYC Charter, Laws and Rules, last; the three before it are 0.2.0's.
   assert.deepEqual(
     CIVIC_MANIFEST.map((e) => [e.sourceId, e.alias, e.configuration.requirement]),
     [
       ['socrata', 'socrata', 'required'],
       ['data-commons', 'data_commons', 'required'],
       ['boston-opencontext', 'boston', 'optional'],
+      ['nyc-charter', 'nyc_charter', 'optional'],
     ],
   );
   for (const entry of CIVIC_MANIFEST) {
@@ -41,23 +44,38 @@ test('manifest: three entries, each carrying identity, alias, configuration, sch
   assert.equal(CIVIC_MANIFEST[1]!.configuration.keyVariable, 'DATA_COMMONS_API_KEY');
   assert.equal(CIVIC_MANIFEST[0]!.configuration.defaultAddress, undefined, 'Socrata has no default address');
   assert.equal(CIVIC_MANIFEST[2]!.configuration.defaultAddress, undefined, 'Boston OpenContext has no default address');
+  assert.equal(CIVIC_MANIFEST[3]!.configuration.defaultAddress, undefined, 'NYC Charter has no default address');
 });
 
-test('manifest: no two sources declare the same tool name', () => {
-  assert.doesNotThrow(() => assertUniqueToolNames(CIVIC_MANIFEST));
+test('manifest: one bare name is shared, search (Socrata and NYC Charter); every exposed name is unique', () => {
+  // Through 0.2.0 no two sources shared a bare name. The exposed names, the
+  // router's key, are unique, and the startup checks run over them.
+  assert.deepEqual(findDuplicateToolNames(CIVIC_MANIFEST), [{ tool: 'search', sourceIds: ['socrata', 'nyc-charter'] }]);
+  assert.throws(() => assertUniqueToolNames(CIVIC_MANIFEST), /Duplicate tool name "search"/);
+  assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
+  assert.equal(new Set(civicRouter.aliasedMcpTools.map((t) => t.function.name)).size, civicRouter.aliasedMcpTools.length);
 });
 
-test('manifest: each entry\'s address variable is the one the configuration reader reads for it', () => {
+test('manifest: each entry\'s configuration variable is the one the configuration reader reads for it', () => {
   for (const entry of CIVIC_MANIFEST) {
+    const variable = entry.configuration.addressVariable;
+    if ((entry as unknown as { hosting?: unknown }).hosting !== undefined) {
+      // A hosted source takes no address: its variable is a switch, and it
+      // offers the source without adding an address.
+      const on = readMcpEnv({ [variable]: 'sandbox' });
+      assert.equal(configuredAddresses(on)[entry.sourceId], undefined, `${variable} is no address`);
+      assert.equal(civicRouter.sourcesOffered(on).find((s) => s.sourceId === entry.sourceId)?.reason, 'configured', `${variable} offers ${entry.sourceId}`);
+      continue;
+    }
     const address = `https://${entry.sourceId}.example.org/mcp`;
-    const read = configuredAddresses(readMcpEnv({ [entry.configuration.addressVariable]: address }));
-    assert.equal(read[entry.sourceId], address, `${entry.configuration.addressVariable} configures ${entry.sourceId}`);
+    const read = configuredAddresses(readMcpEnv({ [variable]: address }));
+    assert.equal(read[entry.sourceId], address, `${variable} configures ${entry.sourceId}`);
   }
 });
 
-test('startup checks: the civic manifest passes them, and its dispatch map holds the eleven', () => {
+test('startup checks: the civic manifest passes them, and its dispatch map holds the sixteen', () => {
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
-  assert.equal(civicRouter.dispatchMap.size, 11);
+  assert.equal(civicRouter.dispatchMap.size, 16);
   assert.deepEqual(
     [...civicRouter.dispatchMap.values()].map((t) => [t.exposedName, t.upstreamName]),
     civicRouter.mcpTools.map((t) => [`${CIVIC_MANIFEST.find((e) => e.tools.includes(t))!.alias}__${t.function.name}`, t.function.name]),
@@ -79,11 +97,14 @@ test('startup checks: a name two sources share builds (their exposed names diffe
 });
 
 test('views: each civic entry\'s tools are its toolsFor in the bare view, byte for byte', () => {
-  const [socrata, dataCommons, boston] = CIVIC_MANIFEST;
+  const [socrata, dataCommons, boston, charter] = CIVIC_MANIFEST;
   assert.equal(JSON.stringify(socrataTools(BARE_VIEW)), JSON.stringify(socrata!.tools));
   assert.equal(JSON.stringify(dataCommonsTools(BARE_VIEW)), JSON.stringify(dataCommons!.tools));
   assert.equal(JSON.stringify(bostonTools(BARE_VIEW)), JSON.stringify(boston!.tools));
-  for (const entry of CIVIC_MANIFEST) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
+  // NYC Charter's schemas are its server's text, not the package's: no toolsFor.
+  assert.ok(charter, 'a fourth entry');
+  assert.equal(charter.toolsFor, undefined);
+  for (const entry of CIVIC_MANIFEST.slice(0, 3)) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
 });
 
 test('kept from the website: the portal table is a plain-object lookup, so a prototype key reads the prototype', () => {
