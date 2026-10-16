@@ -147,7 +147,9 @@ test('names (c): each refusal also happens at construction', () => {
 // --- (d) The sixteen names in view ------------------------------------------------
 
 test('names (d): the sixteen names in view are unchanged by normalization', () => {
-  const map = dispatchMap([...CIVIC_MANIFEST, entry('charter', 'charter', CHARTER_TOOLS)]);
+  // Since 0.3.0 the civic manifest holds the fifth source's five itself
+  // (alias `nyc_charter`); through 0.2.0 this test added a stub for them.
+  const map = dispatchMap(CIVIC_MANIFEST);
   const expected = [
     'socrata__get_data',
     'socrata__search',
@@ -160,13 +162,14 @@ test('names (d): the sixteen names in view are unchanged by normalization', () =
     'boston__ckan__query_data',
     'boston__ckan__aggregate_data',
     'boston__ckan__execute_sql',
-    'charter__search',
-    'charter__get_section',
-    'charter__list_titles',
-    'charter__get_title',
-    'charter__get_version',
+    'nyc_charter__search',
+    'nyc_charter__get_section',
+    'nyc_charter__list_titles',
+    'nyc_charter__get_title',
+    'nyc_charter__get_version',
   ];
   assert.deepEqual([...map.keys()], expected);
+  assert.deepEqual([...map.values()].filter((t) => t.sourceId === 'nyc-charter').map((t) => t.upstreamName), CHARTER_TOOLS);
   for (const target of map.values()) {
     assert.equal(target.exposedName, `${target.alias}__${target.upstreamName}`, `${target.exposedName} is not normalized`);
     assert.equal(target.normalized, false);

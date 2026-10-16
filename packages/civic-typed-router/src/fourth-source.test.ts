@@ -121,7 +121,9 @@ test('F4: the count word continues past three', async () => {
   ];
   const prompt = await createCivicRouter(many).buildSystemPrompt(input(ALL_CONFIGURED));
   assert.match(prompt, /You have access to 11 MCP data sources/);
-  const ten = await createCivicRouter(many.slice(0, 10)).buildSystemPrompt(input(ALL_CONFIGURED));
+  // The civic manifest's NYC Charter entry is not offered here (its switch is
+  // off), so the last entry dropped leaves ten offered.
+  const ten = await createCivicRouter(many.slice(0, -1)).buildSystemPrompt(input(ALL_CONFIGURED));
   assert.match(ten, /You have access to TEN MCP data sources/);
 });
 
@@ -135,6 +137,7 @@ test('selection: the default is every configured source, and its outputs are the
       ['socrata', 'socrata', 'configured'],
       ['data-commons', 'data_commons', 'configured'],
       ['boston-opencontext', 'boston', 'not-configured'],
+      ['nyc-charter', 'nyc_charter', 'not-configured'],
     ],
   );
   const bare = await civicRouter.buildSystemPrompt(input(configured));
@@ -142,12 +145,12 @@ test('selection: the default is every configured source, and its outputs are the
   // Selecting every offered source by name changes the reasons, not the bytes.
   const all = ['socrata', 'data-commons'];
   assert.equal(await civicRouter.buildSystemPrompt(input(configured, { selection: all })), bare);
-  assert.deepEqual(civicRouter.sourcesOffered(configured, all).map((s) => s.reason), ['selected', 'selected', 'not-configured']);
+  assert.deepEqual(civicRouter.sourcesOffered(configured, all).map((s) => s.reason), ['selected', 'selected', 'not-configured', 'not-configured']);
 });
 
 test('selection: a source left out of the selection is left out of the prompt, the tools and the lock section', async () => {
   const selection = ['socrata', 'data-commons'];
-  assert.deepEqual(civicRouter.sourcesOffered(ALL_CONFIGURED, selection).map((s) => s.reason), ['selected', 'selected', 'not-selected']);
+  assert.deepEqual(civicRouter.sourcesOffered(ALL_CONFIGURED, selection).map((s) => s.reason), ['selected', 'selected', 'not-selected', 'not-configured']);
 
   const prompt = await civicRouter.buildSystemPrompt(input(ALL_CONFIGURED, { selection }));
   assert.match(prompt, /You have access to TWO MCP data sources/);
@@ -163,6 +166,12 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'boston__ckan__get_schema',
     'boston__ckan__execute_sql',
     'boston__ckan__aggregate_data',
+    // NYC Charter's switch is off in ALL_CONFIGURED: withheld whatever the selection.
+    'nyc_charter__search',
+    'nyc_charter__get_section',
+    'nyc_charter__list_titles',
+    'nyc_charter__get_title',
+    'nyc_charter__get_version',
   ]);
   assert.match(civicRouter.portalLockGuidance('data.cityofnewyork.us', ALL_CONFIGURED, selection), /\(Data Commons\) is separate/);
 
@@ -174,7 +183,7 @@ test('selection: a source left out of the selection is left out of the prompt, t
 test('selection: a source the configuration does not offer is not-configured whatever the selection says', async () => {
   const configured = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
   const selection = ['socrata', 'boston-opencontext'];
-  assert.deepEqual(civicRouter.sourcesOffered(configured, selection).map((s) => s.reason), ['selected', 'not-selected', 'not-configured']);
+  assert.deepEqual(civicRouter.sourcesOffered(configured, selection).map((s) => s.reason), ['selected', 'not-selected', 'not-configured', 'not-configured']);
   assert.deepEqual(civicRouter.offeredSkillSources(configured, selection), ['socrata']);
 });
 

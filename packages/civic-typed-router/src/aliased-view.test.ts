@@ -19,11 +19,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
+  BLOCK_SEPARATOR,
   bostonSkill,
   civicRouter,
   composePreamble,
   dataCommonsSkill,
   getSkillForPortal,
+  readMcpEnv,
   socrataSkillFallback,
   unaliasText,
   type CivicRouter,
@@ -114,7 +116,7 @@ function aliasedToolsText(router: CivicRouter, capture: ToolsCapture): string {
   return JSON.stringify(router.aliasedOfferedMcpTools(router.aliasedMcpToolsFor(lockedPortal), configuredOf(capture)));
 }
 
-const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston)__/;
+const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston|nyc_charter)__/;
 const ELEVEN = [
   'get_data',
   'search',
@@ -269,14 +271,32 @@ test('callable: the extractor recognises each anchor it claims to (the website\'
   assert.deepEqual(extractToolMentions(fixture).sort(), ['alpha_one', 'alpha_two', 'beta_one', 'delta_one', 'gamma_one', 'gamma_two']);
 });
 
-test('callable: every tool name the aliased prompt-reaching text presents has an aliased schema', () => {
+test('callable: every tool name the aliased prompt-reaching text presents has an aliased schema', async () => {
   const view = civicRouter.aliasedView;
   const callable = new Set(civicRouter.aliasedMcpTools.map((t) => t.function.name));
   const portals = ['data.cityofnewyork.us', 'data.cityofchicago.org', 'data.sf.gov'];
+  // The three civic sources' own preamble entries, and the preamble the router
+  // composes with every source offered, NYC Charter's composed entry included
+  // (its intro block: the intro and the preamble, before the first block).
+  const everySource = readMcpEnv({
+    SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
+    BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
+    NYC_CHARTER_HOSTING: 'sandbox',
+  });
+  const composed = await civicRouter.aliasedBuildSystemPrompt({
+    configured: everySource,
+    today: '2026-01-15',
+    publicationHost: null,
+    fetchPrompt: async () => '',
+    fetchInstructions: async () => null,
+  });
   const corpus: Record<string, string> = {
     'the cross-source preamble': composePreamble(
-      civicRouter.manifest.map((entry) => ({ sourceId: entry.sourceId, preambleEntry: entry.prompt!.preambleEntry!(view) })),
+      civicRouter.manifest
+        .filter((entry) => entry.prompt?.preambleEntry)
+        .map((entry) => ({ sourceId: entry.sourceId, preambleEntry: entry.prompt!.preambleEntry!(view) })),
     ),
+    'the composed preamble, every source offered': composed.split(BLOCK_SEPARATOR)[0]!,
     'the Socrata fallback': socrataSkillFallback(view),
     'the Data Commons guidance': dataCommonsSkill('records.example.org', view),
     'the Boston guidance': bostonSkill(view),
@@ -293,8 +313,13 @@ test('callable: every tool name the aliased prompt-reaching text presents has an
   }
   assert.ok(seen.length >= 11, `the extractor found only ${seen.length} mentions; it has stopped measuring`);
   assert.ok(seen.every((name) => ALIAS_PREFIX.test(name)), 'every presented name is an exposed one');
-  // The preamble still describes exactly three sources, one `Tools:` list each.
+  // The three own preamble entries describe three sources, one `Tools:` list
+  // each; with every source offered the composed preamble has four, the
+  // fourth NYC Charter's five exposed names.
   assert.equal([...corpus['the cross-source preamble']!.matchAll(/Tools:\s*([^.\n]+)\./g)].length, 3);
+  const lists = [...corpus['the composed preamble, every source offered']!.matchAll(/Tools:\s*([^.\n]+)\./g)].map((m) => m[1]);
+  assert.equal(lists.length, 4);
+  assert.equal(lists[3], 'nyc_charter__search, nyc_charter__get_section, nyc_charter__list_titles, nyc_charter__get_title, nyc_charter__get_version');
 });
 
 // --- Anchored: the server's guidance --------------------------------------------------
