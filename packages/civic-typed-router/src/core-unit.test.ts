@@ -190,6 +190,19 @@ test('index: tool name to source id, derived from the schemas', () => {
   assert.equal(index.constructor as unknown, Object);
 });
 
+test('index: a bare name two sources declare stays on the first source that declares it, whatever is configured', () => {
+  // `c` and then `d` also declare `a1`; `a` declares it first.
+  const shared: Manifest<{ log: string[] }> = [A, B, entry('c', 'optional', ['c1', 'a1']), entry('d', 'required', ['a1'])];
+  const index = toolSourceIndex(shared);
+  assert.equal(index.a1, 'a', 'a later entry never takes the name');
+  assert.equal(index.c1, 'c');
+  // The index takes no configuration: offering `c` or not changes nothing.
+  assert.deepEqual(offeredEntries(shared, { c: 'https://c.example.org' }).map((e) => e.sourceId), ['a', 'c', 'd']);
+  assert.equal(toolSourceIndex(shared).a1, 'a');
+  // Order decides it, not which source is required.
+  assert.equal(toolSourceIndex([entry('d', 'optional', ['a1']), A]).a1, 'd');
+});
+
 test('validation: duplicate tool names are found and refused when asked', () => {
   const dup = entry('d', 'required', ['a1', 'd1']);
   assert.deepEqual(findDuplicateToolNames(MANIFEST), []);

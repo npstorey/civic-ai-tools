@@ -13,6 +13,7 @@ import {
   BARE_VIEW,
   checkToolNames,
   CIVIC_MANIFEST,
+  civicRouter,
   createCivicRouter,
   dispatchMap,
   exposedToolName,
@@ -213,6 +214,15 @@ test('dispatch (e): a bare name two offered sources share is refused, naming bot
   // Each exposed name still resolves.
   const charter = router.resolveCalledName('charter__search', readMcpEnv({}));
   assert.deepEqual(charter.ok && [charter.sourceId, charter.upstreamName], ['charter', 'search']);
+});
+
+test('index: a bare name a later source also declares stays on the first source, under every configuration', () => {
+  // The stub declares a bare `search` after Socrata's. The tool-to-source
+  // index answers by name alone and takes no configuration.
+  const router = createCivicRouter([...CIVIC_MANIFEST, civicStub('example', 'example', ['search', 'lookup'])]);
+  assert.equal(router.sourceIdForToolName('search'), 'socrata', 'the index does not move to the newest entry');
+  assert.equal(router.sourceIdForToolName('lookup'), 'example');
+  assert.equal(civicRouter.sourceIdForToolName('search'), 'socrata');
 });
 
 test('dispatch (e): an unknown name is refused; a tool of a source the run is not offered is refused', () => {
