@@ -3,6 +3,30 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+The dependency floor (sprint LAYOUT-WEB, F0).
+
+- **Dependency floor raised:** `@typedstandards/produce-core` `^0.8.0` →
+  `^0.9.0`, and the `@typedstandards/verify-core` devDependency `^0.13.0` →
+  `^0.14.0`, the version produce-core 0.9.0 resolves. Under 0.x semver
+  `^0.8.0` excludes 0.9.0, so a consumer that pins produce-core `^0.9.0`
+  would install a second copy of each core beside this package's.
+- **What the two releases bring.** produce-core 0.9.0 adds `buildLayoutNode`,
+  which builds a `content/layout/v1` node, with `CONTENT_LAYOUT` and five
+  types, and an optional `layoutNodeId` on `attestation/publishes/v1`,
+  emitted only when supplied; an attestation built without it has the same
+  bytes as one built by 0.8.0. verify-core 0.14.0 registers
+  `content/layout/v1` (check #12 reads `ok` for a layout node) and adds
+  `parseStrictJson` and `RepeatedMemberNameError`. The harness reads none of
+  these.
+- The lockfile resolves produce-core 0.9.0 and verify-core 0.14.0, one copy
+  each, and no other entry moves. The golden byte-compat suite passes
+  unchanged.
+- A consumer that pins produce-core 0.8.x no longer shares its copy with this
+  package.
+- **README:** the runtime-dependency line names `^0.9.0`.
+
 ## 0.7.0 — 2026-10-15
 
 - **The seam inside the harness** ([civic-ai-tools#244](https://github.com/npstorey/civic-ai-tools/issues/244) P2).
