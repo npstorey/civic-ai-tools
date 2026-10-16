@@ -21,7 +21,7 @@ export function configuredAddress(addresses: ConfiguredAddresses, sourceId: stri
 }
 
 /** Whether a run is offered this source: always, unless it is optional and
- *  has no configured address. */
+ *  has no configured address (for a hosted source, its switch is off). */
 export function isEntryOffered(entry: ManifestEntry<unknown>, addresses: ConfiguredAddresses): boolean {
   if (entry.configuration.requirement !== 'optional') return true;
   return configuredAddress(addresses, entry.sourceId) !== undefined;

@@ -1,4 +1,4 @@
-// The civic content: the three sources' manifest entries, their texts, the
+// The civic content: the civic sources' manifest entries, their texts, the
 // one-portal lock, the prompt frame and the configuration reader. May import
 // `../core/`; core never imports from here.
 
@@ -21,9 +21,12 @@ export type {
 export {
   BOSTON_OPENCONTEXT_ADDRESS_VARIABLE,
   configuredAddresses,
+  configuredSources,
   DATA_COMMONS_ADDRESS_VARIABLE,
   DATA_COMMONS_DEFAULT_ADDRESS,
   DATA_COMMONS_KEY_VARIABLE,
+  NYC_CHARTER_HOSTING_SANDBOX,
+  NYC_CHARTER_HOSTING_VARIABLE,
   readMcpEnv,
   SOCRATA_ADDRESS_VARIABLE,
   type ConfigurationSource,
@@ -56,6 +59,7 @@ export {
   bostonSkill,
   bostonTools,
 } from './boston.ts';
+export { NYC_CHARTER_ENTRY, NYC_CHARTER_HOSTING, NYC_CHARTER_TOOL_NAMES, NYC_CHARTER_TOOLS } from './nyc-charter.ts';
 export {
   lockedFetch,
   lockedGetData,

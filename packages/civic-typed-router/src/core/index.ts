@@ -11,6 +11,7 @@ export type {
   ManifestEntry,
   Requirement,
   SourceConfiguration,
+  SourceHosting,
   SourceView,
   ToolLike,
 } from './types.ts';

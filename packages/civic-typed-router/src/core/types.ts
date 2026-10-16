@@ -38,7 +38,11 @@ export type Requirement = 'required' | 'optional';
 
 /** How an instance configures a source. */
 export interface SourceConfiguration {
-  /** The configuration variable that carries the source's address. */
+  /** The configuration variable that offers the source: the one that carries
+   *  its address, or, for a source the instance runs itself (an entry with
+   *  `hosting`), the one that switches it on. A hosted source takes no
+   *  address: its switch's value stands in its place in `ConfiguredAddresses`
+   *  when it is on. */
   readonly addressVariable: string;
   /** The configuration variable that carries the source's key, if it takes one. */
   readonly keyVariable?: string;
@@ -71,6 +75,31 @@ export interface SourceView {
  *  absent, the bare view. */
 export interface GuidanceEntry<Context> {
   fetchText(context: Context, view?: SourceView): Promise<string>;
+}
+
+/**
+ * Where a source the instance runs itself comes from: an exact published
+ * package, as a record can name it. Minimal by design: it states what runs
+ * and what it may reach, not how a host starts it, on which port, or in which
+ * variant; the full hosting field, with its variants and the logging posture,
+ * is later work (R6). It carries no address: a hosted source is reached at an
+ * address its host resolves per call, never one an instance configures.
+ *
+ * Carried, never read by the router.
+ */
+export interface SourceHosting {
+  /** The registry the package is published to. The only kind today. */
+  readonly kind: 'npm-package';
+  /** The package's registry name, as published (`@scope/name`). */
+  readonly package: string;
+  /** The exact version the instance installs: never a range. */
+  readonly version: string;
+  /** The commit the registry states for that version (its `gitHead`), in
+   *  full. */
+  readonly commit: string;
+  /** The hosts the source may reach, applied when its host creates the
+   *  sandbox it runs in. Empty: it may reach none. */
+  readonly outbound: readonly string[];
 }
 
 /** One source in a manifest. */
@@ -112,6 +141,9 @@ export interface ManifestEntry<Context = unknown> {
    *  withheld-tools list follows this one. */
   readonly toolNames: readonly string[];
   readonly guidance: GuidanceEntry<Context>;
+  /** Present when the instance runs the source itself rather than calling a
+   *  configured address. Carried, never read by the router. */
+  readonly hosting?: SourceHosting;
 }
 
 /** An ordered list of sources. The order is the order the prompt and the
@@ -119,5 +151,7 @@ export interface ManifestEntry<Context = unknown> {
 export type Manifest<Context = unknown> = readonly ManifestEntry<Context>[];
 
 /** Each source's configured address, keyed by `sourceId`. A source with no
- *  key, or with an empty value, is not configured. */
+ *  key, or with an empty value, is not configured. A hosted source, which
+ *  takes no address, is configured by its switch: its value here is the
+ *  switch's value while the switch is on, and it has no key otherwise. */
 export type ConfiguredAddresses = { readonly [sourceId: string]: string | undefined };
