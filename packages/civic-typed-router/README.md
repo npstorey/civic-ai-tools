@@ -1,6 +1,6 @@
 # @typedstandards/civic-typed-router
 
-The civic MCP router for applications built on [Typed Standards](../../docs/architecture/typed-standards-specification.md): one manifest of three sources (Socrata open data portals, Google Data Commons, Boston OpenContext), each with its tool schemas and its guidance, and the two outputs a model run needs from them, the tools array and the composed system prompt. Its landing is recorded in [ADR-0031](../../docs/adr/0031-civic-typed-router-packaging.md); its naming of tools across sources in [ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md).
+The civic MCP router for applications built on [Typed Standards](../../docs/architecture/typed-standards-specification.md): one manifest of four sources (Socrata open data portals, Google Data Commons, Boston OpenContext, and NYC Charter, Laws and Rules, which an instance runs itself), each with its tool schemas and its guidance, and the two outputs a model run needs from them, the tools array and the composed system prompt. Its landing is recorded in [ADR-0031](../../docs/adr/0031-civic-typed-router-packaging.md); its naming of tools across sources in [ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md).
 
 ## The output contract
 
@@ -19,7 +19,9 @@ Every output comes in two views, side by side:
 - **The bare view** names every tool by its upstream name, the name the server declares: `get_data`, `search_indicators`, `ckan__search_datasets`. It is 0.1.0's output: `mcpTools`, `mcpToolsFor`, `offeredMcpTools`, `buildSystemPrompt`, `withPortalLockGuidance` and the rest, unchanged.
 - **The aliased view** names every tool `<alias>__<upstream name>`: `socrata__get_data`, `data_commons__search_indicators`, `boston__ckan__search_datasets`. Each bare function has an `aliased*` sibling: `aliasedMcpTools`, `aliasedMcpToolsFor`, `aliasedOfferedMcpTools`, `aliasedWithheldToolNames`, `aliasedBuildSystemPrompt`, `aliasedPortalLockGuidance`, `aliasedWithPortalLockGuidance`.
 
-The alias exists so that two sources may declare the same tool name: Socrata's `search` and a fourth source's `search` become `socrata__search` and `<alias>__search`. The wire call to each server still uses the server's own name.
+The alias exists so that two sources may declare the same tool name: Socrata's `search` and NYC Charter's `search` become `socrata__search` and `nyc_charter__search`. The wire call to each server still uses the server's own name.
+
+**The bare view cannot tell a shared name apart.** It names tools by upstream name only, so it is exact for the three sources it was captured from. With NYC Charter switched off, its tools are withheld by schema object as well as by name, so Socrata's `search` stays and every bare output is 0.2.0's. With the switch on, the bare tools array holds two tools named `search`: use the aliased view.
 
 How text names a tool in each view:
 
@@ -61,6 +63,27 @@ else refuse(call.message); // names the candidates
 
 Per call, a record can then hold the exposed name, the upstream name and the alias from the map, beside the server's identity.
 
+## A hosted source: the hosting field (minimal) and its switch
+
+Since 0.3.0 one source is not reached at a configured address: NYC Charter, Laws and Rules (`@betanyc/nyc-charter-laws-rules` on npm, published by BetaNYC) is a stdio server whose section index ships in its package, so an instance runs the pinned package itself, in a sandbox it creates. The manifest entry carries what a record needs to name what ran:
+
+```ts
+interface SourceHosting {
+  readonly kind: 'npm-package';
+  readonly package: string;   // '@betanyc/nyc-charter-laws-rules'
+  readonly version: string;   // '0.3.1', exact
+  readonly commit: string;    // 'b784cb763ec0d953139eef4ed366e8ec4de72625', the registry's gitHead for that version
+  readonly outbound: readonly string[]; // hosts it may reach; [] = none
+}
+// ManifestEntry.hosting?: SourceHosting — carried, never read by the router
+```
+
+The field is **minimal by design**: it states what runs and what it may reach, and carries no address, command, port or variant. How a host starts the package and where it listens are the host's; the full hosting field, with its variants and the logging posture, is later work (R6). `router-goldens.test.ts` runs every golden with `hosting` replaced and behind a getter that throws, to show the router never reads it. A consumer derives the record's names from it: the purl `pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1` (scope and name each percent-encoded, the `/` kept) and the component version `0.3.1+b784cb763ec0` (the version, then the commit's first 12 hex characters as build metadata).
+
+**The switch.** A hosted source is offered by a switch, never by an address. `readMcpEnv` reads `NYC_CHARTER_HOSTING`: when its trimmed value is exactly `sandbox`, the result gains `nycCharterHosting: 'sandbox'`; unset, blank or any other value (`Sandbox`, `hosted`) and the key is absent, so with the switch off every configuration reading is 0.2.0's, key for key. `configuredAddresses` (the addresses a record states) never has a key for the source; selection reads `configuredSources`, which adds the switch. The entry's `configuration.addressVariable` names the switch, so a consumer that refuses a call by naming the variable that would configure the source names `NYC_CHARTER_HOSTING`.
+
+**What it adds when on.** The aliased tools array gains `nyc_charter__search`, `nyc_charter__get_section`, `nyc_charter__list_titles`, `nyc_charter__get_title` and `nyc_charter__get_version`, after every other source's. The prompt gains one preamble entry (composed from `displayName` and `description`), the count word, one outro citation and one mention in the lock section, and no block: the server sends no instructions and no prompt, so its guidance entry returns `''` and calls neither fetcher, and offering it never wakes it. A bare `search` is then refused as ambiguous (`socrata__search` or `nyc_charter__search`); with the switch off it resolves to `socrata__search`.
+
 ## The selection
 
 The composition and the offered tools take an explicit selection of source ids, `selection?: readonly string[]`. Absent (the default) it is every source the configuration offers, and every output is the one it was before the selection existed. A selection narrows the configured sources; it never adds one. `sourcesOffered(configured, selection?)` states each source's reason, as a record will:
@@ -83,6 +106,8 @@ The bar is `src/__fixtures__/app-goldens.json`, captured by running the website'
 - 42 composed prompts, each `withPortalLockGuidance(await buildSystemPrompt(portal), lockedPortal)` over Boston OpenContext configured or not, the run portal and the one-portal lock, the Socrata guidance fetched or failed, each server's instructions present or absent, and the publication host set or not, plus five value cases;
 - 5 tools arrays, each `offeredMcpTools(mcpToolsFor(lockedPortal))`, and four aliases of them;
 - the facts: tool to source, the offered sources and withheld tools, and the configuration reading at its edges.
+
+The goldens hold three sources; since 0.3.0 the manifest holds a fourth that no capture switches on. Every prompt and tools array is still its golden byte for byte. The facts that name the whole vocabulary move by stated deltas, never by a looser comparison: `mcpTools` (replay's tools, the bare `mcpToolsFor`) is the golden array with NYC Charter's five schemas appended; the withheld tools gain its five; its four names no other source has map to `nyc-charter` (`search` stays Socrata's); and the offered array is never the vocabulary object, since NYC Charter is withheld in every capture.
 
 `src/router-goldens.test.ts` reproduces every one through the package entry, with each capture's own inputs, and checks that the fetcher calls each prompt makes are the calls the website made, in order. It then runs everything again with every entry's `id` and `alias` replaced, to show that `id` is never read and that the bare view does not read `alias` (only the startup checks and the aliased view do).
 
@@ -150,6 +175,7 @@ A civic entry may also carry `prompt` (its preamble entry in a view, its outro c
 | Socrata | `socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server` | Package name and repository; the server declares no `mcpName` and is not in the MCP Registry |
 | Google Data Commons | `datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit` | The server package's PyPI metadata (name and homepage), which declares no MCP Registry name |
 | Boston OpenContext | `opencontext@https://data-mcp.boston.gov/mcp` | Service name and address: the deployment's own metadata could not be read when the entry was written |
+| NYC Charter, Laws and Rules | `@betanyc/nyc-charter-laws-rules@https://github.com/BetaNYC/nyc-charter-laws-rules` | Package name and repository; the publisher has not listed the server in the MCP Registry |
 
 The three routing lines, as the entries carry them:
 
@@ -158,12 +184,14 @@ The three routing lines, as the entries carry them:
 | Socrata | Socrata open data portals: records that cities and states publish, such as 311 requests, building permits, inspections, crime, housing violations, payroll, licenses and transit ridership. Covers NYC, Chicago, SF, Seattle, LA, state portals such as data.ny.gov, and hundreds of other portals. Cannot reach Boston's city data, and returns only the datasets each portal's publisher posts, so it is not the source for census demographics. | Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule. |
 | Google Data Commons | Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods. | Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually). |
 | Boston OpenContext | Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics. | Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually). |
+| NYC Charter, Laws and Rules | New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress. | Pinned to version 0.3.1 of the publisher's package and the index it bundles: the Charter and the Administrative Code are current through Local Law 2026/147, enacted September 12, 2026, and the Rules through rules effective October 4, 2026. |
 
-Not carried yet: hosting and variants, the logging posture, a pinned package version, and a server's tool-list mode.
+Carried since 0.3.0: a minimal hosting field and a pinned package version (above). Not carried yet: hosting variants, the logging posture, and a server's tool-list mode.
 
 ### Two semantics kept from the website
 
 - `getSkillForPortal` and the tool-to-source index look a key up on a plain object, so a key that is also an `Object.prototype` property (`constructor`) reads that property. The goldens do not cover such inputs; the behaviour is kept, and pinned by a test, so that changing it is a decision.
+- The tool-to-source index (`sourceIdForToolName`) answers by bare name alone and takes no configuration. Since 0.3.0 a name two sources declare belongs to the first entry that declares it, so `search` is Socrata's under every configuration; through 0.2.0 the last entry won, which no manifest then exercised. Which source a call reached is the dispatch rule's answer, which reads the offered sources.
 - Boston OpenContext's routing list orders its six tools differently from its schemas. The tools array follows the schemas; the withheld-tools list follows the routing list.
 
 ## Purity
@@ -183,7 +211,7 @@ node packages/civic-typed-router/src/__fixtures__/capture-app-goldens.mjs \
 cmp /tmp/app-goldens.json packages/civic-typed-router/src/__fixtures__/app-goldens.json
 ```
 
-It exports the commit with `git archive` and changes no file in the clone. With the commit and capture date of the committed fixture, the output is byte-identical to it. Without `--out` it overwrites the committed fixture, whose bytes are this package's acceptance bar: regenerate it only on purpose, from a stated website commit.
+It exports the commit with `git archive` and changes no file in the clone. With the commit and capture date of the committed fixture, the output is byte-identical to it. It is the instrument for the website at `d1919a8` and before: it refuses a tree whose `src/lib/mcp/` imports this package (the website since website #599, W2), because that tree's outputs are the router's own, and capturing them as the router's bar would be circular. Without `--out` it overwrites the committed fixture, whose bytes are this package's acceptance bar: regenerate it only on purpose, from a stated website commit.
 
 `socrata-guidance.json` is the Socrata guidance the website fetches, pinned from a socrata-mcp-server clone at a stated commit (`BASE_SKILL`, the separator, then `WEB_SKILL`), with its origin and the comparison against the hub's `docs/skills/base.md` and `web.md`:
 
@@ -196,6 +224,17 @@ cmp /tmp/socrata-guidance.json packages/civic-typed-router/src/__fixtures__/socr
 ```
 
 It reads the two modules with `git show` and extracts each template literal with the hub's drift checker, which parses and never evaluates them.
+
+`nyc-charter-tools.json` is NYC Charter's five tool schemas as the server's own `tools/list` returns them at the pinned version, with its `initialize` result and the currency lines its `get_version` tool returns:
+
+```sh
+node packages/civic-typed-router/src/__fixtures__/pin-nyc-charter-tools.mjs \
+  --capture-date 2026-10-16 \
+  --out /tmp/nyc-charter-tools.json
+cmp /tmp/nyc-charter-tools.json packages/civic-typed-router/src/__fixtures__/nyc-charter-tools.json
+```
+
+It installs `@betanyc/nyc-charter-laws-rules@0.3.1` with `npm install --ignore-scripts` into a fresh directory under the OS temporary directory, reads the version's `gitHead` with `npm view`, starts the server over stdio with an empty environment, and removes the directory. It reaches only the npm registry. The fixture records the version, the `gitHead`, the integrity, the capture date and the resolved versions of `@modelcontextprotocol/sdk` and `zod`; two runs with the same date are byte-identical. `src/civic/nyc-charter.ts` carries the same schemas as code, and `src/nyc-charter.test.ts` holds the two equal.
 
 ## Develop
 
