@@ -44,6 +44,8 @@ function entry(sourceId: string, alias: string, names: string[]): ManifestEntry<
     tools: names.map(tool),
     toolNames: names,
     guidance: { fetchText: async () => '' },
+    hostings: [],
+    consentDefault: 'on',
   };
 }
 

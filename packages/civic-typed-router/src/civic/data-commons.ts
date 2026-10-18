@@ -312,4 +312,27 @@ export const DATA_COMMONS_ENTRY: CivicManifestEntry = {
     citation: civicCitation('data-commons'),
     lockMention: 'Data Commons',
   },
+  // One variant: Google's hosted endpoint, the default address. Its posture
+  // is the privacy policy the Data Commons documentation links, read on the
+  // date below.
+  hostings: [
+    {
+      variant: 'remote',
+      kind: 'remote',
+      runsAt: 'publisher',
+      logging: [
+        {
+          statedBy: 'manifest',
+          holder: 'Google',
+          keeps: 'content',
+          retention: 'Varies by kind of data and use; the statement gives no period.',
+          statementUrl: 'https://policies.google.com/privacy?hl=en-US',
+          readOn: '2026-10-18',
+        },
+      ],
+    },
+  ],
+  consentDefault: 'on',
+  // The Data Commons documentation: "Data Commons by Google".
+  publisher: 'Google',
 };

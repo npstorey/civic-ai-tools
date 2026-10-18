@@ -59,7 +59,13 @@ export {
   bostonSkill,
   bostonTools,
 } from './boston.ts';
-export { NYC_CHARTER_ENTRY, NYC_CHARTER_HOSTING, NYC_CHARTER_TOOL_NAMES, NYC_CHARTER_TOOLS } from './nyc-charter.ts';
+export {
+  NYC_CHARTER_ENTRY,
+  NYC_CHARTER_HOSTING,
+  NYC_CHARTER_SANDBOX_VARIANT,
+  NYC_CHARTER_TOOL_NAMES,
+  NYC_CHARTER_TOOLS,
+} from './nyc-charter.ts';
 export {
   lockedFetch,
   lockedGetData,

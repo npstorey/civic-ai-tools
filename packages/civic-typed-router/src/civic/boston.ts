@@ -336,4 +336,28 @@ export const BOSTON_OPENCONTEXT_ENTRY: CivicManifestEntry = {
     citation: civicCitation('boston-opencontext'),
     lockMention: 'Boston OpenContext for Boston',
   },
+  // One variant: the City's own server. Its posture is the City's terms of
+  // use and privacy policy for its digital services, read on the date below;
+  // the data store behind it is the City's too.
+  hostings: [
+    {
+      variant: 'remote',
+      kind: 'remote',
+      runsAt: 'government',
+      logging: [
+        {
+          statedBy: 'manifest',
+          holder: 'City of Boston',
+          keeps: 'metadata',
+          retention: "Under the City's records retention schedule; the statement gives no period for server logs.",
+          statementUrl: 'https://www.boston.gov/government/cabinets/innovation-and-technology/terms-use-and-privacy-policy-city-boston-digital',
+          readOn: '2026-10-18',
+        },
+      ],
+    },
+  ],
+  consentDefault: 'on',
+  // The repository's owner, the City of Boston's Department of Innovation and
+  // Technology.
+  publisher: 'City of Boston',
 };

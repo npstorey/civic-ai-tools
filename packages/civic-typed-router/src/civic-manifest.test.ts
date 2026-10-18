@@ -59,7 +59,8 @@ test('manifest: one bare name is shared, search (Socrata and NYC Charter); every
 test('manifest: each entry\'s configuration variable is the one the configuration reader reads for it', () => {
   for (const entry of CIVIC_MANIFEST) {
     const variable = entry.configuration.addressVariable;
-    if ((entry as unknown as { hosting?: unknown }).hosting !== undefined) {
+    const hostings = (entry as unknown as { hostings?: readonly { kind?: unknown }[] }).hostings ?? [];
+    if (hostings.some((variant) => variant.kind === 'npm-package')) {
       // A hosted source takes no address: its variable is a switch, and it
       // offers the source without adding an address.
       const on = readMcpEnv({ [variable]: 'sandbox' });

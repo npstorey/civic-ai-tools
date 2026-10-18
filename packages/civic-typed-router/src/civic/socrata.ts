@@ -639,4 +639,22 @@ export const SOCRATA_ENTRY: CivicManifestEntry = {
     citation: civicCitation('socrata'),
   },
   portalLock: { lockTools: lockSocrataTools, section: portalLockSectionFor },
+  // One variant: the server at the address the instance configures. Who runs
+  // that address is the instance's choice, and the portal a call reaches is
+  // the call's (its `domain`), so both holders are named by role and the
+  // consuming app states them (ADR-0036).
+  hostings: [
+    {
+      variant: 'remote',
+      kind: 'remote',
+      runsAt: 'other',
+      logging: [
+        { statedBy: 'instance', role: 'server-operator' },
+        { statedBy: 'instance', role: 'portal-operator' },
+      ],
+    },
+  ],
+  consentDefault: 'on',
+  // The repository's owner, as its page names it.
+  publisher: 'npstorey',
 };

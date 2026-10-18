@@ -39,10 +39,10 @@ export type Requirement = 'required' | 'optional';
 /** How an instance configures a source. */
 export interface SourceConfiguration {
   /** The configuration variable that offers the source: the one that carries
-   *  its address, or, for a source the instance runs itself (an entry with
-   *  `hosting`), the one that switches it on. A hosted source takes no
-   *  address: its switch's value stands in its place in `ConfiguredAddresses`
-   *  when it is on. */
+   *  its address, or, for a source the instance runs itself (an entry with an
+   *  `npm-package` variant), the one that switches it on. A hosted source
+   *  takes no address: its switch's value, which names the variant that is
+   *  on, stands in its place in `ConfiguredAddresses` when it is on. */
   readonly addressVariable: string;
   /** The configuration variable that carries the source's key, if it takes one. */
   readonly keyVariable?: string;
@@ -79,16 +79,19 @@ export interface GuidanceEntry<Context> {
 
 /**
  * Where a source the instance runs itself comes from: an exact published
- * package, as a record can name it. Minimal by design: it states what runs
- * and what it may reach, not how a host starts it, on which port, or in which
- * variant; the full hosting field, with its variants and the logging posture,
- * is later work (R6). It carries no address: a hosted source is reached at an
- * address its host resolves per call, never one an instance configures.
+ * package, as a record can name it. It states what runs and what it may
+ * reach, not how a host starts it or on which port. It carries no address: a
+ * hosted source is reached at an address its host resolves per call, never
+ * one an instance configures.
+ *
+ * Since 0.4.0 these five fields are the `npm-package` arm of
+ * `HostingVariant` (`NpmPackageVariant`), under the same name, so a
+ * `Pick<SourceHosting, …>` of them is unchanged (ADR-0036).
  *
  * Carried, never read by the router.
  */
 export interface SourceHosting {
-  /** The registry the package is published to. The only kind today. */
+  /** The registry the package is published to. */
   readonly kind: 'npm-package';
   /** The package's registry name, as published (`@scope/name`). */
   readonly package: string;
@@ -101,6 +104,87 @@ export interface SourceHosting {
    *  sandbox it runs in. Empty: it may reach none. */
   readonly outbound: readonly string[];
 }
+
+/** Where a hosting variant runs: in a sandbox the instance creates, at the
+ *  server's publisher, at a government's own server, or elsewhere (an
+ *  address the instance configures, which the manifest cannot name for every
+ *  instance). */
+export type HostingRunsAt = 'instance-sandbox' | 'publisher' | 'government' | 'other';
+
+/** What a log holder's statement says it keeps of a request: nothing,
+ *  metadata about it (addresses, times, sizes), its content, or nothing
+ *  either way. `not-stated` is a fact about a statement that was read: it is
+ *  never written for one nobody read. */
+export type LoggingKeeps = 'none' | 'metadata' | 'content' | 'not-stated';
+
+/**
+ * A log holder the manifest names, and what its own statement says it keeps:
+ * policy text carried by reference, with the statement's address and the date
+ * it was read. It is the holder's statement, never a fact the router, an
+ * instance or a record attests (ADR-0036).
+ */
+export interface StatedLoggingPosture {
+  readonly statedBy: 'manifest';
+  /** The holder, named as its statement names it. */
+  readonly holder: string;
+  readonly keeps: LoggingKeeps;
+  /** How long, as the statement puts it, when it says. */
+  readonly retention?: string;
+  /** The statement read: an `https:` address. */
+  readonly statementUrl: string;
+  /** The UTC date the statement was read, `YYYY-MM-DD`. */
+  readonly readOn: string;
+}
+
+/**
+ * A log holder the instance chooses (the platform its sandboxes run on, the
+ * operator of an address it configures), which the manifest, the same for
+ * every instance, cannot name for all of them. Named by role only: the
+ * consuming app states the holder and its posture (ADR-0036).
+ */
+export interface InstanceLoggingPosture {
+  readonly statedBy: 'instance';
+  /** The holder's role, a key the consuming app states a posture for. */
+  readonly role: string;
+}
+
+/** Who holds logs of what a variant is sent, and what each states it keeps. */
+export type LoggingPosture = StatedLoggingPosture | InstanceLoggingPosture;
+
+/** What every hosting variant carries. */
+export interface HostingVariantCommon {
+  /** The variant's name, unique within its entry. For a source offered by a
+   *  switch, the switch's value that turns this variant on; a remote's single
+   *  variant is selected by its address variable's presence. */
+  readonly variant: string;
+  readonly runsAt: HostingRunsAt;
+  /** Every holder of logs of what the variant is sent, in the order the data
+   *  flows: the server's holder first, then each onward recipient. */
+  readonly logging: readonly LoggingPosture[];
+}
+
+/** A variant the instance runs from an exact published package, in a sandbox
+ *  it creates: 0.3.0's `SourceHosting`, and what every variant carries. */
+export interface NpmPackageVariant extends SourceHosting, HostingVariantCommon {}
+
+/** A variant reached at an address the instance configures. It carries no
+ *  package and no address. */
+export interface RemoteVariant extends HostingVariantCommon {
+  readonly kind: 'remote';
+}
+
+/** A variant run from a container image. A name in the type only: no
+ *  container host is built, and no entry carries one. */
+export interface ContainerVariant extends HostingVariantCommon {
+  readonly kind: 'container';
+}
+
+/** One way a source can be run or reached, discriminated on `kind`. No arm
+ *  carries an address. Carried, never read by the router. */
+export type HostingVariant = NpmPackageVariant | RemoteVariant | ContainerVariant;
+
+/** A source's state in a reader's first consent: On, or Ask first. */
+export type ConsentDefault = 'on' | 'ask-first';
 
 /** One source in a manifest. */
 export interface ManifestEntry<Context = unknown> {
@@ -141,9 +225,16 @@ export interface ManifestEntry<Context = unknown> {
    *  withheld-tools list follows this one. */
   readonly toolNames: readonly string[];
   readonly guidance: GuidanceEntry<Context>;
-  /** Present when the instance runs the source itself rather than calling a
-   *  configured address. Carried, never read by the router. */
-  readonly hosting?: SourceHosting;
+  /** The ways the source can be run or reached (ADR-0036). The consumer
+   *  selects the variant in force from its configuration. Carried, never read
+   *  by the router. */
+  readonly hostings: readonly HostingVariant[];
+  /** The source's state in a reader's first consent. Carried, never read by
+   *  the router. */
+  readonly consentDefault: ConsentDefault;
+  /** The source's publisher, named as its own page names it. Carried, never
+   *  read by the router. */
+  readonly publisher?: string;
 }
 
 /** An ordered list of sources. The order is the order the prompt and the

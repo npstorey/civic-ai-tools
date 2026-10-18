@@ -3,16 +3,27 @@
 
 export type {
   ConfiguredAddresses,
+  ConsentDefault,
+  ContainerVariant,
   FunctionDefinition,
   FunctionToolSchema,
   GuidanceEntry,
+  HostingRunsAt,
+  HostingVariant,
+  HostingVariantCommon,
+  InstanceLoggingPosture,
   JsonSchema,
+  LoggingKeeps,
+  LoggingPosture,
   Manifest,
   ManifestEntry,
+  NpmPackageVariant,
+  RemoteVariant,
   Requirement,
   SourceConfiguration,
   SourceHosting,
   SourceView,
+  StatedLoggingPosture,
   ToolLike,
 } from './types.ts';
 export {

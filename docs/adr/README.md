@@ -39,3 +39,4 @@ Numbered, immutable records of settled project decisions — each documents one 
 | [0033](0033-composed-harness-record-fields.md) | The composed-harness record fields — what a record states about how its prompt and tools were composed, and who answered each call | Accepted (2026-10-15) |
 | [0034](0034-content-layout-node.md) | The `content/layout/v1` node — a page layout published and verified apart from the host that renders it, and the optional `layoutNodeId` on publication | Accepted (2026-10-15) |
 | [0035](0035-record-package-input-is-i-json.md) | A record package's JSON text is I-JSON — a repeated member name is refused before any hash is computed | Accepted (2026-10-15) |
+| [0036](0036-source-hosting-variants-and-logging-posture.md) | Source hosting variants and the logging posture — each manifest entry lists its variants, each variant names who holds its logs, and the entry carries its consent default and its publisher | Accepted (2026-10-18) |

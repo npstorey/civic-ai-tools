@@ -53,6 +53,8 @@ function entry(
         return typeof text === 'string' ? text : text();
       },
     },
+    hostings: [],
+    consentDefault: 'on',
   };
 }
 

@@ -29,7 +29,8 @@ export const NYC_CHARTER_HOSTING_VARIABLE = 'NYC_CHARTER_HOSTING';
 
 /** The one value of `NYC_CHARTER_HOSTING` that switches the source on: the
  *  instance runs the pinned package in a sandbox it creates. Compared after
- *  trimming, and exactly: any other value leaves the switch off. */
+ *  trimming, and exactly: any other value leaves the switch off. It is the
+ *  name of the variant it turns on (`NYC_CHARTER_SANDBOX_VARIANT.variant`). */
 export const NYC_CHARTER_HOSTING_SANDBOX = 'sandbox';
 
 /** Google's hosted Data Commons endpoint: a third-party public service, used

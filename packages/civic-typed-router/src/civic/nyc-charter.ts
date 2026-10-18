@@ -19,9 +19,9 @@
 // `instructions` and it serves no prompt, so its guidance entry returns ''
 // and calls neither fetcher. Offering it never wakes it.
 
-import type { FunctionToolSchema, SourceHosting } from '../core/types.ts';
+import type { FunctionToolSchema, NpmPackageVariant, SourceHosting } from '../core/types.ts';
 import type { CivicManifestEntry } from './context.ts';
-import { NYC_CHARTER_HOSTING_VARIABLE } from './env.ts';
+import { NYC_CHARTER_HOSTING_SANDBOX, NYC_CHARTER_HOSTING_VARIABLE } from './env.ts';
 
 /** The server's tool names, in the order its `tools/list` returns them. */
 export const NYC_CHARTER_TOOL_NAMES: readonly string[] = ['search', 'get_section', 'list_titles', 'get_title', 'get_version'];
@@ -163,13 +163,27 @@ export const NYC_CHARTER_TOOLS: readonly FunctionToolSchema[] = [
 
 /** The pinned package: version 0.3.1, whose registry metadata states the
  *  commit below as its `gitHead` (and whose provenance names the same commit,
- *  built from the tag `v0.3.1`). It may reach no host. */
+ *  built from the tag `v0.3.1`). It may reach no host. 0.3.0's hosting
+ *  field, unchanged; since 0.4.0 the `sandbox` variant carries it. */
 export const NYC_CHARTER_HOSTING: SourceHosting = {
   kind: 'npm-package',
   package: '@betanyc/nyc-charter-laws-rules',
   version: '0.3.1',
   commit: 'b784cb763ec0d953139eef4ed366e8ec4de72625',
   outbound: [],
+};
+
+/** The source's one variant: the pinned package, run in a sandbox the
+ *  instance creates, while `NYC_CHARTER_HOSTING` is `sandbox` (the switch's
+ *  value is the variant's name). Its one log holder is the platform the
+ *  instance runs its sandboxes on, which the instance chooses, so the
+ *  instance states its posture: the package reaches no host, so nothing goes
+ *  onward. */
+export const NYC_CHARTER_SANDBOX_VARIANT: NpmPackageVariant = {
+  ...NYC_CHARTER_HOSTING,
+  variant: NYC_CHARTER_HOSTING_SANDBOX,
+  runsAt: 'instance-sandbox',
+  logging: [{ statedBy: 'instance', role: 'sandbox-platform' }],
 };
 
 /**
@@ -205,5 +219,8 @@ export const NYC_CHARTER_ENTRY: CivicManifestEntry = {
     // The lock section lists the other sources with commas: a name without one.
     lockMention: 'the NYC Charter server for New York City law',
   },
-  hosting: NYC_CHARTER_HOSTING,
+  hostings: [NYC_CHARTER_SANDBOX_VARIANT],
+  consentDefault: 'on',
+  // The publisher's repository: "built and maintained by BetaNYC".
+  publisher: 'BetaNYC',
 };

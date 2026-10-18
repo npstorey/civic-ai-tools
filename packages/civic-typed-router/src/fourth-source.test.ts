@@ -50,6 +50,8 @@ const EXAMPLE_ENTRY: CivicManifestEntry = {
       return view.sourceText('example', '# Example server instructions\n\nCall `lookup_record` with an id.');
     },
   },
+  hostings: [{ variant: 'remote', kind: 'remote', runsAt: 'other', logging: [{ statedBy: 'instance', role: 'server-operator' }] }],
+  consentDefault: 'on',
 };
 
 const FOUR: CivicManifest = [...CIVIC_MANIFEST, EXAMPLE_ENTRY];
