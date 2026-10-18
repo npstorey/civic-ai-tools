@@ -121,6 +121,42 @@ function wasRecordedRejected(query: RecordPackage['queries'][number]): boolean {
 const REJECTED_CALL_RENDERING =
   'REJECTED by the source — no data was returned, and no row count is claimed';
 
+/** A non-empty string field of a `dataSources` entry, or `undefined`. The
+ *  entry is read as stored: a package from an older producer may lack a
+ *  field the current type requires (the first packager wrote no `sourceId`). */
+function entryText(entry: Record<string, unknown>, field: string): string | undefined {
+  const value = entry[field];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+/** One `## Data Sources` line (civic-ai-tools#265). An entry carrying a
+ *  `datasetUrl` renders exactly as before 0.9.0. An entry without one (an
+ *  aggregate source: its registry row names a portal, not a dataset) renders
+ *  by what it carries: `sourceId`, then `catalogType`, `portalUrl` and any
+ *  `datasetId` in parentheses. Every value comes from the entry's own signed
+ *  fields, and no other producer text is interpolated; a missing one is
+ *  either left out or stated in this module's fixed words, so no line reads
+ *  `undefined`. */
+function renderDataSource(ds: RecordPackage['dataSources'][number]): string {
+  const entry = ds as unknown as Record<string, unknown>;
+  // Both interpolations of the 0.8.0 line keep their test (a string, of any
+  // length), so every line 0.8.0 rendered from two strings is byte-identical.
+  const accessed = typeof entry.accessTimestamp === 'string'
+    ? `(accessed ${entry.accessTimestamp})`
+    : '(access time not recorded)';
+  if (typeof entry.datasetUrl === 'string') {
+    return `  - ${entry.datasetUrl} ${accessed}`;
+  }
+  const sourceId = entryText(entry, 'sourceId') ?? 'source not recorded';
+  const datasetId = entryText(entry, 'datasetId');
+  const where = [
+    entryText(entry, 'catalogType'),
+    entryText(entry, 'portalUrl'),
+    datasetId !== undefined ? `dataset ${datasetId}` : undefined,
+  ].filter((part): part is string => part !== undefined);
+  return `  - ${sourceId}${where.length > 0 ? ` (${where.join(', ')})` : ''} ${accessed}`;
+}
+
 /** Build the user-turn evaluation content from a package's signed fields.
  *  Takes `RecordPackage` — produce-core 0.3.0's settlement-era name for the
  *  same object (spec Appendix J, migration class alias-and-deprecate). The
@@ -140,7 +176,7 @@ export function buildEvaluationPrompt(pkg: RecordPackage): string {
     .join('\n');
 
   const dataSources = pkg.dataSources
-    .map(ds => `  - ${ds.datasetUrl} (accessed ${ds.accessTimestamp})`)
+    .map(renderDataSource)
     .join('\n');
 
   return `## Original Prompt
