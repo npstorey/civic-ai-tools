@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.4.0 — 2026-10-18
 
 Hosting variants and the logging posture on every entry, with each source's
 consent default and publisher ([ADR-0036](../../docs/adr/0036-source-hosting-variants-and-logging-posture.md)).
@@ -40,6 +40,11 @@ No golden moves: every prompt, tools array and fact is 0.3.0's.
 - **The switch names the variant.** `NYC_CHARTER_HOSTING=sandbox` turns on
   the variant named `sandbox` (`NYC_CHARTER_HOSTING_SANDBOX`); the switch rule
   itself is unchanged.
+- **For a consumer's records.** At the pin bump to this version, the
+  router's own `components[]` entry in every new record moves from `0.3.0`
+  to `0.4.0`. Nothing else in a record moves: the `sandbox` variant carries
+  0.3.0's package, version and commit strings, so the purl and the component
+  version a consumer derives for NYC Charter are unchanged.
 - New exports: the types `HostingVariant`, `HostingVariantCommon`,
   `NpmPackageVariant`, `RemoteVariant`, `ContainerVariant`, `HostingRunsAt`,
   `LoggingPosture`, `StatedLoggingPosture`, `InstanceLoggingPosture`,
