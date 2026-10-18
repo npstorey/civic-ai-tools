@@ -12,10 +12,12 @@
 //   - every fact: tool to source, the offered sources and withheld tools, and
 //     the configuration reading at its edges.
 //
-// Then all of it again with every entry's `id`, `alias` and `hosting`
-// replaced: once by other values, once behind getters. Nothing reads `id` or
-// `hosting`; the bare view does not read `alias` (only the startup checks and
-// the aliased view do).
+// Then all of it again with every entry's `id`, `alias`, `hosting`,
+// `hostings`, `consentDefault` and `publisher` replaced: once by other values,
+// once behind getters. Nothing reads `id`, `hosting` (0.3.0's field, trapped so
+// an entry of the old shape is caught too), `hostings`, `consentDefault` or
+// `publisher` (0.4.0); the bare view does not read `alias` (only the startup
+// checks and the aliased view do).
 //
 // What NYC Charter, Laws and Rules moves (0.3.0). The goldens are the website
 // at d1919a8, which had three sources; the manifest now holds a fourth, last,
@@ -335,7 +337,7 @@ test('goldens: facts (tool to source, offered and withheld, configuration readin
   checkFacts(civicRouter);
 });
 
-// --- Nothing reads `id`, `hosting` or `alias` ------------------------------
+// --- Nothing reads `id`, the hosting fields or `alias` ---------------------
 
 async function checkEverything(router: CivicRouter): Promise<void> {
   for (const capture of goldens.prompts) await checkPrompt(router, capture);
@@ -346,47 +348,79 @@ async function checkEverything(router: CivicRouter): Promise<void> {
 
 const SENTINEL = 'sentinel: id is carried, never read';
 /** A hosting value no consumer could use: if the router read it, an output
- *  or a check would change. */
+ *  or a check would change. 0.3.0's `hosting`, kept so an old-shape entry is
+ *  trapped too. */
 const SENTINEL_HOSTING = Object.freeze({ kind: 'sentinel: hosting is carried, never read' });
+/** The same for 0.4.0's carried fields: the variants, the consent default and
+ *  the publisher. */
+const SENTINEL_HOSTINGS = Object.freeze([Object.freeze({ kind: 'sentinel: hostings are carried, never read' })]);
+const SENTINEL_CONSENT_DEFAULT = 'sentinel: consentDefault is carried, never read';
+const SENTINEL_PUBLISHER = 'sentinel: publisher is carried, never read';
 
-/** Whether the civic manifest carries a hosting field at all: the hosting
- *  traps below test nothing until one does. */
+/** The carried fields the traps cover, beside `id`. */
+const CARRIED = ['hosting', 'hostings', 'consentDefault', 'publisher'] as const;
+
+/** The entries that carry an `npm-package` variant: the hosting traps below
+ *  test nothing until one does. */
 const hostedEntries = (): string[] =>
-  CIVIC_MANIFEST.filter((entry) => (entry as unknown as { hosting?: unknown }).hosting !== undefined).map((e) => e.sourceId);
+  CIVIC_MANIFEST.filter((entry) =>
+    ((entry as unknown as { hostings?: readonly { kind?: unknown }[] }).hostings ?? []).some((v) => v.kind === 'npm-package'),
+  ).map((e) => e.sourceId);
 
-test('id and hosting are never read and the bare view does not depend on alias: every golden holds with id and hosting sentinels and every alias another', async () => {
+/** Every entry carries the three 0.4.0 fields, so the traps below trap a
+ *  value that is there. */
+const everyEntryCarries = (): boolean =>
+  CIVIC_MANIFEST.every((entry) => Object.hasOwn(entry, 'hostings') && Object.hasOwn(entry, 'consentDefault') && Object.hasOwn(entry, 'publisher'));
+
+test('id and the hosting fields are never read and the bare view does not depend on alias: every golden holds with id, hosting, hostings, consentDefault and publisher sentinels and every alias another', async () => {
   assert.deepEqual(hostedEntries(), ['nyc-charter'], 'the manifest carries one hosted entry');
+  assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   // An alias must pass the startup checks, so each is replaced by another
-  // well-formed one rather than by the sentinel. Every entry gets a hosting
-  // sentinel, the hosted one in place of its own.
+  // well-formed one rather than by the sentinel. Every entry gets each
+  // carried-field sentinel in place of its own value.
   const manifest: CivicManifest = CIVIC_MANIFEST.map(
-    (entry, i) => ({ ...entry, id: SENTINEL, alias: `other_alias_${i}`, hosting: SENTINEL_HOSTING }) as unknown as CivicManifestEntry,
+    (entry, i) =>
+      ({
+        ...entry,
+        id: SENTINEL,
+        alias: `other_alias_${i}`,
+        hosting: SENTINEL_HOSTING,
+        hostings: SENTINEL_HOSTINGS,
+        consentDefault: SENTINEL_CONSENT_DEFAULT,
+        publisher: SENTINEL_PUBLISHER,
+      }) as unknown as CivicManifestEntry,
   );
   assert.ok(manifest.every((e) => e.id === SENTINEL && e.alias.startsWith('other_alias_')));
-  assert.ok(manifest.every((e) => (e as unknown as { hosting: unknown }).hosting === SENTINEL_HOSTING));
+  assert.ok(
+    manifest.every((e) => {
+      const carried = e as unknown as Record<(typeof CARRIED)[number], unknown>;
+      return (
+        carried.hosting === SENTINEL_HOSTING &&
+        carried.hostings === SENTINEL_HOSTINGS &&
+        carried.consentDefault === SENTINEL_CONSENT_DEFAULT &&
+        carried.publisher === SENTINEL_PUBLISHER
+      );
+    }),
+  );
   assert.notEqual(manifest, CIVIC_MANIFEST);
   await checkEverything(createCivicRouter(manifest));
 });
 
-test('id and hosting are never read, and alias only at construction: every golden holds with id and hosting behind getters that throw', async () => {
+test('id and the hosting fields are never read, and alias only at construction: every golden holds with id, hosting, hostings, consentDefault and publisher behind getters that throw', async () => {
   assert.deepEqual(hostedEntries(), ['nyc-charter'], 'the manifest carries one hosted entry');
+  assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   const reads: string[] = [];
   const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => {
     const trapped = { ...entry } as CivicManifestEntry;
-    Object.defineProperty(trapped, 'id', {
-      enumerable: true,
-      get() {
-        reads.push(`${entry.sourceId}.id`);
-        throw new Error(`${entry.sourceId}.id was read`);
-      },
-    });
-    Object.defineProperty(trapped, 'hosting', {
-      enumerable: true,
-      get() {
-        reads.push(`${entry.sourceId}.hosting`);
-        throw new Error(`${entry.sourceId}.hosting was read`);
-      },
-    });
+    for (const field of ['id', ...CARRIED]) {
+      Object.defineProperty(trapped, field, {
+        enumerable: true,
+        get() {
+          reads.push(`${entry.sourceId}.${field}`);
+          throw new Error(`${entry.sourceId}.${field} was read`);
+        },
+      });
+    }
     Object.defineProperty(trapped, 'alias', {
       enumerable: true,
       get() {
@@ -396,16 +430,29 @@ test('id and hosting are never read, and alias only at construction: every golde
     });
     return trapped;
   });
-  // The traps work: a read of id or hosting throws, and each read is recorded.
+  // The traps work: a read of id or of any carried field throws, and each
+  // read is recorded.
+  const charter = manifest.at(-1) as unknown as Record<(typeof CARRIED)[number], unknown>;
   assert.throws(() => manifest[0]!.id, /was read/);
-  assert.throws(() => (manifest.at(-1) as unknown as { hosting: unknown }).hosting, /nyc-charter\.hosting was read/);
+  assert.throws(() => charter.hosting, /nyc-charter\.hosting was read/);
+  assert.throws(() => charter.hostings, /nyc-charter\.hostings was read/);
+  assert.throws(() => charter.consentDefault, /nyc-charter\.consentDefault was read/);
+  assert.throws(() => charter.publisher, /nyc-charter\.publisher was read/);
+  assert.throws(() => (manifest[0] as unknown as Record<string, unknown>).hostings, /socrata\.hostings was read/);
+  assert.deepEqual(
+    reads,
+    ['socrata.id', 'nyc-charter.hosting', 'nyc-charter.hostings', 'nyc-charter.consentDefault', 'nyc-charter.publisher', 'socrata.hostings'],
+  );
   assert.equal(manifest[0]!.alias, 'socrata');
   reads.length = 0;
 
   const router = createCivicRouter(manifest);
-  assert.ok(reads.length > 0 && reads.every((r) => r.endsWith('.alias')), 'construction reads alias (the checks and the map), never id or hosting');
+  assert.ok(
+    reads.length > 0 && reads.every((r) => r.endsWith('.alias')),
+    'construction reads alias (the checks and the map), never id or a carried field',
+  );
   reads.length = 0;
 
   await checkEverything(router);
-  assert.deepEqual(reads, [], 'no bare output read an entry\'s id, hosting or alias');
+  assert.deepEqual(reads, [], 'no bare output read an entry\'s id, hosting, hostings, consentDefault, publisher or alias');
 });

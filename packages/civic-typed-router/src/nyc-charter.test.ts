@@ -1,7 +1,8 @@
-// NYC Charter, Laws and Rules: the fourth civic entry, the hosting field it
+// NYC Charter, Laws and Rules: the fourth civic entry, the hosting variant it
 // carries, the switch that offers it, and what it moves.
 //
-//   - the entry and its hosting field (package, version, commit; no address);
+//   - the entry and its `sandbox` variant (package, version, commit; no
+//     address);
 //   - its schemas are the committed capture's, and its five aliased names pass
 //     the startup checks;
 //   - the switch: `readMcpEnv` reads `NYC_CHARTER_HOSTING` as on only for
@@ -72,9 +73,17 @@ function charter(): CivicManifestEntry {
   return entry;
 }
 
-/** The hosting field, read as a plain record. */
+/** The entry's npm-package variant, read as a plain record (0.4.0; 0.3.0's
+ *  `hosting` field carried the same five strings). */
 function hostingOf(entry: CivicManifestEntry): Record<string, unknown> | undefined {
-  return (entry as unknown as { hosting?: Record<string, unknown> }).hosting;
+  const hostings = (entry as unknown as { hostings?: readonly Record<string, unknown>[] }).hostings ?? [];
+  return hostings.find((variant) => variant.kind === 'npm-package');
+}
+
+/** The five fields 0.3.0's hosting field had. */
+function fiveOf(hosting: Record<string, unknown>): Record<string, unknown> {
+  const { kind, package: name, version, commit, outbound } = hosting;
+  return { kind, package: name, version, commit, outbound };
 }
 
 const SOCRATA = 'https://socrata-mcp.example.org';
@@ -103,17 +112,17 @@ test('charter entry: the last civic entry, optional, offered by NYC_CHARTER_HOST
   assert.equal(entry.displayName, 'NYC Charter, Laws and Rules MCP Server');
 });
 
-test('charter entry: the hosting field carries the package, the version and the commit as strings, and no address', () => {
+test('charter entry: the sandbox variant carries the package, the version and the commit as strings, and no address', () => {
   const hosting = hostingOf(charter());
-  assert.ok(hosting, 'the entry carries a hosting field');
-  assert.deepEqual(hosting, {
+  assert.ok(hosting, 'the entry carries an npm-package variant');
+  assert.deepEqual(fiveOf(hosting), {
     kind: 'npm-package',
     package: fixture._meta.package,
     version: fixture._meta.version,
     commit: fixture._meta.gitHead,
     outbound: [],
   });
-  assert.deepEqual(Object.keys(hosting!).sort(), ['commit', 'kind', 'outbound', 'package', 'version']);
+  assert.deepEqual(Object.keys(hosting!).sort(), ['commit', 'kind', 'logging', 'outbound', 'package', 'runsAt', 'variant', 'version']);
   for (const key of ['package', 'version', 'commit'] as const) assert.equal(typeof hosting![key], 'string', `${key} is a string`);
   assert.equal(hosting!.version, '0.3.1');
   assert.match(hosting!.commit as string, /^[0-9a-f]{40}$/);
@@ -124,10 +133,11 @@ test('charter entry: the hosting field carries the package, the version and the 
   assert.notEqual(`pkg:npm/${encodeURIComponent(hosting!.package as string)}@${hosting!.version}`, purl);
   assert.equal(purl, 'pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1');
   assert.equal(`${hosting!.version}+${(hosting!.commit as string).slice(0, 12)}`, '0.3.1+b784cb763ec0');
-  // No address anywhere in it, and none of the three existing entries carries one.
+  // No address anywhere in it, and none of the three existing entries carries
+  // an npm-package variant.
   assert.doesNotMatch(JSON.stringify(hosting), /https?:|url|address|endpoint|port/i);
   for (const entry of CIVIC_MANIFEST.filter((e) => e.sourceId !== 'nyc-charter')) {
-    assert.equal(hostingOf(entry), undefined, `${entry.sourceId} carries no hosting field`);
+    assert.equal(hostingOf(entry), undefined, `${entry.sourceId} carries no npm-package variant`);
   }
 });
 
