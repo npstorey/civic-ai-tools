@@ -12,6 +12,7 @@ import {
   DATHERE_CONTENT_PROFILE,
   ENVIRONMENT_EXTENSION_KEY,
   COMPOSITION_EXTENSION_KEY,
+  SOURCE_OFFERED_REASONS,
   RecordFieldError,
   CIVICAITOOLS_ENVIRONMENT_HOST,
   CIVICAITOOLS_ENVIRONMENT_CONFIG,
@@ -362,6 +363,53 @@ test('ADR-0033 §E: a value outside the record\'s form is refused, never dropped
   refuses({ components: [{ id: 'x', guidanceOrigin: 'inline' }] }, 'components');
   refuses({ components: [{ id: 'x', guidanceHash: 'a0'.repeat(32), guidanceOrigin: 'remote' }] }, 'components');
   refuses({ components: [{ id: 'x', version: '' }] }, 'components');
+});
+
+// --- ADR-0033 §E as amended 2026-10-18: the six reasons ---
+
+const SIX_REASONS = ['configured', 'not-configured', 'selected', 'not-selected', 'reader-off', 'not-consented'];
+
+/** ADR-0033 §E: "a source was offered exactly when its reason is `configured`
+ *  or `selected`". Written here, since the harness exports no predicate. */
+const wasOffered = (reason: string): boolean => reason === 'configured' || reason === 'selected';
+
+test('ADR-0033 §E amended: the reasons are the four in §E\'s order, then reader-off and not-consented', () => {
+  assert.deepEqual([...SOURCE_OFFERED_REASONS], SIX_REASONS);
+});
+
+test('ADR-0033 §E amended: the derivation accepts each of the six reasons and states it as passed', () => {
+  for (const reason of SIX_REASONS) {
+    const fields = deriveDatHereEnvelopeFields({
+      model: 'm',
+      sourcesOffered: [{ sourceId: 'socrata', alias: 'socrata', reason }],
+    }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+    assert.equal(
+      JSON.stringify(fields.extensions),
+      `{"org.civicaitools.composition":{"sourcesOffered":[{"sourceId":"socrata","alias":"socrata","reason":"${reason}"}]}}`,
+      `reason ${reason}`,
+    );
+  }
+});
+
+test('ADR-0033 §E amended: a seventh reason is refused with RecordFieldError', () => {
+  for (const reason of ['off', 'ask-first', 'not-selected ', 'Reader-off', '']) {
+    assert.throws(
+      () => deriveDatHereEnvelopeFields({
+        model: 'm',
+        sourcesOffered: [{ sourceId: 'socrata', alias: 'socrata', reason }],
+      }, CIVICAITOOLS_ENVIRONMENT_CONFIG),
+      (e: unknown) => e instanceof RecordFieldError && e.field === 'sourcesOffered',
+      `reason ${JSON.stringify(reason)} was not refused`,
+    );
+  }
+});
+
+test('ADR-0033 §E amended: "offered" is exactly configured or selected, over the six', () => {
+  assert.deepEqual(SIX_REASONS.filter(wasOffered), ['configured', 'selected']);
+  assert.deepEqual(SOURCE_OFFERED_REASONS.filter(wasOffered), ['configured', 'selected']);
+  for (const reason of ['not-configured', 'not-selected', 'reader-off', 'not-consented']) {
+    assert.equal(wasOffered(reason), false, `${reason} is not offered`);
+  }
 });
 
 test('composite derivation: datHere input produces all four envelope fields', () => {
