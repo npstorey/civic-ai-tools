@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.9.0 — 2026-10-18
 
 The reader's states and the flows-statement reference (sprint R6, H2;
 [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)'s
