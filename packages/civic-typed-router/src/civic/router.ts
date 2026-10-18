@@ -30,8 +30,9 @@
 // sources may share an upstream name: their exposed names differ, and a bare
 // call of that name is refused at dispatch (`resolveCalledName`).
 //
-// Nothing here reads an entry's `id` or its `hosting`. The bare view reads no
-// `alias` either: only the checks, the dispatch map and the aliased view do.
+// Nothing here reads an entry's `id`, `hostings`, `consentDefault` or
+// `publisher`. The bare view reads no `alias` either: only the checks, the
+// dispatch map and the aliased view do.
 //
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
