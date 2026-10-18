@@ -412,6 +412,92 @@ test('ADR-0033 §E amended: "offered" is exactly configured or selected, over th
   }
 });
 
+// --- ADR-0033 §E as amended 2026-10-18: the flows statement, by reference ---
+
+const FLOWS = { url: 'https://instance.example/api/flows', hash: 'c4'.repeat(32), date: '2026-10-18' };
+const FLOWS_JSON = '{"url":"https://instance.example/api/flows","hash":"' + 'c4'.repeat(32) + '","date":"2026-10-18"}';
+
+/** Derive with inputs the policy type may not name yet (typed as a record, as
+ *  the refusal helper above passes its inputs). */
+function deriveWith(input: Record<string, unknown>) {
+  return deriveDatHereEnvelopeFields({ model: 'm', ...input }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+}
+
+test('ADR-0033 §E amended: a block passed only flowsStatement carries that one key, exactly as passed', () => {
+  assert.equal(
+    JSON.stringify(deriveWith({ flowsStatement: FLOWS }).extensions),
+    '{"org.civicaitools.composition":{"flowsStatement":' + FLOWS_JSON + '}}',
+  );
+  // Stated in the record's key order (url, hash, date), whatever order it was passed in.
+  const reordered = { date: FLOWS.date, hash: FLOWS.hash, url: FLOWS.url };
+  assert.equal(
+    JSON.stringify(deriveWith({ flowsStatement: reordered }).extensions),
+    '{"org.civicaitools.composition":{"flowsStatement":' + FLOWS_JSON + '}}',
+  );
+  // A local instance's address is accepted (shape answer (a)).
+  const local = { ...FLOWS, url: 'http://localhost:3000/api/flows' };
+  const block = deriveWith({ flowsStatement: local }).extensions![COMPOSITION_EXTENSION_KEY] as Record<string, unknown>;
+  assert.deepEqual(block.flowsStatement, local);
+});
+
+test('ADR-0033 §E amended: flowsStatement is the block\'s last key, after the three fields, under every content profile', () => {
+  for (const contentProfile of [DATHERE_CONTENT_PROFILE, undefined]) {
+    const fields = deriveWith({
+      contentProfile,
+      assertedDate: '2026-10-15',
+      sourcesOffered: SOURCES_OFFERED,
+      components: COMPONENTS,
+      flowsStatement: FLOWS,
+    });
+    const block = fields.extensions![COMPOSITION_EXTENSION_KEY] as Record<string, unknown>;
+    assert.deepEqual(Object.keys(block), ['assertedDate', 'sourcesOffered', 'components', 'flowsStatement']);
+    assert.equal(JSON.stringify(block.flowsStatement), FLOWS_JSON);
+  }
+});
+
+test('ADR-0033 §E amended: an absent flowsStatement is an absent key, and the block\'s bytes do not move', () => {
+  const without = deriveWith({ assertedDate: '2026-10-15', sourcesOffered: SOURCES_OFFERED, components: COMPONENTS });
+  const withUndefined = deriveWith({ assertedDate: '2026-10-15', sourcesOffered: SOURCES_OFFERED, components: COMPONENTS, flowsStatement: undefined });
+  assert.equal(JSON.stringify(withUndefined.extensions), JSON.stringify(without.extensions));
+  assert.equal(JSON.stringify(without.extensions).includes('flowsStatement'), false);
+  assert.equal(deriveWith({ flowsStatement: undefined }).extensions, undefined);
+});
+
+test('ADR-0033 §E amended: a flowsStatement outside the record\'s form is refused, never dropped', () => {
+  const refused = (flowsStatement: unknown, why: string) =>
+    assert.throws(
+      () => deriveWith({ flowsStatement }),
+      (e: unknown) => e instanceof RecordFieldError && e.field === 'flowsStatement',
+      `${why}: ${JSON.stringify(flowsStatement)} was not refused`,
+    );
+  // The object itself.
+  refused(null, 'null');
+  refused([FLOWS], 'an array');
+  refused(FLOWS_JSON, 'JSON text instead of an object');
+  refused({ url: FLOWS.url, hash: FLOWS.hash }, 'a missing date');
+  refused({ ...FLOWS, content: 'the statement itself' }, 'an extra key');
+  // hash: lowercase hex SHA-256.
+  refused({ ...FLOWS, hash: 'C4'.repeat(32) }, 'uppercase hex');
+  refused({ ...FLOWS, hash: 'c4'.repeat(31) }, '62 hex digits');
+  refused({ ...FLOWS, hash: 'sha256:' + 'c4'.repeat(32) }, 'a prefixed digest');
+  refused({ ...FLOWS, hash: 7 }, 'a number');
+  // date: a real YYYY-MM-DD.
+  refused({ ...FLOWS, date: '2026-02-30' }, 'no such day');
+  refused({ ...FLOWS, date: '2026-10-18T00:00:00Z' }, 'a timestamp');
+  refused({ ...FLOWS, date: '' }, 'empty');
+  // url: an absolute http: or https: URL with no credentials and no whitespace.
+  refused({ ...FLOWS, url: '/api/flows' }, 'a relative reference');
+  refused({ ...FLOWS, url: 'instance.example/api/flows' }, 'no scheme');
+  refused({ ...FLOWS, url: 'ftp://instance.example/flows.json' }, 'another scheme');
+  refused({ ...FLOWS, url: 'data:application/json,{}' }, 'a data URL');
+  refused({ ...FLOWS, url: 'https:instance.example/api/flows' }, 'no authority');
+  refused({ ...FLOWS, url: 'https://reader:pw@instance.example/api/flows' }, 'credentials');
+  refused({ ...FLOWS, url: ' https://instance.example/api/flows' }, 'leading whitespace');
+  refused({ ...FLOWS, url: 'https://instance.example/api/\nflows' }, 'an embedded newline');
+  refused({ ...FLOWS, url: '' }, 'empty');
+  refused({ ...FLOWS, url: 42 }, 'a number');
+});
+
 test('composite derivation: datHere input produces all four envelope fields', () => {
   const fields = deriveDatHereEnvelopeFields({
     model: 'openai/gpt-4o',

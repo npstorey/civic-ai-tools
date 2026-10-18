@@ -85,3 +85,41 @@ test('ADR-0033: a present attribute that is not the named shape is refused by na
     );
   }
 });
+
+// --- ADR-0033 §E as amended 2026-10-18: analysis.flows_statement ---
+
+const FLOWS = { url: 'https://instance.example/api/flows', hash: 'c4'.repeat(32), date: '2026-10-18' };
+
+/** The extractor's output read by a field name its type may not declare yet. */
+function flowsOf(trace: Record<string, unknown>): unknown {
+  return (extractRunAttributes(trace) as { flowsStatement?: unknown }).flowsStatement;
+}
+
+test('ADR-0033 §E amended: analysis.flows_statement comes back as flowsStatement, one object of three strings', () => {
+  assert.deepEqual(flowsOf(traceWithRoot({ 'analysis.flows_statement': JSON.stringify(FLOWS) })), FLOWS);
+  // Shape, not policy: the forms of url, hash and date are the derivation's to refuse.
+  const unchecked = { url: 'not a url', hash: 'XYZ', date: 'yesterday' };
+  assert.deepEqual(flowsOf(traceWithRoot({ 'analysis.flows_statement': JSON.stringify(unchecked) })), unchecked);
+  // Absent attribute, absent field.
+  assert.equal(Object.prototype.hasOwnProperty.call(extractRunAttributes(traceWithRoot({})), 'flowsStatement'), false);
+});
+
+test('ADR-0033 §E amended: an analysis.flows_statement that is not one object of exactly three strings is refused', () => {
+  const cases: Array<[string, string]> = [
+    ['not JSON', 'https://instance.example/api/flows'],
+    ['an array', JSON.stringify([FLOWS])],
+    ['null', 'null'],
+    ['a JSON string', JSON.stringify(JSON.stringify(FLOWS))],
+    ['a missing field', JSON.stringify({ url: FLOWS.url, hash: FLOWS.hash })],
+    ['a non-string field', JSON.stringify({ ...FLOWS, date: 20261018 })],
+    ['a null field', JSON.stringify({ ...FLOWS, hash: null })],
+    ['an extra field', JSON.stringify({ ...FLOWS, content: 'the statement itself' })],
+  ];
+  for (const [why, value] of cases) {
+    assert.throws(
+      () => extractRunAttributes(traceWithRoot({ 'analysis.flows_statement': value })),
+      (e: unknown) => e instanceof RunAttributeError && e.attribute === 'analysis.flows_statement',
+      `${why} (${value}) was not refused`,
+    );
+  }
+});
