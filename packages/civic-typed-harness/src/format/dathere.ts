@@ -252,20 +252,34 @@ export interface DatHerePolicyInput {
   sourcesOffered?: readonly SourceOfferedInput[];
   /** What composed the prompt (composition block). */
   components?: readonly CompositionComponentInput[];
+  /** The instance's flows statement in force for the run, by reference
+   *  (composition block; ADR-0033 §E as amended 2026-10-18). */
+  flowsStatement?: FlowsStatementInput;
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
 }
 
-/** Why a source was or was not offered to the model (ADR-0033 §E). A source
- *  was offered exactly when its reason is `configured` or `selected`. */
-export type SourceOfferedReason = 'configured' | 'not-configured' | 'selected' | 'not-selected';
+/** Why a source was or was not offered to the model (ADR-0033 §E, amended
+ *  2026-10-18). A source was offered exactly when its reason is `configured`
+ *  or `selected`; `reader-off` and `not-consented` are the reader's states
+ *  for a configured source that was not offered. */
+export type SourceOfferedReason =
+  | 'configured'
+  | 'not-configured'
+  | 'selected'
+  | 'not-selected'
+  | 'reader-off'
+  | 'not-consented';
 
-/** The four reasons, in the order ADR-0033 §E states them. */
+/** The six reasons: the four in the order ADR-0033 §E states them, then the
+ *  two its 2026-10-18 amendment adds. */
 export const SOURCE_OFFERED_REASONS: readonly SourceOfferedReason[] = [
   'configured',
   'not-configured',
   'selected',
   'not-selected',
+  'reader-off',
+  'not-consented',
 ];
 
 /** One `sourcesOffered` entry as a caller passes it. `reason` is a string so
@@ -297,11 +311,22 @@ export interface CompositionComponentInput {
   guidanceOrigin?: string;
 }
 
+/** The instance's flows statement, by reference (ADR-0033 §E as amended
+ *  2026-10-18; ADR-0036 §D): the address it is served at, the lowercase hex
+ *  SHA-256 that is its version, and its `YYYY-MM-DD` date. The record states
+ *  these three and never the statement's content. */
+export interface FlowsStatementInput {
+  url: string;
+  hash: string;
+  date: string;
+}
+
 /** The composition block's inputs (ADR-0033 §E). */
 export interface CompositionInput {
   assertedDate?: string;
   sourcesOffered?: readonly SourceOfferedInput[];
   components?: readonly CompositionComponentInput[];
+  flowsStatement?: FlowsStatementInput;
 }
 
 const ASSERTED_DATE_FORM = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -323,6 +348,32 @@ function isCalendarDate(value: string): boolean {
 
 function nonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+/** The flows statement's keys, in the record's order. */
+const FLOWS_STATEMENT_KEYS = ['url', 'hash', 'date'] as const;
+
+/** Any whitespace or control character: a URL parser strips or drops these,
+ *  so a string carrying one is not the address it parses to. */
+const WHITESPACE_OR_CONTROL = /[\s\u0000-\u001f\u007f]/;
+
+/** An absolute `http:` or `https:` URL, as written (the scheme followed by
+ *  `//`), with no credentials and no whitespace or control character. `http:`
+ *  is accepted because a local instance serves its statement from
+ *  `http://localhost`. */
+function isStatementUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^https?:\/\//i.test(value) || WHITESPACE_OR_CONTROL.test(value)) {
+    return false;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  return (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+    && parsed.username === ''
+    && parsed.password === '';
 }
 
 /**
@@ -397,6 +448,29 @@ export function buildCompositionExtension(
     });
   }
 
+  // The block's last key, so a block built without it keeps its bytes.
+  if (input.flowsStatement !== undefined) {
+    const statement: unknown = input.flowsStatement;
+    if (statement === null || typeof statement !== 'object' || Array.isArray(statement)) {
+      throw new RecordFieldError('flowsStatement', 'must be an object { url, hash, date }');
+    }
+    const extra = Object.keys(statement).filter((k) => !(FLOWS_STATEMENT_KEYS as readonly string[]).includes(k));
+    if (extra.length > 0) {
+      throw new RecordFieldError('flowsStatement', `carries url, hash and date only, never the statement itself; got ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+    }
+    const { url, hash, date } = statement as Record<string, unknown>;
+    if (!isStatementUrl(url)) {
+      throw new RecordFieldError('flowsStatement', `url must be an absolute http: or https: URL with no credentials; got ${JSON.stringify(url)}`);
+    }
+    if (!(typeof hash === 'string' && SHA256_HEX_FORM.test(hash))) {
+      throw new RecordFieldError('flowsStatement', `hash must be a lowercase hex SHA-256; got ${JSON.stringify(hash)}`);
+    }
+    if (!(typeof date === 'string' && isCalendarDate(date))) {
+      throw new RecordFieldError('flowsStatement', `date must be a YYYY-MM-DD calendar date; got ${JSON.stringify(date)}`);
+    }
+    block.flowsStatement = { url, hash, date };
+  }
+
   return Object.keys(block).length > 0 ? block : undefined;
 }
 
@@ -442,6 +516,7 @@ export function deriveDatHereEnvelopeFields(
     assertedDate: input.assertedDate,
     sourcesOffered: input.sourcesOffered,
     components: input.components,
+    flowsStatement: input.flowsStatement,
   });
   if (composition !== undefined) {
     extensions[COMPOSITION_EXTENSION_KEY] = composition;

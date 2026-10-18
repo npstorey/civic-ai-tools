@@ -1,7 +1,8 @@
 // Run-attribute extraction (CAPTURE group) — reads the facts the producer
 // recorded on the trace's ROOT span at run time (ADR-0033 §D, §E): the date
 // the prompt asserted, the servers the run had, the tools it offered, the
-// sources it was offered and the components that composed its prompt.
+// sources it was offered, the components that composed its prompt, and the
+// flows statement in force (by reference: address, hash and date).
 //
 // WHY THE TRACE (civic-ai-tools-website#495). A record is packaged after the
 // run, sometimes much later; a fact read at packaging is packaging-time state.
@@ -10,9 +11,11 @@
 //
 // SHAPE, NOT POLICY. This module checks that each attribute parses as the
 // shape ADR-0033 names (JSON text of an array of objects whose named fields
-// are strings) and returns it under the derivation's input names. The values
-// — the date form, the reason set, the hash form, the origin set — are policy,
-// checked by the format group's derivation, which refuses a bad one by name.
+// are strings; for `analysis.flows_statement`, of one object of exactly three
+// strings) and returns it under the derivation's input names. The values —
+// the date form, the reason set, the hash form, the origin set, the address
+// form — are policy, checked by the format group's derivation, which refuses
+// a bad one by name.
 //
 // An ABSENT attribute is an absent field. A PRESENT attribute that does not
 // parse is refused with `RunAttributeError`, never read as absent: absence
@@ -33,6 +36,7 @@ export interface ExtractedRunAttributes {
   toolDefinitions?: Array<Record<string, unknown>>;
   sourcesOffered?: Array<{ sourceId: string; alias: string; reason: string }>;
   components?: Array<{ id: string; version?: string; guidanceHash?: string; guidanceOrigin?: string }>;
+  flowsStatement?: { url: string; hash: string; date: string };
 }
 
 /** A root-span attribute that is present but not the shape ADR-0033 names. */
@@ -102,6 +106,38 @@ function objectArray(
   return parsed as Array<Record<string, unknown>>;
 }
 
+/** Parse an attribute as JSON text of ONE plain object whose fields are
+ *  exactly `fields`, each a string: a missing field, a non-string field and
+ *  an extra field are each refused. The field set is closed because the
+ *  object lands in the record whole; an extra field would otherwise either
+ *  reach signed bytes unchecked or be dropped silently. */
+function exactStringObject(
+  attribute: string,
+  text: string,
+  fields: readonly string[],
+): Record<string, string> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new RunAttributeError(attribute, 'is not JSON text');
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new RunAttributeError(attribute, 'is not a JSON object');
+  }
+  const entry = parsed as Record<string, unknown>;
+  for (const field of fields) {
+    if (typeof entry[field] !== 'string') {
+      throw new RunAttributeError(attribute, `has no string ${field}`);
+    }
+  }
+  const extra = Object.keys(entry).filter((k) => !fields.includes(k));
+  if (extra.length > 0) {
+    throw new RunAttributeError(attribute, `has a field outside ${fields.join(', ')}: ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  return entry as Record<string, string>;
+}
+
 /**
  * Read the run attributes from a trace's root span. Returns `{}` for a trace
  * with no root span — including a BlobRef trace's inspection view
@@ -135,6 +171,12 @@ export function extractRunAttributes(
   const components = stringAttr(root, 'analysis.components');
   if (components !== undefined) {
     out.components = objectArray('analysis.components', components, ['id'], ['version', 'guidanceHash', 'guidanceOrigin']) as unknown as ExtractedRunAttributes['components'];
+  }
+
+  const flows = stringAttr(root, 'analysis.flows_statement');
+  if (flows !== undefined) {
+    const { url, hash, date } = exactStringObject('analysis.flows_statement', flows, ['url', 'hash', 'date']);
+    out.flowsStatement = { url, hash, date };
   }
 
   return out;

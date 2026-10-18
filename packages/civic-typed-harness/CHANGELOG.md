@@ -3,6 +3,58 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.9.0 — 2026-10-18
+
+The reader's states and the flows-statement reference (sprint R6, H2;
+[ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)'s
+2026-10-18 amendment, ruling D2 = A of
+[civic-ai-tools-website#632](https://github.com/npstorey/civic-ai-tools-website/issues/632)),
+and the evaluator prompt's aggregate sources
+([civic-ai-tools#265](https://github.com/npstorey/civic-ai-tools/issues/265)).
+Signed bytes move only on a new record that passes a new reason or a
+`flowsStatement`; a record packaged without them has the same bytes, and no
+golden fixture moves.
+
+- **Two `sourcesOffered` reasons.** `SourceOfferedReason` and
+  `SOURCE_OFFERED_REASONS` gain `reader-off` (the source was configured, and
+  the reader turned it off) and `not-consented` (the source was configured,
+  and the reader has given no consent for it), after the four of ADR-0033 §E
+  in §E's order. A source was offered exactly when its reason is `configured`
+  or `selected`, as before. The derivation's refusal message lists the six.
+- **`flowsStatement` in the composition block.** `CompositionInput`,
+  `DatHerePolicyInput` and `ExtractedRunAttributes` gain an optional
+  `flowsStatement: { url, hash, date }`, typed as the new
+  `FlowsStatementInput` on the two inputs. `extractRunAttributes` reads it
+  from the root-span attribute `analysis.flows_statement`, JSON text of one
+  object whose fields are exactly the three strings, and refuses anything
+  else with `RunAttributeError`. The derivation states it as the block's last
+  key, keys in the order `url`, `hash`, `date`, and refuses with
+  `RecordFieldError` a `url` that is not an absolute `http:` or `https:` URL
+  without credentials or whitespace, a `hash` that is not lowercase hex
+  SHA-256, a `date` that is not a calendar date, and any other key. The
+  record refers to the statement by address, hash and date, never by content
+  (ADR-0036 §D). Absent, the key is absent.
+- **The evaluator prompt names an aggregate source.** `buildEvaluationPrompt`
+  rendered every `dataSources` entry by its `datasetUrl`, and an aggregate
+  entry (Data Commons, Boston, a hosted source) carries none, so the
+  evaluator read `- undefined (accessed …)` for it. An entry without a
+  `datasetUrl` now reads `- <sourceId> (<catalogType>, <portalUrl>) (accessed
+  <time>)`, with `dataset <datasetId>` added when it carries one; a missing
+  field is left out or stated in fixed words, so no line reads `undefined`.
+  An entry with a `datasetUrl` reads exactly as before. Measured across the
+  release boundary, as 0.4.1 was: the published 0.8.0 and this build render
+  a dataset-only package and an empty one byte-identically, and render a
+  package with two aggregate entries differently.
+- **`RUBRIC_VERSION_SHA256` does not move:**
+  `b62b193c992fd430cc82dff9a80a057bbe0b2b656fbdace450ca1a5d99fffa02` in the
+  published 0.8.0 and in this build. It is the SHA-256 of the rubric text
+  alone, and the prompt template is outside it, so an evaluation either side
+  of this release carries the same `promptSetVersion` while the evaluator of
+  a record with an aggregate entry is shown different input.
+  [civic-ai-tools#207](https://github.com/npstorey/civic-ai-tools/issues/207),
+  that gap, stays open.
+- No dependency changes.
+
 ## 0.8.0 — 2026-10-16
 
 The dependency floor (sprint LAYOUT-WEB, F0).

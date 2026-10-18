@@ -65,7 +65,9 @@ import {
   DATHERE_CONTENT_PROFILE,
   DATHERE_PRODUCER_PROFILE,
   ENVIRONMENT_EXTENSION_KEY,
+  COMPOSITION_EXTENSION_KEY,
   AI_ASSISTED_ANALYSIS_PROFILE_TYPE,
+  extractRunAttributes,
   type ToolCallSummary,
 } from './index.ts';
 
@@ -475,4 +477,88 @@ test('composition round-trip: tampering with a harness-derived value fails #1 (n
   );
   assert.equal(result.hashMatch, false);
   assert.deepEqual(result.envelopeIntegrity, { status: 'altered' });
+});
+
+// --- ADR-0033 §E as amended 2026-10-18: the two reasons and the flows
+// --- statement, from the trace's root span to the signed record ---
+
+const FLOWS_STATEMENT = { url: 'https://instance.example/api/flows', hash: hash('flows statement'), date: '2026-10-18' };
+const OFFERED_WITH_READER_STATES = [
+  { sourceId: 'socrata', alias: 'socrata', reason: 'selected' },
+  { sourceId: 'data-commons', alias: 'data_commons', reason: 'reader-off' },
+  { sourceId: 'boston-opencontext', alias: 'boston', reason: 'not-consented' },
+];
+
+/** A trace whose root span records the run's offered set and flows statement,
+ *  as a producer writes them at run time. */
+function traceWithFlowsStatement(): Record<string, unknown> {
+  const tb = new TraceBuilder({ ...CIVICAITOOLS_TRACE_CONFIG, now: makeClock(), randomBytes: makeSeededBytes() });
+  tb.startRoot('civic_analysis', {
+    'query.text_hash': hash(PROMPT),
+    'analysis.sources_offered': JSON.stringify(OFFERED_WITH_READER_STATES),
+    'analysis.flows_statement': JSON.stringify(FLOWS_STATEMENT),
+  });
+  tb.endRoot();
+  return tb.finalize() as unknown as Record<string, unknown>;
+}
+
+test('flows-statement round trip: root-span attribute → extractor → policy input → composition block → signed record, verified offline', async () => {
+  const trace = traceWithFlowsStatement();
+  const fields = deriveDatHereEnvelopeFields({
+    model: MODEL,
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    summary: SUMMARY,
+    extensions: { 'org.civicaitools.notebook': { nbformat: 4, nbformat_minor: 5, cells: [], metadata: {} } },
+    ...extractRunAttributes(trace),
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+  const { pkg, envelopeHash } = buildEnvelope({
+    packageId: PACKAGE_ID,
+    createdAt: CREATED_AT,
+    signingKeyId: KID,
+    prompt: PROMPT,
+    promptVisibility: 'full_text',
+    queries: [],
+    dataSources: [],
+    cost: { model: MODEL },
+    skillMetadata: extractSkillMetadata(trace),
+    output: OUTPUT,
+    trace,
+    captureMethod: 'chat-flow-stream',
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    type: DEFAULT_CONTENT_TYPE,
+    signer: SIGNER,
+    producerProfile: fields.producerProfile,
+    contentCanonicalization: fields.contentCanonicalization,
+    summary: fields.summary,
+    extensions: fields.extensions,
+  });
+
+  const stored = storageRoundTrip(pkg);
+  const block = (stored['extensions'] as Record<string, Record<string, unknown>>)[COMPOSITION_EXTENSION_KEY];
+  assert.deepEqual(block, { sourcesOffered: OFFERED_WITH_READER_STATES, flowsStatement: FLOWS_STATEMENT });
+  assert.deepEqual(Object.keys(block.flowsStatement as object), ['url', 'hash', 'date']);
+
+  const seed = makeSeed();
+  const signed = signEnvelopeHash(envelopeHash, seed, KID);
+  const registry: TrustRegistry = {
+    keys: [{
+      kid: KID,
+      publicKey: signed.publicKey,
+      status: 'active',
+      activatedAt: '2026-07-01T00:00:00.000Z',
+      deprecatedAt: null,
+      revokedAt: null,
+      signerIdentity: SIGNER,
+    }],
+  };
+  const signature = { ...signed } as unknown as VerifySignatureEnvelope;
+  const clean = await verifyEvidence({ package: stored, packageHash: envelopeHash, signature }, { registry, fetch: offlineFetch });
+  assert.equal(clean.hashMatch, true, 'the record as signed verifies (#1)');
+  assert.equal(clean.signatureValid, true, 'the signature verifies (#2)');
+
+  // The reference is inside the signed bytes: changing its hash breaks #1.
+  const tampered = storageRoundTrip(pkg);
+  ((tampered['extensions'] as Record<string, Record<string, Record<string, unknown>>>)[COMPOSITION_EXTENSION_KEY].flowsStatement).hash = hash('another statement');
+  const altered = await verifyEvidence({ package: tampered, packageHash: envelopeHash, signature }, { registry, fetch: offlineFetch });
+  assert.equal(altered.hashMatch, false);
 });

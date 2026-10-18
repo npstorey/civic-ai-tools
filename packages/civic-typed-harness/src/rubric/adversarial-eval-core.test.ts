@@ -337,3 +337,77 @@ test('buildEvaluationPrompt: the rejection is stated in fixed words, not the pro
   );
   assert.match(lineFor(prompt, 'producer-text'), /reject|refus|fail/i);
 });
+
+// --- A dataSources entry is rendered by what it carries (civic-ai-tools#265) ---
+//
+// An aggregate entry (a source whose registry row names an
+// `aggregatePortalUrl`: Data Commons, Boston, a hosted source) carries
+// `sourceId`, `catalogType`, `portalUrl` and `accessTimestamp`, and no
+// `datasetUrl` (`capture/data-sources.ts`). Rendering every entry by its
+// `datasetUrl` told the evaluator `- undefined (accessed …)` for each such
+// source. A dataset entry's line stays what it was.
+
+const ACCESSED = '2026-06-12T00:00:00Z';
+
+/** The lines of the prompt's `## Data Sources` section. */
+function dataSourceLines(prompt: string): string[] {
+  const start = prompt.indexOf('## Data Sources\n');
+  const end = prompt.indexOf('\n\n## Model Used');
+  assert.ok(start >= 0 && end > start, 'the prompt has a Data Sources section');
+  return prompt.slice(start + '## Data Sources\n'.length, end).split('\n');
+}
+
+function packageWithSources(dataSources: unknown[]): EvidencePackage {
+  return {
+    prompt: { text: 'q', hash: 'h', visibility: 'full_text' },
+    queries: [],
+    dataSources,
+    cost: { model: 'm' },
+    output: 'o',
+  } as unknown as EvidencePackage;
+}
+
+test('buildEvaluationPrompt: an aggregate entry names its source, catalog and portal, and no Data Sources line reads undefined (#265)', () => {
+  const pkg = packageWithSources([
+    { sourceId: 'socrata', catalogType: 'socrata', portalUrl: 'https://data.example', datasetId: 'erm2-nwe9', datasetUrl: 'https://data.example/d/erm2-nwe9', accessTimestamp: ACCESSED },
+    { sourceId: 'data-commons', catalogType: 'data-commons', portalUrl: 'https://api.datacommons.example', accessTimestamp: ACCESSED },
+    { sourceId: 'nyc-charter', catalogType: 'npm-package', portalUrl: 'pkg:npm/example-charter-mcp@0.1.0', accessTimestamp: ACCESSED },
+  ]);
+  const lines = dataSourceLines(buildEvaluationPrompt(pkg));
+  for (const line of lines) assert.doesNotMatch(line, /undefined/);
+  assert.deepEqual(lines, [
+    `  - https://data.example/d/erm2-nwe9 (accessed ${ACCESSED})`,
+    `  - data-commons (data-commons, https://api.datacommons.example) (accessed ${ACCESSED})`,
+    `  - nyc-charter (npm-package, pkg:npm/example-charter-mcp@0.1.0) (accessed ${ACCESSED})`,
+  ]);
+});
+
+test('buildEvaluationPrompt: an entry carrying datasetUrl renders as before, with or without the fields added since (#265)', () => {
+  const pkg = packageWithSources([
+    // The first packager's shape, before `sourceId` existed.
+    { catalogType: 'socrata', portalUrl: 'https://data.example', datasetId: 'erm2-nwe9', datasetUrl: 'https://data.example/d/erm2-nwe9', accessTimestamp: ACCESSED },
+    // The shape the harness builds today.
+    { sourceId: 'socrata', catalogType: 'socrata', portalUrl: 'https://data.example', datasetId: 'abcd-efgh', datasetUrl: 'https://data.example/d/abcd-efgh', accessTimestamp: ACCESSED },
+  ]);
+  assert.deepEqual(dataSourceLines(buildEvaluationPrompt(pkg)), [
+    `  - https://data.example/d/erm2-nwe9 (accessed ${ACCESSED})`,
+    `  - https://data.example/d/abcd-efgh (accessed ${ACCESSED})`,
+  ]);
+});
+
+test('buildEvaluationPrompt: an entry without datasetUrl that lacks other fields still reads no undefined, in fixed words (#265)', () => {
+  const pkg = packageWithSources([
+    { sourceId: 'socrata', catalogType: 'socrata', portalUrl: 'https://data.example', datasetId: 'erm2-nwe9', accessTimestamp: ACCESSED },
+    { catalogType: 'data-commons', portalUrl: 'https://api.datacommons.example', accessTimestamp: ACCESSED },
+    { sourceId: 'boston-opencontext' },
+    {},
+  ]);
+  const lines = dataSourceLines(buildEvaluationPrompt(pkg));
+  for (const line of lines) assert.doesNotMatch(line, /undefined/);
+  assert.deepEqual(lines, [
+    `  - socrata (socrata, https://data.example, dataset erm2-nwe9) (accessed ${ACCESSED})`,
+    `  - source not recorded (data-commons, https://api.datacommons.example) (accessed ${ACCESSED})`,
+    '  - boston-opencontext (access time not recorded)',
+    '  - source not recorded (access time not recorded)',
+  ]);
+});

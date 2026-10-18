@@ -164,3 +164,30 @@ The three new terms are declared where every other term is, in `format/vocabular
 - ADR-0032: tool naming across sources, written by R2's router phase (H1) and landing beside this record.
 - Specification §8.1.6 (extensions), §8.1.8 (`queries[]`), §8.7.1 (datHere requirements), Appendix J (vocabulary).
 - [Q65](../architecture/open-questions.md#q65--build-composition-as-a-publishable-artifact-what-is-a-harness-at-the-experience-layer): per-source guidance provenance.
+
+## Amendment — 2026-10-18: two reasons and the flows-statement reference (ruling D2 = A)
+
+Ruled by the owner on 2026-10-17 at gate G0 of sprint R6, anchor [civic-ai-tools-website#632](https://github.com/npstorey/civic-ai-tools-website/issues/632): ruling D2 = A. Written by the sprint's harness phase (H2) and landing in its PR, with `@typedstandards/civic-typed-harness` 0.9.0 as planned. It amends §E in two places and changes nothing else in this record. As §H found, the specification lists none of these fields, so no specification text moves.
+
+**The reasons.** `sourcesOffered[].reason` gains two values, after the four of §E in §E's order: `'configured' | 'not-configured' | 'selected' | 'not-selected' | 'reader-off' | 'not-consented'`. A reason outside the six is refused (`RecordFieldError`).
+- `reader-off`: the source was configured, and the reader turned it off.
+- `not-consented`: the source was configured, and the reader has given no consent for it (the reader's state for it is Ask first, or no consent is in force).
+
+A source was offered exactly when its reason is `configured` or `selected`, as §E states; neither new reason is an offered one. The two reasons are the reader's states, which the consuming app maps from its consent store. The router's own `not-selected` stays what the router emits.
+
+**The flows statement.** The composition block gains a fourth field, its last key:
+
+| Field | Type | Read from | When absent |
+|---|---|---|---|
+| `flowsStatement` | `{ url: string; hash: string; date: string }`, keys in that order: the address the instance serves its flows statement at, the statement's version as a lowercase hex SHA-256, and the statement's `YYYY-MM-DD` date | input `flowsStatement`; root-span attribute **`analysis.flows_statement`** (JSON text of one object) | key omitted |
+
+- **`url`'s form.** An absolute URL that the WHATWG `URL` parser accepts, written with its scheme and `//`, whose scheme is `https:` or `http:`, with no user name or password and no whitespace or control character. `http:` is accepted because a local instance serves its statement from `http://localhost`, and no measured reason requires `https:` only: the record states the address as passed and fetches nothing. Anything else is refused.
+- `hash` is refused unless it is lowercase hex SHA-256, the form of `components[].guidanceHash`. `date` is refused unless it is a real calendar date, the check `assertedDate` takes.
+- An object that is not exactly the three fields is refused, an extra key included: the record carries the reference and nothing else.
+- **The extractor** reads `analysis.flows_statement` as JSON text of one object whose fields are exactly `url`, `hash` and `date`, each a string. It refuses with `RunAttributeError` text that is not JSON, a JSON value that is not an object (an array, `null`, a string), a missing field, a field that is not a string, and an extra field. It checks that shape only; the three forms above are checked by the derivation.
+
+**Key placement.** `flowsStatement` is the block's last key, after `components`, so a block built without it has the same bytes as before this amendment, and a block built with it keeps the three earlier keys where they were. Measured at hub `794fe5b`, with produce-core 0.9.0 and verify-core 0.14.0: a v0.1 envelope's hash is the SHA-256 of its RFC 8785 JCS canonicalization (verify-core `computeEnvelopeHash`), and JCS sorts object keys, so on that chain the envelope hash does not depend on the order. Three things do depend on insertion order: a pre-v0.1 envelope's hash, which is the SHA-256 of its `JSON.stringify`; the package as stored and served, which is serialized in insertion order; and the derivation's output, which the tests pin with `JSON.stringify`. The `dathere-ag-jupyter/v1` content hash covers the notebook alone, and the composition block does not enter it.
+
+**By reference only.** The record refers to the flows statement by address, hash and date, and never carries its content (ADR-0036 §D). The recipients, what each receives and the postures their holders state are in the statement, not in signed bytes, so a record can state where its question went without attesting other parties' practices.
+
+**Bytes.** Signed bytes move only on a new record that passes a new reason or a `flowsStatement`. A record packaged without them has the same bytes, and the golden fixtures do not move.

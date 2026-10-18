@@ -46,7 +46,7 @@ const graph = buildProvenanceGraph(trace, input, CIVICAITOOLS_PROVENANCE_CONFIG)
 
 Likewise: `buildDatHereEnvironment` / `deriveDatHereEnvelopeFields` take `CIVICAITOOLS_ENVIRONMENT_CONFIG`, `new TraceBuilder(...)` takes `CIVICAITOOLS_TRACE_CONFIG`, and `isDatasetKeyedSource` / `displayNameForSource` / `formatDataSourcesSummary` take `CIVIC_SOURCE_REGISTRY`. The acceptance condition is encoded in `src/required-config.assert.ts`: reintroducing any of the removed defaults fails `npm run typecheck`.
 
-## What a record states about its run (0.7.0, [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md))
+## What a record states about its run (0.7.0 and 0.9.0, [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md))
 
 **Every call is attributed to its own source.** A tool span's source is its `mcp.source` tag; an untagged span resolves by its tool name through the resolver (`ProvenanceConfig.resolver`, default `civicToolSourceResolver`); a span neither identifies is attributed to `UNKNOWN_SOURCE_ID` (`'unknown'`), never to Socrata. The same order holds in `dataSources[]`, where an unknown call mints no entry. A caller may still pass `fallbackSourceId` explicitly, for example `'socrata'` to reproduce an earlier record of an untagged span.
 
@@ -63,6 +63,7 @@ Likewise: `buildDatHereEnvironment` / `deriveDatHereEnvelopeFields` take `CIVICA
 | `analysis.tool_definitions` | `toolDefinitions` | `org.civicaitools.environment.toolDefinitions` |
 | `analysis.sources_offered` | `sourcesOffered` | `org.civicaitools.composition.sourcesOffered` |
 | `analysis.components` | `components` | `org.civicaitools.composition.components` |
+| `analysis.flows_statement` (one object, `{ url, hash, date }`) | `flowsStatement` | `org.civicaitools.composition.flowsStatement`, the block's last key |
 
 ```ts
 const fields = deriveDatHereEnvelopeFields(
@@ -71,7 +72,11 @@ const fields = deriveDatHereEnvelopeFields(
 );
 ```
 
-An absent attribute is an absent field. A present attribute that does not parse is refused (`RunAttributeError`), and a value outside the record's form — a date that is not a calendar date, a reason outside `configured` / `not-configured` / `selected` / `not-selected`, a guidance hash that is not lowercase hex SHA-256, an origin outside `endpoint` / `inline` / `fallback` — is refused by the derivation (`RecordFieldError`), never dropped. The `org.civicaitools.composition` block is emitted under every content profile, appended after the other extensions, and only when one of its fields is passed: a package built with none of these inputs has 0.6.0's extensions bytes, except that a datHere environment block no longer states the two placeholders.
+An absent attribute is an absent field. A present attribute that does not parse is refused (`RunAttributeError`), and a value outside the record's form — a date that is not a calendar date, a reason outside `configured` / `not-configured` / `selected` / `not-selected` / `reader-off` / `not-consented`, a guidance hash that is not lowercase hex SHA-256, an origin outside `endpoint` / `inline` / `fallback`, a flows statement that is not exactly an absolute `http:` or `https:` `url` with no credentials, a lowercase hex SHA-256 `hash` and a calendar `date` — is refused by the derivation (`RecordFieldError`), never dropped. The `org.civicaitools.composition` block is emitted under every content profile, appended after the other extensions, and only when one of its fields is passed: a package built with none of these inputs has 0.6.0's extensions bytes, except that a datHere environment block no longer states the two placeholders.
+
+**The reader's states and the flows statement (0.9.0, ADR-0033's 2026-10-18 amendment).** Two reasons follow the four: `reader-off` (the source was configured, and the reader turned it off) and `not-consented` (the source was configured, and the reader has given no consent for it). A source was offered exactly when its reason is `configured` or `selected`. `flowsStatement` refers to the instance's flows statement by address, hash and date, and the record never carries the statement itself. A record packaged without either has the same bytes.
+
+**The evaluator prompt (0.9.0, [civic-ai-tools#265](https://github.com/npstorey/civic-ai-tools/issues/265)).** `buildEvaluationPrompt` lists each `dataSources` entry by what it carries. An entry with a `datasetUrl` reads as before; an aggregate entry, which has none, reads `- <sourceId> (<catalogType>, <portalUrl>) (accessed <time>)`, where 0.8.0 printed `undefined`. `RUBRIC_VERSION_SHA256` does not move: it is the SHA-256 of the rubric text alone, and the prompt template is outside it ([civic-ai-tools#207](https://github.com/npstorey/civic-ai-tools/issues/207), open).
 
 ## Purity contract (harness-grade)
 
