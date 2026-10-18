@@ -256,16 +256,27 @@ export interface DatHerePolicyInput {
   extensions?: Record<string, unknown>;
 }
 
-/** Why a source was or was not offered to the model (ADR-0033 §E). A source
- *  was offered exactly when its reason is `configured` or `selected`. */
-export type SourceOfferedReason = 'configured' | 'not-configured' | 'selected' | 'not-selected';
+/** Why a source was or was not offered to the model (ADR-0033 §E, amended
+ *  2026-10-18). A source was offered exactly when its reason is `configured`
+ *  or `selected`; `reader-off` and `not-consented` are the reader's states
+ *  for a configured source that was not offered. */
+export type SourceOfferedReason =
+  | 'configured'
+  | 'not-configured'
+  | 'selected'
+  | 'not-selected'
+  | 'reader-off'
+  | 'not-consented';
 
-/** The four reasons, in the order ADR-0033 §E states them. */
+/** The six reasons: the four in the order ADR-0033 §E states them, then the
+ *  two its 2026-10-18 amendment adds. */
 export const SOURCE_OFFERED_REASONS: readonly SourceOfferedReason[] = [
   'configured',
   'not-configured',
   'selected',
   'not-selected',
+  'reader-off',
+  'not-consented',
 ];
 
 /** One `sourcesOffered` entry as a caller passes it. `reason` is a string so
