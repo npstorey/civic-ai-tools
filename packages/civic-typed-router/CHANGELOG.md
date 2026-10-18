@@ -2,6 +2,57 @@
 
 Factual record of what changed per published version.
 
+## Unreleased
+
+Hosting variants and the logging posture on every entry, with each source's
+consent default and publisher ([ADR-0036](../../docs/adr/0036-source-hosting-variants-and-logging-posture.md)).
+No golden moves: every prompt, tools array and fact is 0.3.0's.
+
+- **Breaking: `ManifestEntry.hosting?` is removed.** In its place every entry
+  lists `hostings: readonly HostingVariant[]`, a union discriminated on
+  `kind`: `NpmPackageVariant` (`kind: 'npm-package'`; it extends
+  `SourceHosting`, whose five keys are unchanged, so a
+  `Pick<SourceHosting, …>` of a variant compiles as before), `RemoteVariant`
+  (`kind: 'remote'`) and `ContainerVariant` (`kind: 'container'`, a name only:
+  no host is built). Every arm carries `variant`, `runsAt`
+  (`'instance-sandbox' | 'publisher' | 'government' | 'other'`) and
+  `logging`. No arm has an address field. A manifest built outside this
+  package must add `hostings` and `consentDefault` to each entry.
+- **The logging posture.** `logging: readonly LoggingPosture[]` names every
+  holder of logs of what a variant is sent, in the order the data flows.
+  A posture is either stated by the manifest (`statedBy: 'manifest'`,
+  `holder`, `keeps: 'none' | 'metadata' | 'content' | 'not-stated'`,
+  `retention?`, `statementUrl`, `readOn`) or left to the instance by role
+  (`statedBy: 'instance'`, `role`), for a holder the instance chooses. Policy
+  text carried by reference, never read by the router.
+- **`consentDefault: 'on' | 'ask-first'`** on every entry, `'on'` for all
+  four, and **`publisher?: string`**: npstorey (Socrata), Google (Data
+  Commons), City of Boston (Boston OpenContext), BetaNYC (NYC Charter).
+- **The four entries' variants.** Socrata: `remote`, runs at `other`, holders
+  by role `server-operator` and `portal-operator`. Data Commons: `remote`,
+  runs at `publisher`, Google, `content`
+  (https://policies.google.com/privacy?hl=en-US). Boston OpenContext:
+  `remote`, runs at `government`, City of Boston, `metadata` (the City's
+  terms of use and privacy policy for its digital services). NYC Charter:
+  `sandbox` (`npm-package`), runs at `instance-sandbox`, with 0.3.0's
+  package, version, commit and `outbound: []`, holder by role
+  `sandbox-platform`. Every stated posture was read on 2026-10-18.
+- **The switch names the variant.** `NYC_CHARTER_HOSTING=sandbox` turns on
+  the variant named `sandbox` (`NYC_CHARTER_HOSTING_SANDBOX`); the switch rule
+  itself is unchanged.
+- New exports: the types `HostingVariant`, `HostingVariantCommon`,
+  `NpmPackageVariant`, `RemoteVariant`, `ContainerVariant`, `HostingRunsAt`,
+  `LoggingPosture`, `StatedLoggingPosture`, `InstanceLoggingPosture`,
+  `LoggingKeeps` and `ConsentDefault`, and the value
+  `NYC_CHARTER_SANDBOX_VARIANT`. `NYC_CHARTER_HOSTING` and `SourceHosting`
+  are unchanged.
+- Tests: the goldens' sentinel and throwing-getter runs cover `hostings`,
+  `consentDefault` and `publisher` beside `id` and `hosting`;
+  `hosting-type.test.ts` pins the union, its arms and the posture at type
+  check; `hosting-variants.test.ts` pins the four entries' values;
+  `hosted-variant-derivations.test.ts` derives every value the reference
+  website derives from a hosting value and holds each equal to 0.3.0's.
+
 ## 0.3.0 — 2026-10-16
 
 A fourth source the instance runs itself, the minimal hosting field and its

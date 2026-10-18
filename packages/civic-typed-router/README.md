@@ -63,22 +63,53 @@ else refuse(call.message); // names the candidates
 
 Per call, a record can then hold the exposed name, the upstream name and the alias from the map, beside the server's identity.
 
-## A hosted source: the hosting field (minimal) and its switch
+## Hosting variants, the logging posture, and a hosted source's switch
 
-Since 0.3.0 one source is not reached at a configured address: NYC Charter, Laws and Rules (`@betanyc/nyc-charter-laws-rules` on npm, published by BetaNYC) is a stdio server whose section index ships in its package, so an instance runs the pinned package itself, in a sandbox it creates. The manifest entry carries what a record needs to name what ran:
+Every manifest entry lists the ways its source can be run or reached, `hostings`, with who holds the logs of what each is sent ([ADR-0036](../../docs/adr/0036-source-hosting-variants-and-logging-posture.md)). Beside them it carries `consentDefault`, the source's state in a reader's first consent, and `publisher`, named as the source's own page names it.
 
 ```ts
-interface SourceHosting {
+type HostingVariant = NpmPackageVariant | RemoteVariant | ContainerVariant; // discriminated on `kind`
+
+interface HostingVariantCommon {
+  readonly variant: string;   // unique within the entry; a switch's value names the variant it turns on
+  readonly runsAt: 'instance-sandbox' | 'publisher' | 'government' | 'other';
+  readonly logging: readonly LoggingPosture[]; // every log holder, in the order the data flows
+}
+interface NpmPackageVariant extends SourceHosting, HostingVariantCommon {} // kind: 'npm-package'
+interface RemoteVariant extends HostingVariantCommon { readonly kind: 'remote' }
+interface ContainerVariant extends HostingVariantCommon { readonly kind: 'container' } // a name only: no host is built
+
+interface SourceHosting {     // 0.3.0's hosting field, unchanged
   readonly kind: 'npm-package';
   readonly package: string;   // '@betanyc/nyc-charter-laws-rules'
   readonly version: string;   // '0.3.1', exact
   readonly commit: string;    // 'b784cb763ec0d953139eef4ed366e8ec4de72625', the registry's gitHead for that version
   readonly outbound: readonly string[]; // hosts it may reach; [] = none
 }
-// ManifestEntry.hosting?: SourceHosting — carried, never read by the router
+
+type LoggingPosture =
+  | { statedBy: 'manifest'; holder: string; keeps: 'none' | 'metadata' | 'content' | 'not-stated';
+      retention?: string; statementUrl: string; readOn: string } // the holder's own statement, its https address, the UTC date read
+  | { statedBy: 'instance'; role: string };                     // a holder the instance chooses: the consuming app states it
+
+// ManifestEntry: hostings: readonly HostingVariant[]; consentDefault: 'on' | 'ask-first'; publisher?: string
+// Carried, never read by the router.
 ```
 
-The field is **minimal by design**: it states what runs and what it may reach, and carries no address, command, port or variant. How a host starts the package and where it listens are the host's; the full hosting field, with its variants and the logging posture, is later work (R6). `router-goldens.test.ts` runs every golden with `hosting` replaced and behind a getter that throws, to show the router never reads it. A consumer derives the record's names from it: the purl `pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1` (scope and name each percent-encoded, the `/` kept) and the component version `0.3.1+b784cb763ec0` (the version, then the commit's first 12 hex characters as build metadata).
+No variant carries an address: a remote's address is the instance's configuration, and a hosted source is reached at an address its host resolves per call. A posture is policy text carried by reference: what the holder's own statement says, read on `readOn`. `not-stated` means the statement read says nothing about what the holder keeps. Where the holder depends on the instance (the platform it runs its sandboxes on, the operator of an address it configures), the manifest names the holder by role and the consuming app states it, beside the instance-level recipients (the model endpoint and the rest).
+
+| Source | `publisher` | Variant (`kind`) | `runsAt` | `logging` |
+|---|---|---|---|---|
+| Socrata | npstorey | `remote` (`remote`) | `other` | role `server-operator`; role `portal-operator` |
+| Google Data Commons | Google | `remote` (`remote`) | `publisher` | Google, `content` ([privacy policy](https://policies.google.com/privacy?hl=en-US), read 2026-10-18) |
+| Boston OpenContext | City of Boston | `remote` (`remote`) | `government` | City of Boston, `metadata` ([terms of use and privacy policy](https://www.boston.gov/government/cabinets/innovation-and-technology/terms-use-and-privacy-policy-city-boston-digital), read 2026-10-18) |
+| NYC Charter, Laws and Rules | BetaNYC | `sandbox` (`npm-package`) | `instance-sandbox` | role `sandbox-platform` |
+
+Every entry's `consentDefault` is `'on'`.
+
+**Which variant is in force is the consumer's to select.** For a source offered by a switch, the switch's value names the variant that is on (`NYC_CHARTER_HOSTING=sandbox` turns on the variant `sandbox`); a remote's single variant is selected by its address variable's presence. No router function reads `hostings`, `consentDefault` or `publisher`: `router-goldens.test.ts` runs every golden with each, and 0.3.0's `hosting`, replaced and behind a getter that throws. Two variants of one source would share its `id` and be two panel rows; each entry has one variant, and a second enabled variant of one source is later work (ADR-0036 §G).
+
+**A hosted source.** NYC Charter, Laws and Rules (`@betanyc/nyc-charter-laws-rules` on npm, published by BetaNYC) is a stdio server whose section index ships in its package, so an instance runs the pinned package itself, in a sandbox it creates. Its `sandbox` variant (`NYC_CHARTER_SANDBOX_VARIANT`) carries 0.3.0's `NYC_CHARTER_HOSTING` strings unchanged, so a consumer derives the record's names from it as before: the purl `pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1` (scope and name each percent-encoded, the `/` kept) and the component version `0.3.1+b784cb763ec0` (the version, then the commit's first 12 hex characters as build metadata). `src/hosted-variant-derivations.test.ts` derives every value the reference website derives from it and holds each equal to what 0.3.0's field gave.
 
 **The switch.** A hosted source is offered by a switch, never by an address. `readMcpEnv` reads `NYC_CHARTER_HOSTING`: when its trimmed value is exactly `sandbox`, the result gains `nycCharterHosting: 'sandbox'`; unset, blank or any other value (`Sandbox`, `hosted`) and the key is absent, so with the switch off every configuration reading is 0.2.0's, key for key. `configuredAddresses` (the addresses a record states) never has a key for the source; selection reads `configuredSources`, which adds the switch. The entry's `configuration.addressVariable` names the switch, so a consumer that refuses a call by naming the variable that would configure the source names `NYC_CHARTER_HOSTING`.
 
@@ -186,7 +217,7 @@ The three routing lines, as the entries carry them:
 | Boston OpenContext | Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics. | Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually). |
 | NYC Charter, Laws and Rules | New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress. | Pinned to version 0.3.1 of the publisher's package and the index it bundles: the Charter and the Administrative Code are current through Local Law 2026/147, enacted September 12, 2026, and the Rules through rules effective October 4, 2026. |
 
-Carried since 0.3.0: a minimal hosting field and a pinned package version (above). Not carried yet: hosting variants, the logging posture, and a server's tool-list mode.
+Carried: each source's hosting variants, its logging posture, its consent default and its publisher (since 0.4.0, above), and a pinned package version (since 0.3.0). Not carried yet: a server's tool-list mode.
 
 ### Two semantics kept from the website
 
