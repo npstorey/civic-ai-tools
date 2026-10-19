@@ -22,6 +22,8 @@ import {
   buildDatHereEnvironment,
   deriveDatHereEnvelopeFields,
 } from './dathere.ts';
+// Namespace import: a name the module may not export yet is read through it.
+import * as dathereModule from './dathere.ts';
 import { buildEnvelope, type EnvelopeInput } from '@typedstandards/produce-core';
 import {
   LEGACY_JSON_CANONICALIZATION,
@@ -496,6 +498,110 @@ test('ADR-0033 §E amended: a flowsStatement outside the record\'s form is refus
   refused({ ...FLOWS, url: 'https://instance.example/api/\nflows' }, 'an embedded newline');
   refused({ ...FLOWS, url: '' }, 'empty');
   refused({ ...FLOWS, url: 42 }, 'a number');
+});
+
+// --- ADR-0033 amendment 2 (2026-10-19): routing and definitionHash ---
+
+const ROUTING = { method: 'in-loop', version: '0.5.0' };
+const ROUTING_JSON = '{"method":"in-loop","version":"0.5.0"}';
+const DEFINITION_HASH = 'd5'.repeat(32);
+
+/** The block alone, built from inputs the composition type may not name yet. */
+function compositionWith(input: Record<string, unknown>): Record<string, unknown> | undefined {
+  return deriveWith(input).extensions?.[COMPOSITION_EXTENSION_KEY] as Record<string, unknown> | undefined;
+}
+
+test('ADR-0033 amendment 2: the three routing methods are all-sources, picker and in-loop, in that order', () => {
+  assert.deepEqual((dathereModule as Record<string, unknown>).ROUTING_METHODS, ['all-sources', 'picker', 'in-loop']);
+});
+
+test('ADR-0033 amendment 2: routing alone and definitionHash alone are each stated exactly as passed', () => {
+  assert.equal(
+    JSON.stringify(deriveWith({ routing: ROUTING }).extensions),
+    '{"org.civicaitools.composition":{"routing":' + ROUTING_JSON + '}}',
+  );
+  assert.equal(
+    JSON.stringify(deriveWith({ definitionHash: DEFINITION_HASH }).extensions),
+    '{"org.civicaitools.composition":{"definitionHash":"' + DEFINITION_HASH + '"}}',
+  );
+  // Stated in the record's key order (method, version), whatever order it was passed in.
+  assert.equal(
+    JSON.stringify(compositionWith({ routing: { version: '0.5.0', method: 'in-loop' } })),
+    '{"routing":' + ROUTING_JSON + '}',
+  );
+  // Each of the three methods is accepted and stated as passed.
+  for (const method of ['all-sources', 'picker', 'in-loop']) {
+    assert.deepEqual(compositionWith({ routing: { method, version: '1.0.0-rc.1' } }), { routing: { method, version: '1.0.0-rc.1' } });
+  }
+});
+
+test('ADR-0033 amendment 2: flowsStatement, routing, definitionHash are the block\'s last three keys, in that order, under every content profile', () => {
+  for (const contentProfile of [DATHERE_CONTENT_PROFILE, undefined]) {
+    const block = compositionWith({
+      contentProfile,
+      assertedDate: '2026-10-19',
+      sourcesOffered: SOURCES_OFFERED,
+      components: COMPONENTS,
+      flowsStatement: FLOWS,
+      routing: ROUTING,
+      definitionHash: DEFINITION_HASH,
+    })!;
+    assert.deepEqual(Object.keys(block), ['assertedDate', 'sourcesOffered', 'components', 'flowsStatement', 'routing', 'definitionHash']);
+    assert.equal(JSON.stringify(block.routing), ROUTING_JSON);
+    assert.equal(block.definitionHash, DEFINITION_HASH);
+  }
+  // Without the flows statement, routing then definitionHash still close the block.
+  const noFlows = compositionWith({ assertedDate: '2026-10-19', definitionHash: DEFINITION_HASH, routing: ROUTING })!;
+  assert.deepEqual(Object.keys(noFlows), ['assertedDate', 'routing', 'definitionHash']);
+});
+
+test('ADR-0033 amendment 2: an absent routing or definitionHash is an absent key, and the block\'s bytes do not move', () => {
+  const base = { assertedDate: '2026-10-19', sourcesOffered: SOURCES_OFFERED, components: COMPONENTS, flowsStatement: FLOWS };
+  const without = JSON.stringify(deriveWith(base).extensions);
+  assert.equal(JSON.stringify(deriveWith({ ...base, routing: undefined, definitionHash: undefined }).extensions), without);
+  assert.equal(without.includes('routing'), false);
+  assert.equal(without.includes('definitionHash'), false);
+  assert.equal(deriveWith({ routing: undefined, definitionHash: undefined }).extensions, undefined);
+});
+
+test('ADR-0033 amendment 2: a routing outside the record\'s form is refused, never dropped', () => {
+  const refused = (routing: unknown, why: string) =>
+    assert.throws(
+      () => deriveWith({ routing }),
+      (e: unknown) => e instanceof RecordFieldError && e.field === 'routing',
+      `${why}: ${JSON.stringify(routing)} was not refused`,
+    );
+  refused(null, 'null');
+  refused('in-loop', 'a string');
+  refused(ROUTING_JSON, 'JSON text instead of an object');
+  refused(7, 'a number');
+  refused([ROUTING], 'an array');
+  refused({ ...ROUTING, definitionHash: DEFINITION_HASH }, 'an extra key');
+  refused({ version: '0.5.0' }, 'a missing method');
+  refused({ ...ROUTING, method: 'In-loop' }, 'a method outside the three (case)');
+  refused({ ...ROUTING, method: 'directory' }, 'a method outside the three');
+  refused({ ...ROUTING, method: null }, 'a null method');
+  refused({ method: 'in-loop' }, 'a missing version');
+  refused({ ...ROUTING, version: '' }, 'an empty version');
+  refused({ ...ROUTING, version: 5 }, 'a numeric version');
+  refused({ ...ROUTING, version: null }, 'a null version');
+});
+
+test('ADR-0033 amendment 2: a definitionHash that is not a lowercase hex SHA-256 is refused, never dropped', () => {
+  const refused = (definitionHash: unknown, why: string) =>
+    assert.throws(
+      () => deriveWith({ definitionHash }),
+      (e: unknown) => e instanceof RecordFieldError && e.field === 'definitionHash',
+      `${why}: ${JSON.stringify(definitionHash)} was not refused`,
+    );
+  refused(null, 'null');
+  refused('', 'empty');
+  refused('D5'.repeat(32), 'uppercase hex');
+  refused('d5'.repeat(31), '62 hex digits');
+  refused('d5'.repeat(32) + 'a', '65 hex digits');
+  refused('sha256:' + 'd5'.repeat(32), 'a prefixed digest');
+  refused({ hash: DEFINITION_HASH }, 'an object');
+  refused(42, 'a number');
 });
 
 test('composite derivation: datHere input produces all four envelope fields', () => {
