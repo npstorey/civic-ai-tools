@@ -17,7 +17,9 @@
 // once behind getters. Nothing reads `id`, `hosting` (0.3.0's field, trapped so
 // an entry of the old shape is caught too), `hostings`, `consentDefault` or
 // `publisher` (0.4.0); the bare view does not read `alias` (only the startup
-// checks and the aliased view do).
+// checks and the aliased view do). The in-loop functions (0.5.0: the
+// directory, the first-step tool, the in-loop prompt and the harness
+// definition) run under the same replacements and give the same outcomes.
 //
 // What NYC Charter, Laws and Rules moves (0.3.0). The goldens are the website
 // at d1919a8, which had three sources; the manifest now holds a fourth, last,
@@ -346,6 +348,49 @@ async function checkEverything(router: CivicRouter): Promise<void> {
   checkFacts(router);
 }
 
+// --- The in-loop functions (0.5.0), over any router ----------------------------
+
+type HarnessDefinitionFn = (input: {
+  configured: McpRegistryEnv;
+  selection?: readonly string[];
+  chosenBy: string;
+  components: readonly { id: string; version?: string; guidanceHash?: string }[];
+}) => unknown;
+
+/** Every in-loop function's output over `router`, for fixed inputs: what the
+ *  sentinel runs compare. */
+async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
+  const configured = readMcpEnv({
+    SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
+    BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
+    NYC_CHARTER_HOSTING: 'sandbox',
+  });
+  const input = {
+    configured,
+    today: '2026-01-15',
+    publicationHost: 'records.example.org',
+    fetchPrompt: async () => 'Fixture Socrata guidance.',
+    fetchInstructions: async (sourceId: string) => (sourceId === 'data-commons' ? 'Fixture Data Commons instructions.' : null),
+  };
+  const selections = [undefined, ['socrata', 'nyc-charter']];
+  const loadedSets = [[], ['socrata'], ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter']];
+  const harnessDefinition = (router as unknown as Record<string, unknown>).harnessDefinition;
+  assert.equal(typeof harnessDefinition, 'function', 'CivicRouter has harnessDefinition');
+  return {
+    directory: selections.map((selection) => router.directoryPrompt({ ...input, selection })),
+    tool: selections.map((selection) => router.aliasedLoadSourceTool({ configured, selection })),
+    inLoop: await Promise.all(loadedSets.map((loaded) => router.aliasedInLoopSystemPrompt({ ...input, loaded }))),
+    definition: selections.map((selection) =>
+      (harnessDefinition as HarnessDefinitionFn)({
+        configured,
+        selection,
+        chosenBy: 'model',
+        components: [{ id: 'a-component', version: '1', guidanceHash: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' }],
+      }),
+    ),
+  };
+}
+
 const SENTINEL = 'sentinel: id is carried, never read';
 /** A hosting value no consumer could use: if the router read it, an output
  *  or a check would change. 0.3.0's `hosting`, kept so an old-shape entry is
@@ -404,6 +449,13 @@ test('id and the hosting fields are never read and the bare view does not depend
   );
   assert.notEqual(manifest, CIVIC_MANIFEST);
   await checkEverything(createCivicRouter(manifest));
+
+  // The in-loop functions give, under the sentinels, what they give with
+  // only the aliases replaced.
+  const aliasesOnly: CivicManifest = CIVIC_MANIFEST.map((entry, i) => ({ ...entry, alias: `other_alias_${i}` }));
+  const outcomes = await inLoopOutcomes(createCivicRouter(manifest));
+  assert.match(JSON.stringify(outcomes), /other_alias_3/, 'the outcomes name the replaced aliases');
+  assert.deepEqual(outcomes, await inLoopOutcomes(createCivicRouter(aliasesOnly)));
 });
 
 test('id and the hosting fields are never read, and alias only at construction: every golden holds with id, hosting, hostings, consentDefault and publisher behind getters that throw', async () => {
@@ -455,4 +507,14 @@ test('id and the hosting fields are never read, and alias only at construction: 
 
   await checkEverything(router);
   assert.deepEqual(reads, [], 'no bare output read an entry\'s id, hosting, hostings, consentDefault, publisher or alias');
+
+  // The in-loop functions read `alias` (the aliased view) and nothing the
+  // traps cover, and give what the default router gives.
+  assert.deepEqual(await inLoopOutcomes(router), await inLoopOutcomes(civicRouter));
+  // (`reads` is narrowed to empty by the assertion above; it has grown since.)
+  const inLoopReads = reads as string[];
+  assert.ok(
+    inLoopReads.length > 0 && inLoopReads.every((r) => r.endsWith('.alias')),
+    'the in-loop functions read alias, never id or a carried field',
+  );
 });
