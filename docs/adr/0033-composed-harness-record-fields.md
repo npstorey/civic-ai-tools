@@ -191,3 +191,39 @@ A source was offered exactly when its reason is `configured` or `selected`, as �
 **By reference only.** The record refers to the flows statement by address, hash and date, and never carries its content (ADR-0036 §D). The recipients, what each receives and the postures their holders state are in the statement, not in signed bytes, so a record can state where its question went without attesting other parties' practices.
 
 **Bytes.** Signed bytes move only on a new record that passes a new reason or a `flowsStatement`. A record packaged without them has the same bytes, and the golden fixtures do not move.
+
+## Amendment 2 — 2026-10-19: routing, the definition hash and the load span (rulings D3 = A and D5 = B)
+
+Ruled by the owner on 2026-10-19 at gate G0 of sprint R8, anchor [civic-ai-tools-website#644](https://github.com/npstorey/civic-ai-tools-website/issues/644): ruling D3 = A (the router package owns the directory and the `load_source` tool, the website owns the loop's load step, and the harness owns what a record states) and ruling D5 = B (every composition yields a harness definition, and a record of an in-loop run states its hash). Written by the sprint's harness phase (H2) and landing in its PR, with `@typedstandards/civic-typed-harness` 0.10.0 as planned. It amends §E with two fields and adds the load span below; nothing else in this record changes. As §H found, the specification lists none of these fields or terms, so no specification text moves.
+
+**Two fields.** The composition block gains two keys after `flowsStatement`, in this order, each emitted only when passed:
+
+| Field | Type | Read from | When absent |
+|---|---|---|---|
+| `routing` | `{ method: 'all-sources' \| 'picker' \| 'in-loop'; version: string }`, keys in that order: how the run's sources were chosen, and the version of the router that chose them | input `routing`; root-span attribute **`analysis.routing`** (JSON text of one object) | key omitted |
+| `definitionHash` | string, the lowercase hex SHA-256 of the run's harness definition, as the router computed it ([ADR-0037](0037-the-first-step-tool.md)) | input `definitionHash`; root-span attribute **`analysis.definition_hash`** (plain text) | key omitted |
+
+- **The methods** (`ROUTING_METHODS`, design §5's three values): `all-sources`, every configured source offered from the first request; `picker`, a set chosen before the run; `in-loop`, the model loaded sources during the run through the router's directory. The derivation accepts `picker`, and nothing in this sprint emits it: whether a run under all-sources routing with a reader's panel selection is `all-sources` or `picker` is left unrecorded, so its bytes do not move.
+- **Refusals** (`RecordFieldError`, naming the field). `routing` is refused when it is `null` or not an object (an array, a string, JSON text), when it carries a key besides `method` and `version`, when `method` is not one of the three, and when `version` is not a non-empty string. `definitionHash` is refused when it is `null` or not a lowercase hex SHA-256, the form of `components[].guidanceHash`.
+- **The input type.** `RoutingInput.method` is typed `string`, as `SourceOfferedInput.reason` is, so the extractor's output passes to the derivation by name; `RoutingMethod` names the three values for a caller that builds the object itself.
+- **The harness computes no hash.** The definition's hash arrives as a value (D5 = B): the router computes it over its canonical JSON, and the harness checks its form and states it.
+- **The extractor** reads `analysis.routing` as JSON text of one object whose fields are exactly `method` and `version`, each a string, and refuses with `RunAttributeError` text that is not JSON, a JSON value that is not an object, a missing field, a field that is not a string, and an extra field. It reads `analysis.definition_hash` as a plain string, as `analysis.asserted_date` is read. It checks those shapes only; the method set and the hash form are checked by the derivation.
+
+**Key placement.** Each key follows the ones before it, so a block built without them has the same bytes as before this amendment, and a block built with them keeps every earlier key where it was. The amendment of 2026-10-18 says which hashes depend on insertion order.
+
+**The load span.** A `load_source` call is recorded as a tool span like any other (`mcp_tool_call`), with `tool.operation_type` `load_source` and one outcome attribute, `tool.load_outcome`. The instance's own loop handles the call, and no source answers it. So:
+- the provenance graph mints no `mcp-server:` agent for it: it is not among the sources in the trace, even when it carries an `mcp.source` tag;
+- it mints no data-response entity for it, even when the span carries `tool.response_hash`, and `buildDataSources` mints no `dataSources[]` entry for it, skipping the call **in place**: calls are paired to spans by index (`capture/data-sources.ts`), so a load call keeps its position and the calls after it keep their own spans;
+- its tool-call activity is associated with the **platform agent** (`config.platformAgent`, the instance that publishes the record), states no `civic:sourceId`, and states the outcome under `civic:loadOutcome`, as its last key;
+- its query entity, its description, and `civic:sourceAlias`, `civic:upstreamToolName` and `civic:serverId` when the span carries the attributes, are as for any tool span;
+- `tool.load_outcome` must be one of `loaded`, `declined`, `no-answer` and `unavailable`; a load span with no outcome, or another value, is refused with `LoadSpanError` when the graph is built, so a graph never states a load without saying how it ended.
+
+A span with any other operation type is unchanged.
+
+**Two readings, and why.** The anchor says the load's activity "is associated with the software agent", and that the harness mints "no access entry" for it.
+- *The software agent is the platform agent.* Every agent in the graph is a `prov:SoftwareAgent`: the model, one per source, and the platform. No source handled the load, and the model asked for it (its inference is the query entity's `prov:wasGeneratedBy`, as for any call); the loop that answered it is the instance's, which the platform agent names. Associating it with a source's agent would state a contact that did not happen, and a source agent minted for it is exactly the `unknown` agent this amendment removes.
+- *No access entry means no `dataSources[]` entry and no data-response entity.* Both state that a source was reached and returned data. A load reached none, even if a producer hashes the one-line result onto the span.
+
+**The outcome term.** `civic:loadOutcome` (`CIVIC_TERM_LOAD_OUTCOME`), declared in `format/vocabulary.ts` with its four values (`LOAD_OUTCOMES`): `loaded`, the source's guidance and tools were added for the next request; `declined`, the reader did not allow the source for this run; `no-answer`, no decision arrived in time; `unavailable`, the instance could not offer the source for a reason known without contacting it. It is named as `civic:failureKind` is, for the call outcome it labels. Like every term, it is era-independent: a graph built under the prior-era vocabulary carries the same key under that era's namespace. It reaches the capture builder as a parameter, with the outcome set, as every other term does (the seam of civic-ai-tools#244 P2: `capture/` imports nothing from `format/`).
+
+**Bytes.** Signed bytes move only on a new record that passes `routing` or `definitionHash`, or whose trace carries a load span. A record packaged without them has the same bytes: the three existing golden fixtures do not move, and the two pinned ones keep their sha256. One new golden, `in-loop-golden.json`, holds a record of an in-loop run byte for byte.

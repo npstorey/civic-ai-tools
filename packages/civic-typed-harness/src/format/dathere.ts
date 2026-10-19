@@ -477,7 +477,8 @@ export function buildCompositionExtension(
     });
   }
 
-  // The block's last key, so a block built without it keeps its bytes.
+  // After components, so a block built without it keeps its bytes (routing
+  // and definitionHash follow it; ADR-0033 amendment 2).
   if (input.flowsStatement !== undefined) {
     const statement: unknown = input.flowsStatement;
     if (statement === null || typeof statement !== 'object' || Array.isArray(statement)) {
