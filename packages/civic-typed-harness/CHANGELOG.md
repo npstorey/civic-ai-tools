@@ -33,7 +33,10 @@ without them has the same bytes, and no existing golden fixture moves.
   associated with the platform agent, states no `civic:sourceId`, and states
   `tool.load_outcome` under the new term `civic:loadOutcome`
   (`CIVIC_TERM_LOAD_OUTCOME`), whose values are `LOAD_OUTCOMES` (`loaded`,
-  `declined`, `no-answer`, `unavailable`; the type `LoadOutcome`). A load
+  `declined`, `no-answer`, `unavailable`, `not-offered`; the type
+  `LoadOutcome`). `not-offered` (the alias named no source of the directory
+  set, so nothing was loaded and the reader was not asked) is the owner's
+  amendment of D4 on 2026-10-19. A load
   span with no outcome, or another value, is refused with the new
   `LoadSpanError` when the graph is built. Before this, such a span was
   attributed to an `unknown` source agent.

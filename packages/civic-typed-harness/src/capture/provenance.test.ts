@@ -1983,7 +1983,6 @@ test('ADR-0033 amendment 2: the outcome term is civic:loadOutcome, and its value
 });
 
 test('ADR-0033 amendment 2: the LoadOutcome type admits not-offered', () => {
-  // @ts-expect-error -- the four-value type refuses the fifth; the fix removes this line.
   const fifth: LoadOutcome = 'not-offered';
   assert.equal(fifth, 'not-offered');
 });

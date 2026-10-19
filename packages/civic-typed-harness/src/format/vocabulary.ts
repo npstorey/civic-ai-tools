@@ -219,12 +219,15 @@ export const CIVIC_TERM_LOAD_OUTCOME = 'civic:loadOutcome';
  *  source's guidance and tools were added for the next request; `declined`,
  *  the reader did not allow the source for this run; `no-answer`, no decision
  *  arrived in time; `unavailable`, the instance could not offer the source
- *  for a reason known without contacting it. */
-export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable';
+ *  for a reason known without contacting it; `not-offered`, the alias named
+ *  no source of the directory set, so nothing was loaded and the reader was
+ *  not asked (the owner's amendment of D4, 2026-10-19). */
+export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable' | 'not-offered';
 
-/** The four outcomes, in that order. A load span carrying any other value,
- *  or none, is refused when the graph is built. */
-export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-answer', 'unavailable'];
+/** The five outcomes, in that order: the four of ADR-0033 amendment 2, then
+ *  `not-offered`. A load span carrying any other value, or none, is refused
+ *  when the graph is built. */
+export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-answer', 'unavailable', 'not-offered'];
 
 /**
  * One era of the civic vocabulary: the two literals plus the emitters bound
