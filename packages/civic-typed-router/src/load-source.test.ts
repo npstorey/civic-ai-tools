@@ -13,20 +13,17 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import * as pkg from './index.ts';
 import {
   CIVIC_MANIFEST,
   civicRouter,
   createCivicRouter,
   findToolNameProblems,
+  LOAD_SOURCE_TOOL_NAME,
   readMcpEnv,
   ToolNameError,
   type CivicManifest,
   type CivicManifestEntry,
-  type CivicRouter,
   type FunctionToolSchema,
-  type McpRegistryEnv,
-  type SourceSelection,
 } from './index.ts';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
@@ -45,16 +42,6 @@ function r5With(aliases: readonly string[]): FunctionToolSchema {
   return tool as unknown as FunctionToolSchema;
 }
 
-// --- What the phase adds, reached by name so the red tree type-checks ----------------
-
-type AliasedLoadSourceTool = (input: { configured: McpRegistryEnv; selection?: SourceSelection }) => FunctionToolSchema;
-
-function loadSourceToolOf(router: CivicRouter): AliasedLoadSourceTool {
-  const value = (router as unknown as Record<string, unknown>).aliasedLoadSourceTool;
-  assert.equal(typeof value, 'function', 'CivicRouter has aliasedLoadSourceTool');
-  return value as AliasedLoadSourceTool;
-}
-
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
@@ -71,7 +58,7 @@ test('load_source: the fixture is R5\'s frozen tool, with its eleven aliases', (
 });
 
 test('load_source: with every source configured it is R5\'s tool with the four aliases in manifest order, byte for byte', () => {
-  const tool = loadSourceToolOf(civicRouter)({ configured: EVERY_SOURCE });
+  const tool = civicRouter.aliasedLoadSourceTool({ configured: EVERY_SOURCE });
   const expected = r5With(['socrata', 'data_commons', 'boston', 'nyc_charter']);
   assert.deepEqual(tool, expected);
   assert.equal(JSON.stringify(tool), JSON.stringify(expected), 'key order too');
@@ -79,7 +66,7 @@ test('load_source: with every source configured it is R5\'s tool with the four a
 });
 
 test('load_source: its enum is the directory set: two aliases with the optional sources off, and a selection narrows it', () => {
-  const aliasedLoadSourceTool = loadSourceToolOf(civicRouter);
+  const aliasedLoadSourceTool = civicRouter.aliasedLoadSourceTool;
   assert.deepEqual(aliasedLoadSourceTool({ configured: REQUIRED_ONLY }), r5With(['socrata', 'data_commons']));
   assert.deepEqual(
     aliasedLoadSourceTool({ configured: EVERY_SOURCE, selection: ['nyc-charter', 'data-commons'] }),
@@ -93,14 +80,14 @@ test('load_source: its enum is the directory set: two aliases with the optional 
 });
 
 test('load_source: each call returns a new object, so a consumer\'s change to one never reaches the next', () => {
-  const aliasedLoadSourceTool = loadSourceToolOf(civicRouter);
+  const aliasedLoadSourceTool = civicRouter.aliasedLoadSourceTool;
   const first = aliasedLoadSourceTool({ configured: EVERY_SOURCE });
   (first.function.parameters as { properties: { alias: { enum: string[] } } }).properties.alias.enum.push('changed');
   assert.deepEqual(aliasedLoadSourceTool({ configured: EVERY_SOURCE }), r5With(['socrata', 'data_commons', 'boston', 'nyc_charter']));
 });
 
 test('load_source: the package exports the reserved name', () => {
-  assert.equal((pkg as unknown as Record<string, unknown>).LOAD_SOURCE_TOOL_NAME, 'load_source');
+  assert.equal(LOAD_SOURCE_TOOL_NAME, 'load_source');
 });
 
 // --- The reserved name --------------------------------------------------------------------
@@ -120,7 +107,7 @@ const CHARTER_ALIASED_LOAD_SOURCE: CivicManifestEntry = { ...CHARTER, alias: 'lo
 const withCharter = (entry: CivicManifestEntry): CivicManifest => [...CIVIC_MANIFEST.slice(0, -1), entry];
 
 const reservedProblems = (manifest: CivicManifest) =>
-  findToolNameProblems(manifest).filter((problem) => (problem.kind as string) === 'reserved-name');
+  findToolNameProblems(manifest).filter((problem) => problem.kind === 'reserved-name');
 
 test('reserved name: a manifest whose entry has an upstream tool named load_source is refused at construction, naming it', () => {
   const manifest = withCharter(CHARTER_WITH_LOAD_SOURCE);
@@ -134,7 +121,7 @@ test('reserved name: a manifest whose entry has an upstream tool named load_sour
     () => createCivicRouter(manifest),
     (error: unknown) =>
       error instanceof ToolNameError &&
-      error.problems.some((problem) => (problem.kind as string) === 'reserved-name') &&
+      error.problems.some((problem) => problem.kind === 'reserved-name') &&
       /"load_source"/.test(error.message),
   );
 });
@@ -151,7 +138,7 @@ test('reserved name: a manifest whose alias is load_source is refused at constru
     () => createCivicRouter(manifest),
     (error: unknown) =>
       error instanceof ToolNameError &&
-      error.problems.some((problem) => (problem.kind as string) === 'reserved-name') &&
+      error.problems.some((problem) => problem.kind === 'reserved-name') &&
       /"load_source"/.test(error.message),
   );
 });

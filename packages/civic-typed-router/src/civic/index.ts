@@ -9,6 +9,7 @@ export {
   type BuildSystemPromptInput,
   type CivicRouter,
   type DirectoryPromptInput,
+  type LoadSourceToolInput,
 } from './router.ts';
 export type {
   CivicGuidanceContext,
@@ -88,6 +89,7 @@ export {
   DIRECTORY_PARAGRAPH,
   directoryFrameFor,
   introFor,
+  LOAD_SOURCE_TOOL_TEXT,
   outroFor,
   sourceCountWord,
   type PromptSource,

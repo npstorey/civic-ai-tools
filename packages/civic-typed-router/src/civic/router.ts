@@ -36,7 +36,7 @@
 //
 // In-loop routing (0.5.0, ADR-0037) adds functions in the aliased view only:
 // the directory, which reads each offered entry's `alias`, `description` and
-// `freshness`.
+// `freshness`, and the first-step tool, which reads each one's `alias`.
 //
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
@@ -58,7 +58,7 @@ import {
   type DispatchTarget,
 } from '../core/alias.ts';
 import { composeManifestPrompt } from '../core/compose.ts';
-import { composeDirectory } from '../core/directory.ts';
+import { composeDirectory, loadSourceTool } from '../core/directory.ts';
 import {
   isEntryOffered,
   offeredEntries,
@@ -75,7 +75,7 @@ import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetc
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { configuredSources, type McpRegistryEnv } from './env.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
-import { composeOutro, composePreamble, directoryFrameFor, introFor } from './prompt-frame.ts';
+import { composeOutro, composePreamble, directoryFrameFor, introFor, LOAD_SOURCE_TOOL_TEXT } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The civic sources, in the order the prompt and the tools array name them.
@@ -104,6 +104,10 @@ export interface BuildSystemPromptInput {
 /** What the directory needs from the consumer: no fetcher, since the
  *  directory is the manifest's own text. */
 export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | 'today' | 'selection'>;
+
+/** What the first-step tool needs: the directory set's configuration and
+ *  selection. */
+export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 'selection'>;
 
 export interface CivicRouter {
   /** The manifest this router was built from. */
@@ -192,6 +196,10 @@ export interface CivicRouter {
    *  directory set (the sources `selection` offers, in manifest order), from
    *  its alias, description and freshness. Calls no fetcher. */
   directoryPrompt(input: DirectoryPromptInput): string;
+  /** The first-step tool: `load_source(alias)`, R5's frozen schema with its
+   *  enum the directory set's aliases, in manifest order. A new object on
+   *  every call. Its name is reserved (`LOAD_SOURCE_TOOL_NAME`). */
+  aliasedLoadSourceTool(input: LoadSourceToolInput): FunctionToolSchema;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -399,6 +407,13 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
     directoryPrompt(input) {
       return composeDirectory(directoryFrameFor(input.today), directoryEntries(input.configured, input.selection));
+    },
+
+    aliasedLoadSourceTool(input) {
+      return loadSourceTool(
+        directoryEntries(input.configured, input.selection).map((entry) => entry.alias),
+        LOAD_SOURCE_TOOL_TEXT,
+      );
     },
   };
 }

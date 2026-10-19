@@ -44,8 +44,11 @@ export {
   composeDirectory,
   directoryLine,
   directorySentence,
+  LOAD_SOURCE_TOOL_NAME,
+  loadSourceTool,
   type DirectoryEntry,
   type DirectoryFrame,
+  type LoadSourceToolText,
 } from './directory.ts';
 export {
   assertUniqueToolNames,

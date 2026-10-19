@@ -20,6 +20,7 @@
 // rewrite: a token equal to one of that source's own tool names is renamed
 // where it is anchored, and nowhere else.
 
+import { LOAD_SOURCE_TOOL_NAME } from './directory.ts';
 import { isOfferedReason, offeredReason, type SourceSelection } from './select.ts';
 import type { ConfiguredAddresses, FunctionToolSchema, JsonSchema, Manifest, ManifestEntry, SourceView } from './types.ts';
 
@@ -80,6 +81,15 @@ export type ToolNameProblem =
   | { readonly kind: 'alias-shared'; readonly alias: string; readonly sourceIds: readonly string[]; readonly message: string }
   | { readonly kind: 'source-id-shared'; readonly sourceId: string; readonly message: string }
   | {
+      /** An alias, or an upstream tool name, that is the first-step tool's
+       *  reserved name (`LOAD_SOURCE_TOOL_NAME`). Since 0.5.0. */
+      readonly kind: 'reserved-name';
+      readonly name: string;
+      readonly sourceId: string;
+      readonly field: 'alias' | 'tool';
+      readonly message: string;
+    }
+  | {
       readonly kind: 'name-collision';
       readonly exposedName: string;
       readonly tools: readonly { readonly sourceId: string; readonly upstreamName: string }[];
@@ -96,8 +106,9 @@ function aliasDefect(alias: string): string | null {
 }
 
 /** Every reason the manifest cannot be given an aliased view, in manifest
- *  order: an ill-formed alias, an alias or a source id two entries share, and
- *  two tools whose exposed names are the same after normalizing. */
+ *  order: an ill-formed alias, an alias or a source id two entries share, an
+ *  alias or an upstream tool name that is the first-step tool's reserved
+ *  name, and two tools whose exposed names are the same after normalizing. */
 export function findToolNameProblems(manifest: Manifest<unknown>): ToolNameProblem[] {
   const problems: ToolNameProblem[] = [];
 
@@ -134,6 +145,33 @@ export function findToolNameProblems(manifest: Manifest<unknown>): ToolNameProbl
         sourceIds,
         message: `Alias "${alias}" is used by ${sourceIds.map((id) => `"${id}"`).join(' and ')}. Each source needs its own alias.`,
       });
+    }
+  }
+
+  // The first-step tool's name is reserved. A bare upstream name is accepted
+  // at dispatch (`resolveCalledName`), so a source tool of that name would
+  // take a bare call meant for the first-step tool; and the directory names
+  // each source by its alias, which the first-step tool takes as its argument.
+  for (const entry of manifest) {
+    if (entry.alias === LOAD_SOURCE_TOOL_NAME) {
+      problems.push({
+        kind: 'reserved-name',
+        name: LOAD_SOURCE_TOOL_NAME,
+        sourceId: entry.sourceId,
+        field: 'alias',
+        message: `Alias "${entry.alias}" of source "${entry.sourceId}" is reserved: "${LOAD_SOURCE_TOOL_NAME}" is the first-step tool's name, which takes a source's alias as its argument.`,
+      });
+    }
+    for (const tool of entry.tools) {
+      if (tool.function.name === LOAD_SOURCE_TOOL_NAME) {
+        problems.push({
+          kind: 'reserved-name',
+          name: LOAD_SOURCE_TOOL_NAME,
+          sourceId: entry.sourceId,
+          field: 'tool',
+          message: `Tool "${tool.function.name}" of source "${entry.sourceId}" has a reserved name: "${LOAD_SOURCE_TOOL_NAME}" is the first-step tool's name, and a bare call of it would be dispatched to the source.`,
+        });
+      }
     }
   }
 

@@ -12,7 +12,7 @@
 // with every tool they name going through the view.
 
 import { BARE_VIEW } from '../core/alias.ts';
-import type { DirectoryFrame } from '../core/directory.ts';
+import type { DirectoryFrame, LoadSourceToolText } from '../core/directory.ts';
 import type { SourceView } from '../core/types.ts';
 
 /** The civic source ids, as the website's registry keys them. */
@@ -157,3 +157,11 @@ export function directoryFrameFor(today: string): DirectoryFrame {
     freshnessLabel: DIRECTORY_FRESHNESS_LABEL,
   };
 }
+
+/** The first-step tool's text: R5's frozen `load_source` schema's, byte for
+ *  byte. */
+export const LOAD_SOURCE_TOOL_TEXT: LoadSourceToolText = Object.freeze({
+  description:
+    "Load one data source from the directory in the system prompt, by its alias. The source's tools and guidance are added to this conversation, and you can call those tools on your next turn. Call it once per source; call it more than once to load several sources.",
+  aliasDescription: 'The alias of the source to load, exactly as the directory lists it.',
+});
