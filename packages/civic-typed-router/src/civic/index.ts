@@ -3,12 +3,14 @@
 // `../core/`; core never imports from here.
 
 export {
+  CIVIC_DOMAIN,
   CIVIC_MANIFEST,
   civicRouter,
   createCivicRouter,
   type BuildSystemPromptInput,
   type CivicRouter,
   type DirectoryPromptInput,
+  type HarnessDefinitionInput,
   type InLoopSystemPromptInput,
   type LoadSourceToolInput,
 } from './router.ts';

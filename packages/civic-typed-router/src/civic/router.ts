@@ -38,7 +38,9 @@
 // the directory, which reads each offered entry's `alias`, `description` and
 // `freshness`; the first-step tool, which reads each one's `alias`; and the
 // in-loop prompt, the directory followed by the composition over the loaded
-// sources without its intro.
+// sources without its intro. And, in both views' terms, the harness
+// definition, which reads the offered source ids and takes the components
+// from the consumer.
 //
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
@@ -60,6 +62,7 @@ import {
   type DispatchTarget,
 } from '../core/alias.ts';
 import { BLOCK_SEPARATOR, composeManifestPrompt } from '../core/compose.ts';
+import { harnessDefinitionOf } from '../core/definition.ts';
 import { composeDirectory, loadSourceTool } from '../core/directory.ts';
 import {
   isEntryOffered,
@@ -71,7 +74,14 @@ import {
   type SourceSelection,
 } from '../core/select.ts';
 import { assertUniqueToolNames, toolSourceIndex } from '../core/tool-index.ts';
-import type { FunctionToolSchema, SourceView, ToolLike } from '../core/types.ts';
+import type {
+  ChosenBy,
+  FunctionToolSchema,
+  HarnessDefinition,
+  HarnessDefinitionComponent,
+  SourceView,
+  ToolLike,
+} from '../core/types.ts';
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
@@ -84,6 +94,9 @@ import { SOCRATA_ENTRY } from './socrata.ts';
  *  NYC Charter, Laws and Rules is last: optional and off unless its switch is
  *  on, so with the switch off every output of the three before it is 0.2.0's. */
 export const CIVIC_MANIFEST: CivicManifest = [SOCRATA_ENTRY, DATA_COMMONS_ENTRY, BOSTON_OPENCONTEXT_ENTRY, NYC_CHARTER_ENTRY];
+
+/** The domain a civic router's harness definition states. */
+export const CIVIC_DOMAIN = 'civic';
 
 /** What one composed prompt needs from the consumer. */
 export interface BuildSystemPromptInput {
@@ -110,6 +123,19 @@ export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | '
 /** What the first-step tool needs: the directory set's configuration and
  *  selection. */
 export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 'selection'>;
+
+/** What a harness definition is made from. */
+export interface HarnessDefinitionInput {
+  readonly configured: McpRegistryEnv;
+  /** The composition's selection; `sources` is `offeredSkillSources` over
+   *  it. Absent, every source the configuration offers. */
+  readonly selection?: SourceSelection;
+  readonly chosenBy: ChosenBy;
+  /** The components as the consumer's composition states them, in its
+   *  order: the router never reads an entry's `id` or `hostings`, and does
+   *  not see a block as composed, so it cannot state them itself. */
+  readonly components: readonly HarnessDefinitionComponent[];
+}
 
 /** One in-loop request's prompt: a composition's inputs, with `selection`
  *  the directory set, and the source ids loaded so far in the run. */
@@ -217,6 +243,12 @@ export interface CivicRouter {
    *  block per loaded source, its outro. With nothing loaded it is
    *  `directoryPrompt(input)` and calls no fetcher. */
   aliasedInLoopSystemPrompt(input: InLoopSystemPromptInput): Promise<string>;
+  /** The harness definition of a composition: `{ domain: 'civic', sources,
+   *  components, chosenBy, hash }`, `sources` being `offeredSkillSources`
+   *  over `selection` and `hash` the lowercase hex SHA-256 of the canonical
+   *  JSON of the other four fields. Throws `HarnessDefinitionError` for a
+   *  field outside its shape. */
+  harnessDefinition(input: HarnessDefinitionInput): HarnessDefinition;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -434,6 +466,15 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
       const composed = entries.filter((entry) => loaded.has(entry.sourceId)).map((entry) => entry.sourceId);
       if (composed.length === 0) return directory;
       return `${directory}${BLOCK_SEPARATOR}${await compose(aliased, { ...input, selection: composed }, false)}`;
+    },
+
+    harnessDefinition(input) {
+      return harnessDefinitionOf({
+        domain: CIVIC_DOMAIN,
+        sources: offeredIds(input.configured, input.selection),
+        components: input.components,
+        chosenBy: input.chosenBy,
+      });
     },
 
     aliasedLoadSourceTool(input) {

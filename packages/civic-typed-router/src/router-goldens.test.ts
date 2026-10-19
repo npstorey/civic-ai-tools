@@ -350,13 +350,6 @@ async function checkEverything(router: CivicRouter): Promise<void> {
 
 // --- The in-loop functions (0.5.0), over any router ----------------------------
 
-type HarnessDefinitionFn = (input: {
-  configured: McpRegistryEnv;
-  selection?: readonly string[];
-  chosenBy: string;
-  components: readonly { id: string; version?: string; guidanceHash?: string }[];
-}) => unknown;
-
 /** Every in-loop function's output over `router`, for fixed inputs: what the
  *  sentinel runs compare. */
 async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
@@ -374,14 +367,12 @@ async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
   };
   const selections = [undefined, ['socrata', 'nyc-charter']];
   const loadedSets = [[], ['socrata'], ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter']];
-  const harnessDefinition = (router as unknown as Record<string, unknown>).harnessDefinition;
-  assert.equal(typeof harnessDefinition, 'function', 'CivicRouter has harnessDefinition');
   return {
     directory: selections.map((selection) => router.directoryPrompt({ ...input, selection })),
     tool: selections.map((selection) => router.aliasedLoadSourceTool({ configured, selection })),
     inLoop: await Promise.all(loadedSets.map((loaded) => router.aliasedInLoopSystemPrompt({ ...input, loaded }))),
     definition: selections.map((selection) =>
-      (harnessDefinition as HarnessDefinitionFn)({
+      router.harnessDefinition({
         configured,
         selection,
         chosenBy: 'model',
