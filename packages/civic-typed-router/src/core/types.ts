@@ -246,3 +246,32 @@ export type Manifest<Context = unknown> = readonly ManifestEntry<Context>[];
  *  takes no address, is configured by its switch: its value here is the
  *  switch's value while the switch is on, and it has no key otherwise. */
 export type ConfiguredAddresses = { readonly [sourceId: string]: string | undefined };
+
+// --- The harness definition (ADR-0037) ---------------------------------------------
+
+/** Who chose a composition's sources: the reader, the model (in-loop
+ *  routing), or the instance (its configuration). */
+export type ChosenBy = 'reader' | 'model' | 'instance';
+
+/** One component of a composition, as the consumer's composition states it:
+ *  its identity, the version the consumer knows, and the lowercase hex
+ *  SHA-256 of its block as composed. */
+export interface HarnessDefinitionComponent {
+  readonly id: string;
+  readonly version?: string;
+  readonly guidanceHash?: string;
+}
+
+/** What one composition was made of, and the hash of that. */
+export interface HarnessDefinition {
+  /** The domain the composition is for (`'civic'` for this package's router). */
+  readonly domain: string;
+  /** The composed source ids, in composition order. */
+  readonly sources: readonly string[];
+  /** The consumer's components, in its order. */
+  readonly components: readonly HarnessDefinitionComponent[];
+  readonly chosenBy: ChosenBy;
+  /** The lowercase hex SHA-256 of the canonical JSON of the four fields
+   *  above (`canonicalJson`, `sha256Hex`). */
+  readonly hash: string;
+}

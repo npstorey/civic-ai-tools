@@ -3,11 +3,16 @@
 // `../core/`; core never imports from here.
 
 export {
+  CIVIC_DOMAIN,
   CIVIC_MANIFEST,
   civicRouter,
   createCivicRouter,
   type BuildSystemPromptInput,
   type CivicRouter,
+  type DirectoryPromptInput,
+  type HarnessDefinitionInput,
+  type InLoopSystemPromptInput,
+  type LoadSourceToolInput,
 } from './router.ts';
 export type {
   CivicGuidanceContext,
@@ -82,7 +87,12 @@ export {
   composePreamble,
   CROSS_SOURCE_PREAMBLE,
   crossSourcePreamble,
+  DIRECTORY_FRESHNESS_LABEL,
+  DIRECTORY_HEADING,
+  DIRECTORY_PARAGRAPH,
+  directoryFrameFor,
   introFor,
+  LOAD_SOURCE_TOOL_TEXT,
   outroFor,
   sourceCountWord,
   type PromptSource,

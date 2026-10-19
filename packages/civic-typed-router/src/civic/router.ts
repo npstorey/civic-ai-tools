@@ -34,6 +34,14 @@
 // `publisher`. The bare view reads no `alias` either: only the checks, the
 // dispatch map and the aliased view do.
 //
+// In-loop routing (0.5.0, ADR-0037) adds functions in the aliased view only:
+// the directory, which reads each offered entry's `alias`, `description` and
+// `freshness`; the first-step tool, which reads each one's `alias`; and the
+// in-loop prompt, the directory followed by the composition over the loaded
+// sources without its intro. And, in both views' terms, the harness
+// definition, which reads the offered source ids and takes the components
+// from the consumer.
+//
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
 // source is offered by its switch, never by an address.
@@ -53,7 +61,9 @@ import {
   type DispatchMap,
   type DispatchTarget,
 } from '../core/alias.ts';
-import { composeManifestPrompt } from '../core/compose.ts';
+import { BLOCK_SEPARATOR, composeManifestPrompt } from '../core/compose.ts';
+import { harnessDefinitionOf } from '../core/definition.ts';
+import { composeDirectory, loadSourceTool } from '../core/directory.ts';
 import {
   isEntryOffered,
   offeredEntries,
@@ -64,19 +74,29 @@ import {
   type SourceSelection,
 } from '../core/select.ts';
 import { assertUniqueToolNames, toolSourceIndex } from '../core/tool-index.ts';
-import type { FunctionToolSchema, SourceView, ToolLike } from '../core/types.ts';
+import type {
+  ChosenBy,
+  FunctionToolSchema,
+  HarnessDefinition,
+  HarnessDefinitionComponent,
+  SourceView,
+  ToolLike,
+} from '../core/types.ts';
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { configuredSources, type McpRegistryEnv } from './env.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
-import { composeOutro, composePreamble, introFor } from './prompt-frame.ts';
+import { composeOutro, composePreamble, directoryFrameFor, introFor, LOAD_SOURCE_TOOL_TEXT } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The civic sources, in the order the prompt and the tools array name them.
  *  NYC Charter, Laws and Rules is last: optional and off unless its switch is
  *  on, so with the switch off every output of the three before it is 0.2.0's. */
 export const CIVIC_MANIFEST: CivicManifest = [SOCRATA_ENTRY, DATA_COMMONS_ENTRY, BOSTON_OPENCONTEXT_ENTRY, NYC_CHARTER_ENTRY];
+
+/** The domain a civic router's harness definition states. */
+export const CIVIC_DOMAIN = 'civic';
 
 /** What one composed prompt needs from the consumer. */
 export interface BuildSystemPromptInput {
@@ -94,6 +114,35 @@ export interface BuildSystemPromptInput {
    *  offers. A source the configuration does not offer stays out whatever
    *  the selection says. */
   readonly selection?: SourceSelection;
+}
+
+/** What the directory needs from the consumer: no fetcher, since the
+ *  directory is the manifest's own text. */
+export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | 'today' | 'selection'>;
+
+/** What the first-step tool needs: the directory set's configuration and
+ *  selection. */
+export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 'selection'>;
+
+/** What a harness definition is made from. */
+export interface HarnessDefinitionInput {
+  readonly configured: McpRegistryEnv;
+  /** The composition's selection; `sources` is `offeredSkillSources` over
+   *  it. Absent, every source the configuration offers. */
+  readonly selection?: SourceSelection;
+  readonly chosenBy: ChosenBy;
+  /** The components as the consumer's composition states them, in its
+   *  order: the router never reads an entry's `id` or `hostings`, and does
+   *  not see a block as composed, so it cannot state them itself. */
+  readonly components: readonly HarnessDefinitionComponent[];
+}
+
+/** One in-loop request's prompt: a composition's inputs, with `selection`
+ *  the directory set, and the source ids loaded so far in the run. */
+export interface InLoopSystemPromptInput extends BuildSystemPromptInput {
+  /** The source ids the model has loaded, in any order. An id outside the
+   *  directory set is not composed. */
+  readonly loaded: readonly string[];
 }
 
 export interface CivicRouter {
@@ -175,6 +224,31 @@ export interface CivicRouter {
   upstreamToolName(name: string): string;
   /** The target of an exposed name, or `undefined`. */
   sourceForAliasedName(name: string): DispatchTarget | undefined;
+
+  // --- In-loop routing (ADR-0037) ---------------------------------------------------
+
+  /** The directory: the first request's system prompt under in-loop routing.
+   *  The intro, the heading, the paragraph, and one line per source of the
+   *  directory set (the sources `selection` offers, in manifest order), from
+   *  its alias, description and freshness. Calls no fetcher. */
+  directoryPrompt(input: DirectoryPromptInput): string;
+  /** The first-step tool: `load_source(alias)`, R5's frozen schema with its
+   *  enum the directory set's aliases, in manifest order. A new object on
+   *  every call. Its name is reserved (`LOAD_SOURCE_TOOL_NAME`). */
+  aliasedLoadSourceTool(input: LoadSourceToolInput): FunctionToolSchema;
+  /** An in-loop request's system prompt (ADR-0037): the directory over
+   *  `selection`; and, when a source of the directory set is loaded, the
+   *  block separator and the aliased composition over the loaded sources of
+   *  the directory set (manifest order) without its intro: its preamble, one
+   *  block per loaded source, its outro. With nothing loaded it is
+   *  `directoryPrompt(input)` and calls no fetcher. */
+  aliasedInLoopSystemPrompt(input: InLoopSystemPromptInput): Promise<string>;
+  /** The harness definition of a composition: `{ domain: 'civic', sources,
+   *  components, chosenBy, hash }`, `sources` being `offeredSkillSources`
+   *  over `selection` and `hash` the lowercase hex SHA-256 of the canonical
+   *  JSON of the other four fields. Throws `HarnessDefinitionError` for a
+   *  field outside its shape. */
+  harnessDefinition(input: HarnessDefinitionInput): HarnessDefinition;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -243,7 +317,10 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   ): string =>
     lockedPortal ? `${systemPrompt}\n\n---\n\n${lockGuidance(view, lockedPortal, configured, selection)}` : systemPrompt;
 
-  const compose = (view: SourceView, input: BuildSystemPromptInput): Promise<string> => {
+  // `withIntro` false leaves the intro out: the preamble opens the text, so
+  // the result is the full composition less its intro and the blank line
+  // after it (the civic preamble is never empty).
+  const compose = (view: SourceView, input: BuildSystemPromptInput, withIntro = true): Promise<string> => {
     const entries = offeredEntries(manifest, configuredSources(input.configured), input.selection) as CivicManifestEntry[];
     const sources = entries.map((entry) => ({
       sourceId: entry.sourceId,
@@ -256,11 +333,9 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
       fetchPrompt: input.fetchPrompt,
       fetchInstructions: input.fetchInstructions,
     };
-    const frame = {
-      intro: introFor(input.today),
-      preamble: composePreamble(sources),
-      outro: composeOutro(sources.map((source) => source.citation)),
-    };
+    const preamble = composePreamble(sources);
+    const outro = composeOutro(sources.map((source) => source.citation));
+    const frame = withIntro ? { intro: introFor(input.today), preamble, outro } : { intro: preamble, outro };
     // The bare view calls each guidance entry exactly as 0.1.0 did, with the
     // context alone.
     return view === BARE_VIEW
@@ -293,6 +368,10 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
   const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] =>
     offeredEntries(manifest, configuredSources(configured), selection).map((entry) => entry.sourceId);
+
+  /** The directory set: the sources `selection` offers, in manifest order. */
+  const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] =>
+    offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[];
 
   return {
     manifest,
@@ -374,6 +453,35 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
     sourceForAliasedName(name) {
       return sourceForAliasedName(map, name);
+    },
+
+    directoryPrompt(input) {
+      return composeDirectory(directoryFrameFor(input.today), directoryEntries(input.configured, input.selection));
+    },
+
+    async aliasedInLoopSystemPrompt(input) {
+      const entries = directoryEntries(input.configured, input.selection);
+      const directory = composeDirectory(directoryFrameFor(input.today), entries);
+      const loaded = new Set(input.loaded);
+      const composed = entries.filter((entry) => loaded.has(entry.sourceId)).map((entry) => entry.sourceId);
+      if (composed.length === 0) return directory;
+      return `${directory}${BLOCK_SEPARATOR}${await compose(aliased, { ...input, selection: composed }, false)}`;
+    },
+
+    harnessDefinition(input) {
+      return harnessDefinitionOf({
+        domain: CIVIC_DOMAIN,
+        sources: offeredIds(input.configured, input.selection),
+        components: input.components,
+        chosenBy: input.chosenBy,
+      });
+    },
+
+    aliasedLoadSourceTool(input) {
+      return loadSourceTool(
+        directoryEntries(input.configured, input.selection).map((entry) => entry.alias),
+        LOAD_SOURCE_TOOL_TEXT,
+      );
     },
   };
 }

@@ -2,12 +2,15 @@
 // from any package; `boundary.test.ts` holds it to that.
 
 export type {
+  ChosenBy,
   ConfiguredAddresses,
   ConsentDefault,
   ContainerVariant,
   FunctionDefinition,
   FunctionToolSchema,
   GuidanceEntry,
+  HarnessDefinition,
+  HarnessDefinitionComponent,
   HostingRunsAt,
   HostingVariant,
   HostingVariantCommon,
@@ -40,6 +43,19 @@ export {
   type SourceSelection,
 } from './select.ts';
 export { BLOCK_SEPARATOR, composeManifestPrompt, composePrompt, type PromptFrame } from './compose.ts';
+export {
+  composeDirectory,
+  directoryLine,
+  directorySentence,
+  LOAD_SOURCE_TOOL_NAME,
+  loadSourceTool,
+  type DirectoryEntry,
+  type DirectoryFrame,
+  type LoadSourceToolText,
+} from './directory.ts';
+export { canonicalJson, CanonicalJsonError } from './canonical-json.ts';
+export { sha256, sha256Hex } from './sha256.ts';
+export { CHOSEN_BY, HarnessDefinitionError, harnessDefinitionOf, type HarnessDefinitionParts } from './definition.ts';
 export {
   assertUniqueToolNames,
   DuplicateToolNameError,

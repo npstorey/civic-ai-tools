@@ -1,0 +1,60 @@
+{
+  "source": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7, frozen 2026-10-11T12:12:02.837Z): each entry's alias, description and freshness as that file has them, in its order. The quote test of 2026-10-19 measured the directory text these entries compose (shape S2).",
+  "entries": [
+    {
+      "alias": "socrata",
+      "description": "Socrata open data portals — city operational data such as 311 requests, building permits, inspections, crime, housing violations, payroll, and licenses. Covers NYC, Chicago, SF, Seattle, LA, and hundreds of other portals — but not Boston.",
+      "freshness": "Live: each call queries the portal at request time; each dataset updates on its publisher's schedule."
+    },
+    {
+      "alias": "data_commons",
+      "description": "Google Data Commons — authoritative federal and international statistical data from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, Department of Education, EPA, and other official agencies.",
+      "freshness": "Live API over published statistical releases; each figure carries its release vintage (the ACS releases annually)."
+    },
+    {
+      "alias": "boston",
+      "description": "Boston OpenContext — the City of Boston's CKAN-native open-data MCP, fronting data.boston.gov. 311, permits, crime, inspections, property, elections, schools, parcels, and neighborhoods for Boston specifically.",
+      "freshness": "Live: each call queries the CKAN DataStore behind data.boston.gov."
+    },
+    {
+      "alias": "nyc_charter",
+      "description": "MCP server for NYC Charter, Administrative Code, and Rules of the City of New York",
+      "freshness": "Bundled index in package 0.2.0, last indexed 2026-07-16; no live call."
+    },
+    {
+      "alias": "nyc_budget",
+      "description": "MCP server for BetaNYC's New York City Budget data — Council discretionary funding (Schedule C, FY2015–FY2027 awards), Terms & Conditions, Section 254 capital changes, Transparency Resolutions (FY2010–FY2024 + FY2026), and the FY2008–FY2027 Legistar crosswalk.",
+      "freshness": "Bundled database in package 1.3.1 (published 2026-08-11); coverage varies by dataset and fiscal year."
+    },
+    {
+      "alias": "nyc_council",
+      "description": "MCP server for NYC Council legislative data — hybrid local SQLite index + live Legistar API",
+      "freshness": "Live Legistar API, plus a local index built from an archive of Council legislation where the deployment provides one."
+    },
+    {
+      "alias": "nys_legislation",
+      "description": "MCP server for New York State legislation via the NYS Open Legislation API",
+      "freshness": "Live NYS Open Legislation API on every request, with an optional local corpus snapshot."
+    },
+    {
+      "alias": "nyc_record",
+      "description": "MCP server for NYC City Record notices via NYC Open Data",
+      "freshness": "Live: queries the City Record Online dataset on NYC Open Data, updated daily, with notices since 2015."
+    },
+    {
+      "alias": "nyc_checkbook",
+      "description": "MCP server for NYC Checkbook spending, contracts, budget, payroll, and revenue data",
+      "freshness": "Live: queries the Checkbook NYC API at request time."
+    },
+    {
+      "alias": "nyc_311",
+      "description": "MCP server for the NYC 311 Public API — city-services calendar, emergency/weather status alerts, and 311 service-request lookup",
+      "freshness": "Live: queries the NYC 311 Public API at request time."
+    },
+    {
+      "alias": "nyc_mta",
+      "description": "MCP server for NYC subway service alerts, elevator and escalator outages, and station lookup, from MTA's public feeds. Build from source; not on npm; status alpha.",
+      "freshness": "Live MTA feeds for alerts and outages; station names from a bundled snapshot of MTA's static GTFS."
+    }
+  ]
+}
