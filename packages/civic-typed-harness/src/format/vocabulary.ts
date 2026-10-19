@@ -207,6 +207,26 @@ export const CIVIC_TERM_SOURCE_ALIAS = 'civic:sourceAlias';
 export const CIVIC_TERM_SERVER_ID = 'civic:serverId';
 
 /**
+ * `civic:loadOutcome` — how a `load_source` call ended (ADR-0033 amendment
+ * 2): one of {@link LOAD_OUTCOMES}, verbatim from the span's
+ * `tool.load_outcome`. Stated on the tool-call activity of a load span, which
+ * the instance's own loop handled, and on no other node. Named as
+ * `civic:failureKind` is, for the call outcome it labels.
+ */
+export const CIVIC_TERM_LOAD_OUTCOME = 'civic:loadOutcome';
+
+/** How a `load_source` call ended (ADR-0033 amendment 2): `loaded`, the
+ *  source's guidance and tools were added for the next request; `declined`,
+ *  the reader did not allow the source for this run; `no-answer`, no decision
+ *  arrived in time; `unavailable`, the instance could not offer the source
+ *  for a reason known without contacting it. */
+export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable';
+
+/** The four outcomes, in that order. A load span carrying any other value,
+ *  or none, is refused when the graph is built. */
+export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-answer', 'unavailable'];
+
+/**
  * One era of the civic vocabulary: the two literals plus the emitters bound
  * to them. The vocabulary is not deployment configuration (a deployment does
  * not choose its own term set); this seam exists only so a prior-era package

@@ -34,8 +34,10 @@ import {
 } from '@typedstandards/produce-core';
 import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
+import { isLoadSpan, LoadSpanError } from './load-span.ts';
 
 export type { ProvGraph, ProvNode };
+export { LoadSpanError };
 
 /** Package-level inputs to the graph build. */
 export interface ProvenanceInput {
@@ -106,6 +108,8 @@ export interface ProvenanceTerms {
   readonly sourceAlias: string;
   /** The identity of the server that answered a call. */
   readonly serverId: string;
+  /** How a `load_source` call ended (ADR-0033 amendment 2). */
+  readonly loadOutcome: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -143,6 +147,10 @@ export interface ProvenanceBuildConfig {
   vocabulary: ProvenanceVocabulary;
   /** Property names. */
   terms: ProvenanceTerms;
+  /** The values a load span's `tool.load_outcome` may carry (ADR-0033
+   *  amendment 2); any other value, or none, is refused with
+   *  `LoadSpanError`. */
+  loadOutcomes: readonly string[];
 }
 
 // --- Helpers ---
@@ -298,7 +306,8 @@ export function buildProvenanceGraphWith(
   }
 
   // The ONE resolution of a span's source, used for its agent node, its
-  // attribution and its `civic:sourceId` alike.
+  // attribution and its `civic:sourceId` alike. A load span has none
+  // (ADR-0033 amendment 2): no source answers it.
   function sourceOfSpan(attributes: OTelAttribute[]): string {
     const tagged = getAttr(attributes, 'mcp.source');
     if (tagged) return tagged;
@@ -306,8 +315,21 @@ export function buildProvenanceGraphWith(
     return (toolName ? config.resolver(toolName) : undefined) || fallbackSourceId;
   }
 
+  // A LOAD SPAN (ADR-0033 amendment 2) is a tool span whose
+  // `tool.operation_type` is `load_source`: the instance's own loop handled
+  // the call and no source answered it, so it adds no source here and mints
+  // no `mcp-server:` agent, even when it carries an `mcp.source` tag. Its
+  // outcome is checked before any node is built, so a graph never states a
+  // load without saying how it ended.
   const sourcesInTrace = new Set<string>();
   for (const span of toolSpans) {
+    if (isLoadSpan(span.attributes)) {
+      const outcome = getAttr(span.attributes, 'tool.load_outcome');
+      if (outcome === undefined || !config.loadOutcomes.includes(outcome)) {
+        throw new LoadSpanError(span.spanId, outcome, config.loadOutcomes);
+      }
+      continue;
+    }
     sourcesInTrace.add(sourceOfSpan(span.attributes));
   }
 
@@ -341,9 +363,10 @@ export function buildProvenanceGraphWith(
   }
 
   // Platform
+  const platformUrn = vocab.platformUrn(config.platformAgent.id);
   graph.push(
     makeAgentNode(
-      vocab.platformUrn(config.platformAgent.id),
+      platformUrn,
       {
         'dcterms:title': config.platformAgent.title,
         [terms.url]: config.platformAgent.url,
@@ -425,6 +448,12 @@ export function buildProvenanceGraphWith(
     const sourceAlias = getAttr(span.attributes, 'mcp.alias');
     const serverId = getAttr(span.attributes, 'mcp.server.id');
     const toolSourceDatasetKeyed = config.isDatasetKeyed(toolSource);
+    // A load span: no source answered it, so its activity is the platform
+    // agent's, states no source and no data response, and states its outcome
+    // (checked above).
+    const loadOutcome = isLoadSpan(span.attributes)
+      ? getAttr(span.attributes, 'tool.load_outcome')
+      : undefined;
 
     // Query entity (tool arguments). Find the most recent inference span
     // before this tool call to link as generator.
@@ -447,8 +476,8 @@ export function buildProvenanceGraphWith(
       }),
     );
 
-    // Data response entity
-    if (responseHash) {
+    // Data response entity — never for a load span, which reached no data.
+    if (responseHash && loadOutcome === undefined) {
       const dataUrn = vocab.urn(packageId, 'data', responseHash);
       dataResponseUrns.push(dataUrn);
 
@@ -531,9 +560,9 @@ export function buildProvenanceGraphWith(
         'dcterms:description': toolName
           ? `MCP tool call: ${toolName} (${opType})`
           : `MCP tool call (${opType})`,
-        [terms.sourceId]: toolSource,
+        ...(loadOutcome === undefined ? { [terms.sourceId]: toolSource } : {}),
         ...provUsed([queryUrn]),
-        ...provWasAssociatedWith(toolAgentUrn),
+        ...provWasAssociatedWith(loadOutcome === undefined ? toolAgentUrn : platformUrn),
         ...(span.startTimeUnixNano
           ? { 'prov:startedAtTime': xsdDateTime(nanoToIso(span.startTimeUnixNano)) }
           : {}),
@@ -566,6 +595,9 @@ export function buildProvenanceGraphWith(
         ...(upstreamToolName ? { [terms.upstreamToolName]: upstreamToolName } : {}),
         ...(sourceAlias ? { [terms.sourceAlias]: sourceAlias } : {}),
         ...(serverId ? { [terms.serverId]: serverId } : {}),
+        // A load span's outcome, last (ADR-0033 amendment 2); no other span
+        // carries the key, so no earlier key list moves.
+        ...(loadOutcome !== undefined ? { [terms.loadOutcome]: loadOutcome } : {}),
       }),
     );
   }
