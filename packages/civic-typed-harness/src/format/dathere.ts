@@ -255,6 +255,12 @@ export interface DatHerePolicyInput {
   /** The instance's flows statement in force for the run, by reference
    *  (composition block; ADR-0033 §E as amended 2026-10-18). */
   flowsStatement?: FlowsStatementInput;
+  /** How the run's sources were chosen, and the router version that did it
+   *  (composition block; ADR-0033 amendment 2). */
+  routing?: RoutingInput;
+  /** The lowercase hex SHA-256 of the run's harness definition, as the router
+   *  computed it (composition block; ADR-0033 amendment 2). */
+  definitionHash?: string;
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
 }
@@ -321,12 +327,32 @@ export interface FlowsStatementInput {
   date: string;
 }
 
-/** The composition block's inputs (ADR-0033 §E). */
+/** How a run's sources were chosen (ADR-0033 amendment 2; design §5's three
+ *  values): `all-sources`, every configured source offered from the first
+ *  request; `picker`, a set chosen before the run; `in-loop`, the model loaded
+ *  sources during the run through the router's directory. */
+export type RoutingMethod = 'all-sources' | 'picker' | 'in-loop';
+
+/** The three methods, in design §5's order. */
+export const ROUTING_METHODS: readonly RoutingMethod[] = ['all-sources', 'picker', 'in-loop'];
+
+/** The routing a run used, as a caller passes it (ADR-0033 amendment 2):
+ *  `method` and the `version` of the router that routed. `method` is a string
+ *  so the trace extractor's output is accepted as is; the derivation refuses
+ *  a value outside `ROUTING_METHODS`. */
+export interface RoutingInput {
+  method: string;
+  version: string;
+}
+
+/** The composition block's inputs (ADR-0033 §E, and amendment 2). */
 export interface CompositionInput {
   assertedDate?: string;
   sourcesOffered?: readonly SourceOfferedInput[];
   components?: readonly CompositionComponentInput[];
   flowsStatement?: FlowsStatementInput;
+  routing?: RoutingInput;
+  definitionHash?: string;
 }
 
 const ASSERTED_DATE_FORM = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -352,6 +378,9 @@ function nonEmptyString(value: unknown): value is string {
 
 /** The flows statement's keys, in the record's order. */
 const FLOWS_STATEMENT_KEYS = ['url', 'hash', 'date'] as const;
+
+/** The routing object's keys, in the record's order. */
+const ROUTING_KEYS = ['method', 'version'] as const;
 
 /** Any whitespace or control character: a URL parser strips or drops these,
  *  so a string carrying one is not the address it parses to. */
@@ -448,7 +477,8 @@ export function buildCompositionExtension(
     });
   }
 
-  // The block's last key, so a block built without it keeps its bytes.
+  // After components, so a block built without it keeps its bytes (routing
+  // and definitionHash follow it; ADR-0033 amendment 2).
   if (input.flowsStatement !== undefined) {
     const statement: unknown = input.flowsStatement;
     if (statement === null || typeof statement !== 'object' || Array.isArray(statement)) {
@@ -469,6 +499,35 @@ export function buildCompositionExtension(
       throw new RecordFieldError('flowsStatement', `date must be a YYYY-MM-DD calendar date; got ${JSON.stringify(date)}`);
     }
     block.flowsStatement = { url, hash, date };
+  }
+
+  // ADR-0033 amendment 2: routing then definitionHash, after flowsStatement,
+  // each only when passed, so a block built without them keeps its bytes.
+  if (input.routing !== undefined) {
+    const routing: unknown = input.routing;
+    if (routing === null || typeof routing !== 'object' || Array.isArray(routing)) {
+      throw new RecordFieldError('routing', 'must be an object { method, version }');
+    }
+    const extra = Object.keys(routing).filter((k) => !(ROUTING_KEYS as readonly string[]).includes(k));
+    if (extra.length > 0) {
+      throw new RecordFieldError('routing', `carries method and version only; got ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+    }
+    const { method, version } = routing as Record<string, unknown>;
+    if (!(ROUTING_METHODS as readonly unknown[]).includes(method)) {
+      throw new RecordFieldError('routing', `method ${JSON.stringify(method)} is not one of ${ROUTING_METHODS.join(', ')}`);
+    }
+    if (!nonEmptyString(version)) {
+      throw new RecordFieldError('routing', `version must be a non-empty string, the router's version; got ${JSON.stringify(version)}`);
+    }
+    block.routing = { method, version };
+  }
+
+  if (input.definitionHash !== undefined) {
+    const definitionHash: unknown = input.definitionHash;
+    if (!(typeof definitionHash === 'string' && SHA256_HEX_FORM.test(definitionHash))) {
+      throw new RecordFieldError('definitionHash', `must be a lowercase hex SHA-256; got ${JSON.stringify(definitionHash)}`);
+    }
+    block.definitionHash = definitionHash;
   }
 
   return Object.keys(block).length > 0 ? block : undefined;
@@ -517,6 +576,8 @@ export function deriveDatHereEnvelopeFields(
     sourcesOffered: input.sourcesOffered,
     components: input.components,
     flowsStatement: input.flowsStatement,
+    routing: input.routing,
+    definitionHash: input.definitionHash,
   });
   if (composition !== undefined) {
     extensions[COMPOSITION_EXTENSION_KEY] = composition;

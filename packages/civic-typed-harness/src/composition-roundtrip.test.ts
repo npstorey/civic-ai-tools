@@ -562,3 +562,94 @@ test('flows-statement round trip: root-span attribute → extractor → policy i
   const altered = await verifyEvidence({ package: tampered, packageHash: envelopeHash, signature }, { registry, fetch: offlineFetch });
   assert.equal(altered.hashMatch, false);
 });
+
+// --- ADR-0033 amendment 2: routing and definitionHash, from the trace's
+// --- root span to the signed record ---
+
+const IN_LOOP_ROUTING = { method: 'in-loop', version: '0.5.0' };
+const DEFINITION_HASH = hash('harness definition');
+
+/** A trace whose root span records how the run's sources were chosen and the
+ *  hash of its harness definition, as an in-loop producer writes them. */
+function traceWithRouting(): Record<string, unknown> {
+  const tb = new TraceBuilder({ ...CIVICAITOOLS_TRACE_CONFIG, now: makeClock(), randomBytes: makeSeededBytes() });
+  tb.startRoot('civic_analysis', {
+    'query.text_hash': hash(PROMPT),
+    'analysis.flows_statement': JSON.stringify(FLOWS_STATEMENT),
+    'analysis.routing': JSON.stringify(IN_LOOP_ROUTING),
+    'analysis.definition_hash': DEFINITION_HASH,
+  });
+  tb.endRoot();
+  return tb.finalize() as unknown as Record<string, unknown>;
+}
+
+test('routing round trip: root-span attributes → extractor → policy input → composition block → signed record, verified offline', async () => {
+  const trace = traceWithRouting();
+  const fields = deriveDatHereEnvelopeFields({
+    model: MODEL,
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    summary: SUMMARY,
+    extensions: { 'org.civicaitools.notebook': { nbformat: 4, nbformat_minor: 5, cells: [], metadata: {} } },
+    ...extractRunAttributes(trace),
+  }, CIVICAITOOLS_ENVIRONMENT_CONFIG);
+  const { pkg, envelopeHash } = buildEnvelope({
+    packageId: PACKAGE_ID,
+    createdAt: CREATED_AT,
+    signingKeyId: KID,
+    prompt: PROMPT,
+    promptVisibility: 'full_text',
+    queries: [],
+    dataSources: [],
+    cost: { model: MODEL },
+    skillMetadata: extractSkillMetadata(trace),
+    output: OUTPUT,
+    trace,
+    captureMethod: 'chat-flow-stream',
+    contentProfile: DATHERE_CONTENT_PROFILE,
+    type: DEFAULT_CONTENT_TYPE,
+    signer: SIGNER,
+    producerProfile: fields.producerProfile,
+    contentCanonicalization: fields.contentCanonicalization,
+    summary: fields.summary,
+    extensions: fields.extensions,
+  });
+
+  const stored = storageRoundTrip(pkg);
+  const block = (stored['extensions'] as Record<string, Record<string, unknown>>)[COMPOSITION_EXTENSION_KEY];
+  assert.deepEqual(block, { flowsStatement: FLOWS_STATEMENT, routing: IN_LOOP_ROUTING, definitionHash: DEFINITION_HASH });
+  assert.deepEqual(Object.keys(block), ['flowsStatement', 'routing', 'definitionHash']);
+  assert.deepEqual(Object.keys(block.routing as object), ['method', 'version']);
+
+  const seed = makeSeed();
+  const signed = signEnvelopeHash(envelopeHash, seed, KID);
+  const registry: TrustRegistry = {
+    keys: [{
+      kid: KID,
+      publicKey: signed.publicKey,
+      status: 'active',
+      activatedAt: '2026-07-01T00:00:00.000Z',
+      deprecatedAt: null,
+      revokedAt: null,
+      signerIdentity: SIGNER,
+    }],
+  };
+  const signature = { ...signed } as unknown as VerifySignatureEnvelope;
+  const clean = await verifyEvidence({ package: stored, packageHash: envelopeHash, signature }, { registry, fetch: offlineFetch });
+  assert.equal(clean.hashMatch, true, 'the record as signed verifies (#1)');
+  assert.deepEqual(clean.envelopeIntegrity, { status: 'verified' }, '#1 envelopeIntegrity');
+  assert.equal(clean.signatureValid, true, 'the signature verifies (#2)');
+  assert.equal(clean.contentHash?.status, 'ok', '#4 contentHash');
+  assert.equal(clean.keyTrust?.verified, true, '#5 keyTrust');
+  assert.equal(clean.nodeId, envelopeHash, '#13 nodeId');
+
+  // Both keys are inside the signed bytes: changing either breaks #1.
+  for (const edit of [
+    (b: Record<string, unknown>) => { (b.routing as Record<string, unknown>).method = 'all-sources'; },
+    (b: Record<string, unknown>) => { b.definitionHash = hash('another definition'); },
+  ]) {
+    const tampered = storageRoundTrip(pkg);
+    edit((tampered['extensions'] as Record<string, Record<string, unknown>>)[COMPOSITION_EXTENSION_KEY]);
+    const altered = await verifyEvidence({ package: tampered, packageHash: envelopeHash, signature }, { registry, fetch: offlineFetch });
+    assert.equal(altered.hashMatch, false);
+  }
+});

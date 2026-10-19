@@ -38,8 +38,12 @@ import {
   PRIOR_ERA_CIVIC_NS,
   PRIOR_ERA_CIVIC_URN_PREFIX,
   PRIOR_ERA_CIVIC_VOCABULARY,
+  type LoadOutcome,
 } from '../format/vocabulary.ts';
 import { CIVIC_SOURCE_REGISTRY, type CivicSourceRegistry } from '../format/sources.ts';
+import { buildDataSources } from '../civic/data-sources.ts';
+// The package entry, read for a name the load-span tests need it to export.
+import * as harnessEntry from '../index.ts';
 // Namespace import: the vocabulary guard at the foot of this file derives the
 // declared-term set from the module's exported VALUES, so it must see all of
 // them rather than the handful named above.
@@ -1646,7 +1650,8 @@ test('byte stability: the golden graph carries two data-response descriptions on
 /** A trace shaped to reach every branch of the builder that emits a `civic:`
  *  key: a skill fetch (server URL override), an inference reporting both
  *  token counts, a dataset-keyed call that answered with rows and an elapsed,
- *  a call the source REFUSED that also reports its elapsed, and a synthesis. */
+ *  a call the source REFUSED that also reports its elapsed, a load call
+ *  stating its outcome (ADR-0033 amendment 2), and a synthesis. */
 function everyCivicTermTrace(): Record<string, unknown> {
   const inference: SpanStub = {
     name: 'llm_inference',
@@ -1698,6 +1703,18 @@ function everyCivicTermTrace(): Record<string, unknown> {
       { key: 'error', value: { boolValue: true } },
     ],
   };
+  const load: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-load-all-terms',
+    startTimeUnixNano: '1550000000',
+    endTimeUnixNano: '1560000000',
+    attributes: attrs({
+      'tool.name': 'load_source',
+      'tool.operation_type': 'load_source',
+      'tool.arguments': '{"alias":"socrata"}',
+      'tool.load_outcome': 'loaded',
+    }),
+  };
   const synthesis: SpanStub = {
     name: 'synthesis',
     spanId: 'span-synthesis',
@@ -1705,7 +1722,7 @@ function everyCivicTermTrace(): Record<string, unknown> {
     endTimeUnixNano: '2700000000',
     attributes: [],
   };
-  return traceOf([skillSpan('5f6e7d'), inference, answered, rejected, synthesis]);
+  return traceOf([skillSpan('5f6e7d'), inference, load, answered, rejected, synthesis]);
 }
 
 /** Every `civic:` property key anywhere in a graph, nested nodes included. */
@@ -1758,6 +1775,7 @@ test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', (
     'civic:upstreamToolName',
     'civic:sourceAlias',
     'civic:serverId',
+    'civic:loadOutcome',
   ]) {
     assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
   }
@@ -1788,4 +1806,183 @@ test('#199 §2: every term format/vocabulary.ts declares is emitted by a driven 
     [],
     `declared as civic vocabulary and emitted by no build: ${unemitted.join(', ')}. Either the trace above stopped reaching the branch that emits it — in which case the two checks are weaker than they read — or the term has no producer and should not be in the vocabulary.`,
   );
+});
+
+// --- ADR-0033 amendment 2: the load span ---
+//
+// A `load_source` call is a tool span like any other (`mcp_tool_call`), with
+// `tool.operation_type: load_source` and one outcome attribute,
+// `tool.load_outcome`. The instance's own loop handles it and no source
+// answers it, so the graph mints no `mcp-server:` agent and no data-response
+// entity for it; its activity is associated with the platform agent, states
+// the outcome, and states no `civic:sourceId`.
+
+/** The four of ADR-0033 amendment 2 in their positions, then `not-offered`,
+ *  the owner's amendment of D4 on 2026-10-19: the alias named no source of
+ *  the directory set, so nothing was loaded and the reader was not asked. */
+const LOAD_OUTCOME_VALUES = ['loaded', 'declined', 'no-answer', 'unavailable', 'not-offered'];
+
+/** The graph's nodes, or the error the build threw: a refusal reads as a
+ *  failed assertion, not as a thrown error. */
+function nodesOrError(trace: Record<string, unknown>): GraphNode[] | Error {
+  try {
+    return buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
+  } catch (e) {
+    return e as Error;
+  }
+}
+
+/** A load span; `extra` adds or overrides attributes, and an `undefined`
+ *  outcome writes none. */
+function loadSpan(spanId: string, outcome: string | undefined, extra: Record<string, string> = {}): SpanStub {
+  return {
+    name: 'mcp_tool_call',
+    spanId,
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '1100000000',
+    attributes: attrs({
+      'tool.name': 'load_source',
+      'tool.operation_type': 'load_source',
+      'tool.arguments': '{"alias":"socrata"}',
+      ...(outcome !== undefined ? { 'tool.load_outcome': outcome } : {}),
+      ...extra,
+    }),
+  };
+}
+
+/** The Socrata data call of the measured trace (G0 record section 4). */
+function socrataDataSpan(spanId: string): SpanStub {
+  return {
+    name: 'mcp_tool_call',
+    spanId,
+    startTimeUnixNano: '1200000000',
+    endTimeUnixNano: '1300000000',
+    attributes: attrs({
+      'mcp.source': 'socrata',
+      'tool.name': 'get_data',
+      'tool.operation_type': 'query',
+      'tool.arguments': '{"type":"query","portal":"data.cityofnewyork.us","dataset_id":"erm2-nwe9"}',
+      'tool.dataset_id': 'erm2-nwe9',
+      'tool.portal_domain': 'data.cityofnewyork.us',
+      'tool.response_hash': 'a0b1c2',
+    }),
+  };
+}
+
+const PLATFORM_URN = `${CIVIC_URN_PREFIX}:platform:${CIVICAITOOLS_PROVENANCE_CONFIG.platformAgent.id}`;
+
+test('load span: the measured trace (one load span, one Socrata call) yields exactly one server agent, socrata, and one dataSources entry', () => {
+  const trace = traceOf([loadSpan('span-load', 'loaded'), socrataDataSpan('span-data')]);
+  const graph = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG);
+  assert.deepEqual(mcpAgents(graph['@graph']), ['urn:civic-record:mcp-server:socrata']);
+  const entries = buildDataSources(
+    [
+      { name: 'load_source', args: { alias: 'socrata' } },
+      { name: 'get_data', args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+    ],
+    trace,
+    undefined,
+    '2026-10-19T00:00:00.000Z',
+  );
+  assert.deepEqual(entries.map((e) => e.sourceId), ['socrata']);
+});
+
+test('load span: its activity is associated with the platform agent, states the outcome and no civic:sourceId; its query entity is as for any tool span', () => {
+  const trace = traceOf([loadSpan('span-load', 'declined', { 'mcp.alias': 'socrata', 'tool.duration_ms': '12' })]);
+  const nodes = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
+  const activity = activityForSpan(nodes, 'span-load');
+  assert.deepEqual(Object.keys(activity), [
+    '@id',
+    '@type',
+    'dcterms:description',
+    'prov:used',
+    'prov:wasAssociatedWith',
+    'prov:startedAtTime',
+    'prov:endedAtTime',
+    'civic:durationMs',
+    'civic:sourceAlias',
+    'civic:loadOutcome',
+  ]);
+  assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': PLATFORM_URN });
+  assert.equal(activity['civic:loadOutcome'], 'declined');
+  assert.equal(activity['civic:sourceAlias'], 'socrata');
+  assert.equal(hasKey(activity, 'civic:sourceId'), false);
+  // The platform agent the activity names is on the graph, and no server agent is.
+  assert.ok(nodes.some((n) => n['@id'] === PLATFORM_URN));
+  assert.deepEqual(mcpAgents(nodes), []);
+  // The query entity: the arguments' hash, the tool name and the operation type, as for any tool span.
+  const query = nodes.find((n) => n['@id'].includes(':query:'))!;
+  assert.deepEqual(Object.keys(query), ['@id', '@type', 'civic:contentHash', 'civic:toolName', 'civic:operationType', 'dcterms:description']);
+  assert.equal(query['civic:toolName'], 'load_source');
+  assert.equal(query['civic:operationType'], 'load_source');
+});
+
+test('load span: no data-response entity, even when the span carries tool.response_hash', () => {
+  const trace = traceOf([loadSpan('span-load', 'loaded', { 'tool.response_hash': 'a0c0e0' })]);
+  const nodes = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
+  assert.equal(nodes.some((n) => n['@id'].includes(':data:')), false);
+  assert.equal(JSON.stringify(nodes).includes('prov:wasDerivedFrom'), false);
+});
+
+test('load span: each of the five outcomes is stated as the span carried it', () => {
+  for (const outcome of LOAD_OUTCOME_VALUES) {
+    const nodes = nodesOrError(traceOf([loadSpan('span-load', outcome)]));
+    assert.ok(!(nodes instanceof Error), `outcome ${outcome} was refused: ${nodes instanceof Error ? nodes.message : ''}`);
+    assert.equal(activityForSpan(nodes as GraphNode[], 'span-load')['civic:loadOutcome'], outcome);
+  }
+});
+
+test('load span: a not-offered load mints no server agent and no data-response entity, and its activity states not-offered on the platform agent', () => {
+  const nodes = nodesOrError(traceOf([loadSpan('span-load', 'not-offered', { 'mcp.source': 'socrata', 'tool.response_hash': 'a0c0e0' })]));
+  assert.ok(!(nodes instanceof Error), `not-offered was refused: ${nodes instanceof Error ? nodes.message : ''}`);
+  const graph = nodes as GraphNode[];
+  const activity = activityForSpan(graph, 'span-load');
+  assert.equal(activity['civic:loadOutcome'], 'not-offered');
+  assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': PLATFORM_URN });
+  assert.equal(hasKey(activity, 'civic:sourceId'), false);
+  assert.deepEqual(mcpAgents(graph), []);
+  assert.equal(graph.some((n) => n['@id'].includes(':data:')), false);
+});
+
+test('load span: an absent outcome, or one outside the five, is refused with LoadSpanError when the graph is built', () => {
+  const exported = (harnessEntry as Record<string, unknown>).LoadSpanError;
+  assert.equal(typeof exported, 'function', 'LoadSpanError is exported from the package entry');
+  for (const outcome of [undefined, '', 'Loaded', 'consented', 'failed', 'no_answer']) {
+    assert.throws(
+      () => buildProvenanceGraph(traceOf([socrataDataSpan('span-data'), loadSpan('span-load', outcome)]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG),
+      (e: unknown) =>
+        e instanceof (exported as new (...args: never[]) => Error)
+        && (e as { spanId?: unknown }).spanId === 'span-load'
+        && (e as { outcome?: unknown }).outcome === outcome,
+      `outcome ${JSON.stringify(outcome)} was not refused`,
+    );
+  }
+});
+
+test('load span: a span tagged with a source still mints no agent for that source, and its activity still states no civic:sourceId', () => {
+  const trace = traceOf([loadSpan('span-load', 'loaded', { 'mcp.source': 'data-commons', 'mcp.server.id': 'data-commons' })]);
+  const nodes = buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
+  assert.deepEqual(mcpAgents(nodes), []);
+  const activity = activityForSpan(nodes, 'span-load');
+  assert.equal(hasKey(activity, 'civic:sourceId'), false);
+  assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': PLATFORM_URN });
+});
+
+test('load span: under the prior-era vocabulary the activity carries the same term, and names the prior-era platform agent', () => {
+  const nodes = buildProvenanceGraph(traceOf([loadSpan('span-load', 'no-answer')]), BASE_INPUT, PRIOR_ERA_REFERENCE_CONFIG)['@graph'] as GraphNode[];
+  const activity = nodes.find((n) => n['@id'] === `${PRIOR_ERA_CIVIC_URN_PREFIX}:${BASE_INPUT.packageId}:tool-call:span-load`)!;
+  assert.ok(activity, 'the prior-era activity is on the graph');
+  assert.equal(activity['civic:loadOutcome'], 'no-answer');
+  assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': `${PRIOR_ERA_CIVIC_URN_PREFIX}:platform:${CIVICAITOOLS_PROVENANCE_CONFIG.platformAgent.id}` });
+});
+
+test('ADR-0033 amendment 2: the outcome term is civic:loadOutcome, and its values are the five outcomes — the four, then not-offered', () => {
+  const vocabulary = vocabularyModule as Record<string, unknown>;
+  assert.equal(vocabulary.CIVIC_TERM_LOAD_OUTCOME, 'civic:loadOutcome');
+  assert.deepEqual(vocabulary.LOAD_OUTCOMES, LOAD_OUTCOME_VALUES);
+});
+
+test('ADR-0033 amendment 2: the LoadOutcome type admits not-offered', () => {
+  const fifth: LoadOutcome = 'not-offered';
+  assert.equal(fifth, 'not-offered');
 });

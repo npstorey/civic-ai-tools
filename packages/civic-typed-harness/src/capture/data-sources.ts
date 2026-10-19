@@ -17,6 +17,7 @@
 // populates it, never redefines it.
 
 import type { DataSourceEntry } from '@typedstandards/produce-core';
+import { isLoadSpan } from './load-span.ts';
 
 export type { DataSourceEntry };
 
@@ -127,6 +128,10 @@ export function resolveToolSourceWith(
  * activities and in the caller's own `queries[]` — what it is not is an
  * assertion, inside signed bytes, that a source was reached at a timestamp.
  *
+ * A LOAD CALL — one whose span's `tool.operation_type` is `load_source`
+ * (ADR-0033 amendment 2) — contributes nothing either: the instance's loop
+ * answered it and no source did. It too keeps its position in the walk.
+ *
  * The run's portal is not a parameter: an entry states the portal the call
  * carried, never the run's (the civic layer's `buildDataSources` keeps its
  * inert `fallbackPortal` positional for existing callers).
@@ -150,6 +155,10 @@ export function buildDataSourcesWith(
     // filtering the list: `resolveToolSourceWith` pairs a call to `toolSpans[i]`,
     // and a filtered list would shift every later call onto the wrong span.
     if (tc.failed) continue;
+    // A load call (its span's `tool.operation_type` is `load_source`, ADR-0033
+    // amendment 2) reached no source, so it mints no entry. Skipped in place,
+    // for the same reason as a failed call.
+    if (isLoadSpan(toolSpans[i]?.attributes)) continue;
     const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
     if (config.isDatasetKeyed(source)) {
       const datasetId = tc.args.dataset_id as string | undefined;

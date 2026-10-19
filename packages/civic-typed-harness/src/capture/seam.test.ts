@@ -7,7 +7,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildProvenanceGraphWith, type ProvenanceTerms } from './provenance.ts';
+import { buildProvenanceGraphWith, LoadSpanError, type ProvenanceTerms } from './provenance.ts';
 import { buildDataSourcesWith } from './data-sources.ts';
 
 const TERMS: ProvenanceTerms = {
@@ -30,7 +30,12 @@ const TERMS: ProvenanceTerms = {
   upstreamToolName: 'ex:upstreamToolName',
   sourceAlias: 'ex:sourceAlias',
   serverId: 'ex:serverId',
+  loadOutcome: 'ex:loadOutcome',
 };
+
+/** A foreign outcome set: the builder checks a load span against the set its
+ *  caller passes, never one of its own. */
+const LOAD_OUTCOMES = ['done', 'skipped'];
 
 const VOCABULARY = {
   context: () => ({ prov: 'http://www.w3.org/ns/prov#', ex: 'https://example.org/ns/' }),
@@ -44,9 +49,23 @@ function attr(key: string, value: string) {
   return { key, value: { stringValue: value } };
 }
 
-/** One skill fetch, one inference and one tool call that reaches every
- *  term-keyed branch: a refused call with a duration, a dataset-keyed source
- *  with a dataset id and a portal, and a row count. */
+/** One skill fetch, one inference, one tool call that reaches every
+ *  term-keyed branch (a refused call with a duration, a dataset-keyed source
+ *  with a dataset id and a portal, and a row count) and one load span. */
+function loadSpanWith(outcome: string) {
+  return {
+    name: 'mcp_tool_call',
+    spanId: 'l1',
+    startTimeUnixNano: '2500000000',
+    endTimeUnixNano: '2600000000',
+    attributes: [
+      attr('tool.name', 'load_source'),
+      attr('tool.operation_type', 'load_source'),
+      attr('tool.load_outcome', outcome),
+    ],
+  };
+}
+
 const TRACE = {
   resourceSpans: [
     {
@@ -85,6 +104,7 @@ const TRACE = {
                 attr('error.kind', 'timeout'),
               ],
             },
+            loadSpanWith('done'),
           ],
         },
       ],
@@ -106,6 +126,7 @@ function build(isDatasetKeyed: (id: string) => boolean): string {
         skillSourceId: 'library',
         vocabulary: VOCABULARY,
         terms: TERMS,
+        loadOutcomes: LOAD_OUTCOMES,
       },
     ),
   );
@@ -147,12 +168,39 @@ test('seam: the provenance builder resolves an untagged span through the resolve
       skillSourceId: 'library',
       vocabulary: VOCABULARY,
       terms: TERMS,
+      loadOutcomes: LOAD_OUTCOMES,
     },
   );
   const assoc = (spanId: string) =>
     (graph['@graph'].find((n) => n['@id'] === `urn:ex:pkg:tool-call:${spanId}`)!['prov:wasAssociatedWith'] as { '@id': string })['@id'];
   assert.equal(assoc('u1'), 'urn:ex:source:library');
   assert.equal(assoc('u2'), 'urn:ex:source:nobody');
+});
+
+test('seam: the provenance builder checks a load span against the outcomes it is given, and states it on the platform agent it is given', () => {
+  const graph = JSON.parse(build(() => true)) as { '@graph': Array<{ '@id': string; [k: string]: unknown }> };
+  const load = graph['@graph'].find((n) => n['@id'] === 'urn:ex:pkg:tool-call:l1')!;
+  assert.equal(load['ex:loadOutcome'], 'done');
+  assert.deepEqual(load['prov:wasAssociatedWith'], { '@id': 'urn:ex:platform:plat' });
+  // 'loaded' is not in the caller's set, so it is refused here.
+  assert.throws(
+    () => buildProvenanceGraphWith(
+      { resourceSpans: [{ scopeSpans: [{ spans: [loadSpanWith('loaded')] }] }] },
+      { packageId: 'pkg', promptHash: 'dd', outputText: 'out', model: 'model-x' },
+      {
+        platformAgent: { id: 'plat', title: 'Platform', url: 'https://platform.example' },
+        sourceRegistry: {},
+        isDatasetKeyed: () => false,
+        resolver: () => undefined,
+        fallbackSourceId: 'nobody',
+        skillSourceId: 'library',
+        vocabulary: VOCABULARY,
+        terms: TERMS,
+        loadOutcomes: LOAD_OUTCOMES,
+      },
+    ),
+    (e: unknown) => e instanceof LoadSpanError && e.outcome === 'loaded',
+  );
 });
 
 test('seam: data-source population runs on a caller registry, resolver and dataset-keyed predicate', () => {

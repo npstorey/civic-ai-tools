@@ -664,3 +664,73 @@ test('a rejected call keeps its position: the calls after it still pair with the
   assert.equal(entries[0].sourceId, 'socrata', 'the surviving call kept its own span');
   assert.equal(entries[0].datasetId, 'abcd-1234');
 });
+
+// --- ADR-0033 amendment 2: a load span is skipped in place ---
+
+/** A load span (`tool.operation_type: load_source`), tagged with a source
+ *  when `source` is given. */
+function loadSpan(source?: string): SpanStub {
+  const attrs: Record<string, string> = {
+    ...(source ? { 'mcp.source': source } : {}),
+    'tool.name': 'load_source',
+    'tool.operation_type': 'load_source',
+    'tool.load_outcome': 'loaded',
+  };
+  return {
+    name: 'mcp_tool_call',
+    attributes: Object.entries(attrs).map(([key, stringValue]) => ({ key, value: { stringValue } })),
+  };
+}
+
+test('load span: a trace with one load span and one Socrata call yields one dataSources entry, Socrata\'s', () => {
+  const entries = buildDataSources(
+    [
+      { name: 'load_source', args: { alias: 'socrata' } },
+      { name: 'get_data', args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+    ],
+    traceWithToolSpans([loadSpan(), toolSpan('socrata')]),
+    undefined,
+    NOW,
+  );
+  assert.deepEqual(entries.map((e) => `${e.sourceId}/${e.datasetId ?? ''}`), ['socrata/erm2-nwe9']);
+});
+
+test('load span: a load call between two data calls is skipped in place — the second data call still pairs with its own span', () => {
+  // The load span names an aggregate source, so a load call that were read as
+  // a data call would mark that source accessed. The third call's tool name
+  // resolves to nothing, so its source comes from its own span alone: a walk
+  // that dropped the load call would pair it with the load span instead.
+  const entries = buildDataSources(
+    [
+      { name: 'get_data', args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+      { name: 'load_source', args: { alias: 'data_commons' } },
+      { name: 'boston__search_datasets', args: { query: 'permits' } },
+    ],
+    traceWithToolSpans([toolSpan('socrata'), loadSpan('data-commons'), toolSpan('boston-opencontext')]),
+    undefined,
+    NOW,
+  );
+  assert.deepEqual(
+    entries.map((e) => `${e.sourceId}/${e.datasetId ?? ''}`),
+    ['socrata/erm2-nwe9', 'boston-opencontext/'],
+    'no entry for the loaded source, and the call after the load keeps its own span',
+  );
+});
+
+test('load span: a not-offered load between two data calls is skipped in place, like any load', () => {
+  const notOffered = loadSpan('data-commons');
+  notOffered.attributes = notOffered.attributes.map((a) =>
+    a.key === 'tool.load_outcome' ? { key: a.key, value: { stringValue: 'not-offered' } } : a,
+  );
+  const entries = buildDataSources(
+    [
+      { name: 'get_data', args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+      { name: 'load_source', args: { alias: 'no_such_source' } },
+      { name: 'boston__search_datasets', args: { query: 'permits' } },
+    ],
+    traceWithToolSpans([toolSpan('socrata'), notOffered, toolSpan('boston-opencontext')]),
+    undefined,
+    NOW,
+  );
+  assert.deepEqual(entries.map((e) => `${e.sourceId}/${e.datasetId ?? ''}`), ['socrata/erm2-nwe9', 'boston-opencontext/']);
+});

@@ -27,6 +27,7 @@ import {
 import {
   CIVIC_VOCABULARY,
   CIVICAITOOLS_PLATFORM_AGENT,
+  LOAD_OUTCOMES,
   CIVIC_TERM_COMPLETION_TOKENS,
   CIVIC_TERM_CONTENT_HASH,
   CIVIC_TERM_CROISSANT_METADATA_URL,
@@ -35,6 +36,7 @@ import {
   CIVIC_TERM_DURATION_MS,
   CIVIC_TERM_FAILED,
   CIVIC_TERM_FAILURE_KIND,
+  CIVIC_TERM_LOAD_OUTCOME,
   CIVIC_TERM_OPERATION_TYPE,
   CIVIC_TERM_PORTAL_DOMAIN,
   CIVIC_TERM_PROMPT_TOKENS,
@@ -60,8 +62,10 @@ import {
 } from '../format/sources.ts';
 
 // The public surface capture/provenance.ts carried before the seam, re-exported
-// so the package entry exports the same names from here.
+// so the package entry exports the same names from here; and the load span's
+// refusal (ADR-0033 amendment 2).
 export type { ProvenanceInput, ProvGraph, ProvNode } from '../capture/provenance.ts';
+export { LoadSpanError } from '../capture/provenance.ts';
 
 /** Instance configuration for the graph build (config-not-constants). */
 export interface ProvenanceConfig {
@@ -133,6 +137,7 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
   upstreamToolName: CIVIC_TERM_UPSTREAM_TOOL_NAME,
   sourceAlias: CIVIC_TERM_SOURCE_ALIAS,
   serverId: CIVIC_TERM_SERVER_ID,
+  loadOutcome: CIVIC_TERM_LOAD_OUTCOME,
 };
 
 /**
@@ -150,7 +155,11 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
  * skill-fetch URL overrides, and attributes no call), the vocabulary to the
  * settlement-era `CIVIC_VOCABULARY`, and the property names are the format
  * group's `civic:` terms. The dataset-keyed fact is the format group's
- * `isDatasetKeyedSource` over the config's own registry.
+ * `isDatasetKeyedSource` over the config's own registry, and a load span's
+ * outcomes are the format group's `LOAD_OUTCOMES` (ADR-0033 amendment 2).
+ *
+ * @throws LoadSpanError for a load span whose `tool.load_outcome` is absent
+ *   or outside `LOAD_OUTCOMES`.
  */
 export function buildProvenanceGraph(
   trace: Record<string, unknown>,
@@ -168,5 +177,6 @@ export function buildProvenanceGraph(
     modelAgentDescription: config.modelAgentDescription,
     vocabulary: config.vocabulary ?? CIVIC_VOCABULARY,
     terms: CIVIC_PROVENANCE_TERMS,
+    loadOutcomes: LOAD_OUTCOMES,
   });
 }

@@ -3,6 +3,47 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.10.0 — 2026-10-19
+
+What a record of an in-loop run states (sprint R8, H2;
+[ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)'s amendment
+2, rulings D3 = A and D5 = B of
+[civic-ai-tools-website#644](https://github.com/npstorey/civic-ai-tools-website/issues/644)).
+Signed bytes move only on a new record that passes `routing` or
+`definitionHash`, or whose trace carries a load span; a record packaged
+without them has the same bytes, and no existing golden fixture moves.
+
+- **`routing` and `definitionHash` in the composition block.**
+  `CompositionInput`, `DatHerePolicyInput` and `ExtractedRunAttributes` gain
+  an optional `routing: { method, version }` (`RoutingInput` on the two
+  inputs) and `definitionHash: string`. The derivation states them after
+  `flowsStatement`, in that order, each only when passed, and refuses with
+  `RecordFieldError` a `routing` that is `null`, not an object, carries a key
+  besides `method` and `version`, names a method outside `ROUTING_METHODS`
+  (`all-sources`, `picker`, `in-loop`; the type `RoutingMethod`), or has a
+  `version` that is not a non-empty string, and a `definitionHash` that is
+  `null` or not lowercase hex SHA-256. `extractRunAttributes` reads
+  `analysis.routing` as JSON text of exactly `{ method, version }`, both
+  strings, refusing anything else with `RunAttributeError`, and
+  `analysis.definition_hash` as a plain string. The harness computes no
+  hash: the router's arrives as a value.
+- **The load span.** A tool span whose `tool.operation_type` is
+  `load_source` mints no `mcp-server:` agent and no data-response entity, and
+  `buildDataSources` skips its call in place. Its tool-call activity is
+  associated with the platform agent, states no `civic:sourceId`, and states
+  `tool.load_outcome` under the new term `civic:loadOutcome`
+  (`CIVIC_TERM_LOAD_OUTCOME`), whose values are `LOAD_OUTCOMES` (`loaded`,
+  `declined`, `no-answer`, `unavailable`, `not-offered`; the type
+  `LoadOutcome`). `not-offered` (the alias named no source of the directory
+  set, so nothing was loaded and the reader was not asked) is the owner's
+  amendment of D4 on 2026-10-19. A load
+  span with no outcome, or another value, is refused with the new
+  `LoadSpanError` when the graph is built. Before this, such a span was
+  attributed to an `unknown` source agent.
+- **One new golden fixture**, `in-loop-golden.json`, holding a record of an
+  in-loop run byte for byte.
+- No dependency changes.
+
 ## 0.9.0 — 2026-10-18
 
 The reader's states and the flows-statement reference (sprint R6, H2;
