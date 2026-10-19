@@ -41,6 +41,13 @@ export {
 } from './select.ts';
 export { BLOCK_SEPARATOR, composeManifestPrompt, composePrompt, type PromptFrame } from './compose.ts';
 export {
+  composeDirectory,
+  directoryLine,
+  directorySentence,
+  type DirectoryEntry,
+  type DirectoryFrame,
+} from './directory.ts';
+export {
   assertUniqueToolNames,
   DuplicateToolNameError,
   findDuplicateToolNames,

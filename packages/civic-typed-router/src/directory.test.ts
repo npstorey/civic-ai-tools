@@ -16,19 +16,17 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import * as pkg from './index.ts';
 import {
   BARE_VIEW,
   CIVIC_MANIFEST,
   civicRouter,
+  composeDirectory,
   createCivicRouter,
+  directoryFrameFor,
   introFor,
   readMcpEnv,
   type CivicManifest,
   type CivicManifestEntry,
-  type CivicRouter,
-  type McpRegistryEnv,
-  type SourceSelection,
   type SourceView,
 } from './index.ts';
 
@@ -44,30 +42,6 @@ const PARAGRAPH =
   'The data sources below are available to you, but none of their tools are loaded yet. To use a source, call `load_source` with its alias; its tools are added for your next turn, and its guidance then appears in this system prompt. Load every source the question needs; you may call `load_source` more than once. If the question needs no data, answer without loading anything.';
 
 const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8').digest('hex');
-
-// --- What the phase adds, reached by name so the red tree type-checks ----------------
-
-interface DirectoryFrameShape {
-  readonly intro: string;
-  readonly heading: string;
-  readonly paragraph: string;
-  readonly freshnessLabel: string;
-}
-type ComposeDirectory = (frame: DirectoryFrameShape, entries: readonly { alias: string; description: string; freshness: string }[]) => string;
-type DirectoryFrameFor = (today: string) => DirectoryFrameShape;
-type DirectoryPrompt = (input: { configured: McpRegistryEnv; today: string; selection?: SourceSelection }) => string;
-
-function exported<T>(name: string): T {
-  const value = (pkg as unknown as Record<string, unknown>)[name];
-  assert.equal(typeof value, 'function', `the package exports ${name}`);
-  return value as T;
-}
-
-function directoryPromptOf(router: CivicRouter): DirectoryPrompt {
-  const value = (router as unknown as Record<string, unknown>).directoryPrompt;
-  assert.equal(typeof value, 'function', 'CivicRouter has directoryPrompt');
-  return value as DirectoryPrompt;
-}
 
 // --- Inputs ------------------------------------------------------------------------------
 
@@ -93,8 +67,6 @@ const entryLines = (directory: string): string[] => directory.split('\n').filter
 test('directory: the composer over R5\'s eleven frozen entries, with today {{TODAY}}, is the text S2 measured (3,486 characters, sha256 ce6b136a…)', () => {
   assert.match(R5.source, /be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7/, 'the fixture names the frozen file it came from');
   assert.equal(R5.entries.length, 11);
-  const composeDirectory = exported<ComposeDirectory>('composeDirectory');
-  const directoryFrameFor = exported<DirectoryFrameFor>('directoryFrameFor');
   const text = composeDirectory(directoryFrameFor('{{TODAY}}'), R5.entries);
   assert.equal(text.length, 3486);
   assert.equal(sha256(text), 'ce6b136a19890a693b05a24f6778569db76d2bfaaadb92a7f6d3e2f7cf31f89d');
@@ -102,7 +74,7 @@ test('directory: the composer over R5\'s eleven frozen entries, with today {{TOD
 });
 
 test('directory: the civic frame is the intro, the heading and the paragraph S2 measured', () => {
-  const frame = exported<DirectoryFrameFor>('directoryFrameFor')(TODAY);
+  const frame = directoryFrameFor(TODAY);
   assert.deepEqual(
     { ...frame },
     { intro: introFor(TODAY), heading: '## Data sources', paragraph: PARAGRAPH, freshnessLabel: 'Freshness:' },
@@ -110,7 +82,6 @@ test('directory: the civic frame is the intro, the heading and the paragraph S2 
 });
 
 test('directory: a description without closing punctuation gains a period, and one with it is kept as it is', () => {
-  const composeDirectory = exported<ComposeDirectory>('composeDirectory');
   const frame = { intro: 'I', heading: 'H', paragraph: 'P', freshnessLabel: 'F:' };
   const text = composeDirectory(frame, [
     { alias: 'a', description: 'Ends bare', freshness: 'x' },
@@ -127,13 +98,13 @@ test('directory: a description without closing punctuation gains a period, and o
 // --- The four current entries ----------------------------------------------------------------
 
 test('directory: for the four current entries each line is the rule over the entry\'s alias, description and freshness, in manifest order', () => {
-  const directory = directoryPromptOf(civicRouter)({ configured: EVERY_SOURCE, today: TODAY });
+  const directory = civicRouter.directoryPrompt({ configured: EVERY_SOURCE, today: TODAY });
   assert.equal(directory, expectedDirectory(TODAY, CIVIC_MANIFEST));
   assert.deepEqual(entryLines(directory), CIVIC_MANIFEST.map(lineOf));
 });
 
 test('directory: with every source configured it has four lines; with Boston OpenContext and NYC Charter unconfigured, two', () => {
-  const directoryPrompt = directoryPromptOf(civicRouter);
+  const directoryPrompt = civicRouter.directoryPrompt;
   assert.deepEqual(
     entryLines(directoryPrompt({ configured: EVERY_SOURCE, today: TODAY })).map((line) => line.split('`')[1]),
     ['socrata', 'data_commons', 'boston', 'nyc_charter'],
@@ -144,7 +115,7 @@ test('directory: with every source configured it has four lines; with Boston Ope
 });
 
 test('directory: the selection narrows the directory set, in manifest order, and never adds an unconfigured source', () => {
-  const directoryPrompt = directoryPromptOf(civicRouter);
+  const directoryPrompt = civicRouter.directoryPrompt;
   const narrowed = directoryPrompt({ configured: EVERY_SOURCE, today: TODAY, selection: ['nyc-charter', 'socrata'] });
   assert.deepEqual(entryLines(narrowed).map((line) => line.split('`')[1]), ['socrata', 'nyc_charter']);
   const unconfigured = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY, selection: ['boston-opencontext', 'data-commons'] });
@@ -152,7 +123,7 @@ test('directory: the selection narrows the directory set, in manifest order, and
 });
 
 test('directory: no exposed tool name and no backticked upstream name appears in the directory', () => {
-  const directoryPrompt = directoryPromptOf(civicRouter);
+  const directoryPrompt = civicRouter.directoryPrompt;
   const upstream = new Set([...civicRouter.dispatchMap.values()].map((target) => target.upstreamName));
   for (const configured of [EVERY_SOURCE, REQUIRED_ONLY]) {
     const directory = directoryPrompt({ configured, today: TODAY });
@@ -180,7 +151,7 @@ test('directory: it calls neither fetcher, and returns the text itself', () => {
       throw new Error('the directory must not fetch instructions');
     },
   };
-  const directory = directoryPromptOf(civicRouter)(input);
+  const directory = civicRouter.directoryPrompt(input);
   assert.equal(typeof directory, 'string');
   assert.deepEqual(calls, []);
 });
@@ -208,7 +179,7 @@ const EXAMPLE_ENTRY: CivicManifestEntry = {
 
 test('directory: createCivicRouter(fork) gives a fork the same function over its own manifest', () => {
   const fork: CivicManifest = [...CIVIC_MANIFEST, EXAMPLE_ENTRY];
-  const directory = directoryPromptOf(createCivicRouter(fork))({ configured: EVERY_SOURCE, today: TODAY });
+  const directory = createCivicRouter(fork).directoryPrompt({ configured: EVERY_SOURCE, today: TODAY });
   assert.equal(directory, expectedDirectory(TODAY, fork));
   assert.equal(
     entryLines(directory).at(-1),

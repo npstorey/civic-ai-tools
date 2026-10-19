@@ -8,6 +8,7 @@ export {
   createCivicRouter,
   type BuildSystemPromptInput,
   type CivicRouter,
+  type DirectoryPromptInput,
 } from './router.ts';
 export type {
   CivicGuidanceContext,
@@ -82,6 +83,10 @@ export {
   composePreamble,
   CROSS_SOURCE_PREAMBLE,
   crossSourcePreamble,
+  DIRECTORY_FRESHNESS_LABEL,
+  DIRECTORY_HEADING,
+  DIRECTORY_PARAGRAPH,
+  directoryFrameFor,
   introFor,
   outroFor,
   sourceCountWord,

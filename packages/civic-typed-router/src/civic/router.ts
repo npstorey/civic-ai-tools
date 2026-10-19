@@ -34,6 +34,10 @@
 // `publisher`. The bare view reads no `alias` either: only the checks, the
 // dispatch map and the aliased view do.
 //
+// In-loop routing (0.5.0, ADR-0037) adds functions in the aliased view only:
+// the directory, which reads each offered entry's `alias`, `description` and
+// `freshness`.
+//
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
 // source is offered by its switch, never by an address.
@@ -54,6 +58,7 @@ import {
   type DispatchTarget,
 } from '../core/alias.ts';
 import { composeManifestPrompt } from '../core/compose.ts';
+import { composeDirectory } from '../core/directory.ts';
 import {
   isEntryOffered,
   offeredEntries,
@@ -70,7 +75,7 @@ import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetc
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { configuredSources, type McpRegistryEnv } from './env.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
-import { composeOutro, composePreamble, introFor } from './prompt-frame.ts';
+import { composeOutro, composePreamble, directoryFrameFor, introFor } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The civic sources, in the order the prompt and the tools array name them.
@@ -95,6 +100,10 @@ export interface BuildSystemPromptInput {
    *  the selection says. */
   readonly selection?: SourceSelection;
 }
+
+/** What the directory needs from the consumer: no fetcher, since the
+ *  directory is the manifest's own text. */
+export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | 'today' | 'selection'>;
 
 export interface CivicRouter {
   /** The manifest this router was built from. */
@@ -175,6 +184,14 @@ export interface CivicRouter {
   upstreamToolName(name: string): string;
   /** The target of an exposed name, or `undefined`. */
   sourceForAliasedName(name: string): DispatchTarget | undefined;
+
+  // --- In-loop routing (ADR-0037) ---------------------------------------------------
+
+  /** The directory: the first request's system prompt under in-loop routing.
+   *  The intro, the heading, the paragraph, and one line per source of the
+   *  directory set (the sources `selection` offers, in manifest order), from
+   *  its alias, description and freshness. Calls no fetcher. */
+  directoryPrompt(input: DirectoryPromptInput): string;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -294,6 +311,10 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] =>
     offeredEntries(manifest, configuredSources(configured), selection).map((entry) => entry.sourceId);
 
+  /** The directory set: the sources `selection` offers, in manifest order. */
+  const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] =>
+    offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[];
+
   return {
     manifest,
     mcpTools,
@@ -374,6 +395,10 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
     sourceForAliasedName(name) {
       return sourceForAliasedName(map, name);
+    },
+
+    directoryPrompt(input) {
+      return composeDirectory(directoryFrameFor(input.today), directoryEntries(input.configured, input.selection));
     },
   };
 }
