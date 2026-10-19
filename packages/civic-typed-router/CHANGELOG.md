@@ -2,6 +2,66 @@
 
 Factual record of what changed per published version.
 
+## Unreleased
+
+In-loop routing: the directory, the first-step tool, composition for a
+loaded set, and the harness definition
+([ADR-0037](../../docs/adr/0037-the-first-step-tool.md)). Every function
+is new; no golden moves: every prompt, tools array and fact is 0.4.0's,
+and `buildSystemPrompt` with an empty selection keeps its bytes.
+
+- **The directory.** `directoryPrompt({ configured, today, selection? })`:
+  the intro, `## Data sources`, one paragraph (`DIRECTORY_PARAGRAPH`), and
+  one line per source of the directory set in manifest order,
+  `` - `<alias>`: <description> Freshness: <freshness> `` (a period added
+  to a description without closing punctuation). No outro, no trailing
+  newline, no fetch. Over R5's eleven frozen entries it is the text the
+  quote test of 2026-10-19 measured (3,486 characters). Core:
+  `composeDirectory`, `directoryLine`, `directorySentence`,
+  `DirectoryFrame`, `DirectoryEntry`; civic: `directoryFrameFor`,
+  `DIRECTORY_HEADING`, `DIRECTORY_FRESHNESS_LABEL`.
+- **The first-step tool.** `aliasedLoadSourceTool({ configured,
+  selection? })`: `load_source` with one required argument, `alias`,
+  whose enum is the directory set's aliases; R5's frozen schema and
+  descriptions (`LOAD_SOURCE_TOOL_TEXT`). Core: `loadSourceTool`,
+  `LOAD_SOURCE_TOOL_NAME`, `LoadSourceToolText`.
+- **Breaking for a manifest that uses the name: `load_source` is
+  reserved.** `ToolNameProblem` gains a kind, `reserved-name` (`name`,
+  `sourceId`, `field: 'alias' | 'tool'`), and `createCivicRouter` refuses
+  a manifest whose alias or upstream tool is named `load_source`, since a
+  bare call of that name would otherwise be dispatched to the source. A
+  consumer that switches over `ToolNameProblem['kind']` sees one more.
+- **Composition for a loaded set.** `aliasedInLoopSystemPrompt({
+  ...BuildSystemPromptInput, loaded })`: the directory over `selection`,
+  then, when a loaded source is in the directory set, `BLOCK_SEPARATOR`
+  and the aliased composition over the loaded sources without its intro.
+  With nothing loaded it is the directory and calls no fetcher.
+- **The harness definition.** `harnessDefinition({ configured, selection,
+  chosenBy, components })` returns `{ domain, sources, components,
+  chosenBy, hash }`: `domain` `'civic'` (`CIVIC_DOMAIN`), `sources`
+  `offeredSkillSources(configured, selection)`, the consumer's components
+  (`id`, `version?`, `guidanceHash?`), `chosenBy` `'reader' | 'model' |
+  'instance'` (`CHOSEN_BY`), and `hash`, the lowercase hex SHA-256 of the
+  canonical JSON of the other four. No `task`. Refusals throw
+  `HarnessDefinitionError`. Core: `harnessDefinitionOf`,
+  `HarnessDefinitionParts`, `HarnessDefinition`,
+  `HarnessDefinitionComponent`, `ChosenBy`.
+- **Canonical JSON and SHA-256, the package's own.** `canonicalJson`
+  (RFC 8785 for strings, arrays and plain objects; any other value throws
+  `CanonicalJsonError`), `sha256` and `sha256Hex` (FIPS 180-4 over UTF-8
+  bytes). No import and no runtime dependency.
+- New types for the inputs: `DirectoryPromptInput`, `LoadSourceToolInput`,
+  `InLoopSystemPromptInput`, `HarnessDefinitionInput`.
+- **For a consumer's records.** At the pin bump to this version, the
+  router's own `components[]` entry in every new record moves to this
+  version. Nothing else in a record moves from this package alone.
+- Tests: `directory.test.ts`, `load-source.test.ts`, `in-loop.test.ts`
+  (with the pinned fixture `in-loop-one-source.json`) and
+  `definition.test.ts` (FIPS 180-4 vectors and 1,200 inputs against
+  `node:crypto`); the fixtures `r5-directory-entries.json` and
+  `r5-load-source-tool.json` from R5's frozen directory; the goldens'
+  sentinel and throwing-getter runs also run the four new functions.
+
 ## 0.4.0 — 2026-10-18
 
 Hosting variants and the logging posture on every entry, with each source's

@@ -10,6 +10,8 @@ The router hands a consumer three things, and any harness or gateway can consume
 2. **a prompt**, one string;
 3. **the dispatch map**, from each name the model may call to `{ sourceId, alias, upstreamName }`.
 
+Under in-loop routing the prompt is the directory and the composition over the sources the model has loaded, and the tools array starts with the first-step tool `load_source` (below); each composition also yields a harness definition with its hash.
+
 The router performs no call. The consumer sends the tools and the prompt to a model, and when the model calls a tool, resolves the name it called through the map (`resolveCalledName`) and calls the server by its upstream name.
 
 ## Two views: bare and aliased
@@ -55,7 +57,7 @@ else refuse(call.message); // names the candidates
 - An upstream name outside that set is **normalized**, deterministically: each character outside `[A-Za-z0-9_-]` becomes `_` (one per code point), and a name over 64 characters is cut to 55 and ends in `_` and an eight-character hash of the name it came from (FNV-1a, the same on every run and platform). Both names are kept in the dispatch map.
 - An **alias** starts with a letter or an underscore, holds only `[A-Za-z0-9_-]`, contains no `__`, and is at most 32 characters. It is the operator's own, so an ill-formed alias is refused, never normalized.
 
-**The startup checks.** `createCivicRouter(manifest)` runs `checkToolNames` (an ill-formed alias, an alias or a source id two entries share, two tools whose exposed names collide after normalizing) and `assertUniqueToolNames` over the exposed names, then builds the dispatch map. A manifest that fails is refused with every problem named (`ToolNameError`, `DuplicateToolNameError`). Two sources may declare the same upstream name: their exposed names differ.
+**The startup checks.** `createCivicRouter(manifest)` runs `checkToolNames` (an ill-formed alias, an alias or a source id two entries share, an alias or an upstream tool named `load_source`, the first-step tool's reserved name, and two tools whose exposed names collide after normalizing) and `assertUniqueToolNames` over the exposed names, then builds the dispatch map. A manifest that fails is refused with every problem named (`ToolNameError`, `DuplicateToolNameError`). Two sources may declare the same upstream name: their exposed names differ.
 
 **The dispatch map** (`router.dispatchMap`, `dispatchMap(manifest)`) maps each exposed name to `{ exposedName, sourceId, alias, upstreamName, normalized }`. Dispatch reads it; it never splits a name, because an upstream name may itself hold `__` (`ckan__search_datasets`). `upstreamToolName(name)` and `sourceForAliasedName(name)` read it too.
 
@@ -128,6 +130,67 @@ The composition and the offered tools take an explicit selection of source ids, 
 
 Precedence: the configuration first. A selection id the manifest does not hold is ignored. There is no request field; the selection is the consumer's parameter.
 
+## In-loop routing: the directory, the first-step tool, and the harness definition
+
+Under in-loop routing ([ADR-0037](../../docs/adr/0037-the-first-step-tool.md)) the model's first request carries a short directory of sources and one tool, `load_source(alias)`; each later request carries the directory again, followed by the composition over the sources loaded so far, and their tools. The router composes each part. The consuming app owns the loop: it intercepts the `load_source` call, answers it with one plain line, and sends the next request. The router has no mode; a consumer that keeps all-sources routing calls none of these functions, and every output above is unchanged.
+
+**The directory.** `directoryPrompt({ configured, today, selection? })` lists the directory set (the sources `selection` offers, in manifest order), one line per source from its alias, `description` and `freshness`, after the intro, the heading `## Data sources` and one paragraph (`DIRECTORY_PARAGRAPH`). It calls no fetcher and names no tool. The core composer is `composeDirectory(frame, entries)`; the civic values are `directoryFrameFor(today)`.
+
+**The first-step tool.** `aliasedLoadSourceTool({ configured, selection? })` is `load_source` with one required argument, `alias`, whose enum is the directory set's aliases in manifest order. A new object on every call.
+
+**The reserved name.** `load_source` (`LOAD_SOURCE_TOOL_NAME`) is reserved: the dispatch rule accepts a bare upstream name, so a source tool of that name would take a bare call meant for the first-step tool. `createCivicRouter` refuses a manifest whose alias, or whose upstream tool, is named `load_source`, with a `ToolNameError` whose problem has the kind `reserved-name`.
+
+```ts
+import { civicRouter, CIVIC_MANIFEST, createCivicRouter, readMcpEnv, ToolNameError } from '@typedstandards/civic-typed-router';
+
+const configured = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
+const today = '2026-10-19';
+
+// The first request: the directory, and the one tool.
+const directory = civicRouter.directoryPrompt({ configured, today });
+const loadSource = civicRouter.aliasedLoadSourceTool({ configured });
+// directory ends with the lines for `socrata` and `data_commons`;
+// loadSource.function.parameters.properties.alias.enum is ['socrata', 'data_commons'].
+
+// A manifest that names a source load_source is refused.
+try {
+  createCivicRouter([...CIVIC_MANIFEST.slice(0, -1), { ...CIVIC_MANIFEST[3]!, alias: 'load_source' }]);
+} catch (error) {
+  if (!(error instanceof ToolNameError) || error.problems[0]!.kind !== 'reserved-name') throw error;
+}
+```
+
+**Composition for a loaded set.** `aliasedInLoopSystemPrompt({ ...BuildSystemPromptInput, loaded })`, with `selection` the directory set, returns the directory; when a loaded source is in the directory set, it continues with `BLOCK_SEPARATOR` and the aliased composition over the loaded sources without its intro (its preamble, one block per loaded source, its outro), so the role and the date are stated once. With nothing loaded it is `directoryPrompt` for the same input and calls no fetcher; a loaded id outside the directory set is not composed. The tools for the same request are the first-step tool and `aliasedOfferedMcpTools` over the loaded set.
+
+```ts
+const input = {
+  configured,
+  today,
+  publicationHost: null,
+  fetchPrompt: async () => 'The Socrata guidance the consumer fetched.',
+  fetchInstructions: async () => null,
+};
+const loaded = ['socrata'];
+const systemPrompt = await civicRouter.aliasedInLoopSystemPrompt({ ...input, loaded });
+const tools = [loadSource, ...civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpTools, configured, loaded)];
+// systemPrompt starts with the directory; tools are load_source, then socrata__get_data, socrata__search and socrata__fetch.
+```
+
+**The harness definition.** `harnessDefinition({ configured, selection, chosenBy, components })` returns `{ domain, sources, components, chosenBy, hash }`: `domain` is `'civic'` (`CIVIC_DOMAIN`), `sources` is `offeredSkillSources(configured, selection)`, `components` are the consumer's (`id`, `version?`, `guidanceHash?`, in its order; the router reads no entry's `id` and sees no block as composed), `chosenBy` is `'reader' | 'model' | 'instance'`, and `hash` is the lowercase hex SHA-256 of the canonical JSON of the other four. There is no `task`. Out-of-shape fields are refused with `HarnessDefinitionError`. The canonical JSON (`canonicalJson`: RFC 8785 for strings, arrays and plain objects, anything else refused with `CanonicalJsonError`) and the SHA-256 (`sha256Hex`) are this package's own code, so it stays browser-safe and dependency-free. The definition is an output: reading one from a file or an address, and a signer, are later work.
+
+```ts
+const definition = civicRouter.harnessDefinition({
+  configured,
+  selection: loaded,
+  chosenBy: 'model',
+  components: [
+    { id: 'socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server', guidanceHash: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' },
+    { id: '@typedstandards/civic-typed-router', version: '0.5.0' },
+  ],
+});
+// definition.sources is ['socrata']; definition.hash is 64 lowercase hex characters.
+```
+
 ## The pure-move contract, and the website at d1919a8
 
 0.1.0 moved what the reference website (`npstorey/civic-ai-tools-website`) wired in six files into this package without changing an output. The bare view keeps that contract against the website at commit **`d1919a86cc826c0870c8cfbc4c902791c6f9086d`**: given the same configuration and the same inputs, it produces the tools array and the composed system prompt the website produced there, byte for byte. (0.1.0 was captured at `3a0c894`; 0.2.0 brings the civic text up to `d1919a8`: San Francisco's portal as `data.sf.gov`, and the Data Commons text and schemas that take places by name and offer only the arguments the server reads.)
@@ -188,8 +251,8 @@ That is the bare view; the aliased view is the same calls through the `aliased*`
 
 | Directory | What it holds |
 |---|---|
-| `src/core/` | The manifest entry type, selection by configuration and by an explicit selection, the composer's join, the offered-tools filter, the tool-to-source index, two validations (duplicate tool names; a routing list against its schemas), and the naming layer (`alias.ts`: exposed names and their normalization, the checks, the dispatch map and rule, the views, the anchored rewrite and its reverse). No source text: every sentence arrives as a value. |
-| `src/civic/` | The three entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, and the configuration reader. |
+| `src/core/` | The manifest entry type, selection by configuration and by an explicit selection, the composer's join, the directory's join and the first-step tool, the harness definition with its canonical JSON and SHA-256, the offered-tools filter, the tool-to-source index, two validations (duplicate tool names; a routing list against its schemas), and the naming layer (`alias.ts`: exposed names and their normalization, the checks, the dispatch map and rule, the views, the anchored rewrite and its reverse). No source text: every sentence arrives as a value. |
+| `src/civic/` | The three entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, the directory's heading and paragraph and the first-step tool's text, and the configuration reader. |
 
 `src/civic/` may import `src/core/`; `src/core/` imports nothing from `src/civic/` and nothing from any package. `src/boundary.test.ts` enforces this, so extracting the core later as `@typedstandards/typed-router` (the reserved name) is a directory move. `src/index.ts` exports both.
 
@@ -227,7 +290,7 @@ Carried: each source's hosting variants, its logging posture, its consent defaul
 
 ## Purity
 
-No Node built-ins, no environment, no network, no logging, no clock and no RNG anywhere in shipped source; no `openai` import anywhere in the package; no runtime dependency. Enforced twice: `eslint.config.mjs` and `src/purity.test.ts`. The tool-schema type is structural (a JSON-schema shape), so a consumer's own tool type with that shape is accepted without an import.
+No Node built-ins, no environment, no network, no logging, no clock and no RNG anywhere in shipped source (the harness definition's SHA-256 is this package's own code, over `TextEncoder`'s bytes); no `openai` import anywhere in the package; no runtime dependency. Enforced twice: `eslint.config.mjs` and `src/purity.test.ts`. The tool-schema type is structural (a JSON-schema shape), so a consumer's own tool type with that shape is accepted without an import.
 
 ## Re-running the captures
 
