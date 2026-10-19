@@ -716,3 +716,21 @@ test('load span: a load call between two data calls is skipped in place — the 
     'no entry for the loaded source, and the call after the load keeps its own span',
   );
 });
+
+test('load span: a not-offered load between two data calls is skipped in place, like any load', () => {
+  const notOffered = loadSpan('data-commons');
+  notOffered.attributes = notOffered.attributes.map((a) =>
+    a.key === 'tool.load_outcome' ? { key: a.key, value: { stringValue: 'not-offered' } } : a,
+  );
+  const entries = buildDataSources(
+    [
+      { name: 'get_data', args: { type: 'query', portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+      { name: 'load_source', args: { alias: 'no_such_source' } },
+      { name: 'boston__search_datasets', args: { query: 'permits' } },
+    ],
+    traceWithToolSpans([toolSpan('socrata'), notOffered, toolSpan('boston-opencontext')]),
+    undefined,
+    NOW,
+  );
+  assert.deepEqual(entries.map((e) => `${e.sourceId}/${e.datasetId ?? ''}`), ['socrata/erm2-nwe9', 'boston-opencontext/']);
+});

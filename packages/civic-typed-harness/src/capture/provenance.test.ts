@@ -38,6 +38,7 @@ import {
   PRIOR_ERA_CIVIC_NS,
   PRIOR_ERA_CIVIC_URN_PREFIX,
   PRIOR_ERA_CIVIC_VOCABULARY,
+  type LoadOutcome,
 } from '../format/vocabulary.ts';
 import { CIVIC_SOURCE_REGISTRY, type CivicSourceRegistry } from '../format/sources.ts';
 import { buildDataSources } from '../civic/data-sources.ts';
@@ -1816,7 +1817,20 @@ test('#199 §2: every term format/vocabulary.ts declares is emitted by a driven 
 // entity for it; its activity is associated with the platform agent, states
 // the outcome, and states no `civic:sourceId`.
 
-const LOAD_OUTCOME_VALUES = ['loaded', 'declined', 'no-answer', 'unavailable'];
+/** The four of ADR-0033 amendment 2 in their positions, then `not-offered`,
+ *  the owner's amendment of D4 on 2026-10-19: the alias named no source of
+ *  the directory set, so nothing was loaded and the reader was not asked. */
+const LOAD_OUTCOME_VALUES = ['loaded', 'declined', 'no-answer', 'unavailable', 'not-offered'];
+
+/** The graph's nodes, or the error the build threw: a refusal reads as a
+ *  failed assertion, not as a thrown error. */
+function nodesOrError(trace: Record<string, unknown>): GraphNode[] | Error {
+  try {
+    return buildProvenanceGraph(trace, BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
+  } catch (e) {
+    return e as Error;
+  }
+}
 
 /** A load span; `extra` adds or overrides attributes, and an `undefined`
  *  outcome writes none. */
@@ -1910,14 +1924,27 @@ test('load span: no data-response entity, even when the span carries tool.respon
   assert.equal(JSON.stringify(nodes).includes('prov:wasDerivedFrom'), false);
 });
 
-test('load span: each of the four outcomes is stated as the span carried it', () => {
+test('load span: each of the five outcomes is stated as the span carried it', () => {
   for (const outcome of LOAD_OUTCOME_VALUES) {
-    const nodes = buildProvenanceGraph(traceOf([loadSpan('span-load', outcome)]), BASE_INPUT, CIVICAITOOLS_PROVENANCE_CONFIG)['@graph'] as GraphNode[];
-    assert.equal(activityForSpan(nodes, 'span-load')['civic:loadOutcome'], outcome);
+    const nodes = nodesOrError(traceOf([loadSpan('span-load', outcome)]));
+    assert.ok(!(nodes instanceof Error), `outcome ${outcome} was refused: ${nodes instanceof Error ? nodes.message : ''}`);
+    assert.equal(activityForSpan(nodes as GraphNode[], 'span-load')['civic:loadOutcome'], outcome);
   }
 });
 
-test('load span: an absent outcome, or one outside the four, is refused with LoadSpanError when the graph is built', () => {
+test('load span: a not-offered load mints no server agent and no data-response entity, and its activity states not-offered on the platform agent', () => {
+  const nodes = nodesOrError(traceOf([loadSpan('span-load', 'not-offered', { 'mcp.source': 'socrata', 'tool.response_hash': 'a0c0e0' })]));
+  assert.ok(!(nodes instanceof Error), `not-offered was refused: ${nodes instanceof Error ? nodes.message : ''}`);
+  const graph = nodes as GraphNode[];
+  const activity = activityForSpan(graph, 'span-load');
+  assert.equal(activity['civic:loadOutcome'], 'not-offered');
+  assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': PLATFORM_URN });
+  assert.equal(hasKey(activity, 'civic:sourceId'), false);
+  assert.deepEqual(mcpAgents(graph), []);
+  assert.equal(graph.some((n) => n['@id'].includes(':data:')), false);
+});
+
+test('load span: an absent outcome, or one outside the five, is refused with LoadSpanError when the graph is built', () => {
   const exported = (harnessEntry as Record<string, unknown>).LoadSpanError;
   assert.equal(typeof exported, 'function', 'LoadSpanError is exported from the package entry');
   for (const outcome of [undefined, '', 'Loaded', 'consented', 'failed', 'no_answer']) {
@@ -1949,8 +1976,14 @@ test('load span: under the prior-era vocabulary the activity carries the same te
   assert.deepEqual(activity['prov:wasAssociatedWith'], { '@id': `${PRIOR_ERA_CIVIC_URN_PREFIX}:platform:${CIVICAITOOLS_PROVENANCE_CONFIG.platformAgent.id}` });
 });
 
-test('ADR-0033 amendment 2: the outcome term is civic:loadOutcome, and its values are the four outcomes, in that order', () => {
+test('ADR-0033 amendment 2: the outcome term is civic:loadOutcome, and its values are the five outcomes — the four, then not-offered', () => {
   const vocabulary = vocabularyModule as Record<string, unknown>;
   assert.equal(vocabulary.CIVIC_TERM_LOAD_OUTCOME, 'civic:loadOutcome');
   assert.deepEqual(vocabulary.LOAD_OUTCOMES, LOAD_OUTCOME_VALUES);
+});
+
+test('ADR-0033 amendment 2: the LoadOutcome type admits not-offered', () => {
+  // @ts-expect-error -- the four-value type refuses the fifth; the fix removes this line.
+  const fifth: LoadOutcome = 'not-offered';
+  assert.equal(fifth, 'not-offered');
 });
