@@ -21,21 +21,10 @@ import {
   introFor,
   readMcpEnv,
   type BuildSystemPromptInput,
-  type CivicRouter,
   type McpRegistryEnv,
 } from './index.ts';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
-
-// --- What the phase adds, reached by name so the red tree type-checks ----------------
-
-type InLoop = (input: BuildSystemPromptInput & { readonly loaded: readonly string[] }) => Promise<string>;
-
-function inLoopOf(router: CivicRouter): InLoop {
-  const value = (router as unknown as Record<string, unknown>).aliasedInLoopSystemPrompt;
-  assert.equal(typeof value, 'function', 'CivicRouter has aliasedInLoopSystemPrompt');
-  return value as InLoop;
-}
 
 // --- Inputs ------------------------------------------------------------------------------
 
@@ -81,7 +70,7 @@ async function expectedInLoop(input: BuildSystemPromptInput, selection: readonly
 
 test('in-loop: with nothing loaded it is the directory, byte for byte, and calls no fetcher', async () => {
   const { input, calls } = inputFor(EVERY_SOURCE);
-  const prompt = await inLoopOf(civicRouter)({ ...input, loaded: [] });
+  const prompt = await civicRouter.aliasedInLoopSystemPrompt({ ...input, loaded: [] });
   assert.equal(prompt, civicRouter.directoryPrompt(input));
   assert.deepEqual(calls, []);
 });
@@ -90,7 +79,7 @@ test('in-loop: with nothing loaded it is the directory, byte for byte, and calls
 
 test('in-loop: one source loaded is the directory, the separator, and the aliased composition over it without its intro', async () => {
   const { input, calls } = inputFor(EVERY_SOURCE);
-  const prompt = await inLoopOf(civicRouter)({ ...input, loaded: ['socrata'] });
+  const prompt = await civicRouter.aliasedInLoopSystemPrompt({ ...input, loaded: ['socrata'] });
   assert.equal(prompt, await expectedInLoop(input, ['socrata']));
   assert.equal(prompt.indexOf(introFor(input.today)), 0);
   assert.equal(prompt.lastIndexOf(introFor(input.today)), 0, 'the intro is stated once');
@@ -99,7 +88,7 @@ test('in-loop: one source loaded is the directory, the separator, and the aliase
 
 test('in-loop: two sources loaded compose over both, in manifest order whatever the load order', async () => {
   const { input } = inputFor(EVERY_SOURCE);
-  const inLoop = inLoopOf(civicRouter);
+  const inLoop = civicRouter.aliasedInLoopSystemPrompt;
   const prompt = await inLoop({ ...input, loaded: ['data-commons', 'socrata'] });
   assert.equal(prompt, await expectedInLoop(input, ['socrata', 'data-commons']));
   assert.equal(prompt, await inLoop({ ...input, loaded: ['socrata', 'data-commons'] }));
@@ -112,14 +101,14 @@ test('in-loop: the output for one loaded source, with fixed fetchers, is the pin
   );
   assert.deepEqual(fixture.input.env, EVERY_SOURCE_ENV);
   const { input } = inputFor(readMcpEnv(fixture.input.env), { today: fixture.input.today, publicationHost: fixture.input.publicationHost });
-  const prompt = await inLoopOf(civicRouter)({ ...input, loaded: fixture.input.loaded });
+  const prompt = await civicRouter.aliasedInLoopSystemPrompt({ ...input, loaded: fixture.input.loaded });
   assert.ok(prompt === fixture.output, 'the in-loop prompt differs from the pinned fixture');
 });
 
 // --- A loaded id outside the directory set ------------------------------------------------
 
 test('in-loop: a loaded id outside the directory set composes nothing for it', async () => {
-  const inLoop = inLoopOf(civicRouter);
+  const inLoop = civicRouter.aliasedInLoopSystemPrompt;
   // Not in the selection.
   const narrowed = inputFor(EVERY_SOURCE, { selection: ['socrata', 'data-commons'] });
   assert.equal(
@@ -141,7 +130,7 @@ test('in-loop: a loaded id outside the directory set composes nothing for it', a
 // --- The tools and the offered reasons agree with the composed set ---------------------------
 
 test('in-loop: the offered tools and the offered reasons for a loaded set agree with the set it composes, for zero, one and two sources', async () => {
-  const inLoop = inLoopOf(civicRouter);
+  const inLoop = civicRouter.aliasedInLoopSystemPrompt;
   const sourceOf = (name: string): string | undefined => civicRouter.dispatchMap.get(name)?.sourceId;
   for (const loaded of [[], ['socrata'], ['socrata', 'data-commons']]) {
     const { input, calls } = inputFor(EVERY_SOURCE);

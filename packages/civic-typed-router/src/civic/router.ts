@@ -36,7 +36,9 @@
 //
 // In-loop routing (0.5.0, ADR-0037) adds functions in the aliased view only:
 // the directory, which reads each offered entry's `alias`, `description` and
-// `freshness`, and the first-step tool, which reads each one's `alias`.
+// `freshness`; the first-step tool, which reads each one's `alias`; and the
+// in-loop prompt, the directory followed by the composition over the loaded
+// sources without its intro.
 //
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
@@ -57,7 +59,7 @@ import {
   type DispatchMap,
   type DispatchTarget,
 } from '../core/alias.ts';
-import { composeManifestPrompt } from '../core/compose.ts';
+import { BLOCK_SEPARATOR, composeManifestPrompt } from '../core/compose.ts';
 import { composeDirectory, loadSourceTool } from '../core/directory.ts';
 import {
   isEntryOffered,
@@ -108,6 +110,14 @@ export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | '
 /** What the first-step tool needs: the directory set's configuration and
  *  selection. */
 export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 'selection'>;
+
+/** One in-loop request's prompt: a composition's inputs, with `selection`
+ *  the directory set, and the source ids loaded so far in the run. */
+export interface InLoopSystemPromptInput extends BuildSystemPromptInput {
+  /** The source ids the model has loaded, in any order. An id outside the
+   *  directory set is not composed. */
+  readonly loaded: readonly string[];
+}
 
 export interface CivicRouter {
   /** The manifest this router was built from. */
@@ -200,6 +210,13 @@ export interface CivicRouter {
    *  enum the directory set's aliases, in manifest order. A new object on
    *  every call. Its name is reserved (`LOAD_SOURCE_TOOL_NAME`). */
   aliasedLoadSourceTool(input: LoadSourceToolInput): FunctionToolSchema;
+  /** An in-loop request's system prompt (ADR-0037): the directory over
+   *  `selection`; and, when a source of the directory set is loaded, the
+   *  block separator and the aliased composition over the loaded sources of
+   *  the directory set (manifest order) without its intro: its preamble, one
+   *  block per loaded source, its outro. With nothing loaded it is
+   *  `directoryPrompt(input)` and calls no fetcher. */
+  aliasedInLoopSystemPrompt(input: InLoopSystemPromptInput): Promise<string>;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -268,7 +285,10 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   ): string =>
     lockedPortal ? `${systemPrompt}\n\n---\n\n${lockGuidance(view, lockedPortal, configured, selection)}` : systemPrompt;
 
-  const compose = (view: SourceView, input: BuildSystemPromptInput): Promise<string> => {
+  // `withIntro` false leaves the intro out: the preamble opens the text, so
+  // the result is the full composition less its intro and the blank line
+  // after it (the civic preamble is never empty).
+  const compose = (view: SourceView, input: BuildSystemPromptInput, withIntro = true): Promise<string> => {
     const entries = offeredEntries(manifest, configuredSources(input.configured), input.selection) as CivicManifestEntry[];
     const sources = entries.map((entry) => ({
       sourceId: entry.sourceId,
@@ -281,11 +301,9 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
       fetchPrompt: input.fetchPrompt,
       fetchInstructions: input.fetchInstructions,
     };
-    const frame = {
-      intro: introFor(input.today),
-      preamble: composePreamble(sources),
-      outro: composeOutro(sources.map((source) => source.citation)),
-    };
+    const preamble = composePreamble(sources);
+    const outro = composeOutro(sources.map((source) => source.citation));
+    const frame = withIntro ? { intro: introFor(input.today), preamble, outro } : { intro: preamble, outro };
     // The bare view calls each guidance entry exactly as 0.1.0 did, with the
     // context alone.
     return view === BARE_VIEW
@@ -407,6 +425,15 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
     directoryPrompt(input) {
       return composeDirectory(directoryFrameFor(input.today), directoryEntries(input.configured, input.selection));
+    },
+
+    async aliasedInLoopSystemPrompt(input) {
+      const entries = directoryEntries(input.configured, input.selection);
+      const directory = composeDirectory(directoryFrameFor(input.today), entries);
+      const loaded = new Set(input.loaded);
+      const composed = entries.filter((entry) => loaded.has(entry.sourceId)).map((entry) => entry.sourceId);
+      if (composed.length === 0) return directory;
+      return `${directory}${BLOCK_SEPARATOR}${await compose(aliased, { ...input, selection: composed }, false)}`;
     },
 
     aliasedLoadSourceTool(input) {

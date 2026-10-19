@@ -9,6 +9,7 @@ export {
   type BuildSystemPromptInput,
   type CivicRouter,
   type DirectoryPromptInput,
+  type InLoopSystemPromptInput,
   type LoadSourceToolInput,
 } from './router.ts';
 export type {
