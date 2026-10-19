@@ -1,0 +1,36 @@
+{
+  "source": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7, frozen 2026-10-11T12:12:02.837Z): its loadSourceTool, copied as that file has it.",
+  "loadSourceTool": {
+    "type": "function",
+    "function": {
+      "name": "load_source",
+      "description": "Load one data source from the directory in the system prompt, by its alias. The source's tools and guidance are added to this conversation, and you can call those tools on your next turn. Call it once per source; call it more than once to load several sources.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string",
+            "enum": [
+              "socrata",
+              "data_commons",
+              "boston",
+              "nyc_charter",
+              "nyc_budget",
+              "nyc_council",
+              "nys_legislation",
+              "nyc_record",
+              "nyc_checkbook",
+              "nyc_311",
+              "nyc_mta"
+            ],
+            "description": "The alias of the source to load, exactly as the directory lists it."
+          }
+        },
+        "required": [
+          "alias"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}
