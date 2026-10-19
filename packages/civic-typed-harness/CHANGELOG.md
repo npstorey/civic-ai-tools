@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.10.0 — 2026-10-20
 
 What a record of an in-loop run states (sprint R8, H2;
 [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)'s amendment
