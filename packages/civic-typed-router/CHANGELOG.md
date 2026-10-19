@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.5.0 — 2026-10-19
 
 In-loop routing: the directory, the first-step tool, composition for a
 loaded set, and the harness definition
