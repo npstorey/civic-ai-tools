@@ -1,8 +1,10 @@
 // Run-attribute extraction (CAPTURE group) — reads the facts the producer
 // recorded on the trace's ROOT span at run time (ADR-0033 §D, §E): the date
 // the prompt asserted, the servers the run had, the tools it offered, the
-// sources it was offered, the components that composed its prompt, and the
-// flows statement in force (by reference: address, hash and date).
+// sources it was offered, the components that composed its prompt, the
+// flows statement in force (by reference: address, hash and date), and, for
+// an in-loop run, how its sources were chosen and the hash of its harness
+// definition (ADR-0033 amendment 2).
 //
 // WHY THE TRACE (civic-ai-tools-website#495). A record is packaged after the
 // run, sometimes much later; a fact read at packaging is packaging-time state.
@@ -12,10 +14,11 @@
 // SHAPE, NOT POLICY. This module checks that each attribute parses as the
 // shape ADR-0033 names (JSON text of an array of objects whose named fields
 // are strings; for `analysis.flows_statement`, of one object of exactly three
-// strings) and returns it under the derivation's input names. The values —
-// the date form, the reason set, the hash form, the origin set, the address
-// form — are policy, checked by the format group's derivation, which refuses
-// a bad one by name.
+// strings; for `analysis.routing`, of one object of exactly two) and returns
+// it under the derivation's input names. The values — the date form, the
+// reason set, the hash forms, the origin set, the address form, the routing
+// method set — are policy, checked by the format group's derivation, which
+// refuses a bad one by name.
 //
 // An ABSENT attribute is an absent field. A PRESENT attribute that does not
 // parse is refused with `RunAttributeError`, never read as absent: absence
@@ -37,6 +40,8 @@ export interface ExtractedRunAttributes {
   sourcesOffered?: Array<{ sourceId: string; alias: string; reason: string }>;
   components?: Array<{ id: string; version?: string; guidanceHash?: string; guidanceOrigin?: string }>;
   flowsStatement?: { url: string; hash: string; date: string };
+  routing?: { method: string; version: string };
+  definitionHash?: string;
 }
 
 /** A root-span attribute that is present but not the shape ADR-0033 names. */
@@ -178,6 +183,15 @@ export function extractRunAttributes(
     const { url, hash, date } = exactStringObject('analysis.flows_statement', flows, ['url', 'hash', 'date']);
     out.flowsStatement = { url, hash, date };
   }
+
+  const routing = stringAttr(root, 'analysis.routing');
+  if (routing !== undefined) {
+    const { method, version } = exactStringObject('analysis.routing', routing, ['method', 'version']);
+    out.routing = { method, version };
+  }
+
+  const definitionHash = stringAttr(root, 'analysis.definition_hash');
+  if (definitionHash !== undefined) out.definitionHash = definitionHash;
 
   return out;
 }
