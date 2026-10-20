@@ -28,10 +28,20 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 
 // --- Inputs ------------------------------------------------------------------------------
 
-const EVERY_SOURCE_ENV = {
+/** The pinned fixture's configuration: 0.5.0's every source, the three
+ *  hosted sources of 0.6.0 unset (the fixture is held byte for byte). */
+const FIXTURE_ENV = {
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
+};
+/** Every source on: the fixture's configuration and the three switches of
+ *  0.6.0. */
+const EVERY_SOURCE_ENV = {
+  ...FIXTURE_ENV,
+  NYC_CHECKBOOK_HOSTING: 'sandbox',
+  NYC_RECORD_HOSTING: 'sandbox',
+  NYS_LEGISLATION_HOSTING: 'sandbox',
 };
 const EVERY_SOURCE = readMcpEnv(EVERY_SOURCE_ENV);
 
@@ -99,7 +109,7 @@ test('in-loop: the output for one loaded source, with fixed fetchers, is the pin
   const fixture: { input: { env: Record<string, string>; today: string; publicationHost: string; loaded: string[] }; output: string } = JSON.parse(
     readFileSync(join(FIXTURES, 'in-loop-one-source.json'), 'utf8'),
   );
-  assert.deepEqual(fixture.input.env, EVERY_SOURCE_ENV);
+  assert.deepEqual(fixture.input.env, FIXTURE_ENV);
   const { input } = inputFor(readMcpEnv(fixture.input.env), { today: fixture.input.today, publicationHost: fixture.input.publicationHost });
   const prompt = await civicRouter.aliasedInLoopSystemPrompt({ ...input, loaded: fixture.input.loaded });
   assert.ok(prompt === fixture.output, 'the in-loop prompt differs from the pinned fixture');

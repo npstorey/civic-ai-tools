@@ -1,7 +1,7 @@
 {
   "name": "@typedstandards/civic-typed-router",
-  "version": "0.5.0",
-  "description": "The civic MCP router for Typed Standards applications: one manifest of four sources (Socrata, Google Data Commons, Boston OpenContext, and NYC Charter, Laws and Rules, which the instance runs from a pinned package) with their tool schemas and guidance, selection by configuration, and the composed system prompt. A domain-free core in src/core/, the civic content in src/civic/. Reads no clock, no environment and no network; the consumer supplies them.",
+  "version": "0.6.0",
+  "description": "The civic MCP router for Typed Standards applications: one manifest of seven sources (Socrata, Google Data Commons, Boston OpenContext, and four the instance runs from pinned packages: NYC Charter, Laws and Rules; NYC Checkbook; NYC City Record; NYS Open Legislation) with their tool schemas and guidance, selection by configuration, and the composed system prompt. A domain-free core in src/core/, the civic content in src/civic/. Reads no clock, no environment and no network; the consumer supplies them.",
   "license": "MIT",
   "author": "Nathan Storey",
   "type": "module",

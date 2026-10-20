@@ -158,6 +158,11 @@ export interface HostingVariantCommon {
    *  variant is selected by its address variable's presence. */
   readonly variant: string;
   readonly runsAt: HostingRunsAt;
+  /** Where the variant sends the instance's key: `'header'`, in a request
+   *  header; `'query'`, in the request URL's query string. Absent: the
+   *  variant sends no key of the instance's. Carried, never read by the
+   *  router (since 0.6.0). */
+  readonly keyIn?: 'header' | 'query';
   /** Every holder of logs of what the variant is sent, in the order the data
    *  flows: the server's holder first, then each onward recipient. */
   readonly logging: readonly LoggingPosture[];

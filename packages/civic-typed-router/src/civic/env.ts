@@ -15,6 +15,13 @@
 // Charter, Laws and Rules; `./nyc-charter.ts`). Its key is in the result only
 // when the switch is on, so with the switch unset every reading is 0.2.0's,
 // key for key.
+//
+// Since 0.6.0 it reads three more switches of the same kind, one per hosted
+// source: `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` and
+// `NYS_LEGISLATION_HOSTING` (`./nyc-checkbook.ts`, `./nyc-record.ts`,
+// `./nys-legislation.ts`). Each is on only at exactly `sandbox` after
+// trimming, and each key is in the result only while its switch is on, so
+// with the three unset every reading is 0.5.0's, key for key.
 
 import type { ConfiguredAddresses } from '../core/types.ts';
 
@@ -27,11 +34,25 @@ export const BOSTON_OPENCONTEXT_ADDRESS_VARIABLE = 'BOSTON_OPENCONTEXT_MCP_URL';
  *  runs itself, so it takes no address. */
 export const NYC_CHARTER_HOSTING_VARIABLE = 'NYC_CHARTER_HOSTING';
 
-/** The one value of `NYC_CHARTER_HOSTING` that switches the source on: the
- *  instance runs the pinned package in a sandbox it creates. Compared after
- *  trimming, and exactly: any other value leaves the switch off. It is the
- *  name of the variant it turns on (`NYC_CHARTER_SANDBOX_VARIANT.variant`). */
-export const NYC_CHARTER_HOSTING_SANDBOX = 'sandbox';
+/** The switch that offers NYC Checkbook (since 0.6.0). */
+export const NYC_CHECKBOOK_HOSTING_VARIABLE = 'NYC_CHECKBOOK_HOSTING';
+/** The switch that offers NYC City Record (since 0.6.0). */
+export const NYC_RECORD_HOSTING_VARIABLE = 'NYC_RECORD_HOSTING';
+/** The switch that offers NYS Open Legislation (since 0.6.0). */
+export const NYS_LEGISLATION_HOSTING_VARIABLE = 'NYS_LEGISLATION_HOSTING';
+
+/** The one value of a hosted source's switch that turns it on: the instance
+ *  runs the pinned package in a sandbox it creates. Compared after trimming,
+ *  and exactly: any other value leaves the switch off. It is the name of the
+ *  variant it turns on (each hosted entry's `sandbox` variant). Since 0.6.0,
+ *  the name every switch shares; `NYC_CHARTER_HOSTING_SANDBOX` is the same
+ *  value under its 0.3.0 name. */
+export const HOSTING_SANDBOX = 'sandbox';
+
+/** The one value of `NYC_CHARTER_HOSTING` that switches the source on:
+ *  `HOSTING_SANDBOX`, under its 0.3.0 name. It is the name of the variant it
+ *  turns on (`NYC_CHARTER_SANDBOX_VARIANT.variant`). */
+export const NYC_CHARTER_HOSTING_SANDBOX = HOSTING_SANDBOX;
 
 /** Google's hosted Data Commons endpoint: a third-party public service, used
  *  when the instance configures no Data Commons address. */
@@ -50,6 +71,15 @@ export interface McpRegistryEnv {
    *  switch is on. Absent when it is unset, blank or any other value, so a
    *  value the instance cannot run never offers the source. */
   nycCharterHosting?: typeof NYC_CHARTER_HOSTING_SANDBOX;
+  /** Present only when `NYC_CHECKBOOK_HOSTING` is `sandbox` after trimming
+   *  (since 0.6.0). */
+  nycCheckbookHosting?: typeof HOSTING_SANDBOX;
+  /** Present only when `NYC_RECORD_HOSTING` is `sandbox` after trimming
+   *  (since 0.6.0). */
+  nycRecordHosting?: typeof HOSTING_SANDBOX;
+  /** Present only when `NYS_LEGISLATION_HOSTING` is `sandbox` after trimming
+   *  (since 0.6.0). */
+  nysLegislationHosting?: typeof HOSTING_SANDBOX;
 }
 
 /** A plain object of configuration variables, such as a process environment. */
@@ -63,13 +93,15 @@ function presentOrUndefined(raw: string | undefined): string | undefined {
 /** Whether a switch's raw value turns it on: exactly `sandbox` after
  *  trimming. */
 function hostingSwitchOn(raw: string | undefined): boolean {
-  return typeof raw === 'string' && raw.trim() === NYC_CHARTER_HOSTING_SANDBOX;
+  return typeof raw === 'string' && raw.trim() === HOSTING_SANDBOX;
 }
 
 /** Read the civic sources' configuration from `source`. The four address and
  *  key fields are always present, in this order, with `undefined` for an
- *  absent value. `nycCharterHosting` follows them only when its switch is on;
- *  otherwise the result has no such key. */
+ *  absent value. Each switch's key follows them only when that switch is on,
+ *  in manifest order (`nycCharterHosting`, `nycCheckbookHosting`,
+ *  `nycRecordHosting`, `nysLegislationHosting`); otherwise the result has no
+ *  such key. */
 export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
   return {
     socrataUrl: presentOrUndefined(source[SOCRATA_ADDRESS_VARIABLE]),
@@ -77,13 +109,16 @@ export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
     dataCommonsApiKey: source[DATA_COMMONS_KEY_VARIABLE] || undefined,
     bostonOpencontextUrl: presentOrUndefined(source[BOSTON_OPENCONTEXT_ADDRESS_VARIABLE]),
     ...(hostingSwitchOn(source[NYC_CHARTER_HOSTING_VARIABLE]) ? { nycCharterHosting: NYC_CHARTER_HOSTING_SANDBOX } : {}),
+    ...(hostingSwitchOn(source[NYC_CHECKBOOK_HOSTING_VARIABLE]) ? { nycCheckbookHosting: HOSTING_SANDBOX } : {}),
+    ...(hostingSwitchOn(source[NYC_RECORD_HOSTING_VARIABLE]) ? { nycRecordHosting: HOSTING_SANDBOX } : {}),
+    ...(hostingSwitchOn(source[NYS_LEGISLATION_HOSTING_VARIABLE]) ? { nysLegislationHosting: HOSTING_SANDBOX } : {}),
   };
 }
 
 /** Each civic source's configured address, keyed by source id: the mapping
  *  the reference website keeps as `MCP_SOURCE_ADDRESS_FIELD`. Addresses only:
- *  a hosted source has none, so NYC Charter never has a key here, switch on
- *  or off. */
+ *  a hosted source has none, so no hosted source ever has a key here, switch
+ *  on or off. */
 export function configuredAddresses(configured: McpRegistryEnv): ConfiguredAddresses {
   return {
     socrata: configured.socrataUrl,
@@ -99,5 +134,8 @@ export function configuredSources(configured: McpRegistryEnv): ConfiguredAddress
   return {
     ...configuredAddresses(configured),
     ...(configured.nycCharterHosting === NYC_CHARTER_HOSTING_SANDBOX ? { 'nyc-charter': NYC_CHARTER_HOSTING_SANDBOX } : {}),
+    ...(configured.nycCheckbookHosting === HOSTING_SANDBOX ? { 'nyc-checkbook': HOSTING_SANDBOX } : {}),
+    ...(configured.nycRecordHosting === HOSTING_SANDBOX ? { 'nyc-record': HOSTING_SANDBOX } : {}),
+    ...(configured.nysLegislationHosting === HOSTING_SANDBOX ? { 'nys-legislation': HOSTING_SANDBOX } : {}),
   };
 }

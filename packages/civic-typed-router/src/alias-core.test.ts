@@ -7,6 +7,9 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   anchoredRewrite,
@@ -146,11 +149,19 @@ test('names (c): each refusal also happens at construction', () => {
   }
 });
 
-// --- (d) The sixteen names in view ------------------------------------------------
+// --- (d) The fifty-seven names in view --------------------------------------------
 
-test('names (d): the sixteen names in view are unchanged by normalization', () => {
+/** The upstream names a committed capture lists, in its order. */
+const capturedNames = (fixture: string): string[] =>
+  (JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', fixture), 'utf8')) as { tools: { name: string }[] }).tools.map(
+    (t) => t.name,
+  );
+
+test('names (d): the fifty-seven names in view are unchanged by normalization', () => {
   // Since 0.3.0 the civic manifest holds the fifth source's five itself
   // (alias `nyc_charter`); through 0.2.0 this test added a stub for them.
+  // Since 0.6.0 it holds the three hosted sources' 10, 7 and 24, after them,
+  // named from their committed captures.
   const map = dispatchMap(CIVIC_MANIFEST);
   const expected = [
     'socrata__get_data',
@@ -169,7 +180,11 @@ test('names (d): the sixteen names in view are unchanged by normalization', () =
     'nyc_charter__list_titles',
     'nyc_charter__get_title',
     'nyc_charter__get_version',
+    ...capturedNames('nyc-checkbook-tools.json').map((name) => `nyc_checkbook__${name}`),
+    ...capturedNames('nyc-record-tools.json').map((name) => `nyc_record__${name}`),
+    ...capturedNames('nys-legislation-tools.json').map((name) => `nys_legislation__${name}`),
   ];
+  assert.equal(expected.length, 57);
   assert.deepEqual([...map.keys()], expected);
   assert.deepEqual([...map.values()].filter((t) => t.sourceId === 'nyc-charter').map((t) => t.upstreamName), CHARTER_TOOLS);
   for (const target of map.values()) {
@@ -178,7 +193,8 @@ test('names (d): the sixteen names in view are unchanged by normalization', () =
     assert.match(target.exposedName, TOOL_NAME_PATTERN);
   }
   const longest = Math.max(...expected.map((n) => n.length));
-  assert.equal(longest, 31, 'data_commons__search_indicators');
+  assert.equal(longest, 41, 'nys_legislation__list_hearing_transcripts');
+  assert.equal(expected.find((n) => n.length === longest), 'nys_legislation__list_hearing_transcripts');
 });
 
 // --- (e) The dispatch rule ---------------------------------------------------------

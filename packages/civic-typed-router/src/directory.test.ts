@@ -46,10 +46,15 @@ const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8
 // --- Inputs ------------------------------------------------------------------------------
 
 const TODAY = '2026-01-15';
+/** Every source on: both optional addresses, and all four hosted sources'
+ *  switches (since 0.6.0, the three after Charter's too). */
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
+  NYC_CHECKBOOK_HOSTING: 'sandbox',
+  NYC_RECORD_HOSTING: 'sandbox',
+  NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
 
@@ -95,19 +100,19 @@ test('directory: a description without closing punctuation gains a period, and o
   );
 });
 
-// --- The four current entries ----------------------------------------------------------------
+// --- The seven current entries ---------------------------------------------------------------
 
-test('directory: for the four current entries each line is the rule over the entry\'s alias, description and freshness, in manifest order', () => {
+test('directory: for the seven current entries each line is the rule over the entry\'s alias, description and freshness, in manifest order', () => {
   const directory = civicRouter.directoryPrompt({ configured: EVERY_SOURCE, today: TODAY });
   assert.equal(directory, expectedDirectory(TODAY, CIVIC_MANIFEST));
   assert.deepEqual(entryLines(directory), CIVIC_MANIFEST.map(lineOf));
 });
 
-test('directory: with every source configured it has four lines; with Boston OpenContext and NYC Charter unconfigured, two', () => {
+test('directory: with every source configured it has seven lines; with Boston OpenContext and the four hosted sources unconfigured, two', () => {
   const directoryPrompt = civicRouter.directoryPrompt;
   assert.deepEqual(
     entryLines(directoryPrompt({ configured: EVERY_SOURCE, today: TODAY })).map((line) => line.split('`')[1]),
-    ['socrata', 'data_commons', 'boston', 'nyc_charter'],
+    ['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation'],
   );
   const two = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY });
   assert.deepEqual(entryLines(two).map((line) => line.split('`')[1]), ['socrata', 'data_commons']);

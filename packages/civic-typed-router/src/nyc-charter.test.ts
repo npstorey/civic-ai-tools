@@ -100,9 +100,11 @@ function env(value: string | undefined, boston = true): McpRegistryEnv {
 
 // --- The entry -----------------------------------------------------------------------
 
-test('charter entry: the last civic entry, optional, offered by NYC_CHARTER_HOSTING, with its alias and id', () => {
+test('charter entry: the fourth civic entry, optional, offered by NYC_CHARTER_HOSTING, with its alias and id', () => {
   const entry = charter();
-  assert.equal(CIVIC_MANIFEST.at(-1), entry, 'after Boston OpenContext, so the three before it keep their order');
+  // After Boston OpenContext, so the three before it keep their order; the
+  // three hosted sources of 0.6.0 follow it.
+  assert.equal(CIVIC_MANIFEST[3], entry, 'after Boston OpenContext, so the three before it keep their order');
   assert.deepEqual([entry.sourceId, entry.alias, entry.configuration.requirement], ['nyc-charter', 'nyc_charter', 'optional']);
   assert.equal(entry.configuration.addressVariable, 'NYC_CHARTER_HOSTING');
   assert.equal(entry.configuration.defaultAddress, undefined, 'no default address');
@@ -133,10 +135,10 @@ test('charter entry: the sandbox variant carries the package, the version and th
   assert.notEqual(`pkg:npm/${encodeURIComponent(hosting!.package as string)}@${hosting!.version}`, purl);
   assert.equal(purl, 'pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1');
   assert.equal(`${hosting!.version}+${(hosting!.commit as string).slice(0, 12)}`, '0.3.1+b784cb763ec0');
-  // No address anywhere in it, and none of the three existing entries carries
+  // No address anywhere in it, and none of the three remote entries carries
   // an npm-package variant.
   assert.doesNotMatch(JSON.stringify(hosting), /https?:|url|address|endpoint|port/i);
-  for (const entry of CIVIC_MANIFEST.filter((e) => e.sourceId !== 'nyc-charter')) {
+  for (const entry of CIVIC_MANIFEST.slice(0, 3)) {
     assert.equal(hostingOf(entry), undefined, `${entry.sourceId} carries no npm-package variant`);
   }
 });
@@ -230,13 +232,27 @@ test('switch: sourcesOffered gives nyc-charter not-configured with the switch of
     ['data-commons', 'data_commons', 'configured'],
     ['boston-opencontext', 'boston', 'configured'],
   ];
-  assert.deepEqual(rows(env(undefined)), [...three, ['nyc-charter', 'nyc_charter', 'not-configured']]);
-  assert.deepEqual(rows(env('hosted')), [...three, ['nyc-charter', 'nyc_charter', 'not-configured']]);
-  assert.deepEqual(rows(env('sandbox')), [...three, ['nyc-charter', 'nyc_charter', 'configured']]);
+  // The three hosted sources of 0.6.0, their switches unset in `env`.
+  const after = [
+    ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
+    ['nyc-record', 'nyc_record', 'not-configured'],
+    ['nys-legislation', 'nys_legislation', 'not-configured'],
+  ];
+  assert.deepEqual(rows(env(undefined)), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
+  assert.deepEqual(rows(env('hosted')), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
+  assert.deepEqual(rows(env('sandbox')), [...three, ['nyc-charter', 'nyc_charter', 'configured'], ...after]);
   assert.deepEqual(civicRouter.offeredSkillSources(env('sandbox')), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter']);
   assert.deepEqual(civicRouter.offeredSkillSources(env(undefined)), ['socrata', 'data-commons', 'boston-opencontext']);
   // A selection narrows it as any other source.
-  assert.deepEqual(civicRouter.sourcesOffered(env('sandbox'), ['socrata']).map((s) => s.reason), ['selected', 'not-selected', 'not-selected', 'not-selected']);
+  assert.deepEqual(civicRouter.sourcesOffered(env('sandbox'), ['socrata']).map((s) => s.reason), [
+    'selected',
+    'not-selected',
+    'not-selected',
+    'not-selected',
+    'not-configured',
+    'not-configured',
+    'not-configured',
+  ]);
 });
 
 // --- Switched on: the tools and the prompt ----------------------------------------------
@@ -381,10 +397,25 @@ test('dispatch: a bare "search" resolves to socrata__search with the switch off,
 
 test('bare view, switch on: it cannot tell the two "search" tools apart by name, so it offers both (use the aliased view)', () => {
   const tools = civicRouter.offeredMcpTools(civicRouter.mcpToolsFor(undefined), env('sandbox'));
-  assert.equal(tools, civicRouter.mcpTools, 'nothing withheld: the vocabulary itself');
-  assert.deepEqual(
-    tools.filter((t) => t.function.name === 'search').map((t) => civicRouter.manifest.find((e) => e.tools.includes(t))!.sourceId),
-    ['socrata', 'nyc-charter'],
-  );
-  assert.deepEqual(civicRouter.withheldToolNames(env('sandbox')), []);
+  const searchSources = (list: typeof tools) =>
+    list.filter((t) => t.function.name === 'search').map((t) => civicRouter.manifest.find((e) => e.tools.includes(t))!.sourceId);
+  assert.deepEqual(searchSources(tools), ['socrata', 'nyc-charter']);
+  // Only the three hosted sources of 0.6.0, whose switches are unset, are
+  // withheld, by their own schema objects: Socrata's and Charter's tools are
+  // the vocabulary's, in order.
+  const hostedOf06 = new Set(civicRouter.manifest.slice(4).flatMap((e) => e.tools));
+  assert.deepEqual(tools, civicRouter.mcpTools.filter((t) => !hostedOf06.has(t)));
+  // With every switch on, nothing is withheld: the vocabulary itself.
+  const everySwitch = readMcpEnv({
+    SOCRATA_MCP_URL: SOCRATA,
+    BOSTON_OPENCONTEXT_MCP_URL: BOSTON,
+    NYC_CHARTER_HOSTING: 'sandbox',
+    NYC_CHECKBOOK_HOSTING: 'sandbox',
+    NYC_RECORD_HOSTING: 'sandbox',
+    NYS_LEGISLATION_HOSTING: 'sandbox',
+  });
+  const all = civicRouter.offeredMcpTools(civicRouter.mcpToolsFor(undefined), everySwitch);
+  assert.equal(all, civicRouter.mcpTools, 'nothing withheld: the vocabulary itself');
+  assert.deepEqual(searchSources(all), ['socrata', 'nyc-charter', 'nys-legislation']);
+  assert.deepEqual(civicRouter.withheldToolNames(everySwitch), []);
 });
