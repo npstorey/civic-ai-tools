@@ -1991,13 +1991,13 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 7,
-    "notes": "No API key required (optional SOCRATA_APP_TOKEN for higher rate limits). Needs network: every tool queries NYC Open Data. README credits socrata-mcp-server as inspiration for its SODA API pattern. Published on npm as @betanyc/nyc-record-mcp since 2026-05-21; latest release 1.1.0 (npm and GitHub, 2026-07-22).",
+    "notes": "No API key required (optional SOCRATA_APP_TOKEN for higher rate limits). Needs network: every tool queries NYC Open Data. README credits socrata-mcp-server as inspiration for its SODA API pattern. Published on npm as @betanyc/nyc-record-mcp since 2026-05-21; latest release 1.1.0 (npm and GitHub, 2026-07-22; `gitHead` 6c52a53). `@typedstandards/civic-typed-router` (from 0.6.0) carries it as the source `nyc-record`, pinned at 1.1.0 and switched off by default, which an instance runs itself when `NYC_RECORD_HOSTING=sandbox`; its sandbox may reach data.cityofnewyork.us only.",
     "npmPackage": "@betanyc/nyc-record-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-09-18",
+    "dateModified": "2026-10-19",
     "version": "1.1.0",
     "dataPlatform": [
       "socrata"
@@ -2027,14 +2027,14 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 5,
-    "notes": "No API key required. Runs with no network: the section index ships in the npm package (22,185 sections in 0.3.1; the Charter and the Administrative Code current through Local Law 2026/147, the Rules through rules effective 2026-10-04, as its get_version tool reports). Since 2026-10-12 the publisher's daily refresh releases a patch version on npm whenever the law text changes (`release.yml` at b784cb7), so the npm package carries the refreshed index. Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. serverInfo reports the package version (0.3.1). Published on npm as @betanyc/nyc-charter-laws-rules since 2026-05-21; latest release 0.3.1 (npm and GitHub, 2026-10-12; `gitHead` b784cb7). Five tools: search, get_section, list_titles, get_title, get_version. `@typedstandards/civic-typed-router` (from 0.3.0) carries it as the source `nyc-charter`, pinned at 0.3.1, which an instance runs itself when `NYC_CHARTER_HOSTING=sandbox` (verified 2026-10-16); the router's next release, as planned, carries it as the hosting variant `sandbox` (ADR-0036).",
+    "notes": "No API key required. Runs with no network: the section index ships in the npm package (22,185 sections in 0.3.1; the Charter and the Administrative Code current through Local Law 2026/147, the Rules through rules effective 2026-10-04, as its get_version tool reports). Since 2026-10-12 the publisher's daily refresh releases a patch version on npm whenever the law text changes (`release.yml` at b784cb7), so the npm package carries the refreshed index. Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. serverInfo reports the package version (0.3.1). Published on npm as @betanyc/nyc-charter-laws-rules since 2026-05-21; latest release 0.3.1 (npm and GitHub, 2026-10-12; `gitHead` b784cb7). Five tools: search, get_section, list_titles, get_title, get_version. `@typedstandards/civic-typed-router` (from 0.3.0) carries it as the source `nyc-charter`, pinned at 0.3.1, which an instance runs itself when `NYC_CHARTER_HOSTING=sandbox` (verified 2026-10-16); since 0.4.0 the router carries it as the hosting variant `sandbox` (ADR-0036).",
     "npmPackage": "@betanyc/nyc-charter-laws-rules",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-09-18",
-    "version": "0.2.0"
+    "dateModified": "2026-10-19",
+    "version": "0.3.1"
   },
   {
     "id": "nyc-checkbook-mcp",
@@ -2059,14 +2059,14 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 10,
-    "notes": "No API key required. Needs network: every tool calls the Checkbook NYC API, which the server paces to one request per second. tools/list returns 10 tools; smart_search stays disabled unless CHECKBOOK_ENABLE_SMART_SEARCH=1, and the README documents the other 9. Published on npm as @betanyc/nyc-checkbook-mcp since 2026-05-21; latest release 1.6.1 (npm and GitHub, 2026-08-01).",
+    "notes": "No API key required. Needs network: every tool calls the Checkbook NYC API, which the server paces to one request per second. tools/list returns 10 tools; smart_search stays disabled unless CHECKBOOK_ENABLE_SMART_SEARCH=1, and the README documents the other 9. Published on npm as @betanyc/nyc-checkbook-mcp since 2026-05-21; latest release 1.6.3 (npm, 2026-10-17; `gitHead` f013a27, one commit behind the repository's head, a commit that changes no code). `@typedstandards/civic-typed-router` (from 0.6.0) carries it as the source `nyc-checkbook`, pinned at 1.6.3 and switched off by default, which an instance runs itself when `NYC_CHECKBOOK_HOSTING=sandbox`; its sandbox may reach www.checkbooknyc.com only.",
     "npmPackage": "@betanyc/nyc-checkbook-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-09-18",
-    "version": "1.6.1",
+    "dateModified": "2026-10-19",
+    "version": "1.6.3",
     "dataPlatform": [
       "custom-api"
     ]
@@ -2127,14 +2127,14 @@
     ],
     "jurisdiction": "New York State",
     "toolCount": 24,
-    "notes": "Requires a free NYS_LEGISLATION_API_KEY. An optional local SQLite corpus, built with the key from a repository clone (the sync scripts are not in the npm package), enables local-only mode, which needs no network; 6 of the 24 tools have no local coverage. Published on npm as @betanyc/nys-openlegislation-mcp since 2026-05-22; latest release 2.3.0 (npm and GitHub, 2026-07-22).",
+    "notes": "Requires a free NYS_LEGISLATION_API_KEY. An optional local SQLite corpus, built with the key from a repository clone (the sync scripts are not in the npm package), enables local-only mode, which needs no network; 5 of the 24 tools have no local coverage (the README at 2.4.0). Without a key or a corpus the server exits at start; the key is sent in the request URL. Published on npm as @betanyc/nys-openlegislation-mcp since 2026-05-22; latest release 2.4.0 (npm, 2026-10-12; `gitHead` cc069c4); serverInfo reports version 2.3.0. `@typedstandards/civic-typed-router` (from 0.6.0) carries it as the source `nys-legislation`, pinned at 2.4.0 and switched off by default, which an instance runs itself when `NYS_LEGISLATION_HOSTING=sandbox` and supplies the key; its sandbox may reach legislation.nysenate.gov only.",
     "npmPackage": "@betanyc/nys-openlegislation-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": true,
     "verificationStatus": "community",
-    "dateModified": "2026-09-18",
-    "version": "2.3.0",
+    "dateModified": "2026-10-19",
+    "version": "2.4.0",
     "dataPlatform": [
       "custom-api"
     ]
@@ -2161,13 +2161,13 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 7,
-    "notes": "The MCP server in the New-York-City-Budget repository (mcp/). No API key required. Runs with no network: a SQLite database of the repository's data ships in the npm package. Schedule C awards cover FY2015–FY2027. The npm package is MIT; the repository README licenses its data CC BY-SA 4.0 (LICENSE-DATA). The repository's main branch declares 1.4.0, which is not on npm, so a clone reports a different serverInfo version from npx. Published on npm as @betanyc/nyc-budget-mcp since 2026-07-08; latest release 1.3.1 (npm, and GitHub tag mcp-v1.3.1, 2026-08-11).",
+    "notes": "The MCP server in the New-York-City-Budget repository (mcp/). No API key required. Runs with no network: a SQLite database of the repository's data ships in the npm package. Schedule C awards cover FY2015–FY2027. The repository's LICENSE (at f5740c3) is the MIT License, applied by its preamble to the code, the derived data in data/ and BetaNYC's documentation, and not to the source documents in source/, which are public records whose rights stay with their publishers; mcp/package.json says MIT. The repository's main branch declares 1.4.0, which is not on npm, so a clone reports a different serverInfo version from npx. Published on npm as @betanyc/nyc-budget-mcp since 2026-07-08; latest release 1.3.1 (npm, and GitHub tag mcp-v1.3.1, 2026-08-11).",
     "npmPackage": "@betanyc/nyc-budget-mcp",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
     "apiKeyRequired": false,
     "verificationStatus": "community",
-    "dateModified": "2026-09-18",
+    "dateModified": "2026-10-19",
     "version": "1.3.1"
   }
 ]
