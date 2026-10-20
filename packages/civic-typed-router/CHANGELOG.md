@@ -43,11 +43,12 @@ their switches are off.
 - **Consent defaults:** `'ask-first'` for NYC Checkbook and NYS Open
   Legislation, `'on'` for NYC City Record; `publisher` BetaNYC for all three.
 - **`keyIn?: 'header' | 'query'`** on `HostingVariantCommon`: where a
-  variant sends the instance's key, so a consumer can state that the
-  holder's logs can attribute the requests to the instance. NYS Open
-  Legislation's variant carries `keyIn: 'query'` (the server sends its key
-  in the request URL); no other variant carries it. Carried, never read by
-  the router. How the key reaches the sandbox is the consumer's.
+  variant sends the instance's key, `'header'` (a request header) or
+  `'query'` (the request URL's query string); absent, the variant sends
+  no key of the instance's. NYS Open Legislation's variant carries
+  `keyIn: 'query'` (the server sends its key in the request URL); no other
+  variant carries it. Carried, never read by the router. How the key
+  reaches the sandbox is the consumer's.
 - **Three switches:** `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` and
   `NYS_LEGISLATION_HOSTING` (`*_HOSTING_VARIABLE`), each on only when its
   trimmed value is exactly `sandbox`. `readMcpEnv` then adds

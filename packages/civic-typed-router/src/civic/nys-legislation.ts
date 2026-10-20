@@ -753,12 +753,11 @@ export const NYS_LEGISLATION_HOSTING: SourceHosting = {
 
 /** The source's one variant: the pinned package, run in a sandbox the
  *  instance creates, while `NYS_LEGISLATION_HOSTING` is `sandbox`. The
- *  instance's key travels in the query string of every request (`keyIn`), so
- *  the API's logs can attribute those requests to the instance. Two log
- *  holders, in the order the data flows: the platform the instance runs its
- *  sandboxes on (the instance states its posture), then the New York State
- *  Senate, whose policy, read on the date below, covers "all Senate Websites"
- *  and says nothing of API requests. */
+ *  server sends the instance's key in the request URL's query string
+ *  (`keyIn: 'query'`). Two log holders, in the order the data flows: the
+ *  platform the instance runs its sandboxes on (the instance states its
+ *  posture), then the New York State Senate, whose policy, read on the date
+ *  below, covers "all Senate Websites" and says nothing of API requests. */
 export const NYS_LEGISLATION_SANDBOX_VARIANT: NpmPackageVariant = {
   ...NYS_LEGISLATION_HOSTING,
   variant: HOSTING_SANDBOX,
