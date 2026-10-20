@@ -42,10 +42,15 @@ function r5With(aliases: readonly string[]): FunctionToolSchema {
   return tool as unknown as FunctionToolSchema;
 }
 
+/** Every source on: both optional addresses, and all four hosted sources'
+ *  switches (since 0.6.0, the three after Charter's too). */
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
+  NYC_CHECKBOOK_HOSTING: 'sandbox',
+  NYC_RECORD_HOSTING: 'sandbox',
+  NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
 
@@ -57,9 +62,9 @@ test('load_source: the fixture is R5\'s frozen tool, with its eleven aliases', (
   assert.equal((R5.loadSourceTool.function.parameters as { properties: { alias: { enum: string[] } } }).properties.alias.enum.length, 11);
 });
 
-test('load_source: with every source configured it is R5\'s tool with the four aliases in manifest order, byte for byte', () => {
+test('load_source: with every source configured it is R5\'s tool with the seven aliases in manifest order, byte for byte', () => {
   const tool = civicRouter.aliasedLoadSourceTool({ configured: EVERY_SOURCE });
-  const expected = r5With(['socrata', 'data_commons', 'boston', 'nyc_charter']);
+  const expected = r5With(['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']);
   assert.deepEqual(tool, expected);
   assert.equal(JSON.stringify(tool), JSON.stringify(expected), 'key order too');
   assert.equal(tool.function.description, R5.loadSourceTool.function.description, 'the description is R5\'s');
@@ -83,7 +88,7 @@ test('load_source: each call returns a new object, so a consumer\'s change to on
   const aliasedLoadSourceTool = civicRouter.aliasedLoadSourceTool;
   const first = aliasedLoadSourceTool({ configured: EVERY_SOURCE });
   (first.function.parameters as { properties: { alias: { enum: string[] } } }).properties.alias.enum.push('changed');
-  assert.deepEqual(aliasedLoadSourceTool({ configured: EVERY_SOURCE }), r5With(['socrata', 'data_commons', 'boston', 'nyc_charter']));
+  assert.deepEqual(aliasedLoadSourceTool({ configured: EVERY_SOURCE }), r5With(['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']));
 });
 
 test('load_source: the package exports the reserved name', () => {
@@ -92,7 +97,7 @@ test('load_source: the package exports the reserved name', () => {
 
 // --- The reserved name --------------------------------------------------------------------
 
-const CHARTER = CIVIC_MANIFEST.at(-1)!;
+const CHARTER = CIVIC_MANIFEST.find((entry) => entry.sourceId === 'nyc-charter')!;
 
 /** NYC Charter with one more upstream tool, named `load_source`. */
 const CHARTER_WITH_LOAD_SOURCE: CivicManifestEntry = {
@@ -104,7 +109,8 @@ const CHARTER_WITH_LOAD_SOURCE: CivicManifestEntry = {
 /** NYC Charter under the alias `load_source`. */
 const CHARTER_ALIASED_LOAD_SOURCE: CivicManifestEntry = { ...CHARTER, alias: 'load_source' };
 
-const withCharter = (entry: CivicManifestEntry): CivicManifest => [...CIVIC_MANIFEST.slice(0, -1), entry];
+/** The civic manifest with NYC Charter's entry replaced by `entry`, in place. */
+const withCharter = (entry: CivicManifestEntry): CivicManifest => CIVIC_MANIFEST.map((e) => (e === CHARTER ? entry : e));
 
 const reservedProblems = (manifest: CivicManifest) =>
   findToolNameProblems(manifest).filter((problem) => problem.kind === 'reserved-name');
@@ -143,7 +149,7 @@ test('reserved name: a manifest whose alias is load_source is refused at constru
   );
 });
 
-test('reserved name: the four-entry manifest passes, and no other name is reserved', () => {
+test('reserved name: the seven-entry manifest passes, and no other name is reserved', () => {
   assert.deepEqual(findToolNameProblems(CIVIC_MANIFEST), []);
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
   const near: CivicManifestEntry = {

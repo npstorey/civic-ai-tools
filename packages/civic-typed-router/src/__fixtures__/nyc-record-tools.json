@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "description": "The NYC City Record MCP server's tool schemas, as its tools/list returns them at the pinned version. The router's NYC City Record entry carries the same schemas as code.",
+    "package": "@betanyc/nyc-record-mcp",
+    "version": "1.1.0",
+    "gitHead": "6c52a5353381592713678caa109870d1e912c858",
+    "integrity": "sha512-c2/y6IohwaZhNqIV/TPIkQxfzuagaUCuSk5BZxXlwdii4MNMSdMou+3Fuxt7pLuzgAKPvaSHtA26WTY1hphktw==",
+    "repository": "git+https://github.com/BetaNYC/nyc-record-mcp.git",
+    "bin": "dist/index.js",
+    "script": {
+      "path": "packages/civic-typed-router/src/__fixtures__/pin-nyc-record-tools.mjs",
+      "sha256": "5ee9fc2a55401e91d49db8540e3f0f52abfccf0fa1a7f90d816c458645057d89"
+    },
+    "captureDate": "2026-10-19",
+    "node": "v22.23.1",
+    "resolved": {
+      "@modelcontextprotocol/sdk": "1.32.1",
+      "zod": "3.25.76"
+    },
+    "install": "npm install --ignore-scripts into a fresh directory under the OS temporary directory; the server started over stdio with an empty environment",
+    "environment": {},
+    "requests": [
+      "initialize",
+      "notifications/initialized",
+      "tools/list"
+    ]
+  },
+  "initialize": {
+    "requestedProtocolVersion": "2025-06-18",
+    "protocolVersion": "2025-06-18",
+    "serverInfo": {
+      "name": "nyc-record-mcp",
+      "version": "1.1.0"
+    },
+    "capabilities": {
+      "tools": {}
+    },
+    "instructions": null
+  },
+  "tools": [
+    {
+      "name": "search_notices",
+      "description": "Full-text search across all NYC City Record notices. Returns recent matching notices sorted by date.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search term"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_notices_by_agency",
+      "description": "Get City Record notices published by a specific city agency (partial name match).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agency_name": {
+            "type": "string",
+            "description": "Agency name or partial name, e.g. 'DCAS', 'Parks'"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "required": [
+          "agency_name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_notices_by_type",
+      "description": "Get notices filtered by type. Valid types: Solicitation, Award, Intent to Award, Intent to Negotiate, Public Hearings, Public Comment, Meeting, Notice, Vendor List, Sale.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "notice_type": {
+            "type": "string",
+            "enum": [
+              "Solicitation",
+              "Award",
+              "Intent to Award",
+              "Intent to Negotiate",
+              "Public Hearings",
+              "Public Comment",
+              "Meeting",
+              "Notice",
+              "Vendor List",
+              "Sale"
+            ],
+            "description": "Notice type"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "required": [
+          "notice_type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_procurement_notices",
+      "description": "Get recent procurement-related notices: solicitations, awards, intent to award, vendor lists. Useful for tracking open contracts and recent awards.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_public_hearings",
+      "description": "Get recent public hearings, public comment periods, and agency meetings from the City Record.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_open_solicitations",
+      "description": "Get active solicitations (RFPs, RFQs, IFBs) where the due date has not yet passed. Sorted by due date ascending — soonest deadlines first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 25, max 100)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_notices_by_date_range",
+      "description": "Get all City Record notices published within a date range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start date, YYYY-MM-DD"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date, YYYY-MM-DD"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 50, max 200)"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

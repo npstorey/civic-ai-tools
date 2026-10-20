@@ -69,6 +69,14 @@ function input(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptInput
 
 const ALL_CONFIGURED = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org', BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp' });
 
+/** The three hosted sources of 0.6.0, after NYC Charter: their switches are
+ *  unset in every configuration here, so each is not-configured. */
+const HOSTED_OF_06 = ['nyc-checkbook', 'nyc-record', 'nys-legislation'];
+
+/** Their exposed names, in manifest order: withheld in every configuration
+ *  here. */
+const HOSTED_OF_06_EXPOSED = [...civicRouter.dispatchMap.values()].filter((t) => HOSTED_OF_06.includes(t.sourceId)).map((t) => t.exposedName);
+
 // --- F4 ---------------------------------------------------------------------------------
 
 test('F4: a four-entry manifest passes the startup checks', () => {
@@ -140,6 +148,9 @@ test('selection: the default is every configured source, and its outputs are the
       ['data-commons', 'data_commons', 'configured'],
       ['boston-opencontext', 'boston', 'not-configured'],
       ['nyc-charter', 'nyc_charter', 'not-configured'],
+      ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
+      ['nyc-record', 'nyc_record', 'not-configured'],
+      ['nys-legislation', 'nys_legislation', 'not-configured'],
     ],
   );
   const bare = await civicRouter.buildSystemPrompt(input(configured));
@@ -147,12 +158,24 @@ test('selection: the default is every configured source, and its outputs are the
   // Selecting every offered source by name changes the reasons, not the bytes.
   const all = ['socrata', 'data-commons'];
   assert.equal(await civicRouter.buildSystemPrompt(input(configured, { selection: all })), bare);
-  assert.deepEqual(civicRouter.sourcesOffered(configured, all).map((s) => s.reason), ['selected', 'selected', 'not-configured', 'not-configured']);
+  assert.deepEqual(civicRouter.sourcesOffered(configured, all).map((s) => s.reason), [
+    'selected',
+    'selected',
+    'not-configured',
+    'not-configured',
+    ...HOSTED_OF_06.map(() => 'not-configured'),
+  ]);
 });
 
 test('selection: a source left out of the selection is left out of the prompt, the tools and the lock section', async () => {
   const selection = ['socrata', 'data-commons'];
-  assert.deepEqual(civicRouter.sourcesOffered(ALL_CONFIGURED, selection).map((s) => s.reason), ['selected', 'selected', 'not-selected', 'not-configured']);
+  assert.deepEqual(civicRouter.sourcesOffered(ALL_CONFIGURED, selection).map((s) => s.reason), [
+    'selected',
+    'selected',
+    'not-selected',
+    'not-configured',
+    ...HOSTED_OF_06.map(() => 'not-configured'),
+  ]);
 
   const prompt = await civicRouter.buildSystemPrompt(input(ALL_CONFIGURED, { selection }));
   assert.match(prompt, /You have access to TWO MCP data sources/);
@@ -174,7 +197,10 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'nyc_charter__list_titles',
     'nyc_charter__get_title',
     'nyc_charter__get_version',
+    // So are the three hosted sources of 0.6.0.
+    ...HOSTED_OF_06_EXPOSED,
   ]);
+  assert.equal(HOSTED_OF_06_EXPOSED.length, 41);
   assert.match(civicRouter.portalLockGuidance('data.cityofnewyork.us', ALL_CONFIGURED, selection), /\(Data Commons\) is separate/);
 
   // Not selected, the source is not offered at dispatch either.
@@ -185,7 +211,13 @@ test('selection: a source left out of the selection is left out of the prompt, t
 test('selection: a source the configuration does not offer is not-configured whatever the selection says', async () => {
   const configured = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
   const selection = ['socrata', 'boston-opencontext'];
-  assert.deepEqual(civicRouter.sourcesOffered(configured, selection).map((s) => s.reason), ['selected', 'not-selected', 'not-configured', 'not-configured']);
+  assert.deepEqual(civicRouter.sourcesOffered(configured, selection).map((s) => s.reason), [
+    'selected',
+    'not-selected',
+    'not-configured',
+    'not-configured',
+    ...HOSTED_OF_06.map(() => 'not-configured'),
+  ]);
   assert.deepEqual(civicRouter.offeredSkillSources(configured, selection), ['socrata']);
 });
 

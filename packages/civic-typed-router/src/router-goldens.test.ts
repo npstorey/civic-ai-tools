@@ -14,24 +14,28 @@
 //
 // Then all of it again with every entry's `id`, `alias`, `hosting`,
 // `hostings`, `consentDefault` and `publisher` replaced: once by other values,
-// once behind getters. Nothing reads `id`, `hosting` (0.3.0's field, trapped so
+// once behind getters; and once more with every variant's `keyIn` (0.6.0)
+// behind a getter, on real variants. Nothing reads `id`, `hosting` (0.3.0's field, trapped so
 // an entry of the old shape is caught too), `hostings`, `consentDefault` or
 // `publisher` (0.4.0); the bare view does not read `alias` (only the startup
 // checks and the aliased view do). The in-loop functions (0.5.0: the
 // directory, the first-step tool, the in-loop prompt and the harness
 // definition) run under the same replacements and give the same outcomes.
 //
-// What NYC Charter, Laws and Rules moves (0.3.0). The goldens are the website
-// at d1919a8, which had three sources; the manifest now holds a fourth, last,
-// and off unless its switch is on, which no capture sets. Every prompt and
-// every tools array is still its golden byte for byte. The facts that name
-// the whole vocabulary move, each by a stated delta below (`CHARTER`), never
-// by a looser comparison:
+// What the hosted sources move: NYC Charter, Laws and Rules (0.3.0), then
+// NYC Checkbook, NYC City Record and NYS Open Legislation (0.6.0). The
+// goldens are the website at d1919a8, which had three sources; the manifest
+// now holds four more after them, each off unless its switch is on, which no
+// capture sets. Every prompt and every tools array is still its golden byte
+// for byte. The facts that name the whole vocabulary move, each by a stated
+// delta below (`HOSTED`), never by a looser comparison:
 //   - `mcpTools` (and so replay's tools and the bare `mcpToolsFor`) is the
-//     golden array with Charter's five schemas appended;
-//   - the tool-to-source facts gain Charter's four names no other source
-//     has; `search` stays Socrata's;
-//   - the withheld tools gain Charter's five, in every configuration;
+//     golden array with the hosted sources' schemas appended, in manifest
+//     order (Charter's five, then 10, 7 and 24);
+//   - the tool-to-source facts gain each hosted name no earlier source has;
+//     `search` stays Socrata's;
+//   - the withheld tools gain every hosted source's names, in every
+//     configuration;
 //   - so nothing is ever withheld-free: `offeredIsBare` and
 //     `offeredIsMcpTools` are false in every capture, where the goldens have
 //     them true with Boston OpenContext configured.
@@ -112,26 +116,56 @@ interface Goldens {
 
 const goldens: Goldens = JSON.parse(readFileSync(FIXTURE, 'utf8'));
 
-// --- What the fourth source moves: the stated deltas ----------------------------
+// --- What the hosted sources move: the stated deltas ----------------------------
 
-/** NYC Charter, Laws and Rules, as the goldens' facts now include it: its
- *  routing list, its bare schemas (from the committed capture, as function
- *  tools), and the source its four unshared names belong to. */
-const CHARTER = (() => {
+/** One hosted source, as the goldens' facts now include it: its routing list
+ *  and its bare schemas, both from its committed capture (as function
+ *  tools). */
+const hostedSource = (sourceId: string, fixture: string) => {
   const capture: { tools: { name: string; description: string; inputSchema: unknown }[] } = JSON.parse(
-    readFileSync(join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', 'nyc-charter-tools.json'), 'utf8'),
+    readFileSync(join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', fixture), 'utf8'),
   );
   return {
-    sourceId: 'nyc-charter',
-    toolNames: ['search', 'get_section', 'list_titles', 'get_title', 'get_version'],
-    /** The names no golden source has: `search` is Socrata's already. */
-    newNames: ['get_section', 'list_titles', 'get_title', 'get_version'],
+    sourceId,
+    toolNames: capture.tools.map((t) => t.name),
     tools: capture.tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.inputSchema } })),
   };
-})();
+};
 
-/** A golden vocabulary's bytes with Charter's five schemas appended. */
-const withCharterTools = (output: string): string => JSON.stringify([...(JSON.parse(output) as unknown[]), ...CHARTER.tools]);
+/** The four hosted sources, in manifest order. */
+const HOSTED_SOURCES = [
+  hostedSource('nyc-charter', 'nyc-charter-tools.json'),
+  hostedSource('nyc-checkbook', 'nyc-checkbook-tools.json'),
+  hostedSource('nyc-record', 'nyc-record-tools.json'),
+  hostedSource('nys-legislation', 'nys-legislation-tools.json'),
+];
+
+/** The goldens' delta, over all four. */
+const HOSTED = {
+  sourceIds: HOSTED_SOURCES.map((s) => s.sourceId),
+  /** Every hosted name, in manifest order: what the withheld tools gain. */
+  toolNames: HOSTED_SOURCES.flatMap((s) => s.toolNames),
+  tools: HOSTED_SOURCES.flatMap((s) => s.tools),
+};
+
+/** Each hosted name no golden source and no earlier hosted source has, with
+ *  the source it belongs to (the first that declares it, in manifest order).
+ *  `search` is Socrata's already. */
+const hostedNewNames = (goldenNames: readonly string[]): [string, string][] => {
+  const seen = new Set(goldenNames);
+  const owned: [string, string][] = [];
+  for (const source of HOSTED_SOURCES) {
+    for (const name of source.toolNames) {
+      if (seen.has(name)) continue;
+      seen.add(name);
+      owned.push([name, source.sourceId]);
+    }
+  }
+  return owned;
+};
+
+/** A golden vocabulary's bytes with the hosted sources' schemas appended. */
+const withHostedTools = (output: string): string => JSON.stringify([...(JSON.parse(output) as unknown[]), ...HOSTED.tools]);
 
 /** The fixture writes `undefined` as `{"$undefined": true}`. */
 function decode(value: Encoded): unknown {
@@ -216,8 +250,8 @@ function checkTools(router: CivicRouter, capture: ToolsCapture): void {
   const offered = router.offeredMcpTools(bare, configured);
 
   assert.ok(JSON.stringify(offered) === capture.output, `the tools array differs from the golden for configuration ${capture.id}`);
-  // Charter is withheld in every capture, so the offered array is never the
-  // bare one (the stated delta); `bareIsMcpTools` is the golden's.
+  // The hosted sources are withheld in every capture, so the offered array is
+  // never the bare one (the stated delta); `bareIsMcpTools` is the golden's.
   assert.deepEqual(
     {
       offeredIsBare: offered === bare,
@@ -225,7 +259,7 @@ function checkTools(router: CivicRouter, capture: ToolsCapture): void {
       bareIsMcpTools: bare === router.mcpTools,
     },
     { ...capture.identity, offeredIsBare: false, offeredIsMcpTools: false },
-    `array identity differs from the golden, with Charter withheld, for configuration ${capture.id}`,
+    `array identity differs from the golden, with the hosted sources withheld, for configuration ${capture.id}`,
   );
   assert.deepEqual(capture.clientCalls, [], `a tools capture makes no client call (${capture.id})`);
 }
@@ -235,25 +269,25 @@ function checkAlias(router: CivicRouter, alias: Alias): void {
   assert.ok(target, `alias "${alias.name}" names a capture the fixture holds`);
   const configured = configuredOf(target!);
   // The stated delta: each alias held in the goldens (identity and bytes both
-  // true). The vocabulary is now the golden one with Charter's five appended,
-  // and Charter is withheld from the offer, so the offer is never the
-  // vocabulary object.
+  // true). The vocabulary is now the golden one with the hosted sources'
+  // schemas appended, and they are withheld from the offer, so the offer is
+  // never the vocabulary object.
   assert.equal(alias.identityCheck.result, true, `alias "${alias.name}": the golden identity`);
   assert.equal(alias.bytesCheck.result, true, `alias "${alias.name}": the golden bytes`);
   if (alias.expression === 'mcpTools') {
     const identity = router.offeredMcpTools(router.mcpToolsFor(undefined), configured) === router.mcpTools;
-    assert.equal(identity, false, `alias "${alias.name}": identity, with Charter withheld`);
-    assert.ok(JSON.stringify(router.mcpTools) === withCharterTools(target!.output), `alias "${alias.name}": bytes, the golden plus Charter's five`);
+    assert.equal(identity, false, `alias "${alias.name}": identity, with the hosted sources withheld`);
+    assert.ok(JSON.stringify(router.mcpTools) === withHostedTools(target!.output), `alias "${alias.name}": bytes, the golden plus the hosted sources' schemas`);
   } else {
     const bare = router.mcpToolsFor(resolvedOf(target!).lockedPortal);
-    assert.equal(router.offeredMcpTools(bare, configured) === bare, false, `alias "${alias.name}": identity, with Charter withheld`);
+    assert.equal(router.offeredMcpTools(bare, configured) === bare, false, `alias "${alias.name}": identity, with the hosted sources withheld`);
     const listed = alias.bytesCheck.captures ?? [];
     assert.ok(listed.length > 0, `alias "${alias.name}" lists the captures its bytes are checked in`);
     for (const id of listed) {
       const capture = goldens.tools.find((t) => t.id === id)!;
       assert.ok(
-        JSON.stringify(router.mcpToolsFor(resolvedOf(capture).lockedPortal)) === withCharterTools(target!.output),
-        `alias "${alias.name}": bytes in ${id}, the golden plus Charter's five`,
+        JSON.stringify(router.mcpToolsFor(resolvedOf(capture).lockedPortal)) === withHostedTools(target!.output),
+        `alias "${alias.name}": bytes in ${id}, the golden plus the hosted sources' schemas`,
       );
     }
   }
@@ -263,27 +297,32 @@ function checkFacts(router: CivicRouter): void {
   const facts = goldens.facts;
 
   // The fact's tool list is mcpTools' names, then one name no tool has; the
-  // vocabulary now ends with Charter's five (the stated delta).
+  // vocabulary now ends with the hosted sources' names (the stated delta).
+  const goldenNames = facts.sourceIdForToolName.slice(0, -1).map((f) => f.tool);
   assert.deepEqual(
-    [...facts.sourceIdForToolName.slice(0, -1).map((f) => f.tool), ...CHARTER.toolNames],
+    [...goldenNames, ...HOSTED.toolNames],
     router.mcpTools.map((t) => t.function.name),
-    'fact: the tool names, in mcpTools order, then Charter\'s five',
+    'fact: the tool names, in mcpTools order, then the hosted sources\' names',
   );
   // Every golden answer holds, `search` (Socrata's) included.
   for (const { tool, sourceId } of facts.sourceIdForToolName) {
     assert.equal(router.sourceIdForToolName(tool), decode(sourceId), `fact: the source of tool "${tool}"`);
   }
-  for (const tool of CHARTER.newNames) {
+  const newNames = hostedNewNames(goldenNames);
+  // Every hosted name but `search` (which Charter and NYS Open Legislation
+  // share with Socrata) is new: 4 + 10 + 7 + 23.
+  assert.equal(newNames.length, 44);
+  for (const [tool, sourceId] of newNames) {
     assert.ok(!facts.sourceIdForToolName.some((f) => f.tool === tool), `fact: "${tool}" is a name no golden source has`);
-    assert.equal(router.sourceIdForToolName(tool), CHARTER.sourceId, `fact: the source of tool "${tool}", Charter's`);
+    assert.equal(router.sourceIdForToolName(tool), sourceId, `fact: the source of tool "${tool}", ${sourceId}'s`);
   }
 
   for (const fact of facts.offered) {
     const configured = readMcpEnv(fact.env);
     assert.deepEqual(
       router.withheldToolNames(configured),
-      [...fact.withheldToolNames, ...CHARTER.toolNames],
-      `fact: withheld tools, the golden's then Charter's five, env ${JSON.stringify(fact.env)}`,
+      [...fact.withheldToolNames, ...HOSTED.toolNames],
+      `fact: withheld tools, the golden's then the hosted sources' names, env ${JSON.stringify(fact.env)}`,
     );
     assert.deepEqual(router.offeredSkillSources(configured), fact.offeredSkillSources, `fact: offered sources, env ${JSON.stringify(fact.env)}`);
   }
@@ -357,6 +396,9 @@ async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
     SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
     BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
     NYC_CHARTER_HOSTING: 'sandbox',
+    NYC_CHECKBOOK_HOSTING: 'sandbox',
+    NYC_RECORD_HOSTING: 'sandbox',
+    NYS_LEGISLATION_HOSTING: 'sandbox',
   });
   const input = {
     configured,
@@ -365,8 +407,13 @@ async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
     fetchPrompt: async () => 'Fixture Socrata guidance.',
     fetchInstructions: async (sourceId: string) => (sourceId === 'data-commons' ? 'Fixture Data Commons instructions.' : null),
   };
-  const selections = [undefined, ['socrata', 'nyc-charter']];
-  const loadedSets = [[], ['socrata'], ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter']];
+  const selections = [undefined, ['socrata', 'nyc-charter'], ['nyc-record', 'nys-legislation']];
+  const loadedSets = [
+    [],
+    ['socrata'],
+    ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter'],
+    ['nyc-checkbook', 'nyc-record', 'nys-legislation'],
+  ];
   return {
     directory: selections.map((selection) => router.directoryPrompt({ ...input, selection })),
     tool: selections.map((selection) => router.aliasedLoadSourceTool({ configured, selection })),
@@ -409,7 +456,7 @@ const everyEntryCarries = (): boolean =>
   CIVIC_MANIFEST.every((entry) => Object.hasOwn(entry, 'hostings') && Object.hasOwn(entry, 'consentDefault') && Object.hasOwn(entry, 'publisher'));
 
 test('id and the hosting fields are never read and the bare view does not depend on alias: every golden holds with id, hosting, hostings, consentDefault and publisher sentinels and every alias another', async () => {
-  assert.deepEqual(hostedEntries(), ['nyc-charter'], 'the manifest carries one hosted entry');
+  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation'], 'the manifest carries four hosted entries');
   assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   // An alias must pass the startup checks, so each is replaced by another
   // well-formed one rather than by the sentinel. Every entry gets each
@@ -450,7 +497,7 @@ test('id and the hosting fields are never read and the bare view does not depend
 });
 
 test('id and the hosting fields are never read, and alias only at construction: every golden holds with id, hosting, hostings, consentDefault and publisher behind getters that throw', async () => {
-  assert.deepEqual(hostedEntries(), ['nyc-charter'], 'the manifest carries one hosted entry');
+  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation'], 'the manifest carries four hosted entries');
   assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   const reads: string[] = [];
   const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => {
@@ -475,7 +522,7 @@ test('id and the hosting fields are never read, and alias only at construction: 
   });
   // The traps work: a read of id or of any carried field throws, and each
   // read is recorded.
-  const charter = manifest.at(-1) as unknown as Record<(typeof CARRIED)[number], unknown>;
+  const charter = manifest[3] as unknown as Record<(typeof CARRIED)[number], unknown>;
   assert.throws(() => manifest[0]!.id, /was read/);
   assert.throws(() => charter.hosting, /nyc-charter\.hosting was read/);
   assert.throws(() => charter.hostings, /nyc-charter\.hostings was read/);
@@ -508,4 +555,39 @@ test('id and the hosting fields are never read, and alias only at construction: 
     inLoopReads.length > 0 && inLoopReads.every((r) => r.endsWith('.alias')),
     'the in-loop functions read alias, never id or a carried field',
   );
+});
+
+// --- keyIn (0.6.0) is carried, never read ---------------------------------------------
+
+test('keyIn is carried, never read: every golden and every in-loop outcome holds with each variant\'s keyIn behind a getter that throws', async () => {
+  // NYS Open Legislation's variant carries it; the trap is set on every
+  // variant of every entry, so a read of an absent keyIn is caught too.
+  const carriers = CIVIC_MANIFEST.filter((entry) => entry.hostings.some((v) => Object.hasOwn(v, 'keyIn'))).map((e) => e.sourceId);
+  assert.deepEqual(carriers, ['nys-legislation'], 'one variant carries keyIn');
+  const reads: string[] = [];
+  const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => ({
+    ...entry,
+    hostings: entry.hostings.map((variant) => {
+      const trapped = { ...variant };
+      Object.defineProperty(trapped, 'keyIn', {
+        enumerable: true,
+        get() {
+          reads.push(`${entry.sourceId}.${variant.variant}.keyIn`);
+          throw new Error(`${entry.sourceId}.${variant.variant}.keyIn was read`);
+        },
+      });
+      return trapped;
+    }),
+  }));
+  // The trap works.
+  // Read as a plain record: the field is 0.6.0's.
+  const keyInOf = (entry: CivicManifestEntry | undefined): unknown => (entry!.hostings[0] as unknown as Record<string, unknown>).keyIn;
+  assert.throws(() => keyInOf(manifest.find((e) => e.sourceId === 'nys-legislation')), /nys-legislation\.sandbox\.keyIn was read/);
+  assert.throws(() => keyInOf(manifest[0]), /socrata\.remote\.keyIn was read/);
+  reads.length = 0;
+
+  const router = createCivicRouter(manifest);
+  await checkEverything(router);
+  assert.deepEqual(await inLoopOutcomes(router), await inLoopOutcomes(civicRouter));
+  assert.deepEqual(reads, [], 'no output read a variant\'s keyIn');
 });

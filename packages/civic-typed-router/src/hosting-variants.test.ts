@@ -1,9 +1,11 @@
 // The hosting variants, the logging posture, the consent default and the
-// publisher, as the four civic entries carry them (0.4.0, ADR-0036).
+// publisher, as the seven civic entries carry them (0.4.0, ADR-0036; the
+// three hosted sources of 0.6.0, whose own values `hosted-entries.test.ts`
+// holds field by field).
 //
-//   - every entry lists its variants in `hostings`, starts On
-//     (`consentDefault: 'on'`), names its publisher, and keeps no 0.3.0
-//     `hosting` key;
+//   - every entry lists its variants in `hostings`, states its consent default
+//     (On for all but NYC Checkbook and NYS Open Legislation, which start Ask
+//     first), names its publisher, and keeps no 0.3.0 `hosting` key;
 //   - Socrata, Data Commons and Boston OpenContext each have one `remote`
 //     variant, with no package fields and no address;
 //   - NYC Charter has one `npm-package` variant, `sandbox`, the name its
@@ -22,8 +24,22 @@ import assert from 'node:assert/strict';
 
 import { CIVIC_MANIFEST, configuredSources, NYC_CHARTER_HOSTING_SANDBOX, readMcpEnv, type CivicManifestEntry } from './index.ts';
 
-/** The UTC date this phase read every statement the manifest cites. */
+/** The UTC date 0.4.0's phase read every statement it cites. */
 const READ_ON = '2026-10-18';
+
+/** The UTC date 0.6.0's phase (R8 H3) read the statements its three entries
+ *  cite. */
+const READ_ON_H3 = '2026-10-19';
+
+/** The date each stated posture was read, by source: the phase that wrote
+ *  it. */
+const READ_ON_BY_SOURCE: Record<string, string> = {
+  'data-commons': READ_ON,
+  'boston-opencontext': READ_ON,
+  'nyc-checkbook': READ_ON_H3,
+  'nyc-record': READ_ON_H3,
+  'nys-legislation': READ_ON_H3,
+};
 
 /** The four values a stated posture's `keeps` takes. */
 const KEEPS = ['none', 'metadata', 'content', 'not-stated'];
@@ -67,7 +83,7 @@ function isCalendarDate(value: unknown): boolean {
 
 // --- Every entry -------------------------------------------------------------------
 
-test('hosting variants: every entry lists one variant, starts On, and keeps no 0.3.0 hosting key', () => {
+test('hosting variants: every entry lists one variant, states its consent default, and keeps no 0.3.0 hosting key', () => {
   assert.deepEqual(
     CIVIC_MANIFEST.map((e) => [e.sourceId, variants(e.sourceId).length, carried(e).consentDefault, Object.hasOwn(e, 'hosting')]),
     [
@@ -75,6 +91,10 @@ test('hosting variants: every entry lists one variant, starts On, and keeps no 0
       ['data-commons', 1, 'on', false],
       ['boston-opencontext', 1, 'on', false],
       ['nyc-charter', 1, 'on', false],
+      // D7b = A.
+      ['nyc-checkbook', 1, 'ask-first', false],
+      ['nyc-record', 1, 'on', false],
+      ['nys-legislation', 1, 'ask-first', false],
     ],
   );
 });
@@ -87,6 +107,9 @@ test('hosting variants: each entry names its publisher, as the source\'s own pag
       'data-commons': 'Google',
       'boston-opencontext': 'City of Boston',
       'nyc-charter': 'BetaNYC',
+      'nyc-checkbook': 'BetaNYC',
+      'nyc-record': 'BetaNYC',
+      'nys-legislation': 'BetaNYC',
     },
   );
 });
@@ -169,11 +192,47 @@ test('logging posture: each variant\'s holders, in the order the data flows, sta
         ],
       ],
       'nyc-charter': [[{ statedBy: 'instance', role: 'sandbox-platform' }]],
+      'nyc-checkbook': [
+        [
+          { statedBy: 'instance', role: 'sandbox-platform' },
+          {
+            statedBy: 'manifest',
+            holder: 'Office of the New York City Comptroller',
+            keeps: 'not-stated',
+            statementUrl: 'https://comptroller.nyc.gov/privacy-policy/',
+            readOn: READ_ON_H3,
+          },
+        ],
+      ],
+      'nyc-record': [
+        [
+          { statedBy: 'instance', role: 'sandbox-platform' },
+          {
+            statedBy: 'manifest',
+            holder: 'City of New York',
+            keeps: 'not-stated',
+            statementUrl: 'https://www.nyc.gov/home/privacy-policy.page',
+            readOn: READ_ON_H3,
+          },
+        ],
+      ],
+      'nys-legislation': [
+        [
+          { statedBy: 'instance', role: 'sandbox-platform' },
+          {
+            statedBy: 'manifest',
+            holder: 'New York State Senate',
+            keeps: 'not-stated',
+            statementUrl: 'https://www.nysenate.gov/privacy-policy',
+            readOn: READ_ON_H3,
+          },
+        ],
+      ],
     },
   );
 });
 
-test('logging posture: every stated posture has an https statement address, a real read date equal to the phase\'s, and one of the four keeps values; every other names a role only', () => {
+test('logging posture: every stated posture has an https statement address, a real read date equal to its phase\'s, and one of the four keeps values; every other names a role only', () => {
   const postures = everyPosture();
   const stated = postures.filter(({ posture }) => posture.statedBy === 'manifest');
   const byRole = postures.filter(({ posture }) => posture.statedBy === 'instance');
@@ -182,7 +241,7 @@ test('logging posture: every stated posture has an https statement address, a re
   for (const { at, posture } of stated) {
     assert.equal(new URL(String(posture.statementUrl)).protocol, 'https:', `${at}: statementUrl is https`);
     assert.ok(isCalendarDate(posture.readOn), `${at}: readOn is a real YYYY-MM-DD date`);
-    assert.equal(posture.readOn, READ_ON, `${at}: readOn is the phase's read date`);
+    assert.equal(posture.readOn, READ_ON_BY_SOURCE[at.split('/')[0]!], `${at}: readOn is the read date of the phase that wrote it`);
     assert.ok(KEEPS.includes(posture.keeps as string), `${at}: keeps is one of ${KEEPS.join(', ')}`);
     assert.equal(typeof posture.holder, 'string', `${at}: names its holder`);
     for (const key of Object.keys(posture)) {
