@@ -2,6 +2,80 @@
 
 Factual record of what changed per published version.
 
+## Unreleased
+
+Three more sources an instance runs itself from pinned packages, each
+switched off by default, and one carried field on every hosting variant
+([ADR-0036](../../docs/adr/0036-source-hosting-variants-and-logging-posture.md)).
+With the three switches unset every prompt, offered tools array,
+directory, first-step tool, in-loop prompt and harness definition is
+0.5.0's, every golden prompt and tools array holds, and `readMcpEnv`
+returns 0.5.0's keys. What names the whole vocabulary grows, as it did for
+NYC Charter in 0.3.0: `mcpTools` and `aliasedMcpTools` gain the 41 new
+schemas after Charter's, and the withheld tools gain their names while
+their switches are off.
+
+- **NYC Checkbook, NYC City Record and NYS Open Legislation**
+  (`NYC_CHECKBOOK_ENTRY`, `NYC_RECORD_ENTRY`, `NYS_LEGISLATION_ENTRY`), after
+  NYC Charter in `CIVIC_MANIFEST`, which now holds seven entries. Each is a
+  stdio server published by BetaNYC, pinned by version and by the registry's
+  `gitHead`: `@betanyc/nyc-checkbook-mcp` 1.6.3
+  (`f013a276e37e218e93c069c585d54dc3b4e3ee00`), `@betanyc/nyc-record-mcp`
+  1.1.0 (`6c52a5353381592713678caa109870d1e912c858`) and
+  `@betanyc/nys-openlegislation-mcp` 2.4.0
+  (`cc069c46d52b939275f9dcac3d72b2dd011531d3`). Source ids `nyc-checkbook`,
+  `nyc-record`, `nys-legislation`; aliases `nyc_checkbook`, `nyc_record`,
+  `nys_legislation`; each `id` the package name and repository address.
+  Their 10, 7 and 24 tool schemas are the servers' own `tools/list` at the
+  pins (`*_TOOLS`, `*_TOOL_NAMES`). NYS Open Legislation's `search` is
+  exposed as `nys_legislation__search`; a bare `search` is refused as
+  ambiguous whenever two of Socrata, NYC Charter and NYS Open Legislation
+  are offered. None of the three sends guidance, so offering one fetches
+  nothing and wakes nothing.
+- **Their variants** (`*_HOSTING`, `*_SANDBOX_VARIANT`): one `sandbox`
+  variant each, `npm-package`, run at `instance-sandbox`, with one outbound
+  host each (`www.checkbooknyc.com`, `data.cityofnewyork.us`,
+  `legislation.nysenate.gov`), and two log holders: the sandbox platform by
+  role, then the upstream holder stated by the manifest (Office of the New
+  York City Comptroller; City of New York; New York State Senate), each
+  `keeps: 'not-stated'`, since none of the statements read on 2026-10-19
+  says what it keeps of API requests.
+- **Consent defaults:** `'ask-first'` for NYC Checkbook and NYS Open
+  Legislation, `'on'` for NYC City Record; `publisher` BetaNYC for all three.
+- **`keyIn?: 'header' | 'query'`** on `HostingVariantCommon`: where a
+  variant sends the instance's key, so a consumer can state that the
+  holder's logs can attribute the requests to the instance. NYS Open
+  Legislation's variant carries `keyIn: 'query'` (the server sends its key
+  in the request URL); no other variant carries it. Carried, never read by
+  the router. How the key reaches the sandbox is the consumer's.
+- **Three switches:** `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` and
+  `NYS_LEGISLATION_HOSTING` (`*_HOSTING_VARIABLE`), each on only when its
+  trimmed value is exactly `sandbox`. `readMcpEnv` then adds
+  `nycCheckbookHosting`, `nycRecordHosting` or `nysLegislationHosting`
+  (after `nycCharterHosting`, in that order), and `configuredSources` adds
+  the source; `configuredAddresses` never does. `HOSTING_SANDBOX` names the
+  value every switch shares; `NYC_CHARTER_HOSTING_SANDBOX` is the same value.
+- **Directory lines.** Each new entry's `description` says what the source
+  covers and what it does not hold, and its `freshness` that every call is
+  live, with `freshnessSource` citing the publisher's README at the pin.
+- **For a consumer's records.** A hosted source reaches a record as NYC
+  Charter does: its purl in `mcpServers` and `x.y.z+commit` in
+  `components[].version`, from its variant's `package`, `version` and
+  `commit`; nothing new in shape. At the pin bump to this release, the
+  router's own `components[]` entry in every new record moves to it.
+- Tests: `hosted-entries.test.ts` (each entry against its capture, the
+  captures' metadata, the startup checks and dispatch, the switches, every
+  offered output with the switches unset against the four-entry manifest's,
+  the variants and postures, the directory lines); the goldens' stated
+  delta covers the four hosted sources, and a run with every variant's
+  `keyIn` behind a throwing getter; the directory, first-step tool and
+  in-loop tests switch the new entries on in their every-source
+  configuration (the pinned in-loop fixture keeps its own). Fixtures:
+  `nyc-checkbook-tools.json`, `nyc-record-tools.json` and
+  `nys-legislation-tools.json`, each captured by its `pin-*-tools.mjs`
+  (`initialize`, `notifications/initialized` and `tools/list` only; NYS
+  Open Legislation's server started with a placeholder key).
+
 ## 0.5.0 — 2026-10-19
 
 In-loop routing: the directory, the first-step tool, composition for a

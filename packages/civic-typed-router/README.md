@@ -1,6 +1,6 @@
 # @typedstandards/civic-typed-router
 
-The civic MCP router for applications built on [Typed Standards](../../docs/architecture/typed-standards-specification.md): one manifest of four sources (Socrata open data portals, Google Data Commons, Boston OpenContext, and NYC Charter, Laws and Rules, which an instance runs itself), each with its tool schemas and its guidance, and the two outputs a model run needs from them, the tools array and the composed system prompt. Its landing is recorded in [ADR-0031](../../docs/adr/0031-civic-typed-router-packaging.md); its naming of tools across sources in [ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md).
+The civic MCP router for applications built on [Typed Standards](../../docs/architecture/typed-standards-specification.md): one manifest of seven sources (Socrata open data portals, Google Data Commons, Boston OpenContext, and four that an instance runs itself from pinned packages: NYC Charter, Laws and Rules; NYC Checkbook; NYC City Record; and NYS Open Legislation), each with its tool schemas and its guidance, and the two outputs a model run needs from them, the tools array and the composed system prompt. Its landing is recorded in [ADR-0031](../../docs/adr/0031-civic-typed-router-packaging.md); its naming of tools across sources in [ADR-0032](../../docs/adr/0032-tool-naming-across-sources.md).
 
 ## The output contract
 
@@ -21,9 +21,9 @@ Every output comes in two views, side by side:
 - **The bare view** names every tool by its upstream name, the name the server declares: `get_data`, `search_indicators`, `ckan__search_datasets`. It is 0.1.0's output: `mcpTools`, `mcpToolsFor`, `offeredMcpTools`, `buildSystemPrompt`, `withPortalLockGuidance` and the rest, unchanged.
 - **The aliased view** names every tool `<alias>__<upstream name>`: `socrata__get_data`, `data_commons__search_indicators`, `boston__ckan__search_datasets`. Each bare function has an `aliased*` sibling: `aliasedMcpTools`, `aliasedMcpToolsFor`, `aliasedOfferedMcpTools`, `aliasedWithheldToolNames`, `aliasedBuildSystemPrompt`, `aliasedPortalLockGuidance`, `aliasedWithPortalLockGuidance`.
 
-The alias exists so that two sources may declare the same tool name: Socrata's `search` and NYC Charter's `search` become `socrata__search` and `nyc_charter__search`. The wire call to each server still uses the server's own name.
+The alias exists so that two sources may declare the same tool name: Socrata's, NYC Charter's and NYS Open Legislation's `search` become `socrata__search`, `nyc_charter__search` and `nys_legislation__search`. The wire call to each server still uses the server's own name.
 
-**The bare view cannot tell a shared name apart.** It names tools by upstream name only, so it is exact for the three sources it was captured from. With NYC Charter switched off, its tools are withheld by schema object as well as by name, so Socrata's `search` stays and every bare output is 0.2.0's. With the switch on, the bare tools array holds two tools named `search`: use the aliased view.
+**The bare view cannot tell a shared name apart.** It names tools by upstream name only, so it is exact for the three sources it was captured from. With the hosted sources switched off, their tools are withheld by schema object as well as by name, so Socrata's `search` stays and every bare output is 0.2.0's. With NYC Charter's or NYS Open Legislation's switch on, the bare tools array holds two or three tools named `search`: use the aliased view.
 
 How text names a tool in each view:
 
@@ -75,6 +75,7 @@ type HostingVariant = NpmPackageVariant | RemoteVariant | ContainerVariant; // d
 interface HostingVariantCommon {
   readonly variant: string;   // unique within the entry; a switch's value names the variant it turns on
   readonly runsAt: 'instance-sandbox' | 'publisher' | 'government' | 'other';
+  readonly keyIn?: 'header' | 'query'; // where the variant sends the instance's key, if it sends one (0.6.0)
   readonly logging: readonly LoggingPosture[]; // every log holder, in the order the data flows
 }
 interface NpmPackageVariant extends SourceHosting, HostingVariantCommon {} // kind: 'npm-package'
@@ -106,16 +107,31 @@ No variant carries an address: a remote's address is the instance's configuratio
 | Google Data Commons | Google | `remote` (`remote`) | `publisher` | Google, `content` ([privacy policy](https://policies.google.com/privacy?hl=en-US), read 2026-10-18) |
 | Boston OpenContext | City of Boston | `remote` (`remote`) | `government` | City of Boston, `metadata` ([terms of use and privacy policy](https://www.boston.gov/government/cabinets/innovation-and-technology/terms-use-and-privacy-policy-city-boston-digital), read 2026-10-18) |
 | NYC Charter, Laws and Rules | BetaNYC | `sandbox` (`npm-package`) | `instance-sandbox` | role `sandbox-platform` |
+| NYC Checkbook | BetaNYC | `sandbox` (`npm-package`) | `instance-sandbox` | role `sandbox-platform`; Office of the New York City Comptroller, `not-stated` ([privacy policy](https://comptroller.nyc.gov/privacy-policy/), read 2026-10-19) |
+| NYC City Record | BetaNYC | `sandbox` (`npm-package`) | `instance-sandbox` | role `sandbox-platform`; City of New York, `not-stated` ([privacy policy](https://www.nyc.gov/home/privacy-policy.page), read 2026-10-19) |
+| NYS Open Legislation | BetaNYC | `sandbox` (`npm-package`), `keyIn: 'query'` | `instance-sandbox` | role `sandbox-platform`; New York State Senate, `not-stated` ([privacy policy](https://www.nysenate.gov/privacy-policy), read 2026-10-19) |
 
-Every entry's `consentDefault` is `'on'`.
+Every entry's `consentDefault` is `'on'`, except NYC Checkbook's and NYS Open Legislation's, which are `'ask-first'`: each sends a reader's tool arguments to a recipient a first consent has not named, whose statement says nothing about what it keeps of API requests, and NYS Open Legislation's receives the instance's key in every request URL. NYC City Record's upstream is the open data portal the Socrata source already reaches.
 
-**Which variant is in force is the consumer's to select.** For a source offered by a switch, the switch's value names the variant that is on (`NYC_CHARTER_HOSTING=sandbox` turns on the variant `sandbox`); a remote's single variant is selected by its address variable's presence. No router function reads `hostings`, `consentDefault` or `publisher`: `router-goldens.test.ts` runs every golden with each, and 0.3.0's `hosting`, replaced and behind a getter that throws. Two variants of one source would share its `id` and be two panel rows; each entry has one variant, and a second enabled variant of one source is later work (ADR-0036 §G).
+**`keyIn`** (since 0.6.0) is one optional field on every variant: where the variant sends the instance's key, `'header'` or `'query'` (the request URL's query string), so a panel or a guide can state that the holder's logs can attribute the requests to the instance. Absent, the variant sends no key of the instance's. NYS Open Legislation's variant carries `keyIn: 'query'`; no other variant carries it. It is carried, never read: `router-goldens.test.ts` runs every golden and every in-loop output with each variant's `keyIn` behind a getter that throws. How the key reaches the sandbox is the consumer's.
+
+**Which variant is in force is the consumer's to select.** For a source offered by a switch, the switch's value names the variant that is on (`NYC_CHARTER_HOSTING=sandbox` turns on the variant `sandbox`); a remote's single variant is selected by its address variable's presence. No router function reads `hostings` (`keyIn` among them), `consentDefault` or `publisher`: `router-goldens.test.ts` runs every golden with each, and 0.3.0's `hosting`, replaced and behind a getter that throws. Two variants of one source would share its `id` and be two panel rows; each entry has one variant, and a second enabled variant of one source is later work (ADR-0036 §G).
 
 **A hosted source.** NYC Charter, Laws and Rules (`@betanyc/nyc-charter-laws-rules` on npm, published by BetaNYC) is a stdio server whose section index ships in its package, so an instance runs the pinned package itself, in a sandbox it creates. Its `sandbox` variant (`NYC_CHARTER_SANDBOX_VARIANT`) carries 0.3.0's `NYC_CHARTER_HOSTING` strings unchanged, so a consumer derives the record's names from it as before: the purl `pkg:npm/%40betanyc/nyc-charter-laws-rules@0.3.1` (scope and name each percent-encoded, the `/` kept) and the component version `0.3.1+b784cb763ec0` (the version, then the commit's first 12 hex characters as build metadata). `src/hosted-variant-derivations.test.ts` derives every value the reference website derives from it and holds each equal to what 0.3.0's field gave.
 
-**The switch.** A hosted source is offered by a switch, never by an address. `readMcpEnv` reads `NYC_CHARTER_HOSTING`: when its trimmed value is exactly `sandbox`, the result gains `nycCharterHosting: 'sandbox'`; unset, blank or any other value (`Sandbox`, `hosted`) and the key is absent, so with the switch off every configuration reading is 0.2.0's, key for key. `configuredAddresses` (the addresses a record states) never has a key for the source; selection reads `configuredSources`, which adds the switch. The entry's `configuration.addressVariable` names the switch, so a consumer that refuses a call by naming the variable that would configure the source names `NYC_CHARTER_HOSTING`.
+**The three hosted sources of 0.6.0**, each a stdio server published by BetaNYC that an instance runs from the pinned package in a sandbox it creates, and each reaching one upstream host:
 
-**What it adds when on.** The aliased tools array gains `nyc_charter__search`, `nyc_charter__get_section`, `nyc_charter__list_titles`, `nyc_charter__get_title` and `nyc_charter__get_version`, after every other source's. The prompt gains one preamble entry (composed from `displayName` and `description`), the count word, one outro citation and one mention in the lock section, and no block: the server sends no instructions and no prompt, so its guidance entry returns `''` and calls neither fetcher, and offering it never wakes it. A bare `search` is then refused as ambiguous (`socrata__search` or `nyc_charter__search`); with the switch off it resolves to `socrata__search`.
+| Source (`sourceId`, alias) | Package and pin (`version`, `commit`, the registry's `gitHead`) | `outbound` | Key | Switch |
+|---|---|---|---|---|
+| NYC Checkbook (`nyc-checkbook`, `nyc_checkbook`) | `@betanyc/nyc-checkbook-mcp` 1.6.3, `f013a276e37e218e93c069c585d54dc3b4e3ee00` | `www.checkbooknyc.com` | none | `NYC_CHECKBOOK_HOSTING` |
+| NYC City Record (`nyc-record`, `nyc_record`) | `@betanyc/nyc-record-mcp` 1.1.0, `6c52a5353381592713678caa109870d1e912c858` | `data.cityofnewyork.us` | none | `NYC_RECORD_HOSTING` |
+| NYS Open Legislation (`nys-legislation`, `nys_legislation`) | `@betanyc/nys-openlegislation-mcp` 2.4.0, `cc069c46d52b939275f9dcac3d72b2dd011531d3` | `legislation.nysenate.gov` | the server's `NYS_LEGISLATION_API_KEY`, sent in the request URL (`keyIn: 'query'`); the server exits at start without it | `NYS_LEGISLATION_HOSTING` |
+
+Each `id` is the package name and repository address (none is listed in the MCP Registry), and a record derives its names from the variant as for NYC Charter: the purl from `package` and `version`, the component version from `version` and `commit`. Checkbook's `gitHead` is one commit behind its repository's head (that commit changes no code); the pin is the registry's.
+
+**The switches.** A hosted source is offered by a switch, never by an address. `readMcpEnv` reads `NYC_CHARTER_HOSTING`, `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` and `NYS_LEGISLATION_HOSTING`: when a switch's trimmed value is exactly `sandbox` (`HOSTING_SANDBOX`), the result gains its key (`nycCharterHosting`, `nycCheckbookHosting`, `nycRecordHosting`, `nysLegislationHosting`, in that order after the four address and key fields) with the value `'sandbox'`; unset, blank or any other value (`Sandbox`, `on`, `hosted`) and the key is absent, so with the switches off every configuration reading is 0.2.0's, key for key, and with the three of 0.6.0 off it is 0.5.0's. `configuredAddresses` (the addresses a record states) never has a key for a hosted source; selection reads `configuredSources`, which adds each switch that is on. Each entry's `configuration.addressVariable` names its switch, so a consumer that refuses a call by naming the variable that would configure the source names `NYC_CHARTER_HOSTING`, `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` or `NYS_LEGISLATION_HOSTING`.
+
+**What a hosted source adds when on.** The aliased tools array gains its tools under their exposed names, in its server's order, after the sources before it in the manifest: NYC Charter's five (`nyc_charter__search`, `nyc_charter__get_section`, `nyc_charter__list_titles`, `nyc_charter__get_title`, `nyc_charter__get_version`), NYC Checkbook's 10, NYC City Record's 7, NYS Open Legislation's 24. The prompt gains one preamble entry (composed from `displayName` and `description`), the count word, one outro citation and one mention in the lock section, and no block: none of the four servers sends instructions or a prompt, so each guidance entry returns `''` and calls neither fetcher, and offering a source never wakes it. A bare `search` is refused as ambiguous whenever two of Socrata, NYC Charter and NYS Open Legislation are offered (`socrata__search`, `nyc_charter__search`, `nys_legislation__search`); with both hosted switches off it resolves to `socrata__search`.
 
 ## The selection
 
@@ -154,7 +170,7 @@ const loadSource = civicRouter.aliasedLoadSourceTool({ configured });
 
 // A manifest that names a source load_source is refused.
 try {
-  createCivicRouter([...CIVIC_MANIFEST.slice(0, -1), { ...CIVIC_MANIFEST[3]!, alias: 'load_source' }]);
+  createCivicRouter(CIVIC_MANIFEST.map((entry) => (entry.sourceId === 'nyc-charter' ? { ...entry, alias: 'load_source' } : entry)));
 } catch (error) {
   if (!(error instanceof ToolNameError) || error.problems[0]!.kind !== 'reserved-name') throw error;
 }
@@ -201,7 +217,7 @@ The bar is `src/__fixtures__/app-goldens.json`, captured by running the website'
 - 5 tools arrays, each `offeredMcpTools(mcpToolsFor(lockedPortal))`, and four aliases of them;
 - the facts: tool to source, the offered sources and withheld tools, and the configuration reading at its edges.
 
-The goldens hold three sources; since 0.3.0 the manifest holds a fourth that no capture switches on. Every prompt and tools array is still its golden byte for byte. The facts that name the whole vocabulary move by stated deltas, never by a looser comparison: `mcpTools` (replay's tools, the bare `mcpToolsFor`) is the golden array with NYC Charter's five schemas appended; the withheld tools gain its five; its four names no other source has map to `nyc-charter` (`search` stays Socrata's); and the offered array is never the vocabulary object, since NYC Charter is withheld in every capture.
+The goldens hold three sources; since 0.3.0 the manifest holds a fourth, and since 0.6.0 three more, that no capture switches on. Every prompt and tools array is still its golden byte for byte. The facts that name the whole vocabulary move by stated deltas, never by a looser comparison: `mcpTools` (replay's tools, the bare `mcpToolsFor`) is the golden array with the four hosted sources' schemas appended in manifest order (5, 10, 7 and 24); the withheld tools gain their names; each of their names no earlier source has maps to its source (`search` stays Socrata's); and the offered array is never the vocabulary object, since the hosted sources are withheld in every capture.
 
 `src/router-goldens.test.ts` reproduces every one through the package entry, with each capture's own inputs, and checks that the fetcher calls each prompt makes are the calls the website made, in order. It then runs everything again with every entry's `id` and `alias` replaced, to show that `id` is never read and that the bare view does not read `alias` (only the startup checks and the aliased view do).
 
@@ -252,7 +268,7 @@ That is the bare view; the aliased view is the same calls through the `aliased*`
 | Directory | What it holds |
 |---|---|
 | `src/core/` | The manifest entry type, selection by configuration and by an explicit selection, the composer's join, the directory's join and the first-step tool, the harness definition with its canonical JSON and SHA-256, the offered-tools filter, the tool-to-source index, two validations (duplicate tool names; a routing list against its schemas), and the naming layer (`alias.ts`: exposed names and their normalization, the checks, the dispatch map and rule, the views, the anchored rewrite and its reverse). No source text: every sentence arrives as a value. |
-| `src/civic/` | The three entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, the directory's heading and paragraph and the first-step tool's text, and the configuration reader. |
+| `src/civic/` | The seven entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, the directory's heading and paragraph and the first-step tool's text, and the configuration reader. |
 
 `src/civic/` may import `src/core/`; `src/core/` imports nothing from `src/civic/` and nothing from any package. `src/boundary.test.ts` enforces this, so extracting the core later as `@typedstandards/typed-router` (the reserved name) is a directory move. `src/index.ts` exports both.
 
@@ -270,8 +286,11 @@ A civic entry may also carry `prompt` (its preamble entry in a view, its outro c
 | Google Data Commons | `datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit` | The server package's PyPI metadata (name and homepage), which declares no MCP Registry name |
 | Boston OpenContext | `opencontext@https://data-mcp.boston.gov/mcp` | Service name and address: the deployment's own metadata could not be read when the entry was written |
 | NYC Charter, Laws and Rules | `@betanyc/nyc-charter-laws-rules@https://github.com/BetaNYC/nyc-charter-laws-rules` | Package name and repository; the publisher has not listed the server in the MCP Registry |
+| NYC Checkbook | `@betanyc/nyc-checkbook-mcp@https://github.com/BetaNYC/nyc-checkbook-mcp` | Package name and repository; not in the MCP Registry (searched 2026-10-19) |
+| NYC City Record | `@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp` | Package name and repository; not in the MCP Registry (searched 2026-10-19) |
+| NYS Open Legislation | `@betanyc/nys-openlegislation-mcp@https://github.com/BetaNYC/nys-openlegislation-mcp` | Package name and repository; not in the MCP Registry (searched 2026-10-19) |
 
-The three routing lines, as the entries carry them:
+The routing lines, as the entries carry them:
 
 | Source | `description` | `freshness` |
 |---|---|---|
@@ -279,6 +298,9 @@ The three routing lines, as the entries carry them:
 | Google Data Commons | Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods. | Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually). |
 | Boston OpenContext | Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics. | Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually). |
 | NYC Charter, Laws and Rules | New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress. | Pinned to version 0.3.1 of the publisher's package and the index it bundles: the Charter and the Administrative Code are current through Local Law 2026/147, enacted September 12, 2026, and the Rules through rules effective October 4, 2026. |
+| NYC Checkbook | New York City government spending as the Comptroller's Checkbook NYC publishes it: contracts (citywide, NYCHA and NYCEDC), payments to vendors, budget and revenue figures by agency and fiscal year, and payroll by agency and title. Covers New York City only. Does not hold the adopted budget's text, Council discretionary awards, or employee names. | Live: every call queries Checkbook NYC as it stands, and the server spaces its requests at least 1.1 seconds apart. |
+| NYC City Record | Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online. | Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily. |
+| NYS Open Legislation | New York State's legislature through the Senate's Open Legislation API: bills and resolutions since 2009 with their text, status, votes and updates, the State's consolidated laws by section, Senate and Assembly members, committees and their meetings, floor calendars, agendas, and floor and hearing transcripts. Covers New York State only. Does not hold New York City's own law (the Charter, the Administrative Code or the Rules) or federal law. | Live: every call queries the Senate's Open Legislation API as it stands. |
 
 Carried: each source's hosting variants, its logging posture, its consent default and its publisher (since 0.4.0, above), and a pinned package version (since 0.3.0). Not carried yet: a server's tool-list mode.
 
@@ -329,6 +351,19 @@ cmp /tmp/nyc-charter-tools.json packages/civic-typed-router/src/__fixtures__/nyc
 ```
 
 It installs `@betanyc/nyc-charter-laws-rules@0.3.1` with `npm install --ignore-scripts` into a fresh directory under the OS temporary directory, reads the version's `gitHead` with `npm view`, starts the server over stdio with an empty environment, and removes the directory. It reaches only the npm registry. The fixture records the version, the `gitHead`, the integrity, the capture date and the resolved versions of `@modelcontextprotocol/sdk` and `zod`; two runs with the same date are byte-identical. `src/civic/nyc-charter.ts` carries the same schemas as code, and `src/nyc-charter.test.ts` holds the two equal.
+
+The three hosted sources of 0.6.0 are pinned the same way, one script each, and each session is `initialize`, `notifications/initialized` and `tools/list` only: no tool is called, so no server reaches its upstream host.
+
+```sh
+for server in nyc-checkbook nyc-record nys-legislation; do
+  node packages/civic-typed-router/src/__fixtures__/pin-$server-tools.mjs \
+    --capture-date 2026-10-19 \
+    --out /tmp/$server-tools.json
+  cmp /tmp/$server-tools.json packages/civic-typed-router/src/__fixtures__/$server-tools.json
+done
+```
+
+Checkbook's and City Record's servers start with an empty environment. NYS Open Legislation's exits at start with neither a key nor a local corpus, so its script sets one variable, `NYS_LEGISLATION_API_KEY`, to a fixed placeholder that is not a key; the server reads it at start and would send it only with a tool call. Each fixture records its environment, and a run of thirteen or more digits in a server's text (Checkbook's descriptions hold example contract identifiers) is written with one digit in nine as a JSON `\u` escape, which parses to the server's text unchanged, so the file passes the repository's pre-push scan. `src/civic/nyc-checkbook.ts`, `nyc-record.ts` and `nys-legislation.ts` carry the same schemas as code, and `src/hosted-entries.test.ts` holds each equal to its fixture.
 
 ## Develop
 
