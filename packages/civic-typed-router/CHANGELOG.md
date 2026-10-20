@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.6.0 — 2026-10-20
 
 Three more sources an instance runs itself from pinned packages, each
 switched off by default, and one carried field on every hosting variant
