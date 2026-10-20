@@ -4,7 +4,9 @@
 // `HostingVariant` is a union discriminated on `kind`. Its `npm-package` arm
 // is 0.3.0's `SourceHosting` (the same five keys, under the same name, so a
 // consumer's `Pick<SourceHosting, …>` is unchanged) with what every variant
-// carries; no arm has a field for an address. `ManifestEntry` has no
+// carries; no arm has a field for an address. Since 0.6.0 what every variant
+// carries includes one optional field, `keyIn`: where the variant sends the
+// instance's key, `'header'` or `'query'`. `ManifestEntry` has no
 // `hosting` key: it lists `hostings`, and carries `consentDefault` and
 // `publisher?`.
 
@@ -38,7 +40,7 @@ import type {
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 const holds = <T extends true>(value: T): T => value;
 
-type Common = 'variant' | 'runsAt' | 'logging';
+type Common = 'variant' | 'runsAt' | 'keyIn' | 'logging';
 
 test('hosting type: SourceHosting keeps exactly kind, package, version, commit and outbound', () => {
   holds<Equal<SourceHosting, CoreSourceHosting>>(true);
@@ -116,6 +118,24 @@ test('hosting type: no arm has a field for an address', () => {
   // @ts-expect-error -- a remote variant carries no package
   const remoteWithPackage: RemoteVariant = { kind: 'remote', variant: 'remote', runsAt: 'other', logging: [], package: 'example' };
   for (const variant of [npm, remote, container, remoteWithPackage]) assert.equal(typeof variant, 'object');
+});
+
+test('hosting type: keyIn is optional on every arm, header or query, and nothing else', () => {
+  holds<Equal<HostingVariant['keyIn'], 'header' | 'query' | undefined>>(true);
+  holds<Equal<NpmPackageVariant['keyIn'], 'header' | 'query' | undefined>>(true);
+  holds<Equal<RemoteVariant['keyIn'], 'header' | 'query' | undefined>>(true);
+  holds<Equal<ContainerVariant['keyIn'], 'header' | 'query' | undefined>>(true);
+  // Optional: 0.5.0's variants, which carry none, still type-check.
+  holds<Equal<Pick<HostingVariant, 'keyIn'>, Partial<Pick<HostingVariant, 'keyIn'>>>>(true);
+  const posture: LoggingPosture = { statedBy: 'instance', role: 'server-operator' };
+  const none: RemoteVariant = { kind: 'remote', variant: 'remote', runsAt: 'other', logging: [posture] };
+  const query: RemoteVariant = { ...none, keyIn: 'query' };
+  const header: RemoteVariant = { ...none, keyIn: 'header' };
+  // @ts-expect-error -- a key travels in a header or the query string, nothing else
+  const body: RemoteVariant = { ...none, keyIn: 'body' };
+  assert.deepEqual([none.keyIn, query.keyIn, header.keyIn, body.keyIn], [undefined, 'query', 'header', 'body']);
+  // Charter's variant carries none.
+  assert.equal(Object.hasOwn(NYC_CHARTER_SANDBOX_VARIANT, 'keyIn'), false);
 });
 
 test('hosting type: a logging posture is stated by the manifest, with its statement, or by the instance, by role', () => {

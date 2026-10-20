@@ -87,13 +87,28 @@ import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetc
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { configuredSources, type McpRegistryEnv } from './env.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
+import { NYC_CHECKBOOK_ENTRY } from './nyc-checkbook.ts';
+import { NYC_RECORD_ENTRY } from './nyc-record.ts';
+import { NYS_LEGISLATION_ENTRY } from './nys-legislation.ts';
 import { composeOutro, composePreamble, directoryFrameFor, introFor, LOAD_SOURCE_TOOL_TEXT } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The civic sources, in the order the prompt and the tools array name them.
- *  NYC Charter, Laws and Rules is last: optional and off unless its switch is
- *  on, so with the switch off every output of the three before it is 0.2.0's. */
-export const CIVIC_MANIFEST: CivicManifest = [SOCRATA_ENTRY, DATA_COMMONS_ENTRY, BOSTON_OPENCONTEXT_ENTRY, NYC_CHARTER_ENTRY];
+ *  NYC Charter, Laws and Rules follows the three remote sources: optional and
+ *  off unless its switch is on, so with the switch off every output of the
+ *  three before it is 0.2.0's. The three hosted sources of 0.6.0 follow it, in
+ *  this order: NYC Checkbook, NYC City Record, NYS Open Legislation; each is
+ *  optional and off unless its own switch is on, so with the three switches
+ *  off every offered output is 0.5.0's. */
+export const CIVIC_MANIFEST: CivicManifest = [
+  SOCRATA_ENTRY,
+  DATA_COMMONS_ENTRY,
+  BOSTON_OPENCONTEXT_ENTRY,
+  NYC_CHARTER_ENTRY,
+  NYC_CHECKBOOK_ENTRY,
+  NYC_RECORD_ENTRY,
+  NYS_LEGISLATION_ENTRY,
+];
 
 /** The domain a civic router's harness definition states. */
 export const CIVIC_DOMAIN = 'civic';
