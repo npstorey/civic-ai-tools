@@ -60,7 +60,7 @@
     "verificationStatus": "official",
     "dateModified": "2026-04-14",
     "apiKeyRequired": true,
-    "notes": "Hosted HTTPS endpoint at api.datacommons.org/mcp (Google Cloud, free, launched 2026-02-09). Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs at docs.datacommons.org/mcp.",
+    "notes": "Hosted HTTPS endpoint at api.datacommons.org/mcp (Google Cloud, free, launched 2026-02-09). Aggregates data from hundreds of sources. Free API key from apikeys.datacommons.org. Docs at docs.datacommons.org/mcp. The docs link Google's privacy policy (policies.google.com/privacy), which states that Google collects information about activity in its services and that its servers record requests, and gives no retention period (read 2026-10-18).",
     "included": true,
     "dataPlatform": [
       "data-commons"
@@ -232,7 +232,7 @@
     "dateModified": "2026-04-21",
     "toolCount": 6,
     "apiKeyRequired": false,
-    "notes": "Official. Generalized framework designed for other cities to fork and deploy against their own portals (\"one fork = one MCP server\"). 6 tools: ckan__search_datasets, ckan__get_dataset, ckan__query_data, ckan__get_schema, ckan__execute_sql, ckan__aggregate_data. Ships SQL/SoQL validators with regex safety checks. Supersedes boston-core-mcp prototype by the same author. Upstream dev hub at github.com/thealphacubicle/OpenContext. MIT-licensed and self-hostable.",
+    "notes": "Official. Generalized framework designed for other cities to fork and deploy against their own portals (\"one fork = one MCP server\"). 6 tools: ckan__search_datasets, ckan__get_dataset, ckan__query_data, ckan__get_schema, ckan__execute_sql, ckan__aggregate_data. Ships SQL/SoQL validators with regex safety checks. Supersedes boston-core-mcp prototype by the same author. Upstream dev hub at github.com/thealphacubicle/OpenContext. MIT-licensed and self-hostable. The City's terms of use and privacy policy for its digital services (boston.gov) state that server logs and metadata are collected automatically, and that records are kept under the City's records retention schedule (read 2026-10-18).",
     "license": "MIT",
     "programmingLanguage": "Python",
     "endpointUrl": "https://data-mcp.boston.gov/mcp",
@@ -2027,7 +2027,7 @@
     ],
     "jurisdiction": "New York City",
     "toolCount": 5,
-    "notes": "No API key required. Runs with no network: the section index ships in the npm package (22,174 sections in 0.2.0, indexed through 2026-07-16). The repository refreshes the index on main from American Legal Publishing (22,185 sections on 2026-09-18); npm 0.2.0 does not include those refreshes. Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. serverInfo reports version 0.1.0; the npm package is 0.2.0. Published on npm as @betanyc/nyc-charter-laws-rules since 2026-05-21; latest release 0.2.0 (npm and GitHub, 2026-07-22).",
+    "notes": "No API key required. Runs with no network: the section index ships in the npm package (22,185 sections in 0.3.1; the Charter and the Administrative Code current through Local Law 2026/147, the Rules through rules effective 2026-10-04, as its get_version tool reports). Since 2026-10-12 the publisher's daily refresh releases a patch version on npm whenever the law text changes (`release.yml` at b784cb7), so the npm package carries the refreshed index. Features a three-layer legal-disclaimer pattern (tool descriptions + response footer + get_version instruction) so responses cannot be returned without grounding caveats. serverInfo reports the package version (0.3.1). Published on npm as @betanyc/nyc-charter-laws-rules since 2026-05-21; latest release 0.3.1 (npm and GitHub, 2026-10-12; `gitHead` b784cb7). Five tools: search, get_section, list_titles, get_title, get_version. `@typedstandards/civic-typed-router` (from 0.3.0) carries it as the source `nyc-charter`, pinned at 0.3.1, which an instance runs itself when `NYC_CHARTER_HOSTING=sandbox` (verified 2026-10-16); the router's next release, as planned, carries it as the hosting variant `sandbox` (ADR-0036).",
     "npmPackage": "@betanyc/nyc-charter-laws-rules",
     "license": "MIT",
     "programmingLanguage": "TypeScript",
