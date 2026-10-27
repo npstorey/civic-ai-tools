@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@typedstandards/verify-core": "^0.14.0",
-    "@types/node": "^22.20.2",
+    "@types/node": "^26.6.5",
     "@typescript-eslint/parser": "^8",
     "eslint": "^9",
     "typescript": "^5.9.3"
