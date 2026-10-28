@@ -1,0 +1,15 @@
+# Signature blobs must never be diffed as text.
+#
+# A raw Ed25519 signature is 64 bytes that usually contain no NUL, so git's
+# "is this binary?" heuristic calls it TEXT and emits the raw bytes into every
+# diff. The pre-push sensitivity guard pipes `git log -p` through awk, and awk
+# dies on those bytes with "towc: multibyte conversion failure" — which means
+# the file is SILENTLY UNSCANNED rather than loudly rejected. Marking the path
+# `-diff` makes git print "Binary files differ" instead, so the guard's scanner
+# always sees well-formed text.
+#
+# scripts/fixtures/ now commits signatures as base64 TEXT (*.producer.sig.b64),
+# so this rule should never fire in normal use; it is the backstop that keeps a
+# stray raw signature from quietly disabling the guard again.
+*.producer.sig -diff
+*.sig -diff
