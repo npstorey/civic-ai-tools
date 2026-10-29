@@ -39,7 +39,7 @@
     "@typedstandards/verify-core": "^0.14.0",
     "@types/node": "^22.20.5",
     "@typescript-eslint/parser": "^8.72.0",
-    "eslint": "^9",
+    "eslint": "^10",
     "typescript": "^5.9.3"
   },
   "engines": {
