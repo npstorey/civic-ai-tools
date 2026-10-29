@@ -9,6 +9,13 @@ updates:
       minor-and-patch:
         update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
+    ignore:
+      # The major tracks CI's Node (22, ci.yml) and moves by hand with it; lift only if that rule is dropped.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # 7.0 ships no compiler API (the #197 guards import it); @typescript-eslint/parser's peer range stops at <6.1.0. Lift when both change.
+      - dependency-name: typescript
+        versions: [">=7.0.0"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
