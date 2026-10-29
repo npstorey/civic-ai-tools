@@ -15,6 +15,9 @@ received carries strategic context, scrub it first.
 **Never push to `main`,** and never bypass a git hook or the pre-push sensitivity guard. The guard scans the added lines
 of *each outgoing commit*, not the net diff, so a fix commit on top never clears it — rebuild the branch history.
 
+**Dependabot's PRs pass the same gates as any PR** and merge only on the seat's GO, never on the bot's green alone
+([the two keys](docs/architecture/chat-type-taxonomy.md#gates-and-the-two-keys)).
+
 **Secret hygiene** (incident: civic#174, the 2026-08-22 token exposure). Never `cat`, `head`, `tail`, or otherwise dump
 `.env*`, `auth.json`, `credentials*`, `*.pem`, `*.key`, or anything under `~/.ssh` or `~/.aws`. Two reads are permitted:
 a field-scoped read by key **name** (`grep '^VAR_NAME=' .env`, or `jq` over non-secret fields), and a command the tool
