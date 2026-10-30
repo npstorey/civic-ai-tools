@@ -45,12 +45,14 @@ import {
   type BlobRef,
   type RecordPackage,
 } from '@typedstandards/produce-core';
-import * as verifyCore from '@typedstandards/verify-core';
 import {
   checkContentProfile,
+  checkSystemPrompt,
   computeBlobRefHash,
   isBlobRef,
+  isContentProfileConsistent,
   parseBlobRef,
+  PRODUCER_PROFILE_SUBTYPES,
 } from '@typedstandards/verify-core';
 import {
   TraceBuilder,
@@ -69,23 +71,6 @@ import {
   deriveProducerProfile,
   type ToolCallSummary,
 } from './index.ts';
-
-// RED STUB (removed when verify-core moves to 0.15.0): the three exports that
-// 0.15.0 adds are read off the namespace, `undefined` under 0.14.0.
-interface SubtypeRowStub {
-  readonly admits: readonly string[];
-  readonly bundle?: { readonly url: string; readonly sha256: string };
-}
-const vc = verifyCore as unknown as Record<string, unknown>;
-const PRODUCER_PROFILE_SUBTYPES = vc['PRODUCER_PROFILE_SUBTYPES'] as
-  | Readonly<Record<string, SubtypeRowStub>>
-  | undefined;
-const isContentProfileConsistent = vc['isContentProfileConsistent'] as
-  | ((producerProfile: string, contentProfile: string) => boolean)
-  | undefined;
-const checkSystemPrompt = vc['checkSystemPrompt'] as
-  | ((pkg: Record<string, unknown>) => { status: string; form?: string })
-  | undefined;
 
 const FIXTURE_PATH = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', 'civicaitools-v1-golden.json');
 
@@ -321,7 +306,6 @@ function storedRecord(): Record<string, unknown> {
 test('civicaitools-v1: the subtype constant, its profile-type prefix, and verify-core\'s row with the bundle digest', () => {
   assert.equal(CIVICAITOOLS_V1_PRODUCER_PROFILE, 'ai-assisted-analysis/civicaitools-v1');
   assert.ok(CIVICAITOOLS_V1_PRODUCER_PROFILE.startsWith(`${AI_ASSISTED_ANALYSIS_PROFILE_TYPE}/`));
-  assert.ok(PRODUCER_PROFILE_SUBTYPES, 'verify-core exports PRODUCER_PROFILE_SUBTYPES');
   const row = PRODUCER_PROFILE_SUBTYPES[CIVICAITOOLS_V1_PRODUCER_PROFILE];
   assert.ok(row, 'verify-core\'s subtype table has a row for the constant');
   assert.deepEqual([...row.admits], ['datHere', 'default']);
@@ -393,11 +377,9 @@ test('civicaitools-v1 golden: under verify-core, check 16 and check 17 read ok a
     ['the built record', buildCivicAiToolsV1Record().pkg as unknown as Record<string, unknown>],
   ] as const) {
     assert.equal(checkContentProfile(record).status, 'ok', `check 16 on ${label}`);
-    assert.equal(typeof checkSystemPrompt, 'function', 'verify-core exports checkSystemPrompt');
-    assert.deepEqual(checkSystemPrompt!(record), { status: 'ok', form: 'blobRef' }, `check 17 on ${label}`);
+    assert.deepEqual(checkSystemPrompt(record), { status: 'ok', form: 'blobRef' }, `check 17 on ${label}`);
   }
-  assert.equal(typeof isContentProfileConsistent, 'function', 'verify-core exports isContentProfileConsistent');
-  assert.equal(isContentProfileConsistent!('ai-assisted-analysis/civicaitools-v1', 'datHere'), true);
+  assert.equal(isContentProfileConsistent('ai-assisted-analysis/civicaitools-v1', 'datHere'), true);
 });
 
 test('civicaitools-v1 golden: fixture convention — no bare run of thirteen or more digits', () => {
@@ -413,8 +395,7 @@ test('civicaitools-v1: a hash-only default record carries the subtype and "defau
   assert.equal((record.metadata as Record<string, unknown>).contentProfile, 'default');
   assert.equal((record.prompt as Record<string, unknown>).visibility, 'hash_only');
   assert.equal(checkContentProfile(record).status, 'ok');
-  assert.equal(typeof checkSystemPrompt, 'function', 'verify-core exports checkSystemPrompt');
-  assert.deepEqual(checkSystemPrompt!(record), { status: 'not_applicable' });
+  assert.deepEqual(checkSystemPrompt(record), { status: 'not_applicable' });
   assert.doesNotMatch(JSON.stringify(record), /\b\d{13,19}\b/);
 });
 

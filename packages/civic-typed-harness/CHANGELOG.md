@@ -32,6 +32,13 @@ signed bytes move only when its producer passes the new constant as
 - **Q32.** The note in `format/profiles.ts` and the README names
   ADR-0038 as the first worked instance of a content-addressed guidance
   bundle; the module does not grow into a bundle mechanism.
+- **verify-core `^0.15.0` for the tests.** The devDependency on
+  `@typedstandards/verify-core` moves from `^0.14.0` to `^0.15.0`, whose
+  subtype table, `isContentProfileConsistent` and `checkSystemPrompt`
+  (check 17) the new tests read. The runtime dependency,
+  `@typedstandards/produce-core` `^0.9.0`, does not move; the lockfile
+  resolves it to 0.9.1, which requires verify-core `^0.15.0`, so one
+  verify-core installs.
 
 ## 0.10.0 — 2026-10-19
 
