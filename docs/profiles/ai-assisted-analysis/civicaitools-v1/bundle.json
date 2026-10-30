@@ -1,0 +1,372 @@
+{
+  "subtype": "ai-assisted-analysis/civicaitools-v1",
+  "profileType": "ai-assisted-analysis",
+  "displayName": "Civic AI Tools profile, v1",
+  "revision": 1,
+  "date": "2026-10-30",
+  "decisionRecord": "https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0038-civicaitools-v1-producer-profile-subtype.md",
+  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.13-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
+  "versionRule": "The subtype name carries the major: v2 when a declared field changes meaning, is removed, or a v1 reader statement would be false of the record. This file's SHA-256 carries the revisions: an added entry with an absence rule, a new reader sentence or a corrected citation stays v1 and moves the digest and the verifier table row's pin (ADR-0038 section 2).",
+  "producer": "The reference host of this project, civicaitools.org, through the composed harness (ADR-0033, ADR-0037). Every new record of this producer, full-text or hash-only, declares this subtype.",
+  "contentProfiles": {
+    "admits": ["datHere", "default"],
+    "rule": "When both fields are present, metadata.contentProfile is one of the values this row admits. datHere is the A-G envelope (spec section 8.7, its requirements binding on such a record); default is the plain shape, which a hash-only record of this producer carries. The values and their meaning do not change here.",
+    "readers": "Spec section 8.1.1 and section 6.2 state the invariant; section 9.2 check #16 reads it."
+  },
+  "captureMethods": {
+    "inheritedFrom": "ai-assisted-analysis",
+    "override": null,
+    "note": "The capture vocabulary is the profile type's (ADR-0011, the G4 decision; spec section 8.6): chat-flow-stream, claude-code-jsonl-readback, claude-code-self-report. This subtype constrains and extends nothing."
+  },
+  "classes": {
+    "shows": "A host that shows the sources a run reached derives and shows this statement (SHOULD).",
+    "may-show": "A host MAY derive and show this statement; its absence from a page says nothing about the record.",
+    "never-invents": "No host states this from a record of this subtype, because the record does not hold it; its absence renders as not recorded, never as a default."
+  },
+  "absenceRule": "Every entry below is emitted only when the producer knows its value (ADR-0024; ADR-0033 section C). An absent key states nothing: a host renders it as not recorded, and never as a default, a zero or an empty list (ADR-0033's honest-absence rule).",
+  "fields": [
+    {
+      "id": "composition.assertedDate",
+      "path": "extensions[\"org.civicaitools.composition\"].assertedDate",
+      "values": "A calendar date, YYYY-MM-DD: the 'today' the composed prompt stated to the model.",
+      "absent": "Key omitted when the run's root span carried no analysis.asserted_date.",
+      "carriedBy": "packages/civic-typed-harness/src/__fixtures__/in-loop-golden.json (2026-10-19); the published records of this producer since harness 0.7.0.",
+      "sentence": "The model was told the date was {assertedDate}.",
+      "class": "may-show"
+    },
+    {
+      "id": "composition.sourcesOffered",
+      "path": "extensions[\"org.civicaitools.composition\"].sourcesOffered[]",
+      "values": "One entry per manifest source in manifest order: { sourceId, alias, reason }, reason one of configured, not-configured, selected, not-selected, reader-off, not-consented (ADR-0033 section E and its 2026-10-18 amendment). A source was offered exactly when its reason is configured or selected.",
+      "absent": "Key omitted when the run's root span carried no analysis.sources_offered.",
+      "carriedBy": "in-loop-golden.json (three entries); the three fixture records of the reference host's flows tests (record-2f32d9, record-397939, record-d887c1 at website 567a7c2).",
+      "sentence": "Supplies the never-asked group of the chooser sentence (see composition.routing) and, per source, why it was not reached: {alias}: {reason as the host's sentence for it}. The host names the source from its own manifest by sourceId; the record never spells the reader-facing name.",
+      "class": "shows"
+    },
+    {
+      "id": "composition.components",
+      "path": "extensions[\"org.civicaitools.composition\"].components[]",
+      "values": "One entry per offered source in manifest order, then one for the composing package: { id, version?, guidanceHash?, guidanceOrigin? }; guidanceHash is lowercase hex SHA-256 of the guidance text as composed; guidanceOrigin is present exactly when guidanceHash is, one of endpoint, inline, fallback.",
+      "absent": "Key omitted when the root span carried no analysis.components. A missing version or guidanceHash is unknown or no guidance, respectively; neither is stated as a placeholder.",
+      "carriedBy": "in-loop-golden.json (socrata 0.9.2 with endpoint guidance; the router 0.5.0); the three website fixture records.",
+      "sentence": "Composed from: {id} {version} (guidance {guidanceOrigin}, hash {guidanceHash short}); ... . Until a record carries skillMetadata.skillText (website #694), these entries are the record's only statement of the prompt's pieces, by hash and origin, not by text.",
+      "class": "may-show"
+    },
+    {
+      "id": "composition.flowsStatement",
+      "path": "extensions[\"org.civicaitools.composition\"].flowsStatement",
+      "values": "{ url, hash, date }, keys in that order: the address the instance serves its flows statement at (absolute http: or https:, no credentials), the statement's version as lowercase hex SHA-256, and its YYYY-MM-DD date. By reference only; never the statement's content (ADR-0033 amendment of 2026-10-18; ADR-0036 section D).",
+      "absent": "Key omitted when the root span carried no analysis.flows_statement (every record before harness 0.9.0).",
+      "carriedBy": "in-loop-golden.json; record-d887c1 (website 567a7c2).",
+      "sentence": "Where this question's data went is described by the flows statement of {date} at {url} (version {hash short}).",
+      "class": "may-show"
+    },
+    {
+      "id": "composition.routing",
+      "path": "extensions[\"org.civicaitools.composition\"].routing",
+      "values": "{ method, version }, keys in that order. method one of all-sources, picker, in-loop (ADR-0033 amendment 2); version is the router's version. This producer writes the key on an in-loop run only, with method in-loop; an all-sources run writes no routing key (website src/lib/evidence/trace.ts, IN_LOOP_RUN_RECORD_ATTRIBUTE, and src/lib/mcp/routing-mode.ts at 567a7c2), and nothing emits picker.",
+      "absent": "Key omitted when the root span carried no analysis.routing: every all-sources run of this producer, and every record published before in-loop routing reached production (2026-10-27). Absent reads as not recorded, never as all-sources.",
+      "carriedBy": "in-loop-golden.json (in-loop, router 0.5.0). No public record of the reference host carried it at 2026-10-30 12:35Z (R10-WEB's census: 61 public records, 13 with the composition block, 0 with routing).",
+      "sentence": "Shown wherever reached sources are shown, read from routing.method, the load spans and sourcesOffered. in-loop: 'The model chose which sources to use: it loaded {loaded}; it asked about {asked, each with the reader's answer}; it did not ask for {never asked}.' Beside it the host MAY say 'through the civic router {version}'. absent: 'How the sources were chosen: not recorded.' all-sources, only if a record of this producer ever states that method: 'Every configured source was offered from the first request.'",
+      "class": "shows"
+    },
+    {
+      "id": "composition.definitionHash",
+      "path": "extensions[\"org.civicaitools.composition\"].definitionHash",
+      "values": "Lowercase hex SHA-256 of the run's harness definition { domain, sources, components, chosenBy } in the router's canonical JSON (ADR-0037 section E). The harness states the value as the router computed it and computes nothing.",
+      "absent": "Key omitted when the root span carried no analysis.definition_hash: every all-sources run, and every record before harness 0.10.0.",
+      "carriedBy": "in-loop-golden.json. No public record of the reference host carried it at 2026-10-30 12:35Z (the census above).",
+      "sentence": "May be shown as small print beside the chooser sentence: 'harness definition {definitionHash}'. The definition's contents are never stated from the record: the hash resolves to nothing until the definition is a node type (ADR-0037 section E), so a host states the hash and no more.",
+      "class": "may-show"
+    },
+    {
+      "id": "environment.toolDefinitions",
+      "path": "extensions[\"org.civicaitools.environment\"].toolDefinitions",
+      "values": "The tools array as offered to the model, in offered order, verbatim (the router's output: load_source and each loaded source's tools), or a BlobRef when large (spec section 8.7.1 requirement 3; ADR-0033 section C).",
+      "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "Tools offered to the model: {count}, named {names}.",
+      "class": "may-show"
+    },
+    {
+      "id": "notebook.execution",
+      "path": "extensions[\"org.civicaitools.notebook\"].metadata.extensions[\"org.civicaitools.execution\"]",
+      "values": "{ executedAt, environment: { python, libraries }, executionDuration_ms, comparisonCellPresent?, sandboxId? }, the shape spec section 8.7.4 gives the execution extension. Measured at website 567a7c2 (src/lib/notebook-author/phase-d.ts), the reference host writes the block inside the notebook's own metadata at this path, not at the top-level extensions[\"org.civicaitools.execution\"] section 8.7.4 names; a host reads it where the record carries it. The divergence is recorded in ADR-0038 and not resolved by this bundle.",
+      "absent": "Absent when the notebook was not executed by the publisher's pipeline (a skeleton notebook, provenance absent or skeleton); then the record states nothing about an execution.",
+      "carriedBy": "The three website fixture records (executed 2026-10-16 and 2026-10-20). Not carried by in-loop-golden.json, whose notebook is a skeleton.",
+      "sentence": "Executed at {executedAt} on Python {python} with {libraries}, in {executionDuration_ms} ms.",
+      "class": "may-show"
+    },
+    {
+      "id": "notebook.summary",
+      "path": "extensions[\"org.civicaitools.notebook\"].metadata.extensions[\"org.civicaitools.summary\"]",
+      "values": "The structured two-clause summary the notebook author produced, stamped in the notebook's root metadata when the author step supplied one (website src/lib/notebook-author/synthesize.ts at 567a7c2). The record's top-level summary (spec section 8.1.1, section G) is a separate field and the one a datHere record requires.",
+      "absent": "Absent when the author step supplied no structured summary; none of the three measured fixture records carries it, and in-loop-golden.json does not. A host reads section G from the top-level summary and states nothing from this block when it is absent.",
+      "carriedBy": "No measured fixture record carries it. The reference host's answer view reads it when present (src/components/answer-view/buildChatEvidenceView.ts at 567a7c2).",
+      "sentence": "The structured summary's clauses, as the host's section G rendering, only when present.",
+      "class": "may-show"
+    },
+    {
+      "id": "notebook.provenance",
+      "path": "extensions[\"org.civicaitools.notebook\"].metadata.extensions[\"org.civicaitools.notebook\"].provenance",
+      "values": "skeleton or executed (spec section 8.7.4; ADR-0005). Measured at website 567a7c2 (src/lib/notebook-author/synthesize.ts and phase-d.ts), the reference host writes the discriminator inside the notebook's own metadata at this path, not at extensions[\"org.civicaitools.notebook\"].provenance as section 8.7.4 names it; a host reads it where the record carries it. The divergence is recorded in ADR-0038 and not resolved by this bundle.",
+      "absent": "Absent on a skeleton notebook written by the chat-flow path; section 8.7.4 has a verifier read absence as skeleton, and a host labels the notebook as a skeleton, never as executed.",
+      "carriedBy": "The three website fixture records (executed). Not carried by in-loop-golden.json (a skeleton).",
+      "sentence": "executed: 'Executed notebook: the answer was derived from computed data; re-execution is reproducible against the documented runtime and the upstream data as of publish time.' skeleton or absent: 'Skeleton notebook: the answer was authored in chat; the data fetch is reproducible, the answer synthesis is not.' (spec section 8.7.3 item 4 and section 8.7.4's labelling convention, a SHOULD).",
+      "class": "shows"
+    },
+    {
+      "id": "trace.loadSpan.operationType",
+      "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.operation_type\"]",
+      "values": "load_source on a load span: a call the instance's own loop handled through the router's directory, which no source answered (ADR-0033 amendment 2; ADR-0037 section C). Other spans carry the producer's other operation types (query, search, metadata, ...).",
+      "absent": "No load span is present on an all-sources run, where the model is offered no load_source tool, and on every record before in-loop routing. Then the record states that no source was loaded during the run, not that none was reached.",
+      "carriedBy": "in-loop-golden.json (one load span, loaded).",
+      "sentence": "Identifies the load spans from which the chooser sentence's loaded and asked groups are read (see composition.routing): 'the model asked for {alias}'.",
+      "class": "shows"
+    },
+    {
+      "id": "trace.loadSpan.loadOutcome",
+      "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.load_outcome\"]",
+      "values": "One of loaded, declined, no-answer, unavailable, not-offered (LOAD_OUTCOMES, format/vocabulary.ts): the source's guidance and tools were added; the reader did not allow the source for this run; no decision arrived in time; the instance could not offer the source for a reason known without contacting it; the alias named no source of the directory set.",
+      "absent": "Present on every load span: the harness refuses a load span with no outcome or another value when it builds the graph (LoadSpanError), so a record never states a load without saying how it ended.",
+      "carriedBy": "in-loop-golden.json (loaded).",
+      "sentence": "Per load, the chooser sentence's verb: loaded 'it loaded {alias}'; declined 'it asked about {alias}, and you said no'; no-answer 'it asked about {alias}, and no answer arrived in time'; unavailable 'it asked for {alias}, which could not be offered'; not-offered 'it asked for {alias}, which this site does not offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.",
+      "class": "shows"
+    },
+    {
+      "id": "civic.failed",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:failed\"]",
+      "values": "true, only when the producer stated that the source refused the call; never false.",
+      "absent": "Absent when nothing was recorded about how the call ended: the record states nothing, and a reader never reads the absence as success (spec section 8.1.8).",
+      "carriedBy": "No measured fixture record carries it (no fixture call was refused); emitted by the harness since produce-core 0.4.0 whenever a queries[] entry carries failed: true.",
+      "sentence": "'{source} refused this call.' Nothing when absent.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.failureKind",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:failureKind\"]",
+      "values": "An open producer label beside civic:failed, stated verbatim; the reference producer's four values are timeout, unavailable, not_configured, unknown. No normative vocabulary.",
+      "absent": "Absent unless civic:failed is present; a kind without a failure is not a rejection.",
+      "carriedBy": "No measured fixture record carries it.",
+      "sentence": "'{source} refused this call ({failureKind}).' A host never switches on the value exhaustively or treats an unknown one as invalid.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.contentHash",
+      "path": "provenance[\"@graph\"][] (prov:Entity: prompt, skill, output, tool-argument, data-response)[\"civic:contentHash\"]",
+      "values": "sha256:<hex>, the SHA-256 of the bytes the entity stands for.",
+      "absent": "Present on every entity the graph mints for content the producer held; absent on an entity whose bytes the producer did not hold.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'Content hash {hex short}'; a reader hashes the content it holds and compares.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.serverUrl",
+      "path": "provenance[\"@graph\"][] (prov:SoftwareAgent, a source)[\"civic:serverUrl\"]",
+      "values": "The MCP server URL the source agent answered from, as the deployment's source registry states it (or, for the skill source, as the skill-fetch span carried it).",
+      "absent": "Absent on an agent whose address the producer did not state.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'Answered by {source} at {serverUrl host}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.sourceId",
+      "path": "provenance[\"@graph\"][] (prov:SoftwareAgent, prov:Activity, prov:Entity)[\"civic:sourceId\"]",
+      "values": "The stable registry id of the source that answered a call, on the source agent, the tool-call activity and the data-response entity. A load span's activity states none: no source answered it.",
+      "absent": "Absent on a call no source answered (a load) and on a call whose source the span did not name; the graph never defaults a source id (ADR-0024).",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'{the host's name for sourceId} answered this call.' The host resolves the id against its own manifest; the record never spells the reader-facing name.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.url",
+      "path": "provenance[\"@graph\"][] (prov:SoftwareAgent, the platform agent)[\"civic:url\"]",
+      "values": "The public URL of the platform agent that published the record, a typed config input of the deployment.",
+      "absent": "Present whenever the platform agent is minted; absent only when the deployment states no address.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'Published by {url host}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.promptTokens",
+      "path": "provenance[\"@graph\"][] (prov:Activity, an inference)[\"civic:promptTokens\"]",
+      "values": "The prompt tokens the inference span reported, an integer.",
+      "absent": "Absent when the span carried no count; never zero-filled.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'{n} prompt tokens' for the inference. Nothing when absent.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.completionTokens",
+      "path": "provenance[\"@graph\"][] (prov:Activity, an inference)[\"civic:completionTokens\"]",
+      "values": "The completion tokens the inference span reported, an integer.",
+      "absent": "Absent when the span carried no count; never zero-filled.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'{n} completion tokens' for the inference. Nothing when absent.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.toolName",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a tool-argument query)[\"civic:toolName\"]",
+      "values": "The tool the call invoked, verbatim from the span: the name the model called, which under ADR-0032 is <alias>__<upstream name>.",
+      "absent": "Absent when the span named no tool; never a placeholder.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'Called {toolName}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.operationType",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a tool-argument query)[\"civic:operationType\"]",
+      "values": "The producer's classification of what the call did (query, search, metadata, load_source, unknown, ...), an open string stated verbatim.",
+      "absent": "Absent when the span carried no tool.operation_type.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'A {operationType} call.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.datasetId",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a data response)[\"civic:datasetId\"]",
+      "values": "The dataset a data response came from, when the span carried one and the source is dataset-keyed.",
+      "absent": "Absent when the span carried no dataset id (a search, a metadata call, a non-dataset source).",
+      "carriedBy": "in-loop-golden.json; record-2f32d9 and record-d887c1.",
+      "sentence": "'Data from dataset {datasetId}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.portalDomain",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a data response)[\"civic:portalDomain\"]",
+      "values": "The portal host the tool span carried. Never the run's selected portal: a call that addressed no portal yields a response attributed to none.",
+      "absent": "Absent when the span carried no portal host.",
+      "carriedBy": "in-loop-golden.json; record-2f32d9 and record-d887c1.",
+      "sentence": "'From the portal {portalDomain}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.datasetUrl",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a data response)[\"civic:datasetUrl\"]",
+      "values": "The canonical dataset URL, minted only when the span carried both the portal host and the dataset id.",
+      "absent": "Absent when either part is absent; a URL is never minted from a host the span did not state.",
+      "carriedBy": "in-loop-golden.json; record-2f32d9 and record-d887c1.",
+      "sentence": "A link to the dataset at {datasetUrl}.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.croissantMetadataUrl",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a data response)[\"civic:croissantMetadataUrl\"]",
+      "values": "null: an explicit placeholder for a Croissant 1.1 metadata URL, named here because the key is inside signed bytes. No record of this producer carries a non-null value.",
+      "absent": "Absent on a response that is not dataset-keyed.",
+      "carriedBy": "in-loop-golden.json; record-2f32d9 and record-d887c1 (each null).",
+      "sentence": "Nothing: a null states no URL, and a host shows no Croissant link from a record of this subtype.",
+      "class": "never-invents"
+    },
+    {
+      "id": "civic.responseRows",
+      "path": "provenance[\"@graph\"][] (prov:Entity, a data response)[\"civic:responseRows\"]",
+      "values": "The row count the tool response carried, an integer.",
+      "absent": "Absent when the span reported no row count.",
+      "carriedBy": "in-loop-golden.json; record-2f32d9 and record-d887c1.",
+      "sentence": "'{n} rows returned.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.durationMs",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:durationMs\"]",
+      "values": "The elapsed milliseconds the producer measured for one tool call, on a call that answered and on one the source refused alike.",
+      "absent": "Absent when the span carried no duration.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'{n} ms.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.upstreamToolName",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:upstreamToolName\"]",
+      "values": "The server's own tool name, the name the call was sent under on the wire, when the name the model called is an aliased one (ADR-0033 section B; ADR-0032).",
+      "absent": "Absent when the span carried no tool.upstream_name (a call to an unaliased tool).",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "'Sent to the server as {upstreamToolName}.'",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.sourceAlias",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:sourceAlias\"]",
+      "values": "The operator-facing alias of the source that answered the call, the prefix of an aliased tool name.",
+      "absent": "Absent when the span carried no mcp.alias.",
+      "carriedBy": "in-loop-golden.json; the three website fixture records.",
+      "sentence": "The alias by which the chooser sentence names a source: 'it loaded {alias}'.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.serverId",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:serverId\"]",
+      "values": "The identity of the server that answered: the router manifest entry's id, which composition.components[].id also carries, so a call joins to its component.",
+      "absent": "Absent when the span carried no mcp.server.id.",
+      "carriedBy": "The three website fixture records. Not carried by in-loop-golden.json.",
+      "sentence": "'Answered by {serverId}', joined to the component of the same id for its version and guidance hash.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.loadOutcome",
+      "path": "provenance[\"@graph\"][] (prov:Activity, the tool call of a load span, associated with the platform agent)[\"civic:loadOutcome\"]",
+      "values": "One of loaded, declined, no-answer, unavailable, not-offered, verbatim from the span's tool.load_outcome; the activity's last key, on no other node (ADR-0033 amendment 2).",
+      "absent": "Absent on every activity that is not a load; a graph never states a load without it.",
+      "carriedBy": "in-loop-golden.json (loaded).",
+      "sentence": "The graph's statement of trace.loadSpan.loadOutcome; a host reading the graph rather than the trace derives the same per-load verb from it.",
+      "class": "may-show"
+    },
+    {
+      "id": "skillMetadata.skillText",
+      "path": "skillMetadata.skillText",
+      "values": "The composed system prompt the model ran under, inline or as a BlobRef when large (spec section 8.1.1; section 8.7.1 requirement 2 requires it non-empty on a datHere record).",
+      "absent": "Not carried by this producer's records so far: every published record of the reference host carries skillMetadata as {} (website #694, measured 2026-10-30 against two public records and the code at 567a7c2: the packager reads a skill_fetch span the composed-harness flow never writes, and the dialog sends no override). The record's composition names the prompt's pieces by guidanceHash and guidanceOrigin (composition.components). A record that carries the text meets requirement 2; one that does not is reported by spec section 9.2 check #17 as attention, never as a failure.",
+      "carriedBy": "No published record of this producer and no fixture of this producer at 2026-10-30. The harness fixture legacy-blobref-trace-skill-override (reference-golden.json) carries a BlobRef skillText from an override and is not a record of this host.",
+      "sentence": "Text present: section B renders the text (or the BlobRef's resolved text). Hash only (systemPromptHash present, skillText absent): 'The prompt's text was not carried; its hash is {systemPromptHash short}', with the composition's components listed by id, version and guidance hash. Neither: 'The prompt's text was not carried', with the same component list. A host never shows a prompt it reconstructs from the components as if the record carried it.",
+      "class": "shows"
+    },
+    {
+      "id": "skillMetadata.systemPromptHash",
+      "path": "skillMetadata.systemPromptHash",
+      "values": "Lowercase hex SHA-256 of the composed system prompt as a whole (ADR-0033 section E: components[].guidanceHash is each piece's; this is the whole's). The trace of every measured record carries gen_ai.system_prompt_hash on an llm_inference span; the executed_notebook span's analysis.prompt_hash is the notebook author's prompt, a different hash in every measured record.",
+      "absent": "Not carried by this producer's records so far (website #694): skillMetadata is {} on every published record, while the trace's llm_inference span carries gen_ai.system_prompt_hash. A host MAY show the trace's hash as the trace's, never as skillMetadata's.",
+      "carriedBy": "No published record of this producer at 2026-10-30 (the hash is in each record's trace only: record-2f32d9, record-397939, record-d887c1 at website 567a7c2).",
+      "sentence": "Present: 'System prompt hash {systemPromptHash short}' in the Model + environment card. Absent: nothing, or 'not recorded' where the card has a row for it.",
+      "class": "may-show"
+    }
+  ],
+  "neverCarried": [
+    {
+      "id": "consent.who",
+      "fact": "Who consented to a source (the reader's identity).",
+      "rule": "Never enters a record of this subtype and no host states it from one. The consent itself is kept in the app's own store (the MCP-sources design, sections 1.6 and 4.4; ADR-0036). A record states only that a load was asked for and how it ended."
+    },
+    {
+      "id": "consent.when",
+      "fact": "When consent was given or withdrawn.",
+      "rule": "Never enters a record; no host states a consent time from one. The load span's own timing is the call's, not the consent's."
+    },
+    {
+      "id": "consent.account",
+      "fact": "The reader's account (the consent row's account column).",
+      "rule": "Never enters a record. A record's signer is the platform or the publisher, never the consenting reader."
+    },
+    {
+      "id": "consent.perSourceStates",
+      "fact": "The reader's per-source consent states (On, Ask first, Off) as stored.",
+      "rule": "Never enters a record. sourcesOffered[].reason states the state's effect on the run (reader-off, not-consented), which is an outcome for one run and not the stored state; a host never reconstructs the consent panel from a record."
+    },
+    {
+      "id": "consent.flowsVersionRow",
+      "fact": "The flows-version row of the consent store (which statement version the reader consented under).",
+      "rule": "Never enters a record. flowsStatement names the statement in force for the run by url, hash and date; it does not say the reader consented under it."
+    },
+    {
+      "id": "consent.sessionCookie",
+      "fact": "The anonymous reader's session cookie or any session identifier.",
+      "rule": "Never enters a record; no host states one from a record."
+    },
+    {
+      "id": "flowsStatement.text",
+      "fact": "The flows statement's text (the recipients, what each receives, the postures their holders state).",
+      "rule": "Never enters a record: the harness refuses a flowsStatement with any key beyond url, hash and date (format/dathere.ts). A host that shows the statement fetches it by url and checks the hash; it never presents the text as if the record carried it."
+    }
+  ]
+}
