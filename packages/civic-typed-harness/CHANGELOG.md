@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.11.0 — 2026-10-30
 
 The Producer Profile subtype this project's reference host declares
 (sprint R10;
