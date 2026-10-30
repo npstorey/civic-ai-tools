@@ -9,7 +9,7 @@
 | Revision | 1, dated 2026-10-30 |
 | Decision record | [ADR-0038](../../../adr/0038-civicaitools-v1-producer-profile-subtype.md) |
 | URL | `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.13-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json` |
-| SHA-256 of `bundle.json` | `9823edce4c15baa960ba77d3b0af0b261402e6cce621d1cfaca31526bd44f313` |
+| SHA-256 of `bundle.json` | `724e399e02db8993041b64982eec731505084bec2ec5e6ca58fda2de8087a281` |
 | Content profiles the row admits | `datHere` (the A-G envelope, a full-text record) and `default` (the plain shape, a hash-only record) |
 | Capture vocabulary | inherited from `ai-assisted-analysis` (ADR-0011's G4 decision), no override |
 
