@@ -3,6 +3,43 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.11.0 — 2026-10-30
+
+The Producer Profile subtype this project's reference host declares
+(sprint R10;
+[ADR-0038](../../docs/adr/0038-civicaitools-v1-producer-profile-subtype.md)).
+No derivation changes and no existing golden fixture moves: a record's
+signed bytes move only when its producer passes the new constant as
+`producerProfile`.
+
+- **`CIVICAITOOLS_V1_PRODUCER_PROFILE`**, exported from `format/profiles.ts`:
+  `ai-assisted-analysis/civicaitools-v1`, which the reference host passes
+  as `producerProfile` on its full-text (`datHere`) and hash-only
+  (`default`) records alike. `deriveProducerProfile` is unchanged: an
+  explicit value wins under every content profile, and a test pins it
+  under both. The harness exports the name only; the content profiles the
+  subtype admits and its guidance bundle are verify-core's subtype table
+  row (ADR-0038 §3 and §5), which the harness does not read.
+- **`civicaitools-v1-golden.json`**, a fifth golden: a `datHere` record of
+  an in-loop run that declares the subtype and carries
+  `skillMetadata.systemPromptHash` inline and `skillMetadata.skillText` as
+  a BlobRef whose stated content hash equals it. The blob's bytes are not
+  in the fixture: a record carries the reference and the hash, and
+  specification §9.2 check 17 reads `ok` on a BlobRef without resolving
+  it. The bytes come from this repository's own code
+  (`buildCivicAiToolsV1Record()` in `src/civicaitools-v1-golden.test.ts`),
+  with an injected clock and id source.
+- **Q32.** The note in `format/profiles.ts` and the README names
+  ADR-0038 as the first worked instance of a content-addressed guidance
+  bundle; the module does not grow into a bundle mechanism.
+- **verify-core `^0.15.0` for the tests.** The devDependency on
+  `@typedstandards/verify-core` moves from `^0.14.0` to `^0.15.0`, whose
+  subtype table, `isContentProfileConsistent` and `checkSystemPrompt`
+  (check 17) the new tests read. The runtime dependency,
+  `@typedstandards/produce-core` `^0.9.0`, does not move; the lockfile
+  resolves it to 0.9.1, which requires verify-core `^0.15.0`, so one
+  verify-core installs.
+
 ## 0.10.0 — 2026-10-19
 
 What a record of an in-loop run states (sprint R8, H2;
