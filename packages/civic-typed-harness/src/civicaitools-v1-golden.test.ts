@@ -52,12 +52,12 @@ import {
   isBlobRef,
   parseBlobRef,
 } from '@typedstandards/verify-core';
-import * as harness from './index.ts';
 import {
   TraceBuilder,
   CIVICAITOOLS_TRACE_CONFIG,
   CIVICAITOOLS_PROVENANCE_CONFIG,
   CIVICAITOOLS_ENVIRONMENT_CONFIG,
+  CIVICAITOOLS_V1_PRODUCER_PROFILE,
   AI_ASSISTED_ANALYSIS_PROFILE_TYPE,
   COMPOSITION_EXTENSION_KEY,
   DATHERE_CONTENT_PROFILE,
@@ -69,12 +69,6 @@ import {
   deriveProducerProfile,
   type ToolCallSummary,
 } from './index.ts';
-
-// RED STUB (removed by the fix): the base exports no subtype constant, so the
-// value is read off the module namespace and is `undefined` until it exists.
-const CIVICAITOOLS_V1_PRODUCER_PROFILE = (harness as unknown as Record<string, unknown>)[
-  'CIVICAITOOLS_V1_PRODUCER_PROFILE'
-] as string;
 
 // RED STUB (removed when verify-core moves to 0.15.0): the three exports that
 // 0.15.0 adds are read off the namespace, `undefined` under 0.14.0.
