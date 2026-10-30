@@ -989,7 +989,7 @@ Consistency invariant, compared only when both fields are present:
 subtype’s table row admits; a subtype with no row admits
 <code>"datHere"</code> exactly when it begins with
 <code>ai-assisted-analysis/datHere</code>, and <code>"default"</code>
-exactly when it does not (§8.1.1; <a
+exactly when it does not (the rows are stated in §8.6; §8.1.1; <a
 href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
 §3).</li>
 <li><strong>Trace</strong> <em>(informative)</em>: An
@@ -1591,12 +1591,13 @@ href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
 the subtype’s table row admits; a subtype with no row admits
 <code>"datHere"</code> exactly when it begins with
 <code>ai-assisted-analysis/datHere</code>, and <code>"default"</code>
-exactly when it does not. The verifier’s subtype table admits
-<code>["datHere"]</code> for <code>ai-assisted-analysis/datHere</code>
-and <code>["datHere", "default"]</code> for
-<code>ai-assisted-analysis/civicaitools-v1</code>; the no-row clause is
-the reading every earlier revision stated, so no verdict on a published
-record changes.</td>
+exactly when it does not. The rows are stated in §8.6
+(<code>ai-assisted-analysis/datHere</code> admits
+<code>"datHere"</code>;
+<code>ai-assisted-analysis/civicaitools-v1</code> admits
+<code>"datHere"</code> and <code>"default"</code>), and a verifier’s
+table mirrors them; the no-row clause is the reading every earlier
+revision stated, so no verdict on a published record changes.</td>
 </tr>
 <tr>
 <td><code>contentHash</code></td>
@@ -2788,8 +2789,39 @@ profiles the row admits (the §8.1.1 invariant) and, for
 <code>ai-assisted-analysis/civicaitools-v1</code>, its guidance bundle
 by URL and SHA-256 (<a
 href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
-§3 and §5). The subtype row does not change the capture vocabulary,
-which stays the profile type’s.</p>
+§3 and §5). This specification states the table’s rows; a verifier’s
+table mirrors them:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Subtype</th>
+<th>Admits (<code>metadata.contentProfile</code>)</th>
+<th>Guidance bundle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ai-assisted-analysis/datHere</code></td>
+<td><code>"datHere"</code></td>
+<td>none pinned; the integration partner’s</td>
+</tr>
+<tr>
+<td><code>ai-assisted-analysis/civicaitools-v1</code></td>
+<td><code>"datHere"</code>, <code>"default"</code></td>
+<td><code>docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json</code>
+in the hub repository, by URL and SHA-256 (ADR-0038 §5)</td>
+</tr>
+</tbody>
+</table>
+<p>A subtype with no row admits <code>"datHere"</code> exactly when it
+begins with <code>ai-assisted-analysis/datHere</code>, and
+<code>"default"</code> exactly when it does not. The subtype row does
+not change the capture vocabulary, which stays the profile type’s.</p>
 <p>The reference publish route enforces the field at request validation;
 a missing or invalid value returns <code>400</code>. The field is part
 of <code>metadata.captureMethod</code> in the canonical JSON and is
@@ -5553,9 +5585,10 @@ under the §8.1.1 invariant, or <code>producerProfile</code> is absent;
 when the value is neither known value, in which case consistency is not
 judged; <code>contentProfile_inconsistent</code> when the value is
 known, <code>producerProfile</code> is present, and the invariant fails.
-The invariant is read from the verifier’s subtype table: the row for the
-subtype names the content profiles it admits, and a subtype with no row
-admits <code>"datHere"</code> exactly when it begins with
+The invariant is read from the subtype table §8.6 states, which a
+verifier’s table mirrors: the row for the subtype names the content
+profiles it admits, and a subtype with no row admits
+<code>"datHere"</code> exactly when it begins with
 <code>ai-assisted-analysis/datHere</code> and <code>"default"</code>
 exactly when it does not (<a
 href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
