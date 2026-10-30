@@ -323,9 +323,9 @@ frozen snapshots for cross-reference accuracy.</p>
 <h2 id="status-of-this-document">2. Status of This Document</h2>
 <p><strong>Status:</strong> v0.1 Working Draft — open for external
 review (review window to be scheduled) <strong>Spec name:</strong> Typed
-Standards Specification <strong>Version:</strong> v0.1.12 (patch
+Standards Specification <strong>Version:</strong> v0.1.13 (patch
 revision of the v0.1 Working Draft; tag:
-<code>v0.1.12-typed-standards-spec</code>) <strong>License:</strong> CC
+<code>v0.1.13-typed-standards-spec</code>) <strong>License:</strong> CC
 BY 4.0 (see §3; canonical citation form in Appendix A)
 <strong>Maintainer:</strong> Nathan Storey (current; see
 reviewer-orientation document for stewardship and contact details)
@@ -341,7 +341,7 @@ conversations with reviewer organizations have set expectations. Until
 then, the specification lives at HEAD of <code>main</code>. Reviewers
 and integrators embedding a version identifier cite against the
 <strong>current patch-revision tag</strong>
-(<code>v0.1.12-typed-standards-spec</code>), which names the precise
+(<code>v0.1.13-typed-standards-spec</code>), which names the precise
 revision of this document; the consolidation-milestone tag
 (<code>v0.2-typed-standards-rfc</code>) remains for citing the
 consolidation milestone itself, not the current text. The document’s own
@@ -975,14 +975,23 @@ default) or <code>"datHere"</code> (A-G envelope content profile per
 The Producer Profile the package conforms to. Compound-string value of
 the form <code>&lt;profile-type&gt;/&lt;profile-subtype&gt;</code>. v0.1
 vocabulary includes <code>"ai-assisted-analysis/datHere"</code> (first
-realized subtype; refactor of the <code>datHere</code> content profile)
-and the profile type <code>scripted-recomputation</code> (deterministic
-tool output, §8.7.5), whose subtypes the producer names. Other profile
-types (<code>human</code>, <code>hybrid</code>,
+realized subtype; refactor of the <code>datHere</code> content profile),
+<code>"ai-assisted-analysis/civicaitools-v1"</code> (the reference
+host’s subtype, whose guidance bundle is pinned by URL and SHA-256 per
+<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§5) and the profile type <code>scripted-recomputation</code>
+(deterministic tool output, §8.7.5), whose subtypes the producer names.
+Other profile types (<code>human</code>, <code>hybrid</code>,
 <code>sandbox-only</code>) and subtypes are reserved name-only.
 Consistency invariant, compared only when both fields are present:
-<code>metadata.contentProfile === "datHere"</code> iff
-<code>producerProfile.startsWith("ai-assisted-analysis/datHere")</code>.</li>
+<code>metadata.contentProfile</code> is one of the content profiles the
+subtype’s table row admits; a subtype with no row admits
+<code>"datHere"</code> exactly when it begins with
+<code>ai-assisted-analysis/datHere</code>, and <code>"default"</code>
+exactly when it does not (§8.1.1; <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§3).</li>
 <li><strong>Trace</strong> <em>(informative)</em>: An
 OpenTelemetry-shaped JSON object (or BlobRef) describing the spans of
 the analysis. See §8.4.</li>
@@ -1094,7 +1103,7 @@ this document and not yet in the existing drafts)</strong>.</p>
  subgraph PROF[&quot;Profiles — orthogonal axes&quot;]
  direction LR
  CP[&quot;Content profiles&lt;br/&gt;(Typed Claims / Typed Evidence /&lt;br/&gt;Typed Questions)&quot;]:::partial
- PP[&quot;Producer profiles&lt;br/&gt;(AI-Assisted Analysis specified&lt;br/&gt;with subtype/flavor model per ADR-0006;&lt;br/&gt;&#39;ai-assisted-analysis/datHere&#39; subtype = built;&lt;br/&gt;&#39;civicaitools-default&#39; subtype = reserved;&lt;br/&gt;human / hybrid / sandbox-only types = reserved)&quot;]:::partial
+ PP[&quot;Producer profiles&lt;br/&gt;(AI-Assisted Analysis specified&lt;br/&gt;with subtype/flavor model per ADR-0006;&lt;br/&gt;&#39;ai-assisted-analysis/datHere&#39; subtype = built;&lt;br/&gt;&#39;ai-assisted-analysis/civicaitools-v1&#39; subtype = built, bundle pinned per ADR-0038;&lt;br/&gt;human / hybrid / sandbox-only types = reserved)&quot;]:::partial
  end
 
  subgraph TYPED[&quot;Two-family taxonomy — semantic distinction (per ADR-0009)&quot;]
@@ -1560,8 +1569,14 @@ hash and signature.</td>
 <td>optional</td>
 <td>The Producer Profile the package conforms to. Compound-string value
 of the form <code>&lt;profile-type&gt;/&lt;profile-subtype&gt;</code>.
-v0.1 vocabulary includes <code>"ai-assisted-analysis/datHere"</code> and
-the profile type <code>scripted-recomputation</code>
+v0.1 vocabulary includes <code>"ai-assisted-analysis/datHere"</code>,
+<code>"ai-assisted-analysis/civicaitools-v1"</code> (the reference
+host’s subtype; its guidance bundle,
+<code>docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json</code>
+in the hub repository, is pinned by URL and SHA-256 in the verifier’s
+subtype row per <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§5) and the profile type <code>scripted-recomputation</code>
 (<code>scripted-recomputation/&lt;subtype&gt;</code>, subtype non-empty
 and named by the producer; §8.7.5). Other profile types
 (<code>human</code>, <code>hybrid</code>, <code>sandbox-only</code>) and
@@ -1569,9 +1584,19 @@ subtypes are reserved name-only. A top-level envelope field; its
 grandfathered legacy alias <code>contentProfile</code> lives inside the
 <code>metadata</code> object (§8.1.2). Consistency invariant, compared
 only when both fields are present (<a
-href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §2):
-<code>metadata.contentProfile === "datHere"</code> iff
-<code>producerProfile.startsWith("ai-assisted-analysis/datHere")</code>.</td>
+href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §2 as
+amended by <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§3): <code>metadata.contentProfile</code> is one of the content profiles
+the subtype’s table row admits; a subtype with no row admits
+<code>"datHere"</code> exactly when it begins with
+<code>ai-assisted-analysis/datHere</code>, and <code>"default"</code>
+exactly when it does not. The verifier’s subtype table admits
+<code>["datHere"]</code> for <code>ai-assisted-analysis/datHere</code>
+and <code>["datHere", "default"]</code> for
+<code>ai-assisted-analysis/civicaitools-v1</code>; the no-row clause is
+the reading every earlier revision stated, so no verdict on a published
+record changes.</td>
 </tr>
 <tr>
 <td><code>contentHash</code></td>
@@ -2686,7 +2711,13 @@ construction.</li>
 registry mechanism <a
 href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q32</a>
 anticipates. v0.1 verifiers resolve to a hardcoded fallback table; the
-bundle distribution mechanism is a follow-on per Q32.</li>
+bundle distribution mechanism is a follow-on per Q32. One subtype-level
+bundle exists: the <code>ai-assisted-analysis/civicaitools-v1</code>
+bundle, a content-addressed file in the hub repository that the
+verifier’s subtype row names by URL and SHA-256 (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§5), the first worked instance of Q32’s hybrid model; Q32 stays
+open.</li>
 <li>Confirm <code>metadata.captureMethod</code> is in the captureMethod
 vocabulary declared by that bundle.</li>
 </ol>
@@ -2709,11 +2740,19 @@ their actual capture method labeled rather than silently re-described as
 something they were not.</li>
 </ul>
 <p>The vocabulary applies to all subtypes of
-<code>ai-assisted-analysis</code> (the existing <code>datHere</code>
-subtype, the reserved <code>civicaitools-default</code> subtype, and any
-future subtypes) unless a subtype’s guidance bundle explicitly
-constrains or extends the parent vocabulary; v0.1 has no subtype-level
-overrides.</p>
+<code>ai-assisted-analysis</code> (the <code>datHere</code> subtype, the
+<code>civicaitools-v1</code> subtype, whose bundle inherits it with no
+override, and any future subtypes) unless a subtype’s guidance bundle
+explicitly constrains or extends the parent vocabulary; v0.1 has no
+subtype-level overrides. The name <code>civicaitools-default</code>,
+which <a
+href="../adr/0006-producer-profile-architecture.md">ADR-0006</a> §1
+reserved for the reference host’s conventions should they diverge from
+<code>datHere</code>, is retired: the divergence was measured and the
+subtype built under the name <code>civicaitools-v1</code> (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§1), so the reservation is spent and the retired name is not reserved
+again.</p>
 <p>For the <code>scripted-recomputation</code> Producer Profile (§8.7.5;
 <a
 href="../adr/0029-scripted-recomputation-producer-profile.md">ADR-0029</a>
@@ -2743,7 +2782,14 @@ of step 2 above holds one entry per built profile type,
 <code>scripted-recomputation</code>; it remains a stand-in until the
 bundle routing convention of <a
 href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q32</a>
-is settled.</p>
+is settled. Beside it, a subtype-level table holds one row per built
+subtype of <code>ai-assisted-analysis</code>, naming the content
+profiles the row admits (the §8.1.1 invariant) and, for
+<code>ai-assisted-analysis/civicaitools-v1</code>, its guidance bundle
+by URL and SHA-256 (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§3 and §5). The subtype row does not change the capture vocabulary,
+which stays the profile type’s.</p>
 <p>The reference publish route enforces the field at request validation;
 a missing or invalid value returns <code>400</code>. The field is part
 of <code>metadata.captureMethod</code> in the canonical JSON and is
@@ -2789,7 +2835,18 @@ not the <code>datHere</code> content profile, does not extend it, and
 does not use its canonicalization rule. Other Producer Profile types
 (Human, Hybrid, Sandbox-only) are reserved; their requirements will be
 specified when promoted from reserved to built. §8.7.1-§8.7.4 specify
-the <code>datHere</code> content profile.</p>
+the <code>datHere</code> content profile. The second built subtype of
+the AI-Assisted Analysis Producer Profile,
+<code>ai-assisted-analysis/civicaitools-v1</code>, adds no requirement
+here: a record of it carries the <code>datHere</code> content profile (a
+full-text record, bound by §8.7.1-§8.7.4) or the <code>default</code>
+one (a hash-only record), and what its records carry beyond §8.7.1, with
+the statement a host derives from each field and what such a record
+never carries, is stated in its guidance bundle,
+<code>docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json</code>
+in the hub repository, pinned by SHA-256 (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§4-§5).</p>
 <p>A <code>datHere</code>-content-profile package organizes its content
 as the <strong>A-G envelope</strong>, a profile over the existing
 top-level fields specified in §8.1. The envelope is a content profile,
@@ -2908,10 +2965,13 @@ label is itself covered by the canonical-JSON hash and the platform
 signature per §8.2. <code>captureMethod</code> (per §8.6) continues to
 carry one of the values declared by the package’s
 <code>producerProfile</code>’s guidance bundle; for a
-<code>datHere</code>-content-profile package — which v0.1 also carries
-<code>producerProfile: "ai-assisted-analysis/datHere"</code> — that
-resolves to the <code>ai-assisted-analysis</code> Producer Profile’s
-v0.1 vocabulary (<code>chat-flow-stream</code>,
+<code>datHere</code>-content-profile package — which carries
+<code>producerProfile: "ai-assisted-analysis/datHere"</code> or, for the
+reference host’s records,
+<code>"ai-assisted-analysis/civicaitools-v1"</code> (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§1) — that resolves to the <code>ai-assisted-analysis</code> Producer
+Profile’s v0.1 vocabulary (<code>chat-flow-stream</code>,
 <code>claude-code-jsonl-readback</code>,
 <code>claude-code-self-report</code>). <code>contentProfile</code> is an
 independent axis describing what shape the content takes.</li>
@@ -2923,6 +2983,14 @@ malformed-for-<code>datHere</code> while still being able to perform the
 standard envelope-integrity checks (§9). Non-datHere content profiles
 continue to use their existing requirements; the requirements above
 apply only when <code>metadata.contentProfile == "datHere"</code>.</p>
+<p><strong>Which checks test these.</strong> Requirement 7 is §9.2 check
+#16. Requirement 2 is check #17, which reports a <code>datHere</code>
+package with no <code>skillMetadata.skillText</code> as
+<code>skillText_absent</code>, an attention status that never fails the
+package (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§6). Requirement 1 and requirements 3-6 are producer obligations that no
+v0.1 check tests.</p>
 <h4 id="notebook-format">8.7.2 Notebook format</h4>
 <p>A conformant <code>datHere</code>-content-profile package’s section E
 (the notebook) MUST conform to <strong>Jupyter Notebook Format v4.5 or
@@ -5485,14 +5553,40 @@ under the §8.1.1 invariant, or <code>producerProfile</code> is absent;
 when the value is neither known value, in which case consistency is not
 judged; <code>contentProfile_inconsistent</code> when the value is
 known, <code>producerProfile</code> is present, and the invariant fails.
-No status of this check rejects the node or alters the
-envelope-integrity or signature verdicts: both labels are inside the
-signed bytes, so an unknown value is an unrecognized identifier and a
-contradiction between the two is a producer error, not evidence of
-tampering. A package reporting <code>contentProfile_inconsistent</code>
-is reported malformed (<a
+The invariant is read from the verifier’s subtype table: the row for the
+subtype names the content profiles it admits, and a subtype with no row
+admits <code>"datHere"</code> exactly when it begins with
+<code>ai-assisted-analysis/datHere</code> and <code>"default"</code>
+exactly when it does not (<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§3), so a published record’s status does not change. No status of this
+check rejects the node or alters the envelope-integrity or signature
+verdicts: both labels are inside the signed bytes, so an unknown value
+is an unrecognized identifier and a contradiction between the two is a
+producer error, not evidence of tampering. A package reporting
+<code>contentProfile_inconsistent</code> is reported malformed (<a
 href="../adr/0006-producer-profile-architecture.md">ADR-0006</a>
 §2).</li>
+<li><strong>Content-profile system prompt</strong> <em>(reads whether a
+<code>datHere</code>-content-profile package carries the system prompt
+§8.7.1 requirement 2 requires).</em> When
+<code>metadata.contentProfile</code> is <code>"datHere"</code>, read
+<code>skillMetadata.skillText</code> and report <code>ok</code> when it
+is a non-empty string or a BlobRef, and <code>skillText_absent</code>
+when the key is absent, is neither a string nor a BlobRef, or is empty;
+when <code>metadata.contentProfile</code> is not <code>"datHere"</code>
+(absent, <code>"default"</code> or an unknown value), report
+<code>not_applicable</code> and read nothing.
+<code>skillText_absent</code> is an attention status and never a
+failure: the package declares the <code>datHere</code> profile and does
+not carry the prompt’s text, a producer omission against requirement 2;
+it says nothing about the envelope, the signature or the notebook, and
+every other verdict is unchanged, so a package published before this
+check keeps its verdicts. The check does not resolve a BlobRef (check #9
+does), and it does not check that the text is the prompt the model ran
+under, which no check can. Specified by <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+§6; planned for <code>@typedstandards/verify-core</code> 0.15.0.</li>
 </ol>
 <h3 id="what-a-verifier-cannot-check-today">9.3 What a verifier cannot
 check today</h3>
@@ -6470,6 +6564,21 @@ is to implement it, planned as <code>@typedstandards/produce-core</code>
 0.9.0 (to build the node) and <code>@typedstandards/verify-core</code>
 0.14.0 (to resolve its type). The reference implementation does not yet
 read or publish a layout node.</li>
+<li><strong>Status updated 2026-10-30 (v0.1.13):</strong> the
+<code>ai-assisted-analysis/civicaitools-v1</code> subtype is specified
+(<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>)
+and its guidance bundle is published in the hub repository, pinned by
+SHA-256. Its implementation is sprint <a
+href="https://github.com/npstorey/civic-ai-tools/issues/289">civic-ai-tools#289</a>:
+planned as <code>@typedstandards/verify-core</code> 0.15.0 (the subtype
+table, the invariant read from it, and check #17),
+<code>@typedstandards/civic-typed-harness</code> 0.11.0 (the subtype
+constant), and the reference implementation declaring the subtype on new
+records after it carries the composed system prompt (<a
+href="https://github.com/npstorey/civic-ai-tools-website/issues/694">civic-ai-tools-website#694</a>).
+At this revision no published record carries the subtype, and no
+deployed verifier reads the subtype table or check #17.</li>
 </ul>
 <h3 id="appendix-f.-open-questions-pointer">Appendix F. Open questions
 pointer</h3>
@@ -6509,6 +6618,80 @@ verification is demonstrated for the self-contained bundle per
 </ul>
 <h3 id="appendix-g.-revision-history">Appendix G. Revision history</h3>
 <ul>
+<li><strong>2026-10-30</strong> — Producer-profile subtype patch
+revision (v0.1.13; decision record <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>,
+anchor <a
+href="https://github.com/npstorey/civic-ai-tools/issues/289">civic-ai-tools#289</a>).
+<strong>(1) The second built subtype</strong> of the AI-Assisted
+Analysis Producer Profile,
+<code>ai-assisted-analysis/civicaitools-v1</code> (display name “Civic
+AI Tools profile, v1”), the reference host’s own: the §6.2 glossary and
+the §8.1.1 <code>producerProfile</code> row name it; the §7.1 diagram
+and §8.6 name it in place of the reserved
+<code>civicaitools-default</code>, whose reservation (ADR-0006 §1) is
+spent and whose name is retired, not reserved again; §8.6’s step 2 and
+its fallback-table paragraph state the subtype-level table and the one
+bundle it pins; §8.7 points at the bundle and adds no requirement;
+§8.7.1 requirement 7 names the second subtype a <code>datHere</code>
+package may carry. <strong>(2) The consistency invariant</strong> in
+§6.2 and §8.1.1 is read from the subtype’s table row:
+<code>metadata.contentProfile</code> is one of the content profiles the
+row admits (<code>["datHere"]</code> for
+<code>ai-assisted-analysis/datHere</code>;
+<code>["datHere", "default"]</code> for
+<code>ai-assisted-analysis/civicaitools-v1</code>, whose records are
+full-text or hash-only alike), and a subtype with no row admits
+<code>"datHere"</code> exactly when it begins with
+<code>ai-assisted-analysis/datHere</code> and <code>"default"</code>
+exactly when it does not, which is the reading every earlier revision
+stated; §9.2 check #16 says so. No verdict on a published record
+changes; the one combination that changes, <code>datHere</code> with the
+new subtype, is one no published record carries, because the reference
+publish route refused it. <strong>(3) The guidance bundle</strong>, the
+first worked instance of <a
+href="open-questions.md#q32--producer-profile-guidance-doc-routing-convention">Q32</a>’s
+hybrid model: one content-addressed file in the hub repository,
+<code>docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json</code>,
+named in the verifier’s subtype row by URL (its raw address at this
+revision’s tag) and SHA-256
+(<code>9823edce4c15baa960ba77d3b0af0b261402e6cce621d1cfaca31526bd44f313</code>,
+revision 1); it states each field a record of the subtype carries beyond
+§8.7.1 with its path, values, absence rule, carrying record, derived
+statement and class, and the consent facts such a record never carries;
+its capture vocabulary is the type’s with no override; Q32 stays open
+until a second producer or host consumes a bundle. <strong>(4) A new
+§9.2 check #17</strong> reads whether a
+<code>datHere</code>-content-profile package carries the non-empty
+<code>skillMetadata.skillText</code> §8.7.1 requirement 2 has required
+since ADR-0004, reporting <code>ok</code>, <code>skillText_absent</code>
+(attention, never a failure) or <code>not_applicable</code>; §8.7.1
+gains a “Which checks test these” paragraph. The check answers <a
+href="https://github.com/npstorey/civic-ai-tools-website/issues/694">civic-ai-tools-website#694</a>:
+of the reference host’s 61 public records, the 17 executed-run records
+published since September carry no system prompt, 33 older records carry
+its text and hash, and one comparison record carries the hash only;
+every one keeps its verdicts, and the reference host is to carry the
+hash inline and the text as a BlobRef on every new record before it
+declares the subtype. Per §6.1 every new requirement corresponds to the
+settled decision record; the reference verifier is to implement (2), the
+row’s pin and (4) in <code>@typedstandards/verify-core</code> 0.15.0,
+planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/289">civic-ai-tools#289</a>,
+with <code>@typedstandards/civic-typed-harness</code> 0.11.0 to export
+the subtype’s constant. <strong>Named under the Xanadu doctrine</strong>
+(§7.4): the records are the reference host’s own, measured by a
+read-only census on 2026-10-30 (61 public records; 13 carrying the
+<code>org.civicaitools.composition</code> block that no resolvable
+document described; 0 carrying <code>routing</code>, which in-loop runs
+on production have written since 2026-10-27), and every hash-only record
+of that host, which carried no <code>producerProfile</code> at all;
+ADR-0038 records them. No field is removed or retyped; no record byte
+beyond the <code>producerProfile</code> value of new records moves;
+already-signed packages are byte-identical. Schema version unchanged
+(<code>0.1.0</code> per <a
+href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
+The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-10-15</strong> — Layout node patch revision (v0.1.12;
 decision record <a
 href="../adr/0034-content-layout-node.md">ADR-0034</a>, anchor <a
