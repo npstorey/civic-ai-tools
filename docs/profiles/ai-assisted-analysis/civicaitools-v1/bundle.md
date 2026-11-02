@@ -9,7 +9,7 @@
 | Revision | 2, dated 2026-11-02, recorded in the ADR-0038 amendment of that date. Revision 1, dated 2026-10-30, is SHA-256 `724e399e02db8993041b64982eec731505084bec2ec5e6ca58fda2de8087a281` at tag `v0.1.13-typed-standards-spec` |
 | Decision record | [ADR-0038](../../../adr/0038-civicaitools-v1-producer-profile-subtype.md) |
 | URL | `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.14-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json` |
-| SHA-256 of `bundle.json` | `e5e4fa0a428dba6dee986aac65cfabaf1b0b57acc3c4b2d59372d238f01e8385` |
+| SHA-256 of `bundle.json` | `45bf3ab479325a791829ed9987f5f291fea44238b54bfb598f32f306f574eb9b` |
 | Content profiles the row admits | `datHere` (the A-G envelope, a full-text record) and `default` (the plain shape, a hash-only record) |
 | Capture vocabulary | inherited from `ai-assisted-analysis` (ADR-0011's G4 decision), no override |
 
@@ -36,7 +36,7 @@
 | The provenance graph | twenty `civic:` terms | `provenance["@graph"][]` |
 | The system prompt | `skillText`, `systemPromptHash` | `skillMetadata` |
 
-The one statement in the `shows` class that every host of this subtype derives is the chooser sentence: read from `routing.method`, the load spans and `sourcesOffered`, it says what chose the sources and names three groups — loaded; requested, not loaded, each with its last load's reason; not requested — wherever reached sources are shown. No reason states that the reader was asked or answered, because the record does not hold whether a question was put. A record with no `routing` key reads "What chose these sources is not recorded."
+The one statement in the `shows` class that every host of this subtype derives is the chooser sentence: read from `routing.method`, the load spans and `sourcesOffered`, it says what chose the sources and names three groups — loaded; requested, not loaded, each with its last load's reason; not requested — wherever reached sources are shown. No reason states that the reader was asked or answered, because the record does not hold whether a question was put, and no reason names a consent setting. A record with no `routing` key reads "What chose these sources is not recorded."
 
 ## Reading it
 
