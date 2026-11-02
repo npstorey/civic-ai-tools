@@ -179,3 +179,56 @@ The registry's Q32 entry gains a dated status note: this record is the first wor
 - Specification v0.1.12: §6.1, §6.2, §7.1, §8.1.1, §8.1.2, §8.6, §8.7, §8.7.1, §8.7.4, §9.2, Appendix E, Appendix G.
 - [ADR-0006](0006-producer-profile-architecture.md) §1, §2, §5; [ADR-0011](0011-capturemethod-generalization.md) §2; [ADR-0024](0024-evidence-path-configuration.md); [ADR-0029](0029-scripted-recomputation-producer-profile.md); [ADR-0033](0033-composed-harness-record-fields.md) §C, §E, §H and its two amendments; [ADR-0036](0036-source-hosting-variants-and-logging-posture.md) §D; [ADR-0037](0037-the-first-step-tool.md) §E.
 - [The Xanadu doctrine](../architecture/xanadu-doctrine.md); [Q32](../architecture/open-questions.md#q32--producer-profile-guidance-doc-routing-convention); the MCP-sources design (planning-side) §1.6, §4.4, §10 item 11.
+
+## Amendment — 2026-11-02: revision 2 of the bundle (rulings G0-1 = A, G0-2 = (a), G0-3 = A, G0-4 = A)
+
+Ruled by the owner on 2026-11-02 at gate G0 of sprint R11, anchor [civic-ai-tools#294](https://github.com/npstorey/civic-ai-tools/issues/294), for [civic-ai-tools#293](https://github.com/npstorey/civic-ai-tools/issues/293): G0-1 = A (the version rule's reading below), G0-2 = (a) (the URL's tag, with specification v0.1.14), G0-3 = A (the words as proposed) and G0-4 = A (the five items found beyond #293's text). Written by the sprint's phase P1 and landing in its PR. §4 and §5 are not edited; this section records what revision 2 corrects, why it stays `civicaitools-v1`, and its URL and digest.
+
+### What revision 1 stated that a record does not hold
+
+Measured at website `4777b79` and hub `af8faa7`:
+
+- **`declined`.** Revision 1's `trace.loadSpan.loadOutcome` sentence read `declined` as "it asked about {alias}, and you said no", and its `composition.routing` sentence named a group "asked, with the reader's answer" (§4's Shows bullet repeats both). The reference host's code writes `declined` for a source that is not On in two cases: the reader answered Not now to a held pause (`src/lib/mcp/routing-mode.ts:312`), or no pause exists, so no reader is asked (`:301`, `if (!pause) return { outcome: 'declined', … }`). Today the second case reaches no published record: the two paths that write a record's trace, the chat flow (`src/app/api/compare-stream/route.ts:282-288`) and the notebook run (`src/app/api/query-notebook/route.ts:309-316`), hold a pause whenever the consent gate is enforced, and the one path with no pause, `src/app/api/compare/route.ts:189`, writes no trace (`:184-185`). The code permits it, so the sentence is not guaranteed by the record. "You said no" also fails on any page but the reader's own: a host rendering a record for someone else addresses a person who answered nothing.
+- **`no-answer`.** Revision 1's sentence, "it asked about {alias}, and no answer arrived in time", is false of records that reach production. The host writes `no-answer` when no pause could be held, so no question was put: `src/lib/sources/decision.ts:243-250` (`notHeld`) returns it with no consent facts for the source, no store, no time left in the run's budget, or the reader already gone.
+- **`environment.toolDefinitions`.** Its absence rule named only a producer that does not know the tools the run offered. A record whose `metadata.contentProfile` is not `datHere` carries no `org.civicaitools.environment` block at all, because the harness emits the block only for `datHere` (`packages/civic-typed-harness/src/format/dathere.ts:557-571`). The reference host's hash-only record `data-cityofnewyork-us-analysis-2026-10-31-4a76c0` (`default`) carries no environment block while its trace's root span states `analysis.tool_definitions`.
+
+A sentence of the bundle is true of every record the producer can write, not only of the records measured. The two outcome sentences are not, and the absence rule leads a reader of a hash-only record to infer the wrong fact. The record does not hold whether a question was put to the reader, so revision 2 states no reason that says one was.
+
+### The version rule's reading (G0-1 = A)
+
+§2 names `civicaitools-v2` "when a declared field changes meaning, is removed, or a v1 reader statement (§4) would be false of the record", and lists "a new reader sentence" among the changes that stay `v1`. No field changed meaning or was removed: the producer wrote `declined` and `no-answer` for the same cases from revision 1 on. Revision 1's two sentences were not guaranteed by the record from the start; no change in what the records mean made them so. This record reads §2's major trigger as a change in the records' meaning, and a sentence that was wrong of unchanged records as corrected by a revision. Revision 2 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record is re-labelled. The other reading, a new subtype name for a wording correction, is the outcome §2's rejection of D3 B names: records from one month reading as a different profile from the next for a wording fix.
+
+### What revision 2 changes
+
+Seven entries change, and the header's `revision`, `date` and `url`:
+
+1. **`composition.routing`, the chooser sentence** (the website's words, `src/lib/sources/copy.ts:497-507`): in-loop, "The model chose which sources to load, from those this question could use.", then three groups by the host's names for the sources: "Loaded", "Requested, not loaded" (each with its last load's reason, one line each) and "Not requested", an empty group saying "none". The phrase a host MAY add is "from a source list given by {router component id} {version}" (`:541`). Absent: "What chose these sources is not recorded." All-sources: "Every source this question could use was given to the model from the start."
+2. **`trace.loadSpan.loadOutcome`, its sentence**: the reasons are the website's `CHOOSER_REASONS` (`copy.ts:522-526`). `declined`: "Ask first, so it was not used for this question."; `no-answer`: "Ask first: not used, because this site could not ask, or no answer arrived in time."; `unavailable`: "Unavailable. This site could not load it for this question." No reason states that the reader was asked or answered. `loaded` and `not-offered` keep their roles.
+3. **`trace.loadSpan.loadOutcome`, its values**: `declined`, the source needed the reader's permission for this run and was not used, because the reader answered Not now or the producer held no pause in which to ask; `no-answer`, no decision arrived, because the reader did not answer in time or could not be asked.
+4. **`environment.toolDefinitions`, its absence rule**, which adds the case above: on a record that is not `datHere` the whole environment block is absent, and that absence states nothing about the tools.
+5. **`skillMetadata.skillText`, its values and absence rule** (the website's R10 phase P1b, `src/lib/evidence/prompt-blob.ts`): the carried text is the final request's system prompt; on an in-loop run whose loads recomposed the prompt, the earlier prompts are not carried as text and each is identified by `gen_ai.system_prompt_hash` on its `llm_inference` span; a new record carries `systemPromptHash` with no `skillText` when the run-end write of the text failed, or when at publish the stored text could not be read or did not hash to the reference. The hash-only record above states five span hashes, two distinct, and its `skillMetadata.systemPromptHash` is the last.
+6. **`skillMetadata.skillText`, its sentence**: the website's `SYSTEM_PROMPT_TEXT` (`copy.ts:587-615`), no longer marked as hypotheses for this record's reviewer.
+7. **`composition.sourcesOffered` and `trace.loadSpan.operationType`**: their sentences name the chooser sentence's groups by item 1's names.
+
+The same two outcome definitions are in ADR-0033's amendment 2 and the harness's `LoadOutcome` comment (`format/vocabulary.ts`). ADR-0033 gains a dated note, and the comment is corrected for the harness's next release.
+
+### §4 and §5 as they stand
+
+- **§4's Shows bullet** quotes revision 1's chooser sentence and groups. It is not edited: it records what revision 1 stated. A host derives the words of the revision its verifier's row pins, and from revision 2 those are the words above.
+- **§5's "nothing else".** §5 says a later revision "moves the digest and the row's pin (§2) and nothing else". The URL names a tag, and the bundle states its own URL, so a revision also moves the URL's tag. Revision 2 is at the tag the owner's merge kit sets on its merge commit, `v0.1.14-typed-standards-spec`, as revision 1 is at `v0.1.13-typed-standards-spec`. "Nothing else" reads as: no record, no field and no other row moves.
+
+### The URL and the digest
+
+- **URL:** `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.14-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`.
+- **SHA-256 of `bundle.json`, revision 2 (2026-11-02):** `e5e4fa0a428dba6dee986aac65cfabaf1b0b57acc3c4b2d59372d238f01e8385`.
+- Revision 1's URL and digest (§5) still name revision 1's bytes, at their own tag.
+
+### What does not change
+
+No record field, composition key or record byte moves. The 34 field ids and the 7 never-carried ids are unchanged, as are the classes, the version rule's text in the bundle, and §9.2 checks #16 and #17. Every published record keeps its bytes and its verdicts. The verifier's table row is re-pinned to revision 2's URL and digest in `@typedstandards/verify-core` 0.15.1, planned (§2: one verify-core patch per revision); until then the row names revision 1.
+
+### References
+
+- [civic-ai-tools#293](https://github.com/npstorey/civic-ai-tools/issues/293), [civic-ai-tools#294](https://github.com/npstorey/civic-ai-tools/issues/294) (the anchor, its G0 rulings, the words it proposed and the research check of G0-3); [civic-ai-tools#289](https://github.com/npstorey/civic-ai-tools/issues/289) (R10's cold read, findings F2 and F5).
+- Website `4777b79`: `src/lib/mcp/routing-mode.ts:89-103`, `:300-313`; `src/lib/sources/decision.ts:243-250`, `:300-310`; `src/app/api/compare-stream/route.ts:282-288`; `src/app/api/query-notebook/route.ts:309-316`; `src/app/api/compare/route.ts:183-189`; `src/lib/sources/copy.ts:497-507`, `:522-526`, `:541`, `:587-615`; `src/lib/evidence/prompt-blob.ts`; `src/lib/flows/source-chooser.ts` (the three groups).
+- Hub `af8faa7`: `packages/civic-typed-harness/src/format/dathere.ts:557-571`; `format/vocabulary.ts` (`LoadOutcome`).
