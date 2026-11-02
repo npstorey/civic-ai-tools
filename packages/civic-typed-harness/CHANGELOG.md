@@ -3,6 +3,17 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+- **`LoadOutcome`'s comment** (`format/vocabulary.ts`) states `declined` and
+  `no-answer` as
+  [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)'s note of
+  2026-11-02 corrects them: `declined` when the reader answered Not now or no
+  pause was held in which to ask, `no-answer` when the reader did not answer
+  in time or could not be asked; neither states that a question was put
+  (sprint R11, the guidance bundle's revision 2). Comment only: the five
+  values, the code and every golden fixture are unchanged.
+
 ## 0.11.0 — 2026-10-30
 
 The Producer Profile subtype this project's reference host declares

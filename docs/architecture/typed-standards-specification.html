@@ -323,9 +323,9 @@ frozen snapshots for cross-reference accuracy.</p>
 <h2 id="status-of-this-document">2. Status of This Document</h2>
 <p><strong>Status:</strong> v0.1 Working Draft — open for external
 review (review window to be scheduled) <strong>Spec name:</strong> Typed
-Standards Specification <strong>Version:</strong> v0.1.13 (patch
+Standards Specification <strong>Version:</strong> v0.1.14 (patch
 revision of the v0.1 Working Draft; tag:
-<code>v0.1.13-typed-standards-spec</code>) <strong>License:</strong> CC
+<code>v0.1.14-typed-standards-spec</code>) <strong>License:</strong> CC
 BY 4.0 (see §3; canonical citation form in Appendix A)
 <strong>Maintainer:</strong> Nathan Storey (current; see
 reviewer-orientation document for stewardship and contact details)
@@ -341,7 +341,7 @@ conversations with reviewer organizations have set expectations. Until
 then, the specification lives at HEAD of <code>main</code>. Reviewers
 and integrators embedding a version identifier cite against the
 <strong>current patch-revision tag</strong>
-(<code>v0.1.13-typed-standards-spec</code>), which names the precise
+(<code>v0.1.14-typed-standards-spec</code>), which names the precise
 revision of this document; the consolidation-milestone tag
 (<code>v0.2-typed-standards-rfc</code>) remains for citing the
 consolidation milestone itself, not the current text. The document’s own
@@ -6612,6 +6612,21 @@ records after it carries the composed system prompt (<a
 href="https://github.com/npstorey/civic-ai-tools-website/issues/694">civic-ai-tools-website#694</a>).
 At this revision no published record carries the subtype, and no
 deployed verifier reads the subtype table or check #17.</li>
+<li><strong>Status updated 2026-11-02 (v0.1.14):</strong> the subtype’s
+guidance bundle is at revision 2, at this revision’s tag (SHA-256
+<code>45bf3ab479325a791829ed9987f5f291fea44238b54bfb598f32f306f574eb9b</code>;
+<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>,
+amendment of 2026-11-02). The v0.1.13 line’s last sentence no longer
+holds: records the reference implementation published on 2026-10-31
+carry the subtype, and <code>@typedstandards/verify-core</code> 0.15.0
+(the subtype table, the invariant read from it, and check #17) and
+<code>@typedstandards/civic-typed-harness</code> 0.11.0 are published,
+with the reference implementation’s main branch resolving verify-core
+0.15.0. That release’s row pins revision 1;
+<code>@typedstandards/verify-core</code> 0.15.1, planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/294">civic-ai-tools#294</a>,
+is to pin revision 2.</li>
 </ul>
 <h3 id="appendix-f.-open-questions-pointer">Appendix F. Open questions
 pointer</h3>
@@ -6651,6 +6666,39 @@ verification is demonstrated for the self-contained bundle per
 </ul>
 <h3 id="appendix-g.-revision-history">Appendix G. Revision history</h3>
 <ul>
+<li><strong>2026-11-02</strong> — Guidance bundle revision patch
+revision (v0.1.14; decision record <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+and its amendment of 2026-11-02, anchor <a
+href="https://github.com/npstorey/civic-ai-tools/issues/294">civic-ai-tools#294</a>;
+<a
+href="https://github.com/npstorey/civic-ai-tools/issues/293">civic-ai-tools#293</a>).
+The <code>ai-assisted-analysis/civicaitools-v1</code> guidance bundle
+moves to revision 2, at this revision’s tag, SHA-256
+<code>45bf3ab479325a791829ed9987f5f291fea44238b54bfb598f32f306f574eb9b</code>.
+It corrects reader statements the record does not guarantee: the reasons
+for the <code>declined</code> and <code>no-answer</code> load outcomes
+no longer say that the reader was asked or answered, because the record
+does not hold whether a question was put, and no reason names a consent
+setting; the chooser sentence’s groups are loaded, requested and not
+loaded, and not requested; the absence of the environment block from a
+record that is not <code>datHere</code> is stated; the system prompt
+entries state that the final request’s prompt is the one carried and
+that the hash stands alone when the text was not stored; and the
+never-carried rule for the per-source consent states names a record’s
+notebook text, which may name the setting the site applied and from
+which no host derives a state. No field is added, removed or retyped,
+and the subtype name does not change (ADR-0038 §2, as its amendment
+reads it). This document’s normative text is unchanged: §8.6’s subtype
+row names the bundle by its path, which does not move. Appendix E gains
+a status line that corrects the v0.1.13 line’s last sentence. The
+reference verifier’s row is to pin revision 2 in
+<code>@typedstandards/verify-core</code> 0.15.1, planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/294">civic-ai-tools#294</a>.
+Already-signed packages are byte-identical. Schema version unchanged
+(<code>0.1.0</code> per <a
+href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
+The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-10-30</strong> — Producer-profile subtype patch
 revision (v0.1.13; decision record <a
 href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>,
