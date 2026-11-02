@@ -74,8 +74,8 @@ import {
 
 const FIXTURE_PATH = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', 'civicaitools-v1-golden.json');
 
-/** The bundle digest ADR-0038 §5 records for revision 1 (2026-10-30). */
-const BUNDLE_SHA256 = '724e399e02db8993041b64982eec731505084bec2ec5e6ca58fda2de8087a281';
+/** The bundle digest ADR-0038's amendment of 2026-11-02 records for revision 2. */
+const BUNDLE_SHA256 = '45bf3ab479325a791829ed9987f5f291fea44238b54bfb598f32f306f574eb9b';
 
 const PACKAGE_ID = '00000000-0000-4000-8000-0000000000c1';
 const HASH_ONLY_PACKAGE_ID = '00000000-0000-4000-8000-0000000000c2';
