@@ -215,11 +215,15 @@ export const CIVIC_TERM_SERVER_ID = 'civic:serverId';
  */
 export const CIVIC_TERM_LOAD_OUTCOME = 'civic:loadOutcome';
 
-/** How a `load_source` call ended (ADR-0033 amendment 2): `loaded`, the
- *  source's guidance and tools were added for the next request; `declined`,
- *  the reader did not allow the source for this run; `no-answer`, no decision
- *  arrived in time; `unavailable`, the instance could not offer the source
- *  for a reason known without contacting it; `not-offered`, the alias named
+/** How a `load_source` call ended (ADR-0033 amendment 2 and its note of
+ *  2026-11-02): `loaded`, the source's guidance and tools were added for the
+ *  next request; `declined`, the source needed the reader's permission for
+ *  this run and was not used, because the reader answered Not now or the
+ *  producer held no pause in which to ask; `no-answer`, no decision arrived,
+ *  because the reader did not answer in time or could not be asked (neither
+ *  value states that a question was put to the reader); `unavailable`, the
+ *  instance could not offer the source for a reason known without
+ *  contacting it; `not-offered`, the alias named
  *  no source of the directory set, so nothing was loaded and the reader was
  *  not asked (the owner's amendment of D4, 2026-10-19). */
 export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable' | 'not-offered';
