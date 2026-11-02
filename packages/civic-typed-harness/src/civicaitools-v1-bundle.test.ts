@@ -9,13 +9,19 @@
 //     sentence and the per-load reasons, which state no question put to the
 //     reader, because the record does not hold whether one was put (website
 //     `src/lib/mcp/routing-mode.ts:301`, a declined load with no pause; and
-//     `src/lib/sources/decision.ts:243-248`, `notHeld`, at 4777b79).
+//     `src/lib/sources/decision.ts:243-248`, `notHeld`, at 4777b79). They name
+//     no consent setting and no "this site": the record holds an outcome for
+//     one run, not a stored setting, and a second host is not the site that
+//     ran the question (rulings W1 and W3, civic-ai-tools#294, 2026-11-02).
+//   - The never-carried rule for the per-source consent states: no field
+//     carries them, and no host derives one from a record's notebook text
+//     (ruling W2).
 //   - The absence rule for `environment.toolDefinitions` on a record that is
 //     not `datHere`, against a record this harness derives and produce-core
 //     assembles (`deriveDatHereEnvelopeFields`, then `buildEnvelope`).
-//   - The system prompt entry: the final request's prompt is carried; the
-//     earlier ones by trace hash only; the hash alone when the text's write
-//     failed.
+//   - The system prompt entries: the final request's prompt is carried; the
+//     earlier ones by trace hash only; the hash alone when the text was not
+//     stored (ruling W4 for systemPromptHash).
 //   - The field set: the 34 field ids and the 7 never-carried ids, so no
 //     revision adds or removes a field.
 //   - The digest: `bundle.md`'s SHA-256 row and the ADR-0038 text name the
@@ -66,16 +72,19 @@ const REVISION_URL =
 const NOT_RECORDED = 'What chose these sources is not recorded.';
 const ALL_SOURCES = 'Every source this question could use was given to the model from the start.';
 
-/** Website `CHOOSER_REASONS` (`src/lib/sources/copy.ts:522-526` at 4777b79). */
-const REASON_DECLINED = 'Ask first, so it was not used for this question.';
-const REASON_NO_ANSWER = 'Ask first: not used, because this site could not ask, or no answer arrived in time.';
-const REASON_UNAVAILABLE = 'Unavailable. This site could not load it for this question.';
+/** The reasons as ruled (W1 = A, civic-ai-tools#294 comment 6580908649). Not the website's
+ *  `CHOOSER_REASONS` (`src/lib/sources/copy.ts:522-526` at 4777b79), which name the
+ *  setting "Ask first" and "this site". */
+const REASON_DECLINED = 'Not allowed, so it was not used for this question.';
+const REASON_NO_ANSWER = 'Not used, because the site that ran this question could not ask, or no answer arrived in time.';
+const REASON_UNAVAILABLE = 'Unavailable. The site that ran this question could not load it.';
 
 const ROUTING_SENTENCE =
   "Shown wherever reached sources are shown, read from routing.method, the load spans and sourcesOffered. " +
   "in-loop: 'The model chose which sources to load, from those this question could use.', then three groups by the " +
   "host's names for the sources: 'Loaded: {loaded}'; 'Requested, not loaded: {source} — {its last load's reason}', " +
-  "one line each; 'Not requested: {offered sources with no load}'; an empty group says 'none'. Beside it the host " +
+  "one line each; 'Not requested: {the sources whose reason is configured, selected or not-consented, with no load}'; " +
+  "an empty group says 'none'. Beside it the host " +
   "MAY say 'from a source list given by {router component id} {version}'. " +
   `absent: '${NOT_RECORDED}' all-sources, only if a record of this producer ever states that method: '${ALL_SOURCES}'`;
 
@@ -84,8 +93,8 @@ const LOAD_OUTCOME_SENTENCE =
   `that source's last load: declined '${REASON_DECLINED}'; no-answer '${REASON_NO_ANSWER}'; ` +
   `unavailable '${REASON_UNAVAILABLE}' ` +
   'No reason states that the reader was asked or answered: the record does not hold whether a question was put. ' +
-  "loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which this site does not " +
-  "offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.";
+  "loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which the site that ran " +
+  "this question does not offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.";
 
 const LOAD_OUTCOME_VALUES =
   'One of loaded, declined, no-answer, unavailable, not-offered (LOAD_OUTCOMES, format/vocabulary.ts). ' +
@@ -121,6 +130,18 @@ const SKILL_TEXT_EARLIER_PROMPTS =
   'identified by gen_ai.system_prompt_hash on its llm_inference span';
 const SKILL_TEXT_WRITE_FAILED =
   'a new record carries systemPromptHash with no skillText when the run-end write of the text failed';
+/** Ruling W4 (the seat's record, civic-ai-tools#294 comment 6580229504). */
+const PROMPT_HASH_BESIDE =
+  "beside the skillText BlobRef when the text was stored (see skillMetadata.skillText's absence rule)";
+
+/** Ruling W2 = C: the field-level "never" kept, the notebook-text case and the no-derivation rule added. */
+const PER_SOURCE_STATES_RULE =
+  'Never enters a record as a field. sourcesOffered[].reason states the state\'s effect on the run (reader-off, ' +
+  'not-consented), which is an outcome for one run and not the stored state. A record\'s notebook text, written at ' +
+  'run time, may name the setting the site applied (the reference host\'s notebook says a declined source was ' +
+  "'not used, set to Ask first', website src/lib/notebook-author/tool-to-cell.ts:1169 at 4777b79); no host derives " +
+  'a consent state from that text or from any other part of a record, and a host never reconstructs the consent ' +
+  'panel from a record.';
 
 // --- The field set ------------------------------------------------------------------------
 
@@ -197,7 +218,7 @@ test('civicaitools-v1 bundle: the chooser sentence is the website\'s, and its ab
   assert.equal(field('composition.routing').sentence, ROUTING_SENTENCE);
 });
 
-test('civicaitools-v1 bundle: the declined, no-answer and unavailable reasons equal CHOOSER_REASONS and claim no question put', () => {
+test('civicaitools-v1 bundle: the declined, no-answer and unavailable reasons are the ruled words and claim no question put', () => {
   const entry = field('trace.loadSpan.loadOutcome');
   assert.equal(entry.sentence, LOAD_OUTCOME_SENTENCE);
   assert.ok(entry.sentence.includes(`declined '${REASON_DECLINED}'`));
@@ -216,11 +237,11 @@ test('civicaitools-v1 bundle: the groups the other entries name are the chooser 
   assert.deepEqual(named, [], 'no entry names a group of revision 1');
 });
 
-test('civicaitools-v1 bundle: no shows-class sentence, nor any other, states a reader\'s answer', () => {
+test('civicaitools-v1 bundle: no sentence of any class states a reader\'s answer, names Ask first, or says this site', () => {
   const bundle = readBundle();
   assert.ok(bundle.fields.some((f) => f.class === 'shows'));
   const stating = bundle.fields.flatMap((entry) =>
-    ['you said no', "the reader's answer"]
+    ['you said no', "the reader's answer", 'ask first', 'this site']
       .filter((phrase) => entry.sentence.toLowerCase().includes(phrase))
       .map((phrase) => `${entry.id} (${entry.class}): "${phrase}"`),
   );
@@ -327,6 +348,21 @@ test('civicaitools-v1 bundle: skillText\'s sentence is the website\'s SYSTEM_PRO
     assert.ok(sentence.includes(`'${words}'`), `the sentence quotes: ${words}`);
   }
   assert.ok(!sentence.includes('hypotheses'), 'no words are marked as hypotheses');
+});
+
+test('civicaitools-v1 bundle: systemPromptHash is carried beside the BlobRef only when the text was stored', () => {
+  assert.ok(field('skillMetadata.systemPromptHash').absent.includes(PROMPT_HASH_BESIDE));
+});
+
+// --- Ruling W2: the per-source consent states -------------------------------------------
+
+test('civicaitools-v1 bundle: no field carries the consent states, and no host derives one from notebook text', () => {
+  const entry = readBundle().neverCarried.find((n) => n.id === 'consent.perSourceStates');
+  assert.ok(entry, 'the never-carried list has consent.perSourceStates');
+  assert.equal(entry.fact, "The reader's per-source consent states (On, Ask first, Off) as stored.");
+  assert.equal(entry.rule, PER_SOURCE_STATES_RULE);
+  assert.ok(entry.rule.includes("A record's notebook text, written at run time, may name the setting the site applied"));
+  assert.ok(entry.rule.includes('no host derives a consent state from that text'));
 });
 
 // --- Criterion 7: the field set and the digest -------------------------------------------
