@@ -1,0 +1,414 @@
+{
+  "schema": "civic-inventory/1",
+  "id": "civic-7",
+  "version": "2026-11-02.1",
+  "note": "Today's seven sources, from the router's manifest (@typedstandards/civic-typed-router@0.6.0), in its order. The baseline configuration (baseline-7) leaves Boston OpenContext unconfigured, as production does; the inventory lists all seven.",
+  "entries": [
+    {
+      "kind": "server",
+      "id": "socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server",
+      "alias": "socrata",
+      "sourceId": "socrata",
+      "displayName": "Socrata MCP Server",
+      "description": "Socrata open data portals: records that cities and states publish, such as 311 requests, building permits, inspections, crime, housing violations, payroll, licenses and transit ridership. Covers NYC, Chicago, SF, Seattle, LA, state portals such as data.ny.gov, and hundreds of other portals. Cannot reach Boston's city data, and returns only the datasets each portal's publisher posts, so it is not the source for census demographics.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "freshnessSource": "socrata-mcp-server at 3163601 (0.9.2), the hosted Socrata server: get_data sends its catalog, query and metrics requests to the portal on each call (src/tools/socrata-tools.ts); fetch keeps a result for five minutes (src/utils/cache.ts, documentCache).",
+      "configuration": {
+        "addressVariable": "SOCRATA_MCP_URL",
+        "requirement": "required"
+      },
+      "consentDefault": "on",
+      "publisher": "npstorey",
+      "serverType": "socrata",
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/socrata.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      },
+      "guidanceRef": {
+        "kind": "prompt",
+        "fetch": "skill-guidance",
+        "pinned": "packages/civic-typed-router/src/__fixtures__/socrata-guidance.json",
+        "pinnedSha256": "599aa75316cfdad80697b04eee52c1459fb5c4112327ce81b657419d288e5c03",
+        "blockSha256": "904740fcb799b0ff0d93a6f663bdfe05692c2dc81f8eb11e4bc5c131088ddb26"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit",
+      "alias": "data_commons",
+      "sourceId": "data-commons",
+      "displayName": "Google Data Commons MCP Server",
+      "description": "Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods.",
+      "freshness": "Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).",
+      "freshnessSource": "The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub's docs/skills/data-commons.md): \"ACS releases annually\" and \"Surface the vintage\". The server is Google's datacommons-mcp (github.com/datacommonsorg/agent-toolkit).",
+      "configuration": {
+        "addressVariable": "DATA_COMMONS_MCP_URL",
+        "keyVariable": "DATA_COMMONS_API_KEY",
+        "requirement": "required",
+        "defaultAddress": "https://api.datacommons.org/mcp"
+      },
+      "consentDefault": "on",
+      "publisher": "Google",
+      "authentication": {
+        "kind": "instance-key",
+        "keyVariable": "DATA_COMMONS_API_KEY"
+      },
+      "serverType": "mcp-remote",
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "demographics",
+        "economy-labor",
+        "health",
+        "education",
+        "environment"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/data-commons.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "data-commons",
+        "toolNames": [
+          "search_indicators",
+          "get_observations"
+        ],
+        "sha256": "0e3712e8e93d02b9c9476e29737b7826af46738f9e44f180d2a092160cab0185"
+      },
+      "guidanceRef": {
+        "kind": "embedded",
+        "instructions": "none",
+        "publicationHost": "civicaitools.org",
+        "blockSha256": "483cbe0ab1ac655ea507339d74bad6965ff022549b0f061f28b6783466577909"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "opencontext@https://data-mcp.boston.gov/mcp",
+      "alias": "boston",
+      "sourceId": "boston-opencontext",
+      "displayName": "Boston OpenContext MCP Server",
+      "description": "Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics.",
+      "freshness": "Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually).",
+      "freshnessSource": "The Boston guidance this package embeds (src/civic/boston.ts, hand-synced from the hub's docs/skills/boston.md): OpenContext \"fronts the CKAN DataStore powering Analyze Boston (data.boston.gov)\"; \"Update cadence varies. 311 daily, assessor annually, crime weekly.\"",
+      "configuration": {
+        "addressVariable": "BOSTON_OPENCONTEXT_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "City of Boston",
+      "serverType": "mcp-remote",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Boston",
+          "City of Boston"
+        ]
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "property-land",
+        "elections",
+        "education"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/boston.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "boston-opencontext",
+        "toolNames": [
+          "ckan__search_datasets",
+          "ckan__get_dataset",
+          "ckan__query_data",
+          "ckan__get_schema",
+          "ckan__execute_sql",
+          "ckan__aggregate_data"
+        ],
+        "sha256": "5942af354c9eafbd179f2fe70fd503f75fb55b6f9c492eea9f8410da06aa53e6"
+      },
+      "guidanceRef": {
+        "kind": "embedded",
+        "instructions": "none",
+        "publicationHost": "civicaitools.org",
+        "blockSha256": "d253d94f9b0d784bc0de4cb6e2af02f6b113ab48ef5d366410f025524b7a531d"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-charter-laws-rules@https://github.com/BetaNYC/nyc-charter-laws-rules",
+      "alias": "nyc_charter",
+      "sourceId": "nyc-charter",
+      "displayName": "NYC Charter, Laws and Rules MCP Server",
+      "description": "New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress.",
+      "freshness": "Pinned to version 0.3.1 of the publisher's package and the index it bundles: the Charter and the Administrative Code are current through Local Law 2026/147, enacted September 12, 2026, and the Rules through rules effective October 4, 2026.",
+      "freshnessSource": "The publisher's release page for v0.3.1 (github.com/BetaNYC/nyc-charter-laws-rules/releases/tag/v0.3.1), and the currency lines the 0.3.1 server's get_version tool returned at capture (src/__fixtures__/nyc-charter-tools.json, getVersion).",
+      "configuration": {
+        "addressVariable": "NYC_CHARTER_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "law-rules"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-charter.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-charter",
+        "toolNames": [
+          "search",
+          "get_section",
+          "list_titles",
+          "get_title",
+          "get_version"
+        ],
+        "sha256": "ec5168ccc6f566ac264773a7d5561e9dd4cd161365034b9955dcc44e9dafa8ec",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-charter-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-checkbook-mcp@https://github.com/BetaNYC/nyc-checkbook-mcp",
+      "alias": "nyc_checkbook",
+      "sourceId": "nyc-checkbook",
+      "displayName": "NYC Checkbook MCP Server",
+      "description": "New York City government spending as the Comptroller's Checkbook NYC publishes it: contracts (citywide, NYCHA and NYCEDC), payments to vendors, budget and revenue figures by agency and fiscal year, and payroll by agency and title. Covers New York City only. Does not hold the adopted budget's text, Council discretionary awards, or employee names.",
+      "freshness": "Live: every call queries Checkbook NYC as it stands, and the server spaces its requests at least 1.1 seconds apart.",
+      "freshnessSource": "The publisher's README for version 1.6.3, \"API notes and limits\" (github.com/BetaNYC/nyc-checkbook-mcp): every outbound request goes to the Checkbook NYC API, rate-limited to one request per second and spaced at least 1.1 seconds apart.",
+      "configuration": {
+        "addressVariable": "NYC_CHECKBOOK_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "ask-first",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "spending-contracts",
+        "budget-finance",
+        "payroll-workforce"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-checkbook.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-checkbook",
+        "toolNames": [
+          "smart_search",
+          "search_contracts",
+          "get_contract",
+          "search_spending",
+          "search_budget",
+          "search_payroll",
+          "search_revenue",
+          "get_agency_spending",
+          "search_nycedc_contracts",
+          "search_nycha_contracts"
+        ],
+        "sha256": "8533854573290f09f70c9aa4ded251a7e6a36752076c77b7ceb2663b8cbf3a1f",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-checkbook-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp",
+      "alias": "nyc_record",
+      "sourceId": "nyc-record",
+      "displayName": "NYC City Record MCP Server",
+      "description": "Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online.",
+      "freshness": "Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily.",
+      "freshnessSource": "The publisher's README for version 1.1.0, \"Data source\" (github.com/BetaNYC/nyc-record-mcp): the City Record Online dataset on NYC Open Data \"is updated daily and includes notices published in the official City Record since 2015\".",
+      "configuration": {
+        "addressVariable": "NYC_RECORD_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "public-notices",
+        "spending-contracts"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-record.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-record",
+        "toolNames": [
+          "search_notices",
+          "get_notices_by_agency",
+          "get_notices_by_type",
+          "get_procurement_notices",
+          "get_public_hearings",
+          "get_open_solicitations",
+          "get_notices_by_date_range"
+        ],
+        "sha256": "29d8a4a27d67db62324b36a36bb8325a92c68c63fd2236ed5aff11494efae147",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-record-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nys-openlegislation-mcp@https://github.com/BetaNYC/nys-openlegislation-mcp",
+      "alias": "nys_legislation",
+      "sourceId": "nys-legislation",
+      "displayName": "NYS Open Legislation MCP Server",
+      "description": "New York State's legislature through the Senate's Open Legislation API: bills and resolutions since 2009 with their text, status, votes and updates, the State's consolidated laws by section, Senate and Assembly members, committees and their meetings, floor calendars, agendas, and floor and hearing transcripts. Covers New York State only. Does not hold New York City's own law (the Charter, the Administrative Code or the Rules) or federal law.",
+      "freshness": "Live: every call queries the Senate's Open Legislation API as it stands.",
+      "freshnessSource": "The publisher's README for version 2.4.0, \"Local corpus (optional)\" (github.com/BetaNYC/nys-openlegislation-mcp): \"By default the server queries the live NYS Open Legislation API on every request\"; the package ships no local corpus.",
+      "configuration": {
+        "addressVariable": "NYS_LEGISLATION_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "ask-first",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "New York State",
+          "New York"
+        ]
+      },
+      "categories": [
+        "legislation",
+        "law-rules"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nys-legislation.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nys-legislation",
+        "toolNames": [
+          "search_bills",
+          "get_bill",
+          "list_bills",
+          "get_bill_votes",
+          "get_bill_updates",
+          "list_laws",
+          "get_law_tree",
+          "get_law_section",
+          "list_members",
+          "get_member",
+          "search_members",
+          "list_committees",
+          "get_committee",
+          "get_committee_meetings",
+          "list_calendars",
+          "get_calendar",
+          "list_agendas",
+          "get_agenda",
+          "list_floor_transcripts",
+          "get_floor_transcript",
+          "list_hearing_transcripts",
+          "get_hearing_transcript",
+          "get_updates",
+          "search"
+        ],
+        "sha256": "81dc325fe4ad1ec02c92fa4806ffdf168dab5c65a698a0650e87b0fa45aacad4",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nys-legislation-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    }
+  ]
+}
