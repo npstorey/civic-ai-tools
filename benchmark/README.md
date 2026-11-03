@@ -7,7 +7,8 @@ every prompt and tool through the router package (`@typedstandards/civic-typed-r
 the requests a configuration allows, and stops at the model's tool call. No source is ever called.
 
 P0 moved R5's chooser-spike instrument here and added the 7-entry inventory; P1 added the 50-, 200- and 1,000-entry
-inventories. P2 adds the question set and gold, P3 the other configurations and the preregistration.
+inventories and the preregistration's inputs (`preregistration/s1.md`). P2 adds the question set and gold, P3 the
+other configurations and the rest of the preregistration.
 
 ## Layout
 
@@ -66,6 +67,12 @@ bytes, so it survives a move to a content node.
 | Inventory | `canonicalJson` SHA-256 |
 |---|---|
 | `7.json` (`civic-7`, `2026-11-02.1`) | `1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882` |
+| `50.json` (`civic-50`, `2026-11-03.1`) | `d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee` |
+| `200.json` (`civic-200`, `2026-11-03.1`) | `ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02` |
+| `1000.json` (`civic-1000`, `2026-11-03.1`) | `16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c` |
+
+The four hashes were written here and in the preregistration (`preregistration/s1.md`) before any question existed
+(A1.3): P2's questions are written against these files, so no description could be tuned to a question.
 
 The seven are the router's manifest entries: `to-manifest.mjs` hands back the router's own entry for each, after
 holding every data field, the tool names and the tools' hash to the router's.
@@ -178,5 +185,5 @@ paths are at `8559002`; R5's runner is `chooser-spike.mjs` in the owner's copy (
 - `questions/` and the gold (P2). The anchor's literal dry-run command, with `--questions benchmark/questions/7.json`,
   joins the checks when P2 commits that file.
 - The configurations beyond `baseline-7` and the plain `flat-N`, the per-row reservation of A3.2, the
-  per-configuration hashes of G0-9, and the preregistration (P3).
+  per-configuration hashes of G0-9, and the preregistration's remaining sections (P3).
 - R5's `report-tools/tables.mjs` (P4 moves it to `scoring/`).
