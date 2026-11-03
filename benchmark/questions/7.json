@@ -510,7 +510,7 @@
     {
       "id": "q53",
       "kind": "single",
-      "text": "Which subway lines had the most service alerts over the past year?",
+      "text": "Which New York City subway lines had the most service alerts over the past year?",
       "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
       "acceptable": [
         ["socrata"]

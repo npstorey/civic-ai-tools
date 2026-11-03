@@ -16,7 +16,9 @@ inventory by path, id, version and `canonicalJson` SHA-256. Every value is a str
 `canonicalJson`, which hashes the file, refuses numbers, booleans and null). Beside each file, `<n>.json.sha256` is the
 SHA-256 of the router's `canonicalJson` of the parsed file, as the inventories have.
 
-The rules below were written before any label. The second labeller is given this file verbatim.
+The rules below were written before any label, and the second labeller was given this file verbatim as it then stood.
+Four sentences, each marked, were added after the labels were fixed and the second labelling was resolved;
+`labelling.md` records that labelling, its resolutions and every change made after it.
 
 ## A question
 
@@ -70,7 +72,9 @@ record. An entry that holds both records is a set on its own; it is never combin
 **3. `[]`, and "no source in this inventory".** The empty set `[]` means "load nothing". It is acceptable when the
 question needs no data source (a definition, arithmetic, a note to write), and under rule 10. When no set of this
 inventory's entries answers the whole question, the label is `[[]]`: no source in this inventory. A question that needs
-two records, one of which no entry holds, is `[[]]` too: loading the other answers only half of it.
+two records, one of which no entry holds, is `[[]]` too: loading the other answers only half of it. So `[[]]` means
+both "load nothing" (a question of kind `none`) and "no source in this inventory"; the question's kind and its note tell
+them apart. (Added after the labels were fixed; see `labelling.md`.)
 
 **4. Who keeps the record.** Decide first which government or body keeps the record asked for; an entry holds a record
 only if it holds that keeper's records.
@@ -92,7 +96,9 @@ only if it holds that keeper's records.
 description excludes. "Cannot reach Boston's city data", "holds no census statistics" and "has no figures for
 neighborhoods" each rule a record out. A server that looks up single records does not count them, and one that reports
 today's state does not hold history. The reverse holds too: a lookup of one record by its number, or of today's state
-(an alert, an outage, a calendar), is the lookup server's, and a dataset of past records is not taken to answer it.
+(an alert, an outage, a calendar), is the lookup server's, and a dataset of past records is not taken to answer it. A
+registry entry whose description names that lookup's record (a council's meetings, say) can be the lookup server, under
+rule 8. (Added after the labels were fixed; see `labelling.md`.)
 
 **6. A portal pack and its base.** A portal pack (`kind: "pack"` with a `filter.portal`) is its base server's tools
 fixed to one portal. It holds the records of the body that publishes that portal (its description names the publisher
@@ -112,7 +118,10 @@ for a place (New York City's spending, contracts and payroll in Checkbook NYC; t
 Council's legislation and its discretionary awards), a general portal of that place holds that kind of record only if
 its base's description names it. The `socrata` server's description names 311 requests, building permits,
 inspections, crime, housing violations, payroll, licenses and transit ridership; a Socrata portal pack follows its
-base. This holds in every inventory, including one that does not list the specialized source.
+base. This holds in every inventory, including one that does not list the specialized source. The clause reaches the
+specialized sources it names and others like them; it does not reach a subject portal of a government body (a state's
+health department or campaign spending commission), which leaves that government's general portal acceptable beside
+it. (Added after the labels were fixed; see `labelling.md`.)
 
 The base. The `socrata` server reaches every Socrata portal, so it is acceptable wherever a Socrata portal pack would
 be, in every inventory, including one in which that portal has no pack. Whether a record is on a Socrata portal is read
@@ -134,7 +143,8 @@ server is, when the description says where it applies:
 - an entry that queries Socrata portals in general, naming none, is labelled as the `socrata` server is.
 
 A list of some places that does not name the one asked about ("9 US cities", "a growing list of cities") does not
-cover it. The entry must name the record asked for, or a portal that holds it. A load of a registry entry is scored on
+cover it. An entry covering "international" procurement or "193 countries" names no place. (Added after the labels were fixed; see `labelling.md`.) The entry
+must name the record asked for, or a portal that holds it. A load of a registry entry is scored on
 the first request only; that does not change its label.
 
 **9. Copies** (`synthetic: "true"`). A near-duplicate (`distractor.kind: "near-duplicate"`) is a copy of a real entry

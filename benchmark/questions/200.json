@@ -574,7 +574,7 @@
     {
       "id": "q53",
       "kind": "single",
-      "text": "Which subway lines had the most service alerts over the past year?",
+      "text": "Which New York City subway lines had the most service alerts over the past year?",
       "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
       "acceptable": [
         ["data_ny_gov"],
@@ -1124,9 +1124,11 @@
       "strata": {"place": "named-state", "category": "elections", "sources": "1", "trap": "none"},
       "acceptable": [
         ["hicscdata_hawaii_gov"],
+        ["opendata_hawaii_gov"],
         ["socrata"],
         ["socrata_pack"]
-      ]
+      ],
+      "note": "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Campaign Spending Commission among them (rule 6)."
     },
     {
       "id": "q104",
@@ -1270,9 +1272,11 @@
       "strata": {"place": "named-state", "category": "procurement", "sources": "1", "trap": "none"},
       "acceptable": [
         ["highways_hidot_hawaii_gov"],
+        ["opendata_hawaii_gov"],
         ["socrata"],
         ["socrata_pack"]
-      ]
+      ],
+      "note": "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Department of Transportation among them (rule 6)."
     },
     {
       "id": "q118",

@@ -17,10 +17,14 @@
 //     record has the gold "no source in this inventory".
 //
 // A missing file fails at an assertion, so the test is red before P2 labels.
+//
+// A2.4: labelling.md records the second labelling (the second labeller's
+// files byte for byte, the agreement), and its resolutions are in the files.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
@@ -179,4 +183,35 @@ test('A2.1: at 200 and 1,000 some questions that need a record have no source in
     assert.ok(none.length >= 4, `${size}.json keeps the no-data questions`);
     for (const q of none) assert.ok(noSource(q), `${size}.json ${q.id}: a no-data question's gold is [[]]`);
   }
+});
+
+test('A2.4: labelling.md records the second labelling, its files byte for byte, and its resolutions in the files', () => {
+  assert.ok(existsSync(at('questions/labelling.md')), 'benchmark/questions/labelling.md exists');
+  const text = readFileSync(at('questions/labelling.md'), 'utf8');
+  // The second labeller's two label files, reproduced byte for byte, hash to the values the file states.
+  const block = (name) => {
+    const start = text.indexOf(`\`${name}\`:\n\n\`\`\`json\n`);
+    assert.ok(start >= 0, `labelling.md reproduces ${name}`);
+    const from = text.indexOf('```json\n', start) + '```json\n'.length;
+    return text.slice(from, text.indexOf('```', from));
+  };
+  const sha = (s) => createHash('sha256').update(s).digest('hex');
+  const stated = (name) => text.match(new RegExp(`\\| \`${name.replace('.', '\\.')}\` \\|[^|]*\\| \`([0-9a-f]{64})\` \\|`))?.[1];
+  const labels = block('labels.json');
+  assert.equal(sha(labels), stated('labels.json'));
+  assert.equal(sha(block('labels-q53.json')), stated('labels-q53.json'));
+  // The sample: 30 ids, each a question, each labelled at the four sizes.
+  const sample = JSON.parse(labels);
+  assert.equal(Object.keys(sample).length, 30);
+  const ids = new Set(questions(7).questions.map((q) => q.id));
+  for (const [id, bySize] of Object.entries(sample)) {
+    assert.ok(ids.has(id), `${id} is a question`);
+    assert.deepEqual(Object.keys(bySize).sort(), ['1000', '200', '50', '7']);
+  }
+  assert.match(text, /\*\*Agreement on the fixed labels: 113 of 120\*\*/);
+  // The resolutions are in the files: q53's text, election_org on q89 at 1,000, opendata_hawaii_gov on q103.
+  const q = (size, id) => questions(size).questions.find((x) => x.id === id);
+  assert.equal(q(7, 'q53').text, 'Which New York City subway lines had the most service alerts over the past year?');
+  assert.ok(q(1000, 'q89').acceptable.some((s) => key(s) === 'election_org'));
+  for (const size of [200, 1000]) assert.ok(q(size, 'q103').acceptable.some((s) => key(s) === 'opendata_hawaii_gov'));
 });

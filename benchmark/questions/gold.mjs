@@ -240,10 +240,10 @@ const SEED = [
     kind: 'single',
     text: 'Which open procurement solicitations has the NYC Department of Transportation published?',
     strata: S('named-city', 'procurement', '1'),
-    readings: one(R("New York City's open solicitations", 'nyc_record', 'tender', 'globalgov', GOVTRIBE)),
+    readings: one(R("New York City's open solicitations", 'nyc_record', 'tender', GOVTRIBE)),
     notes: {
       '200+': 'tender covers US procurement opportunities (rule 8).',
-      1000: 'globalgov covers open tenders in 193 countries, and govtribe U.S. federal, state and local procurement (rule 8).',
+      1000: 'govtribe covers U.S. federal, state and local procurement; globalgov\'s "193 countries" names no place (rule 8).',
     },
   },
   {
@@ -459,7 +459,7 @@ const NEW = [
   },
   {
     kind: 'single',
-    text: 'Which subway lines had the most service alerts over the past year?',
+    text: 'Which New York City subway lines had the most service alerts over the past year?',
     strata: S('named-city', 'transit', '1', 'counting-vs-lookup'),
     readings: one(R("the MTA's past service alerts, on data.ny.gov", NYS)),
     note: "nyc_mta reports today's alerts, not a year's (rule 5); the MTA's records are New York State's (rule 4).",
@@ -709,7 +709,8 @@ const NEW = [
     kind: 'single',
     text: 'Who represents the 39th District in the New York State Senate?',
     strata: S('named-state', 'legislation-law', '1', 'same-category-two-jurisdictions'),
-    readings: one(R("New York State's legislators", 'nys_legislation')),
+    readings: one(R("New York State's legislators", 'nys_legislation', 'election_org')),
+    notes: { 1000: "Judgment: election_org's description names U.S. candidates and offices, so it is read as holding who holds the seat (rule 8; the second labeller's reading, labelling.md)." },
   },
   {
     kind: 'single',
@@ -807,8 +808,11 @@ const NEW = [
     kind: 'single',
     text: 'Which candidates for governor of Hawaii raised the most campaign money in 2022?',
     strata: S('named-state', 'elections', '1'),
-    readings: one(R("Hawaii's campaign finance records", SOC, 'hicscdata_hawaii_gov', 'election_org')),
-    notes: { 1000: 'election_org covers U.S. campaign finance (rule 8).' },
+    readings: one(R("Hawaii's campaign finance records", SOC, 'hicscdata_hawaii_gov', 'opendata_hawaii_gov', 'election_org')),
+    notes: {
+      '200+': "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Campaign Spending Commission among them (rule 6).",
+      1000: 'election_org covers U.S. campaign finance (rule 8).',
+    },
   },
   {
     kind: 'single',
@@ -903,15 +907,18 @@ const NEW = [
     kind: 'single',
     text: 'What highway construction contracts has the Hawaii Department of Transportation awarded since 2024?',
     strata: S('named-state', 'procurement', '1'),
-    readings: one(R("the Hawaii Department of Transportation's contracts", SOC, 'highways_hidot_hawaii_gov', 'highways_hidot_hawaii_gov_2', 'hidot_contracts_data_socrata_com', GOVTRIBE)),
-    notes: { 1000: 'hidot_contracts_data_socrata_com lists 2 datasets and its name states contracts; govtribe covers U.S. state procurement (rules 6 and 8).' },
+    readings: one(R("the Hawaii Department of Transportation's contracts", SOC, 'highways_hidot_hawaii_gov', 'highways_hidot_hawaii_gov_2', 'hidot_contracts_data_socrata_com', 'opendata_hawaii_gov', GOVTRIBE)),
+    notes: {
+      '200+': "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Department of Transportation among them (rule 6).",
+      1000: 'hidot_contracts_data_socrata_com lists 2 datasets and its name states contracts; govtribe covers U.S. state procurement (rules 6 and 8).',
+    },
   },
   {
     kind: 'single',
     text: 'Which UK local councils have open tenders for waste collection services?',
     strata: S('federal', 'procurement', '1'),
-    readings: one(R("the UK's open public tenders", 'tender', 'globalgov')),
-    notes: { '200+': 'tender covers UK procurement opportunities (rule 8).', 1000: 'globalgov covers open tenders in 193 countries (rule 8).' },
+    readings: one(R("the UK's open public tenders", 'tender')),
+    notes: { '200+': 'tender covers UK procurement opportunities (rule 8).', 1000: 'globalgov\'s "193 countries" and open_contracting\'s "international" name no place (rule 8).' },
   },
 
   // Transit.
