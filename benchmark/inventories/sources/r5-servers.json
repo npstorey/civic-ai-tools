@@ -1,0 +1,1063 @@
+{
+  "note": "R5's four servers outside today's seven (R6): each one's directory entry from R5's directory.json and its load (tools, guidance, capture) from R5's loads.json, copied as R5 froze them. R5 named every tool `<alias>__<upstream name>`; build.mjs strips that prefix to give the upstream name (R5's rule, `lib/build-directory.mjs`, inverted), so the router's aliased view gives R5's names back.",
+  "directory": {
+    "file": "directory.json",
+    "sha256": "be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7",
+    "frozenAt": "2026-10-11T12:12:02.837Z",
+    "routerPackage": "@typedstandards/civic-typed-router@0.1.0"
+  },
+  "loads": {
+    "file": "loads.json",
+    "sha256": "0dde81740af6a603b07a3cee81a6933f767448391461ba6f38848e41a1cfd86d",
+    "canonicalSha256": "f9e018df5cf15e3d250e758ef3691ea8d88ddca536b3ee6cddb0457c271ed86e",
+    "canonical": "R5's canonicalJson (keys sorted, no whitespace)"
+  },
+  "servers": [
+    {
+      "entry": {
+        "id": "@betanyc/nyc-budget-mcp@1.3.1",
+        "alias": "nyc_budget",
+        "sourceId": "nyc-budget",
+        "displayName": "@betanyc/nyc-budget-mcp — NYC Budget MCP server",
+        "configuration": {
+          "addressVariable": "NYC_BUDGET_MCP_URL",
+          "requirement": "optional"
+        },
+        "toolNames": [
+          "nyc_budget__search_awards",
+          "nyc_budget__get_awards_by_ein",
+          "nyc_budget__search_transparency_resolutions",
+          "nyc_budget__get_legistar_link",
+          "nyc_budget__search_capital_projects",
+          "nyc_budget__get_terms_conditions",
+          "nyc_budget__list_available_fiscal_years"
+        ],
+        "description": "MCP server for BetaNYC's New York City Budget data — Council discretionary funding (Schedule C, FY2015–FY2027 awards), Terms & Conditions, Section 254 capital changes, Transparency Resolutions (FY2010–FY2024 + FY2026), and the FY2008–FY2027 Legistar crosswalk.",
+        "descriptionSource": "nyc-budget-mcp package.json description, verbatim",
+        "freshness": "Bundled database in package 1.3.1 (published 2026-08-11); coverage varies by dataset and fiscal year.",
+        "freshnessSource": "@betanyc/nyc-budget-mcp 1.3.1 data/budget.db and README coverage table (lines 31-35)"
+      },
+      "load": {
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__search_awards",
+              "description": "Search NYC Council discretionary (Schedule C) awards across FY2015–FY2027 (the EIN-level years). Filter by any combination of EIN, organization name, program name, council member (surname), fiscal year, category, and initiative. NOTE: a single EIN can be a fiscal sponsor covering many programs — e.g. EIN 13-2612524 (\"Fund for the City of New York, Inc.\") is a passthrough for dozens of programs, so to isolate one grantee (e.g. BetaNYC) filter by `program` as well as `ein`. FY2009–FY2014 have no award/EIN data (initiatives-only) and are not searchable here. Coverage: Schedule C awards FY2015–FY2027; Terms & Conditions FY2015–FY2018 + FY2021–FY2027; §254 capital FY2020 + FY2022–FY2027; Transparency Resolutions FY2010–FY2024 + FY2026 (org/program TEXT is low-confidence for FY2010–FY2013 — financial columns reliable; join on EIN). FY2009–FY2014 Schedule C is initiatives-only (no EIN) and is EXCLUDED from the award tools. FY2008 and the FY2009 transparency resolutions are unparsed (source blocked). The Legistar crosswalk covers FY2008–FY2027. Run list_available_fiscal_years for exact per-dataset coverage.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "ein": {
+                    "type": "string",
+                    "description": "Tax ID; hyphens optional (13-2612524 or 132612524)"
+                  },
+                  "organization": {
+                    "type": "string",
+                    "description": "Organization name (substring, case-insensitive)"
+                  },
+                  "program": {
+                    "type": "string",
+                    "description": "Program name (substring) — the field that distinguishes grantees under a shared fiscal-sponsor EIN"
+                  },
+                  "council_member": {
+                    "type": "string",
+                    "description": "Sponsoring council member surname (substring)"
+                  },
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "Any year FY2015–FY2027"
+                  },
+                  "category": {
+                    "type": "string",
+                    "description": "Schedule C category (substring)"
+                  },
+                  "initiative": {
+                    "type": "string",
+                    "description": "Council initiative name (substring)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max rows (default 50, max 500)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__get_awards_by_ein",
+              "description": "Return every Schedule C award tied to an EIN across FY2015–FY2027, with a per-fiscal-year count and total. This is the primary cross-system join key. Reminder: for a fiscal-sponsor EIN the result mixes many programs — narrow with search_awards(ein, program) to isolate one grantee. Coverage: Schedule C awards FY2015–FY2027; Terms & Conditions FY2015–FY2018 + FY2021–FY2027; §254 capital FY2020 + FY2022–FY2027; Transparency Resolutions FY2010–FY2024 + FY2026 (org/program TEXT is low-confidence for FY2010–FY2013 — financial columns reliable; join on EIN). FY2009–FY2014 Schedule C is initiatives-only (no EIN) and is EXCLUDED from the award tools. FY2008 and the FY2009 transparency resolutions are unparsed (source blocked). The Legistar crosswalk covers FY2008–FY2027. Run list_available_fiscal_years for exact per-dataset coverage.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "ein": {
+                    "type": "string",
+                    "description": "Tax ID; hyphens optional"
+                  },
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "Optional: restrict to a year FY2015–FY2027"
+                  }
+                },
+                "required": [
+                  "ein"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__search_transparency_resolutions",
+              "description": "Search the NYC Council Transparency Resolutions FY2010–FY2024 + FY2026 — post-adoption discretionary designations, rescissions, and purpose changes. Rescissions carry negative amounts; a transfer is a rescind + designate pair on the same EIN/agency. Filter by EIN, council member, fiscal year, action (designate / rescind / purpose_change), or organization. IMPORTANT: `fiscal_year` filters the resolution *document's* fiscal year (the year whose budget it amends); each result also shows the row-level designation year, which can differ or be blank. CAVEAT: for FY2010–FY2013 the organization/council-member/program TEXT is low-confidence (glued/garbled PDF text layer) — the financial columns (EIN, amount, agency, date, action) are reliable, so join on EIN, not name; affected rows are flagged in the output. Coverage: Schedule C awards FY2015–FY2027; Terms & Conditions FY2015–FY2018 + FY2021–FY2027; §254 capital FY2020 + FY2022–FY2027; Transparency Resolutions FY2010–FY2024 + FY2026 (org/program TEXT is low-confidence for FY2010–FY2013 — financial columns reliable; join on EIN). FY2009–FY2014 Schedule C is initiatives-only (no EIN) and is EXCLUDED from the award tools. FY2008 and the FY2009 transparency resolutions are unparsed (source blocked). The Legistar crosswalk covers FY2008–FY2027. Run list_available_fiscal_years for exact per-dataset coverage.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "ein": {
+                    "type": "string",
+                    "description": "Tax ID; hyphens optional"
+                  },
+                  "council_member": {
+                    "type": "string",
+                    "description": "Council member surname (substring); unreliable for FY2010–FY2013"
+                  },
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "Resolution document fiscal year, FY2010–FY2024 or 2026"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "designate",
+                      "rescind",
+                      "purpose_change"
+                    ],
+                    "description": "Type of action"
+                  },
+                  "organization": {
+                    "type": "string",
+                    "description": "Organization name (substring); unreliable for FY2010–FY2013"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max rows (default 50, max 500)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__get_legistar_link",
+              "description": "Look up the NYC Council Legistar legislative record (matter number, adoption date, adopting-session link) for a budget source document via the FY2008–FY2027 crosswalk. Filter by fiscal_year and/or document_type (schedule_c, terms_conditions, capital_a, capital_b, transparency_reso, transparency_reso_NN) or by local_file. For confirmed rows, returns a WORKING link to the City Council meeting where the matter was adopted (Legistar MeetingDetail); the older bill-detail URL is not surfaced because NYC's two Legistar backends use different ids and it resolves to \"Invalid parameters!\". Always surfaces the crosswalk `status`: 'confirmed' (matter verified), 'candidate' (anchor/exhibit not upgraded to confirmed), or 'not_located' (no matter found). Do not treat a candidate/not_located row as an authoritative citation.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "Any year FY2008–FY2027"
+                  },
+                  "document_type": {
+                    "type": "string",
+                    "description": "schedule_c, terms_conditions, capital_a, capital_b, transparency_reso, or transparency_reso_NN (substring)"
+                  },
+                  "local_file": {
+                    "type": "string",
+                    "description": "Repo-relative source PDF path (substring)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__search_capital_projects",
+              "description": "Search §254 capital changes across FY2020 + FY2022–FY2027 (no FY2021 detail book exists). Filter by agency, fiscal year, sponsor (council member surname; co-sponsored rows list multiple), or project title. `fy1` is the adoption-year allocation. All parsed years — FY2020, FY2022, FY2023, FY2024, FY2025, FY2026 — come from the \"Supporting Detail Book\" (Council-additions Capital Project Detail), share the full schema (borough, sub-id, sponsor), and reconcile against the printed agency subtotals and both `TOTALS FOR ALL` grand totals (FY2027 partially). FY2025 was reparsed from the FY2025 Supporting Detail Book (PR #21) and is now directly comparable to the other years. Coverage: Schedule C awards FY2015–FY2027; Terms & Conditions FY2015–FY2018 + FY2021–FY2027; §254 capital FY2020 + FY2022–FY2027; Transparency Resolutions FY2010–FY2024 + FY2026 (org/program TEXT is low-confidence for FY2010–FY2013 — financial columns reliable; join on EIN). FY2009–FY2014 Schedule C is initiatives-only (no EIN) and is EXCLUDED from the award tools. FY2008 and the FY2009 transparency resolutions are unparsed (source blocked). The Legistar crosswalk covers FY2008–FY2027. Run list_available_fiscal_years for exact per-dataset coverage.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "agency": {
+                    "type": "string",
+                    "description": "Agency name (substring)"
+                  },
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "FY2020, or any of FY2022–FY2027"
+                  },
+                  "sponsor": {
+                    "type": "string",
+                    "description": "Sponsoring council member surname (substring)"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Project title (substring)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max rows (default 50, max 500)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__get_terms_conditions",
+              "description": "Retrieve Terms & Conditions (reporting mandates attached to appropriations) across FY2015–FY2018 + FY2021–FY2027 (no standalone T&C document exists for FY2019/FY2020). Filter by fiscal year and/or agency name. Coverage: Schedule C awards FY2015–FY2027; Terms & Conditions FY2015–FY2018 + FY2021–FY2027; §254 capital FY2020 + FY2022–FY2027; Transparency Resolutions FY2010–FY2024 + FY2026 (org/program TEXT is low-confidence for FY2010–FY2013 — financial columns reliable; join on EIN). FY2009–FY2014 Schedule C is initiatives-only (no EIN) and is EXCLUDED from the award tools. FY2008 and the FY2009 transparency resolutions are unparsed (source blocked). The Legistar crosswalk covers FY2008–FY2027. Run list_available_fiscal_years for exact per-dataset coverage.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "fiscal_year": {
+                    "type": "number",
+                    "description": "FY2015–FY2018 or FY2021–FY2027"
+                  },
+                  "agency": {
+                    "type": "string",
+                    "description": "Agency name (substring)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max rows (default 50, max 500)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_budget__list_available_fiscal_years",
+              "description": "Report exactly which fiscal years each dataset actually covers, so callers are never misled about what exists. Returns the parsed years for awards/terms/capital/transparency and the full crosswalk range, plus the honesty caveats (FY2009–FY2014 initiatives-only/no-EIN and excluded from award tools; FY2010–FY2013 transparency text low-confidence).",
+              "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        ],
+        "guidance": "",
+        "guidanceRoute": "none: the server advertises no initialize instructions (or was not started, ruling R-a); tool descriptions carry its guidance",
+        "capture": {
+          "route": "listed over stdio (raw JSON-RPC)",
+          "packageVersion": "1.3.1",
+          "upstreamToolsSha256": "a031d571303446e699c094c50e67466c2a474305bcd6097f174256dcdd4cab17",
+          "toolsSha256": "2c8eb5be9abce5a436be3f30ba0a9bd63b8b713aa10f93b6ff06dda1f5c066aa"
+        }
+      }
+    },
+    {
+      "entry": {
+        "id": "@betanyc/nyc-council-mcp@2.6.0",
+        "alias": "nyc_council",
+        "sourceId": "nyc-council",
+        "displayName": "nyc-council-mcp",
+        "configuration": {
+          "addressVariable": "NYC_COUNCIL_MCP_URL",
+          "requirement": "optional"
+        },
+        "toolNames": [
+          "nyc_council__search_bills",
+          "nyc_council__search_legislation",
+          "nyc_council__search_events",
+          "nyc_council__list_committees",
+          "nyc_council__recent_bills",
+          "nyc_council__upcoming_events",
+          "nyc_council__aggregate_bills",
+          "nyc_council__vote_breakdown",
+          "nyc_council__get_voting_record",
+          "nyc_council__get_bill_history",
+          "nyc_council__co_sponsors",
+          "nyc_council__get_bill_hearings",
+          "nyc_council__get_event_bills",
+          "nyc_council__get_bill",
+          "nyc_council__get_upcoming_hearings",
+          "nyc_council__get_council_member",
+          "nyc_council__get_committee",
+          "nyc_council__get_votes",
+          "nyc_council__list_recent_legislation",
+          "nyc_council__search_legislation_live"
+        ],
+        "description": "MCP server for NYC Council legislative data — hybrid local SQLite index + live Legistar API",
+        "descriptionSource": "nyc-council-mcp package.json description, verbatim",
+        "freshness": "Live Legistar API, plus a local index built from an archive of Council legislation where the deployment provides one.",
+        "freshnessSource": "@betanyc/nyc-council-mcp 2.6.0 dist/server.js:15-21 (modes) and dist/index.js (index subcommand)"
+      },
+      "load": {
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__search_bills",
+              "description": "Full-text search across NYC Council bills using the local index. Sub-second response. Returns file number, title, status, committee, intro date, and sponsors. Optionally filter by agency (uses role-context snippets), status, or committee.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search terms (full-text)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 25, max 100)"
+                  },
+                  "agency": {
+                    "type": "string",
+                    "description": "NYC agency key or name (e.g. 'DEP', 'NYPD', 'department of transportation'). Adds a role-context snippet showing HOW the agency is mentioned."
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Filter by status (e.g. 'Enacted', 'Laid Over')"
+                  },
+                  "committee": {
+                    "type": "string",
+                    "description": "Filter by committee name"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__search_legislation",
+              "description": "Alias for search_bills. Full-text search across NYC Council legislation using the local index.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search terms (full-text)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 25, max 100)"
+                  },
+                  "agency": {
+                    "type": "string",
+                    "description": "NYC agency key or name for role-context snippets"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Filter by status"
+                  },
+                  "committee": {
+                    "type": "string",
+                    "description": "Filter by committee name"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__search_events",
+              "description": "Full-text search across committee hearings and events in the local index.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search terms"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 25)"
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__list_committees",
+              "description": "List all NYC Council committees with bill counts and event counts from the local index.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__recent_bills",
+              "description": "Bills introduced in the last N days, sorted newest first.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "days": {
+                    "type": "number",
+                    "description": "Look-back window in days (default 30)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 50)"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__upcoming_events",
+              "description": "Scheduled committee hearings and events in the next N days from the local index. Note: the index may be 1–7 days stale. Use get_upcoming_hearings for real-time data.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "days": {
+                    "type": "number",
+                    "description": "Days ahead to look (default 14)"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 50)"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__aggregate_bills",
+              "description": "Count bills grouped by status, type, committee, or year. Useful for trend analysis.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "group_by": {
+                    "type": "string",
+                    "enum": [
+                      "status",
+                      "type",
+                      "committee",
+                      "year"
+                    ],
+                    "description": "Dimension to aggregate on"
+                  }
+                },
+                "required": [
+                  "group_by"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__vote_breakdown",
+              "description": "Every council member's vote on a specific bill, identified by file number (e.g. '0001-2024').",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file_number": {
+                    "type": "string",
+                    "description": "Bill file number"
+                  }
+                },
+                "required": [
+                  "file_number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_voting_record",
+              "description": "All votes cast by a named council member, newest first.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "member_name": {
+                    "type": "string",
+                    "description": "Full or partial council member name"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results (default 50)"
+                  }
+                },
+                "required": [
+                  "member_name"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_bill_history",
+              "description": "A matter's legislative history — hearings, referrals, committee and Council actions, and outcomes — from the local index, in chronological order. No token required. Identified by a type-prefixed file number like every sibling tool (e.g. 'Int 1122-2024', 'Res 0540-2026'). A bare 'NNNN-YYYY' that matches more than one matter type is rejected with an error naming each match.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file_number": {
+                    "type": "string",
+                    "description": "Type-prefixed file number, e.g. 'Int 1122-2024'"
+                  }
+                },
+                "required": [
+                  "file_number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__co_sponsors",
+              "description": "Council members who most frequently co-sponsor bills with a given member.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "member_name": {
+                    "type": "string",
+                    "description": "Full or partial council member name"
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Number of top co-sponsors to return (default 20)"
+                  }
+                },
+                "required": [
+                  "member_name"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_bill_hearings",
+              "description": "Events where a bill appeared on the agenda, identified by file number.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file_number": {
+                    "type": "string",
+                    "description": "Bill file number"
+                  }
+                },
+                "required": [
+                  "file_number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_event_bills",
+              "description": "All bills on a specific event's agenda, identified by event ID.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "event_id": {
+                    "type": "number",
+                    "description": "Legistar event ID"
+                  }
+                },
+                "required": [
+                  "event_id"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_bill",
+              "description": "Get a specific bill by its intro/file number from the live Legistar API. Legistar file numbers are type-prefixed (e.g. 'Int 0349-2024', 'Res 0232-2024'). A type-prefixed number returns that one matter. A bare 'NNNN-YYYY' number is AMBIGUOUS — the same number can be both an Introduction and a Resolution; if it matches more than one matter the call is REJECTED with an error naming every match, and you re-call with the exact type-prefixed file number. A single match returns the authoritative record.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file_number": {
+                    "type": "string",
+                    "description": "Bill file number, e.g. 'Int 0349-2024' or '0349-2024'"
+                  }
+                },
+                "required": [
+                  "file_number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_upcoming_hearings",
+              "description": "List upcoming NYC Council committee hearings and Stated meetings. Real-time data — use this for scheduling, not the local index. Each event's EventItems array is populated with its agenda items (the bills/matters on the agenda) via a follow-up call per event; pass include_agenda=false to skip that and return events faster with EventItems empty.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "days_ahead": {
+                    "type": "number",
+                    "description": "How many days ahead to look (default 14, max 90)"
+                  },
+                  "include_agenda": {
+                    "type": "boolean",
+                    "description": "Whether to populate each event's EventItems (agenda items) via a per-event follow-up call (default true). Set false for a faster response when you only need the hearing schedule, not what's on each agenda."
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_council_member",
+              "description": "Look up an NYC Council member by name. Returns current contact info and active status.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full or partial name of the council member"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_committee",
+              "description": "Look up an NYC Council committee by name. Returns current membership count and details.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full or partial committee name"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__get_votes",
+              "description": "Get the vote record for a specific agenda item by its EventItemId. Shows how each member voted. Live API data — use for freshness. For a bill's roll call from the local corpus, prefer vote_breakdown (grouped roll calls with a positions-only tally) or the local get_bill_history, which returns each action's event_item_id directly. EventItemIds also come from an event's agenda items (GET /events/{EventId}/eventitems) — e.g. the EventItemId field inside each event returned by get_upcoming_hearings. Note: the live get_bill_history's MatterHistoryEventId is an EVENT id, not an event ITEM id, whereas each local history action's event_item_id IS the id this tool takes.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "event_item_id": {
+                    "type": "number",
+                    "description": "EventItemId of the agenda item (from /events/{EventId}/eventitems, e.g. the EventItems array in get_upcoming_hearings results)"
+                  }
+                },
+                "required": [
+                  "event_item_id"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__list_recent_legislation",
+              "description": "List the most recently introduced NYC Council legislation. Use this to catch bills introduced since the last index update.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "limit": {
+                    "type": "number",
+                    "description": "Number of items to return (default 25, max 50)"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_council__search_legislation_live",
+              "description": "Search NYC Council legislation via the live Legistar API. Slower than search_bills but always current — use when the local index may be stale. Multi-word queries match matters whose title contains ALL the words (in any order), so 'section 254 capital' works — you do NOT need a single generic token. Wrap a phrase in double quotes to require those words to be adjacent. Note: Legistar's OData API has no full-text relevance ranking, so results are ordered by introduction date, not by how well they match. To find OLDER legislation, set order='date_asc' (oldest first) rather than raising the limit.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search terms. Multiple words are AND-ed (all must appear in the title/name); quote a \"phrase\" to require adjacency."
+                  },
+                  "limit": {
+                    "type": "number",
+                    "description": "Max results to return (default 20, max 50)"
+                  },
+                  "order": {
+                    "type": "string",
+                    "enum": [
+                      "date_desc",
+                      "date_asc"
+                    ],
+                    "description": "Sort by introduction date: 'date_desc' (newest first, default) or 'date_asc' (oldest first — use to reach historical legislation)."
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        ],
+        "guidance": "",
+        "guidanceRoute": "none: the server advertises no initialize instructions (or was not started, ruling R-a); tool descriptions carry its guidance",
+        "capture": {
+          "route": "read from exports: LOCAL_TOOL_DEFS dist/tools/local.js:9, LIVE_TOOL_DEFS dist/tools/live.js:15 (:112), LIVE_SEARCH_TOOL_DEF dist/tools/live.js:187; combined by the rule at dist/server.js:64-73, replicated",
+          "packageVersion": "2.6.0",
+          "upstreamToolsSha256": "45cd78ca0a64ad4ed8fa18cedffcf66de3c35ed20c47a86e54b03027d45acee8",
+          "toolsSha256": "b5e667623341bdd1c77e69049fc88592cb76369ffb3d0cbd8ad3d450bd61f491"
+        }
+      }
+    },
+    {
+      "entry": {
+        "id": "@betanyc/nyc-311-mcp@1.1.0",
+        "alias": "nyc_311",
+        "sourceId": "nyc-311",
+        "displayName": "nyc-311-mcp",
+        "configuration": {
+          "addressVariable": "NYC_311_MCP_URL",
+          "requirement": "optional"
+        },
+        "toolNames": [
+          "nyc_311__get_calendar",
+          "nyc_311__get_status",
+          "nyc_311__get_service_request",
+          "nyc_311__get_service_request_list"
+        ],
+        "description": "MCP server for the NYC 311 Public API — city-services calendar, emergency/weather status alerts, and 311 service-request lookup",
+        "descriptionSource": "nyc-311-mcp package.json description, verbatim",
+        "freshness": "Live: queries the NYC 311 Public API at request time.",
+        "freshnessSource": "@betanyc/nyc-311-mcp 1.1.0 dist (api.nyc.gov)"
+      },
+      "load": {
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_311__get_calendar",
+              "description": "Get Alternate Side Parking, Garbage & Recycling, and Schools status for a date or date range (max 90 days). Dates are interpreted in America/New_York (Eastern Time); if no date is given, defaults to today in New York.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "description": "Single date, YYYY-MM-DD. Used for both from and to if no range is given."
+                  },
+                  "from_date": {
+                    "type": "string",
+                    "description": "Range start, YYYY-MM-DD"
+                  },
+                  "to_date": {
+                    "type": "string",
+                    "description": "Range end, YYYY-MM-DD"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_311__get_status",
+              "description": "Get the current city status for an emergency or weather condition: Code Blue (cold weather), Fire Hydrant, OEM emergency notifications, Snow on Sidewalk, or Snow on Street.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "CodeBlue",
+                      "FireHydrant",
+                      "OEM",
+                      "SnowOnSidewalk",
+                      "SnowOnStreet"
+                    ],
+                    "description": "Status type to look up"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_311__get_service_request",
+              "description": "Look up one 311 service request by its number (format 311-XXXXXXXX). Returns agency, problem type, status, timestamp, and address.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sr_number": {
+                    "type": "string",
+                    "description": "Service request number, e.g. '311-17323508'"
+                  }
+                },
+                "required": [
+                  "sr_number"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_311__get_service_request_list",
+              "description": "Bulk look up multiple 311 service requests by their numbers in a single call.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sr_numbers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Array of service request numbers, e.g. ['311-17323508', '311-17323514']"
+                  }
+                },
+                "required": [
+                  "sr_numbers"
+                ]
+              }
+            }
+          }
+        ],
+        "guidance": "",
+        "guidanceRoute": "none: the server advertises no initialize instructions (or was not started, ruling R-a); tool descriptions carry its guidance",
+        "capture": {
+          "route": "listed over stdio (raw JSON-RPC)",
+          "packageVersion": "1.1.0",
+          "upstreamToolsSha256": "2d6d00cb02863de3252d7c655c1fa1b72bca07006b8c08f4df82629b69e267e3",
+          "toolsSha256": "ffb2fe9fe5f8be33e2c2503679947a9ebf99f7d44a6a6d06047c661a3f4cf964"
+        }
+      }
+    },
+    {
+      "entry": {
+        "id": "mta-mcp@https://github.com/BetaNYC/mta-mcp#0a727d2",
+        "alias": "nyc_mta",
+        "sourceId": "nyc-mta",
+        "displayName": "mta-mcp",
+        "configuration": {
+          "addressVariable": "NYC_MTA_MCP_URL",
+          "requirement": "optional"
+        },
+        "toolNames": [
+          "nyc_mta__check_route_on_date",
+          "nyc_mta__get_service_alerts",
+          "nyc_mta__resolve_station",
+          "nyc_mta__get_accessibility_outages"
+        ],
+        "description": "MCP server for NYC subway service alerts, elevator and escalator outages, and station lookup, from MTA's public feeds. Build from source; not on npm; status alpha.",
+        "descriptionSource": "mta-mcp package.json description, verbatim",
+        "freshness": "Live MTA feeds for alerts and outages; station names from a bundled snapshot of MTA's static GTFS.",
+        "freshnessSource": "BetaNYC/mta-mcp@0a727d2 README lines 59-66"
+      },
+      "load": {
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_mta__check_route_on_date",
+              "description": "Is a subway route disrupted on a given date, optionally at one station? Dates are interpreted in America/New_York. Answers from MTA's service-alert feed. A station that only GAINS service (an express train running local) is reported as affected but NOT disrupted. Station-level absence is not absence of impact — read station_level_detail before treating disrupted:false as a guarantee. The station carries MTA's ADA status; elevator outages are included only with include_accessibility:true.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "route_id": {
+                    "type": "string",
+                    "description": "Subway route as MTA emits it: '6', '4', 'A', 'SI'."
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "Date to check, YYYY-MM-DD, Eastern Time."
+                  },
+                  "stop_id": {
+                    "type": "string",
+                    "description": "GTFS parent-station id, e.g. '628' for 68 St-Hunter College."
+                  },
+                  "station": {
+                    "type": "string",
+                    "description": "Station name as free text, e.g. '68 St-Hunter College'. Resolved among the stations that serve route_id; if more than one still matches, the candidates are returned instead of a guess. Use stop_id when you already know it."
+                  },
+                  "include_accessibility": {
+                    "type": "boolean",
+                    "description": "Also list elevator and escalator outages at the station on this date, with MTA's alternate routes. Needs stop_id or station. Costs one extra request to MTA's elevator feed, so it is off by default."
+                  }
+                },
+                "required": [
+                  "route_id",
+                  "date"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_mta__get_service_alerts",
+              "description": "List MTA subway service alerts active on a date, with optional filters. Defaults to today in America/New_York. Use this for open-ended questions like what is happening on a line this weekend.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "route_id": {
+                    "type": "string",
+                    "description": "Restrict to one route, e.g. '6'."
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "Date the alert must be active on, YYYY-MM-DD. Defaults to today in Eastern Time."
+                  },
+                  "alert_type": {
+                    "type": "string",
+                    "description": "Exact MTA alert_type, e.g. 'Planned - Stops Skipped'. Not a fixed enum: MTA can emit a value this server has not seen."
+                  },
+                  "planned_only": {
+                    "type": "boolean",
+                    "description": "Only planned work, identified by an entity id beginning 'lmm:planned_work:' (149 of 150 entities in the reference pull). An observed convention, not an MTA-documented one."
+                  },
+                  "effect": {
+                    "type": "string",
+                    "enum": [
+                      "reduced",
+                      "changed",
+                      "delay",
+                      "informational",
+                      "added",
+                      "added_at_local_stops",
+                      "unknown"
+                    ],
+                    "description": "Restrict to one classified effect. 'unknown' means an alert_type this server does not recognize."
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_mta__resolve_station",
+              "description": "Resolve free-text station names to GTFS parent-station ids, ranked best first, with the routes serving each and MTA's ADA status. Reads a bundled snapshot of MTA's static GTFS — no network call. Station names are not unique: '125 St' is four different stations on four different lines, so every candidate is returned rather than one guessed. route_id is the disambiguator.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Station name or fragment, e.g. '68 St'."
+                  },
+                  "route_id": {
+                    "type": "string",
+                    "description": "Restrict to stations served by this route, e.g. '6'. This is how an ambiguous name is narrowed to one station."
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "nyc_mta__get_accessibility_outages",
+              "description": "Elevator and escalator outages in the subway: in effect now, scheduled, or overlapping one date, with MTA's alternate route for each elevator. With stop_id, rows are placed by equipment ID using MTA's equipment inventory, with name matching as a fallback; each row's matched_by says which. Zero matches is not proof of no outage, and no outage is not proof a station is usable; read no_match_note and station_accessibility.",
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "station": {
+                    "type": "string",
+                    "description": "Station name as free text, matched loosely."
+                  },
+                  "stop_id": {
+                    "type": "string",
+                    "description": "GTFS parent-station id. Rows are placed by equipment ID first, from MTA's equipment inventory. Rows the inventory doesn't cover fall back to matching the station's name. Outages at other stations in the same complex go to complex_outages; name matches that belong to another station go to other_station_outages."
+                  },
+                  "route_id": {
+                    "type": "string",
+                    "description": "Only rows whose trainno includes this route, e.g. '6'. Express and shuttle ids are mapped to the names the feed uses: 6X to 6, 7X to 7, FX to F, and GS, FS, H to S."
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD, New York time. Returns outages in effect now or scheduled whose window overlaps that day, from the current feed alone. Cannot be combined with upcoming:true."
+                  },
+                  "upcoming": {
+                    "type": "boolean",
+                    "description": "false (default) returns outages in effect now; true returns scheduled future outages. true cannot be combined with date."
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "guidance": "",
+        "guidanceRoute": "none: the server advertises no initialize instructions (or was not started, ruling R-a); tool descriptions carry its guidance",
+        "capture": {
+          "route": "listed over stdio (raw JSON-RPC)",
+          "packageVersion": "0.1.0 (unpublished; commit 0a727d2)",
+          "upstreamToolsSha256": "a5d4878923a22855e421bc9ce5264b9eef4caca1c0a77bc9b81e7a81956ad5ff",
+          "toolsSha256": "28d9be5862f72e774218061214211671a4ca8d539c1a265d7ffb0f6c07f38998"
+        }
+      }
+    }
+  ]
+}

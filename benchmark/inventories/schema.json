@@ -11,11 +11,12 @@
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "version": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$" },
     "note": { "type": "string" },
+    "seed": { "type": "string", "minLength": 1 },
     "entries": {
       "type": "array",
       "minItems": 1,
       "items": {
-        "oneOf": [{ "$ref": "#/definitions/serverEntry" }, { "$ref": "#/definitions/packEntry" }]
+        "oneOf": [{ "$ref": "#/definitions/serverEntry" }, { "$ref": "#/definitions/packEntry" }, { "$ref": "#/definitions/registryEntry" }]
       }
     }
   },
@@ -40,8 +41,8 @@
       "additionalProperties": false,
       "required": ["country", "level", "names"],
       "properties": {
-        "country": { "type": "string", "pattern": "^(?:[A-Z]{2}|multiple)$" },
-        "level": { "enum": ["federal", "state", "local", "international", "multiple"] },
+        "country": { "type": "string", "pattern": "^(?:[A-Z]{2}|multiple|unstated)$" },
+        "level": { "enum": ["federal", "state", "local", "international", "multiple", "unstated"] },
         "names": { "type": "array", "items": { "$ref": "#/definitions/text" }, "uniqueItems": true },
         "portalDomain": { "$ref": "#/definitions/text" }
       }
@@ -103,7 +104,10 @@
         "addedOn": { "$ref": "#/definitions/date" },
         "from": { "enum": ["registry", "portal-catalog", "hand"] },
         "by": { "$ref": "#/definitions/text" },
-        "sourceUrl": { "$ref": "#/definitions/text" }
+        "sourceUrl": { "$ref": "#/definitions/text" },
+        "file": { "$ref": "#/definitions/text" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "fileSha256": { "$ref": "#/definitions/sha256" }
       }
     },
     "toolsRef": {
@@ -117,7 +121,8 @@
         "path": { "$ref": "#/definitions/text" },
         "fixture": { "$ref": "#/definitions/text" },
         "toolNames": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/text" }, "uniqueItems": true },
-        "sha256": { "$ref": "#/definitions/sha256" }
+        "sha256": { "$ref": "#/definitions/sha256" },
+        "note": { "$ref": "#/definitions/text" }
       }
     },
     "guidanceRef": {
@@ -178,10 +183,10 @@
       }
     },
     "packEntry": {
-      "description": "A pack (design §3.2, §4): a base server's tools with fixed arguments. Defined for P1, which writes the first ones.",
+      "description": "A pack (design §3.2, §4): a base server's tools with fixed arguments. Its tools are a copy of its base's (toolsRef); it carries no portal lock and no code of the base's. `hosting: container` marks a pack no instance runs (G0-5, D10). `synthetic` and `distractor` mark a constructed distractor.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "alias", "base", "filter", "author", "version", "place", "categories", "description", "freshness", "provenance"],
+      "required": ["kind", "alias", "sourceId", "displayName", "base", "filter", "author", "version", "place", "categories", "description", "freshness", "provenance", "toolsRef"],
       "properties": {
         "kind": { "const": "pack" },
         "alias": { "$ref": "#/definitions/alias" },
@@ -198,7 +203,71 @@
         "categories": { "$ref": "#/definitions/categories" },
         "description": { "$ref": "#/definitions/text" },
         "freshness": { "$ref": "#/definitions/text" },
-        "provenance": { "$ref": "#/definitions/provenance" }
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["platform", "id", "datasetCount", "ownerType", "status"],
+          "properties": {
+            "platform": { "enum": ["socrata", "ckan"] },
+            "id": { "$ref": "#/definitions/text" },
+            "datasetCount": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)$" },
+            "ownerType": { "$ref": "#/definitions/text" },
+            "status": { "$ref": "#/definitions/text" }
+          }
+        },
+        "hosting": { "enum": ["container"] },
+        "toolsRef": { "$ref": "#/definitions/toolsRef" },
+        "synthetic": { "const": "true" },
+        "distractor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "of"],
+          "properties": {
+            "kind": { "enum": ["near-duplicate", "wrapper"] },
+            "of": { "$ref": "#/definitions/alias" }
+          }
+        }
+      },
+      "dependencies": { "synthetic": ["distractor"], "distractor": ["synthetic"] }
+    },
+    "registryEntry": {
+      "description": "An MCP Registry entry: a server whose tools were never captured. A load of it adds no tools and returns one fixed text (load-text.mjs). The registry states no place and no category.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "alias",
+        "sourceId",
+        "displayName",
+        "description",
+        "freshness",
+        "configuration",
+        "consentDefault",
+        "serverType",
+        "place",
+        "categories",
+        "registry",
+        "provenance",
+        "tools"
+      ],
+      "properties": {
+        "kind": { "const": "server" },
+        "id": { "$ref": "#/definitions/text" },
+        "alias": { "$ref": "#/definitions/alias" },
+        "sourceId": { "$ref": "#/definitions/text" },
+        "displayName": { "$ref": "#/definitions/text" },
+        "description": { "$ref": "#/definitions/text" },
+        "freshness": { "$ref": "#/definitions/text" },
+        "configuration": { "$ref": "#/definitions/configuration" },
+        "consentDefault": { "enum": ["on", "ask-first"] },
+        "serverType": { "enum": ["mcp-remote", "npm-package", "custom"] },
+        "place": { "$ref": "#/definitions/place" },
+        "categories": { "type": "array", "maxItems": 0 },
+        "registry": { "$ref": "#/definitions/registry" },
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "tools": { "const": "not-captured" }
       }
     }
   }

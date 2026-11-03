@@ -99,5 +99,6 @@ test('A0.2, the test of the test: the preload refuses a fetch and a socket', () 
 test('A0.6: build.mjs --check rebuilds 7.json byte for byte', () => {
   const run = node(['benchmark/inventories/build.mjs', '--check']);
   assert.equal(run.status, 0, `exit ${run.status}\n${run.stderr}`);
-  assert.match(run.stdout, /7\.json, 7\.json\.sha256 rebuilt byte for byte/);
+  // P1 adds the larger files after 7.json's pair (inventories.test.mjs, A1.1).
+  assert.match(run.stdout, /: 7\.json, 7\.json\.sha256\b.* rebuilt byte for byte/);
 });
