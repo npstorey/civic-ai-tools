@@ -1,0 +1,3299 @@
+{
+  "files": {
+    "rows.jsonl": "53e6556baca5997134a464c7497f5db1980667e2e25fa6ea88dc5e96f670a4fe",
+    "baseline.jsonl": "ade98178c5210189a58cd211e4b07b411250f859771daea559c375e290622d52",
+    "meta.json": "009779cc7a6ec642f461cb23b75c3729b728ebef19d5ce928d32ee43e85a27ab"
+  },
+  "runId": "2026-10-11-run-171124",
+  "today": "2026-10-11",
+  "expectedRows": 1323,
+  "uniqueRows": 1323,
+  "completeRows": 1323,
+  "rowLines": 1323,
+  "spentUsd": "18.2812",
+  "models": [
+    {
+      "spec": "openai/gpt-4o",
+      "model": "openai/gpt-4o",
+      "control": true,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9048
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.9592,
+        "afterSecondRequest": 0.9592,
+        "n": 147,
+        "counts1": {
+          "exact": 126,
+          "wrong": 6,
+          "acceptable": 15
+        },
+        "counts2": {
+          "exact": 126,
+          "wrong": 6,
+          "acceptable": 15
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 96,
+            "correct2": 96
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9592,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 133,
+        "outcomes": {
+          "valid_tool_call": 132,
+          "invalid_tool_call": 1
+        },
+        "validRate": 0.9925,
+        "toolCalls": 145,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 0.9931
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1003,
+        "firstRequestPromptMin": 998,
+        "firstRequestPromptMax": 1019,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 12995,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.0163375",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 25022,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.031365",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0401,
+        "directoryVsT0": 0.0772,
+        "reasoningTokens": 0
+      },
+      "latencyMs": {
+        "firstMedian": 664,
+        "firstP90": 994,
+        "secondMedian": 770,
+        "secondP90": 1186
+      },
+      "costUsd": "1.453",
+      "respondedModels": [
+        "openai/gpt-4o"
+      ],
+      "failures": [
+        {
+          "key": "openai/gpt-4o|q05|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_vWwetHGU4PfxBW4LWmgicPVn",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_p73ZSrn6LncZGFFlGfwrSwo7",
+                "name": "nyc_311__get_service_request_list",
+                "args": "{\"sr_numbers\":[\"noise\"]}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_311__get_service_request_list",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q06|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_UjsKXa7qfX8rcgPeHZJOlJKQ",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_2hsNLikaEkBCoorxszqMDOFX",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership\",\"parent_place\":\"geoId/36\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q05|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_3Agiy4jDtmjjfehuPXaaqrPm",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_8Wxbmwp9bYhKUGgNVtePr2JA",
+                "name": "nyc_311__get_service_request_list",
+                "args": "{\"sr_numbers\":[\"noise\"]}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_311__get_service_request_list",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q06|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_nRKjZLtq2KhkHPmm930zMBnb",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_JQFJqaICGxR6thC8afhbqSPh",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership\",\"places\":[\"geoId/3651000\"]}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q38|2",
+          "kind": "two",
+          "acceptable": [
+            [
+              "nyc_council",
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_council",
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_ldIEEBFziSSEJq6IdeRwWrRE",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_council\"}"
+            },
+            {
+              "id": "call_A4mKW6hOXalZf5JXLPjrZbAe",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "invalid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_AmKGkEDccAsgpLALQFYn6zM9",
+                "name": "nyc_council__aggregate_bills",
+                "args": "{\"group_by\":\"sponsor\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_council__aggregate_bills",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": false,
+                "schemaErrors": [
+                  ".group_by should be equal to one of the allowed values"
+                ],
+                "args": "{\"group_by\":\"sponsor\"}"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q05|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_rnBh77nAvinB8WrUITInzAhF",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_04jSx0ht5YW29WQgFZ9JIDb8",
+                "name": "nyc_311__get_status",
+                "args": "{\"type\":\"OEM\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_311__get_status",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-4o|q06|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_9aewvOEF8TO5Dmdxd8zHvU9v",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_4Cng86s4LN7lF7Yb9FYo7VgM",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership 2025\",\"parent_place\":\"geoId/36\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    },
+    {
+      "spec": "openai/gpt-5.4",
+      "model": "openai/gpt-5.4",
+      "control": true,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9184
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.898,
+        "afterSecondRequest": 0.9116,
+        "n": 147,
+        "counts1": {
+          "exact": 120,
+          "wrong": 6,
+          "over": 5,
+          "missing": 4,
+          "acceptable": 12
+        },
+        "counts2": {
+          "exact": 122,
+          "wrong": 6,
+          "over": 5,
+          "acceptable": 12,
+          "missing": 2
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 96,
+            "correct2": 96
+          },
+          "two": {
+            "n": 18,
+            "correct1": 12,
+            "correct2": 14
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 12,
+            "correct2": 12
+          }
+        }
+      },
+      "overLoading": 0.034,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9388,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 135,
+        "outcomes": {
+          "valid_tool_call": 130,
+          "no_tool_call": 3,
+          "loaded_more_only": 2
+        },
+        "validRate": 0.963,
+        "toolCalls": 244,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1006,
+        "firstRequestPromptMin": 1001,
+        "firstRequestPromptMax": 1022,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 12998,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.03266",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 25025,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.0592715",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0402,
+        "directoryVsT0": 0.0774,
+        "reasoningTokens": 0
+      },
+      "latencyMs": {
+        "firstMedian": 1082,
+        "firstP90": 1781,
+        "secondMedian": 1837,
+        "secondP90": 3323
+      },
+      "costUsd": "1.436",
+      "respondedModels": [
+        "openai/gpt-5.4"
+      ],
+      "failures": [
+        {
+          "key": "openai/gpt-5.4|q06|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_VMTzdCJTtw0HV2bXk0FvIaxF",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_8dC9naxqWCBMzq8g3wNTfJhK",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership New York City 2025\", \"places\":[\"geoId/3651000\"], \"parent_place\":\"\", \"per_search_limit\":5, \"include_topics\":true, \"maybe_bilateral\":false}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q16|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_ktuUNSmzVlWvpBYv0yq9Dou8",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "no_tool_call",
+            "toolCalls": [],
+            "evaluated": [],
+            "content": "I can list FY2025 City Council discretionary recipients, but I need one clarification:\n\nDo you mean organizations funded by:\n1. Queens Council Members, or\n2. organizations located in Queens?\n\nThe budget awards data I have is organized by award, council member, program, EIN, category, and initiative. It does not inherently mean “Queens” unless we define it by sponsoring council member or match organizations to a borough another way.\n\nIf you want, I can immediately give you:\n- all FY2025 awards sponsored by Queens council members, or\n- a specific Queens member’s discretionary awards."
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q26|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_record"
+            ]
+          ],
+          "loaded1": [
+            "socrata"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_h5lCLl71Mk9bj3CMGIMogcuT",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_4CytKOaPiAnNQzROLhWsCxon",
+                "name": "get_data",
+                "args": "{\"type\":\"catalog\",\"portal\":\"data.cityofnewyork.us\",\"query\":\"procurement solicitations open published department agency solicitation PASSPort\",\"dataset_id\":\"\",\"limit\":10,\"offset\":0,\"select\":\"\",\"where\":\"\",\"order\":\"\",\"group\":\"\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "get_data",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": "Plan: I’ll look for the NYC open data dataset that tracks procurement solicitations, inspect its columns, then filter for open solicitations published by the Department of Transportation (NYC DOT)."
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q40|1",
+          "kind": "two",
+          "acceptable": [
+            [
+              "nyc_record",
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_record",
+            "nyc_checkbook",
+            "nyc_charter"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_ubzO1FhjtvLaTwNkST5BlK9K",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_record\"}"
+            },
+            {
+              "id": "call_NqamuOQCdEhvVlqKBd2Gg2Ad",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            },
+            {
+              "id": "call_If41NhJng0G0nc2jbGheTZ2q",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_charter\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_ICEOECM0eGywHLSAjgbDY1XQ",
+                "name": "nyc_record__get_notices_by_agency",
+                "args": "{\"agency_name\":\"Department of Sanitation\",\"limit\":100}"
+              },
+              {
+                "id": "call_Gq6ALuCsjv7rclHuYDRji26L",
+                "name": "nyc_record__get_notices_by_date_range",
+                "args": "{\"start_date\":\"2026-01-01\",\"end_date\":\"2026-10-11\",\"limit\":200}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_record__get_notices_by_agency",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_record__get_notices_by_date_range",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q41|1",
+          "kind": "two",
+          "acceptable": [
+            [
+              "data_commons",
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_f5lpVxeZxo6CH71FNoZWi9Du",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_lpi5vmSXJeaqJ2Uqmx0KD7bF",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q47|1",
+          "kind": "ambiguous",
+          "acceptable": [
+            [
+              "nyc_charter"
+            ],
+            [
+              "nyc_charter",
+              "nyc_council"
+            ],
+            [
+              "nyc_charter",
+              "nys_legislation"
+            ]
+          ],
+          "loaded1": [
+            "nyc_charter",
+            "nyc_record"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_cPZxHK9DzvFqJlCI2MenJie5",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_charter\"}"
+            },
+            {
+              "id": "call_JNoPDUOvL7rMRrZZQ59oGeYW",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_record\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_hI4JR5d0XxuyV3BV8v4wZpmA",
+                "name": "nyc_charter__get_version",
+                "args": "{}"
+              },
+              {
+                "id": "call_ZnJ6lwe847r8dzQm1RuSHao4",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending general vendors food vendors peddler\", \"corpus\":\"admin_code\",\"limit\":10}"
+              },
+              {
+                "id": "call_Z1O0C9DheB8cM5d5qPIy9wkq",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending general vendors food vendors peddler\", \"corpus\":\"rules\",\"limit\":10}"
+              },
+              {
+                "id": "call_nUud975OiUgiDQSvtZXSSKue",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending general vendors food vendors peddler\", \"corpus\":\"charter\",\"limit\":10}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_charter__get_version",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q06|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_KZyIPG2VfvWQqdfX4W19ujcx",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_UmD4WoWF8n9Ir9ngPHvCnTa0",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership New York City 2025\", \"places\":[\"geoId/3651000\"], \"parent_place\":\"\", \"per_search_limit\":5, \"include_topics\":true, \"maybe_bilateral\":false}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q16|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_Ok3gr5tvYvpDDI07eGiGIrek",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "no_tool_call",
+            "toolCalls": [],
+            "evaluated": [],
+            "content": "I can help, but I need to clarify one thing:\n\nThe NYC Budget discretionary funding data I have lets me search FY2025 awards by:\n- organization\n- program\n- EIN\n- sponsoring council member\n- category\n- initiative\n\nIt does **not** appear to have a direct “borough = Queens” filter for Schedule C awards.\n\nSo “organizations in Queens” could mean at least two different things:\n1. organizations **sponsored by Queens Council Members**, or\n2. organizations **physically based in Queens**.\n\nIf you want, I can do either of these next:\n- **Queens-sponsored FY2025 discretionary awards**: organizations funded by Queens Council Members\n- **A specific Queens Council Member’s FY2025 awards**\n- **A specific organization’s FY2025 discretionary funding**\n\nIf you mean **Queens-sponsored awards**, tell me and I’l…[816 chars]"
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q26|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_record"
+            ]
+          ],
+          "loaded1": [
+            "socrata"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_ePVLlsPvKab8RzkuBP8H87If",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_uBth2F5pSPY6IHP20D50K8gZ",
+                "name": "get_data",
+                "args": "{\"type\":\"catalog\",\"portal\":\"data.cityofnewyork.us\",\"query\":\"procurement solicitations agency due date status open bids\",\"dataset_id\":\"\",\"limit\":5,\"offset\":0,\"select\":\"\",\"where\":\"\",\"order\":\"\",\"group\":\"\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "get_data",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": "Plan: I’ll find the NYC open data dataset that lists City procurement solicitations, inspect its columns, then filter for open solicitations published by the Department of Transportation (DOT)."
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q34|2",
+          "kind": "two",
+          "acceptable": [
+            [
+              "boston",
+              "data_commons"
+            ]
+          ],
+          "loaded1": [
+            "boston"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_2xrgDFXY5r6azVvgPHRAugo1",
+              "name": "load_source",
+              "args": "{\"alias\":\"boston\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_0WYwfSv89lp5E29VJCQiIXPi",
+                "name": "ckan__search_datasets",
+                "args": "{\"query\":\"Boston 311 service requests neighborhood\", \"limit\":5}"
+              },
+              {
+                "id": "call_F8U7sj0WhyxPTQSThIuubevu",
+                "name": "ckan__search_datasets",
+                "args": "{\"query\":\"Boston neighborhood median household income\", \"limit\":5}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "ckan__search_datasets",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "ckan__search_datasets",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q47|2",
+          "kind": "ambiguous",
+          "acceptable": [
+            [
+              "nyc_charter"
+            ],
+            [
+              "nyc_charter",
+              "nyc_council"
+            ],
+            [
+              "nyc_charter",
+              "nys_legislation"
+            ]
+          ],
+          "loaded1": [
+            "nyc_charter",
+            "nyc_record"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_SKuZzkY2yQxJuQTwBxTd1UtM",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_charter\"}"
+            },
+            {
+              "id": "call_t2QY0jxqCg4EnQiJbmj8uXZ3",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_record\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_wk97T8mY3NtL7aARjroowMEB",
+                "name": "nyc_charter__get_version",
+                "args": "{}"
+              },
+              {
+                "id": "call_aspUtyrqZGtaI1ssSxtO5XJe",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending food vendor general vendor peddler sidewalk permit license\", \"corpus\":\"admin_code\",\"limit\":10}"
+              },
+              {
+                "id": "call_rag1co42Aw6qDReUS7gnNI0t",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending food vendor general vendor peddler sidewalk permit license\", \"corpus\":\"rules\",\"limit\":10}"
+              },
+              {
+                "id": "call_Q6pFvQMbSbwoQqOSIChdihLV",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"vendor vending peddler\", \"corpus\":\"charter\",\"limit\":10}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_charter__get_version",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q06|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_qB79iBleHvN0Vu7cYp0Xzurp",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_GR1Uzq11kQ4rM07skrmjZkax",
+                "name": "search_indicators",
+                "args": "{\"query\":\"average weekday subway ridership New York City\", \"places\":[\"geoId/3651000\"], \"parent_place\":\"\", \"per_search_limit\":10, \"include_topics\":true, \"maybe_bilateral\":false}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q16|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_2pQcFBPZfRiuF2KxOAeVlxU7",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "no_tool_call",
+            "toolCalls": [],
+            "evaluated": [],
+            "content": "I can search FY2025 discretionary awards by organization, program, EIN, council member, category, or initiative — but the budget awards dataset does **not** have a direct “borough = Queens” filter.\n\nSo “organizations in Queens” could mean at least two different things:\n\n1. **Organizations sponsored by Queens council members** in FY2025, or  \n2. **Organizations physically located in Queens** in FY2025.\n\nWith the tools I have loaded, I can do **#1** directly. I **cannot reliably do #2** from this dataset alone, because it doesn’t include a borough/location field for the award recipient.\n\nIf you want, I can proceed in either of these ways:\n\n- **Queens-sponsored awards:** I’ll compile all FY2025 discretionary recipients whose sponsoring council member is from Queens.\n- **Queens-based organizat…[1082 chars]"
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q26|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_record"
+            ]
+          ],
+          "loaded1": [
+            "socrata"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_cXtJQ1IVXY9I2tffog4oIvYd",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_mbUDgQacwYD2KoGfNiFKJupE",
+                "name": "get_data",
+                "args": "{\"type\":\"catalog\",\"portal\":\"data.cityofnewyork.us\",\"query\":\"procurement solicitations open contracts bids agency department of transportation\",\"dataset_id\":\"\",\"limit\":10,\"offset\":0,\"select\":\"\",\"where\":\"\",\"order\":\"\",\"group\":\"\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "get_data",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": "Plan: I’ll look for the NYC open data dataset that contains current procurement solicitations, inspect its columns first, then filter for records published by the Department of Transportation and still open."
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q34|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "boston",
+              "data_commons"
+            ]
+          ],
+          "loaded1": [
+            "boston"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_BT9WNujCVYWFZUb7eDikd6kF",
+              "name": "load_source",
+              "args": "{\"alias\":\"boston\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_HrqrmZPWXtTsK4sBn0rLxWE6",
+                "name": "ckan__search_datasets",
+                "args": "{\"query\":\"311 service requests neighborhood Boston\", \"limit\":5}"
+              },
+              {
+                "id": "call_GjHR4Ee0uFS1yiDW9Mdguptd",
+                "name": "ckan__search_datasets",
+                "args": "{\"query\":\"median household income neighborhood Boston\", \"limit\":5}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "ckan__search_datasets",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "ckan__search_datasets",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q40|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "nyc_record",
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_record",
+            "nyc_checkbook",
+            "socrata"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_Va3roCDcUynd2wWLsQspLbEa",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_record\"}"
+            },
+            {
+              "id": "call_cXerB6J34IPkXhPjjiHIntm9",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            },
+            {
+              "id": "call_bu2QjqFgPyxAhdMosALku04e",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_ACsVnKomDioD6xnLBVKpiqJC",
+                "name": "nyc_record__get_notices_by_agency",
+                "args": "{\"agency_name\":\"Sanitation\",\"limit\":100}"
+              },
+              {
+                "id": "call_1GCeC5KQbIL5ziYZxV34mvj6",
+                "name": "nyc_record__get_notices_by_type",
+                "args": "{\"notice_type\":\"Award\",\"limit\":100}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_record__get_notices_by_agency",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_record__get_notices_by_type",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": "Plan: I’ll pull 2026 City Record award notices for the Department of Sanitation (DSNY), extract the awarded vendor names, then check Checkbook for payments to those vendors so far this calendar year (through 2026-10-11). Since contract IDs may not be in every notice, I’ll match payments by vendor name and note that limitation."
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q41|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "data_commons",
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_cMSnCdBqDLcgyi9rVYZBG3rF",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_6EfIlLnfEFOU3tCPbmWxdSRK",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-5.4|q47|3",
+          "kind": "ambiguous",
+          "acceptable": [
+            [
+              "nyc_charter"
+            ],
+            [
+              "nyc_charter",
+              "nyc_council"
+            ],
+            [
+              "nyc_charter",
+              "nys_legislation"
+            ]
+          ],
+          "loaded1": [
+            "nyc_charter",
+            "nyc_record"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_R2idAVX6TsP8LUY4lS156x3S",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_charter\"}"
+            },
+            {
+              "id": "call_OYVnPYeOtlctH6qfOKBoIi7Y",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_record\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_vj61glSU47qAUfR7LLJCCnvj",
+                "name": "nyc_charter__get_version",
+                "args": "{}"
+              },
+              {
+                "id": "call_c4LdUWfu7HXigje3kICsY4AF",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending food vendor general vendor peddler sidewalk\", \"corpus\":\"admin_code\",\"limit\":10}"
+              },
+              {
+                "id": "call_r8yKn4ZLh7kHuIW0WXSd7tgS",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending food vendor general vendor peddler sidewalk\", \"corpus\":\"rules\",\"limit\":10}"
+              },
+              {
+                "id": "call_1cjXwjl3zOLy4IsminuwOcZh",
+                "name": "nyc_charter__search",
+                "args": "{\"query\":\"street vendor vending food vendor general vendor peddler sidewalk\", \"corpus\":\"charter\",\"limit\":10}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "nyc_charter__get_version",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_charter__search",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    },
+    {
+      "spec": "google/gemini-3.5-flash-lite",
+      "model": "google/gemini-3.5-flash-lite",
+      "control": true,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9184
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.9592,
+        "afterSecondRequest": 0.9796,
+        "n": 147,
+        "counts1": {
+          "exact": 126,
+          "wrong": 3,
+          "missing": 3,
+          "acceptable": 15
+        },
+        "counts2": {
+          "exact": 129,
+          "wrong": 3,
+          "acceptable": 15
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 99,
+            "correct2": 99
+          },
+          "two": {
+            "n": 18,
+            "correct1": 15,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 1,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 135,
+        "outcomes": {
+          "valid_tool_call": 129,
+          "loaded_more_only": 6
+        },
+        "validRate": 0.9556,
+        "toolCalls": 138,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1014,
+        "firstRequestPromptMin": 1007,
+        "firstRequestPromptMax": 1028,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": null,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": null,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0",
+            "tried": []
+          }
+        },
+        "directoryVsT1": null,
+        "directoryVsT0": null,
+        "reasoningTokens": 0
+      },
+      "latencyMs": {
+        "firstMedian": 677,
+        "firstP90": 923,
+        "secondMedian": 761,
+        "secondP90": 1206
+      },
+      "costUsd": "0.1813",
+      "respondedModels": [
+        "google/gemini-3.5-flash-lite"
+      ],
+      "failures": [
+        {
+          "key": "google/gemini-3.5-flash-lite|q06|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_73094",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_278794",
+                "name": "load_source",
+                "args": "{\"alias\":\"nyc_mta\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "nyc_mta"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.5-flash-lite|q34|1",
+          "kind": "two",
+          "acceptable": [
+            [
+              "boston",
+              "data_commons"
+            ]
+          ],
+          "loaded1": [
+            "boston"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_181501",
+              "name": "load_source",
+              "args": "{\"alias\":\"boston\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_126437",
+                "name": "load_source",
+                "args": "{\"alias\":\"data_commons\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "data_commons"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.5-flash-lite|q06|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_128880",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_72908",
+                "name": "load_source",
+                "args": "{\"alias\":\"nyc_mta\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "nyc_mta"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.5-flash-lite|q34|2",
+          "kind": "two",
+          "acceptable": [
+            [
+              "boston",
+              "data_commons"
+            ]
+          ],
+          "loaded1": [
+            "boston"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_367238",
+              "name": "load_source",
+              "args": "{\"alias\":\"boston\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_584229",
+                "name": "load_source",
+                "args": "{\"alias\":\"data_commons\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "data_commons"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.5-flash-lite|q06|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_184586",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_116868",
+                "name": "load_source",
+                "args": "{\"alias\":\"nyc_mta\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "nyc_mta"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.5-flash-lite|q34|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "boston",
+              "data_commons"
+            ]
+          ],
+          "loaded1": [
+            "boston"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_125135",
+              "name": "load_source",
+              "args": "{\"alias\":\"boston\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_4748503",
+                "name": "load_source",
+                "args": "{\"alias\":\"data_commons\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "data_commons"
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    },
+    {
+      "spec": "anthropic/claude-sonnet-4.6",
+      "model": "anthropic/claude-sonnet-4.6",
+      "control": true,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9184
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.9592,
+        "afterSecondRequest": 0.9592,
+        "n": 147,
+        "counts1": {
+          "exact": 129,
+          "wrong": 6,
+          "acceptable": 12
+        },
+        "counts2": {
+          "exact": 129,
+          "over": 4,
+          "acceptable": 12,
+          "wrong": 2
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 99,
+            "correct2": 99
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 12,
+            "correct2": 12
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 1,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 135,
+        "outcomes": {
+          "valid_tool_call": 129,
+          "loaded_more_only": 4,
+          "no_tool_call": 2
+        },
+        "validRate": 0.9556,
+        "toolCalls": 183,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1624,
+        "firstRequestPromptMin": 1618,
+        "firstRequestPromptMax": 1640,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 16199,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.048612",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 35358,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.106089",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0459,
+        "directoryVsT0": 0.1003,
+        "reasoningTokens": 0
+      },
+      "latencyMs": {
+        "firstMedian": 1421,
+        "firstP90": 2635,
+        "secondMedian": 2056,
+        "secondP90": 4782
+      },
+      "costUsd": "3.6033",
+      "respondedModels": [
+        "anthropic/claude-sonnet-4.6"
+      ],
+      "failures": [
+        {
+          "key": "anthropic/claude-sonnet-4.6|q06|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_mta"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01UzACnfXRusnjyUQsGA8wXf",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_mta\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_0132HXoD48hXMRUQVMAT4ua8",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-4.6|q45|1",
+          "kind": "ambiguous",
+          "acceptable": [
+            [],
+            [
+              "socrata"
+            ],
+            [
+              "boston"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01HqNCuDm9iQCkNqFoDhQKpa",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_01DL8mC4UfT1tJ7tcYQNwZEu",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": "Hmm, the NYC 311 tools available here are for calendar lookups, status alerts, and individual service request lookups — they don't support bulk querying or counting of service requests by type.\n\nTo get a count of pothole reports from last year (2025), I'd need to query the **311 Service Requests dataset** on the Socrata open data portal. Let me load that source!"
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-4.6|q06|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_mta"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_016oqUJrX3HxBTuQVqLTZLzb",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_mta\"}"
+            }
+          ],
+          "second": {
+            "outcome": "no_tool_call",
+            "toolCalls": [],
+            "evaluated": [],
+            "content": "The MTA MCP tools I have access to cover **service alerts, elevator/escalator outages, and station lookups** — they don't include historical ridership statistics.\n\nFor **average weekday subway ridership in 2025**, here are the best sources to find that data:\n\n1. **MTA's own ridership data** — The MTA publishes weekly and annual ridership figures on their website:\n - [MTA Subway Ridership](https://www.mta.info/press-room/statistics) — look for \"Subway Ridership\" under Performance Metrics.\n\n2. **NYC Open Data / Socrata** — The MTA posts turnstile and ridership data on NYC Open Data:\n - Search for *\"MTA Subway Hourly Ridership\"* at [data.ny.gov](https://data.ny.gov) or [data.cityofnewyork.us](https://data.cityofnewyork.us).\n\n3. **American Community Survey / Google Data Commons** — Covers comm…[1493 chars]"
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-4.6|q45|2",
+          "kind": "ambiguous",
+          "acceptable": [
+            [],
+            [
+              "socrata"
+            ],
+            [
+              "boston"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01LqgrWNNyxFGmJMM3z21wiZ",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_015M2b9udSPcbUcuWhzDHLLr",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": "Hmm, it looks like the NYC 311 tools I have available are limited to calendar lookups, emergency/weather status, and individual service request lookups — they don't support bulk querying or counting of service requests by type. Let me check the Socrata open data portal, which has the full 311 dataset, to answer your question!"
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-4.6|q06|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "nyc_mta"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01DeQ9yw3vH9KAhBdSY83YED",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_mta\"}"
+            }
+          ],
+          "second": {
+            "outcome": "no_tool_call",
+            "toolCalls": [],
+            "evaluated": [],
+            "content": "The MTA MCP tools I have access to cover **subway service alerts, elevator/escalator outages, and station lookups** — they don't include historical ridership statistics.\n\nFor **average weekday subway ridership in 2025**, here are the best sources to check directly:\n\n1. **MTA's official ridership data**: The MTA publishes monthly and annual ridership reports at [new.mta.info](https://new.mta.info) and on their open data portal at [data.ny.gov](https://data.ny.gov). Search for \"MTA Subway Ridership.\"\n\n2. **NYC Open Data / Socrata**: The dataset *\"MTA Subway Hourly Ridership\"* is available at [data.ny.gov](https://data.ny.gov/Transportation/MTA-Subway-Hourly-Ridership-Beginning-February-2022/wujg-7c2s) and can be queried to compute average weekday figures for 2025.\n\n3. **MTA Subway Performanc…[1362 chars]"
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-4.6|q45|3",
+          "kind": "ambiguous",
+          "acceptable": [
+            [],
+            [
+              "socrata"
+            ],
+            [
+              "boston"
+            ]
+          ],
+          "loaded1": [
+            "nyc_311"
+          ],
+          "score1": "wrong",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_017PKtXx3WHK1btrKPfsKPMu",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_311\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_01V1qNCXKbrg1psRWnqBHLER",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": "Hmm, the NYC 311 tools available to me are limited to calendar lookups, emergency/weather status, and individual service request lookups — they don't support bulk querying or counting of service requests by type.\n\nTo get a count of pothole reports, I can check the **Socrata open data portal**, which hosts NYC 311 service request data and supports filtered queries. Let me load that source!"
+          }
+        }
+      ]
+    },
+    {
+      "spec": "anthropic/claude-sonnet-5.5@medium",
+      "model": "anthropic/claude-sonnet-5.5",
+      "control": false,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9116
+      },
+      "aliasAccuracy": {
+        "firstRequest": 1,
+        "afterSecondRequest": 0.9864,
+        "n": 147,
+        "counts1": {
+          "exact": 132,
+          "acceptable": 15
+        },
+        "counts2": {
+          "exact": 130,
+          "acceptable": 15,
+          "over": 2
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 102,
+            "correct2": 100
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9796,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 134,
+        "outcomes": {
+          "valid_tool_call": 132,
+          "loaded_more_only": 2
+        },
+        "validRate": 0.9851,
+        "toolCalls": 166,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1834,
+        "firstRequestPromptMin": 1824,
+        "firstRequestPromptMax": 1858,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 22048,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.044106",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 47466,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.094942",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0386,
+        "directoryVsT0": 0.0832,
+        "reasoningTokens": 2834
+      },
+      "latencyMs": {
+        "firstMedian": 1472,
+        "firstP90": 3050,
+        "secondMedian": 1783,
+        "secondP90": 3721
+      },
+      "costUsd": "3.108",
+      "respondedModels": [
+        "anthropic/claude-sonnet-5.5"
+      ],
+      "failures": [
+        {
+          "key": "anthropic/claude-sonnet-5.5@medium|q27|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01LkhZNZgqfGwhyRH4meUrLJ",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_01VoW1FxeTiCq7z5SEie22VN",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "anthropic/claude-sonnet-5.5@medium|q27|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "toolu_01Y9nBXckKs7azycMBmNagta",
+              "name": "load_source",
+              "args": "{\"alias\": \"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "toolu_01LKz3vBB7VV96dKAfpSeN4s",
+                "name": "load_source",
+                "args": "{\"alias\": \"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    },
+    {
+      "spec": "google/gemini-3.8-flash@medium",
+      "model": "google/gemini-3.8-flash",
+      "control": false,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9184
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.9864,
+        "afterSecondRequest": 0.9592,
+        "n": 147,
+        "counts1": {
+          "exact": 132,
+          "acceptable": 13,
+          "over": 2
+        },
+        "counts2": {
+          "exact": 128,
+          "over": 6,
+          "acceptable": 13
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 102,
+            "correct2": 99
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 17
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 13,
+            "correct2": 13
+          }
+        }
+      },
+      "overLoading": 0.0136,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9796,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 135,
+        "outcomes": {
+          "valid_tool_call": 131,
+          "loaded_more_only": 4
+        },
+        "validRate": 0.9704,
+        "toolCalls": 163,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1014,
+        "firstRequestPromptMin": 1007,
+        "firstRequestPromptMax": 1028,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": null,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": null,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0",
+            "tried": []
+          }
+        },
+        "directoryVsT1": null,
+        "directoryVsT0": null,
+        "reasoningTokens": 33091
+      },
+      "latencyMs": {
+        "firstMedian": 1907,
+        "firstP90": 2868,
+        "secondMedian": 2147,
+        "secondP90": 3619
+      },
+      "costUsd": "0.6236",
+      "respondedModels": [
+        "google/gemini-3.8-flash"
+      ],
+      "failures": [
+        {
+          "key": "google/gemini-3.8-flash@medium|q27|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_124340",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_134399",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.8-flash@medium|q48|1",
+          "kind": "ambiguous",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ],
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "socrata",
+            "nyc_checkbook"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_105068",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            },
+            {
+              "id": "call_105074",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_127685",
+                "name": "get_data",
+                "args": "{\"type\":\"catalog\",\"portal\":\"data.cityofnewyork.us\",\"query\":\"citywide payroll data\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "get_data",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.8-flash@medium|q27|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_120427",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_412240",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.8-flash@medium|q38|2",
+          "kind": "two",
+          "acceptable": [
+            [
+              "nyc_council",
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_council",
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_81092",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_council\"}"
+            },
+            {
+              "id": "call_81095",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_177531",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.8-flash@medium|q48|2",
+          "kind": "ambiguous",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ],
+            [
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "socrata",
+            "nyc_checkbook"
+          ],
+          "score1": "over",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_52515",
+              "name": "load_source",
+              "args": "{\"alias\":\"socrata\"}"
+            },
+            {
+              "id": "call_52518",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_119738",
+                "name": "get_data",
+                "args": "{\"type\":\"catalog\",\"portal\":\"data.cityofnewyork.us\",\"query\":\"Citywide Payroll Data\"}"
+              },
+              {
+                "id": "call_119741",
+                "name": "nyc_checkbook__search_payroll",
+                "args": "{\"title\":\"POLICE OFFICER\",\"agency_code\":\"056\",\"fiscal_year\":\"2024\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "get_data",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              },
+              {
+                "name": "nyc_checkbook__search_payroll",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "google/gemini-3.8-flash@medium|q27|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_491195",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_105176",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    },
+    {
+      "spec": "anthropic/claude-opus-5.5@medium",
+      "model": "anthropic/claude-opus-5.5",
+      "control": false,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.898
+      },
+      "aliasAccuracy": {
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "n": 147,
+        "counts1": {
+          "exact": 132,
+          "acceptable": 15
+        },
+        "counts2": {
+          "exact": 132,
+          "acceptable": 15
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 102,
+            "correct2": 102
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 1,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 132,
+        "outcomes": {
+          "valid_tool_call": 132
+        },
+        "validRate": 1,
+        "toolCalls": 174,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1834,
+        "firstRequestPromptMin": 1824,
+        "firstRequestPromptMax": 1858,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 22048,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.088212",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 47466,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.189884",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0386,
+        "directoryVsT0": 0.0832,
+        "reasoningTokens": 6010
+      },
+      "latencyMs": {
+        "firstMedian": 2460,
+        "firstP90": 4570,
+        "secondMedian": 2709,
+        "secondP90": 4966
+      },
+      "costUsd": "6.1721",
+      "respondedModels": [
+        "anthropic/claude-opus-5.5"
+      ],
+      "failures": []
+    },
+    {
+      "spec": "anthropic/claude-haiku-5.5@low",
+      "model": "anthropic/claude-haiku-5.5",
+      "control": false,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.9116
+      },
+      "aliasAccuracy": {
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "n": 147,
+        "counts1": {
+          "exact": 132,
+          "acceptable": 15
+        },
+        "counts2": {
+          "exact": 132,
+          "acceptable": 15
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 102,
+            "correct2": 102
+          },
+          "two": {
+            "n": 18,
+            "correct1": 18,
+            "correct2": 18
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9592,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 134,
+        "outcomes": {
+          "valid_tool_call": 134
+        },
+        "validRate": 1,
+        "toolCalls": 178,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1834,
+        "firstRequestPromptMin": 1824,
+        "firstRequestPromptMax": 1858,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 22048,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.0022053",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 47466,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.0047471",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0386,
+        "directoryVsT0": 0.0832,
+        "reasoningTokens": 12156
+      },
+      "latencyMs": {
+        "firstMedian": 2391,
+        "firstP90": 3334,
+        "secondMedian": 1434,
+        "secondP90": 3194
+      },
+      "costUsd": "0.1593",
+      "respondedModels": [
+        "anthropic/claude-haiku-5.5"
+      ],
+      "failures": []
+    },
+    {
+      "spec": "openai/gpt-6.1-sol@medium",
+      "model": "openai/gpt-6.1-sol",
+      "control": false,
+      "rows": 147,
+      "complete": 147,
+      "errors": 0,
+      "firstCallIsLoad": {
+        "onSourceQuestions": 1,
+        "n": 120,
+        "onAll": 0.898
+      },
+      "aliasAccuracy": {
+        "firstRequest": 0.9864,
+        "afterSecondRequest": 0.9728,
+        "n": 147,
+        "counts1": {
+          "exact": 130,
+          "acceptable": 15,
+          "missing": 2
+        },
+        "counts2": {
+          "exact": 128,
+          "over": 4,
+          "acceptable": 15
+        },
+        "byKind": {
+          "single": {
+            "n": 102,
+            "correct1": 102,
+            "correct2": 99
+          },
+          "two": {
+            "n": 18,
+            "correct1": 16,
+            "correct2": 17
+          },
+          "none": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "ambiguous": {
+            "n": 15,
+            "correct1": 15,
+            "correct2": 15
+          }
+        }
+      },
+      "overLoading": 0,
+      "noLoadOnNoSource": {
+        "rate": 1,
+        "n": 12
+      },
+      "invalidAliasCalls": 0,
+      "otherToolCallsOnFirst": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9796,
+        "n": 49
+      },
+      "secondRequest": {
+        "made": 132,
+        "outcomes": {
+          "valid_tool_call": 127,
+          "loaded_more_only": 5
+        },
+        "validRate": 0.9621,
+        "toolCalls": 170,
+        "validName": 1,
+        "argsParse": 1,
+        "schemaValid": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1006,
+        "firstRequestPromptMin": 1001,
+        "firstRequestPromptMax": 1022,
+        "baselines": {
+          "T0_site_today": {
+            "status": "complete",
+            "promptTokens": 12998,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 11,
+            "cost": "0.0014455",
+            "tried": []
+          },
+          "T1_everything": {
+            "status": "complete",
+            "promptTokens": 25025,
+            "sent": "max tokens 1, app parameters",
+            "toolCount": 92,
+            "cost": "0.0026482",
+            "tried": []
+          }
+        },
+        "directoryVsT1": 0.0402,
+        "directoryVsT0": 0.0774,
+        "reasoningTokens": 393
+      },
+      "latencyMs": {
+        "firstMedian": 1553,
+        "firstP90": 2564,
+        "secondMedian": 2188.5,
+        "secondP90": 3784
+      },
+      "costUsd": "0.8221",
+      "respondedModels": [
+        "openai/gpt-6.1-sol"
+      ],
+      "failures": [
+        {
+          "key": "openai/gpt-6.1-sol@medium|q27|1",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_CHwi7PRCzuLxYwkGzEd7N974",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_ouIZzowBEriIxA9MwEpuzRv8",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-6.1-sol@medium|q27|2",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_KMZj1FhRsCshjcfC9YvnwOIU",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_OXkDhQ1qHVRv1SBK879DAfEf",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-6.1-sol@medium|q41|2",
+          "kind": "two",
+          "acceptable": [
+            [
+              "data_commons",
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_BSOJcEripBjo0ZYigIzi9LDt",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "valid_tool_call",
+            "toolCalls": [
+              {
+                "id": "call_sL1Y1YO7RrdvCGPFXrUd7tuX",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              },
+              {
+                "id": "call_W3SGrVr691uQN7zppXlvbn37",
+                "name": "search_indicators",
+                "args": "{\"query\":\"poverty rate\",\"places\":[\"geoId/36005\"],\"parent_place\":\"\",\"per_search_limit\":5,\"include_topics\":false,\"maybe_bilateral\":false}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              },
+              {
+                "name": "search_indicators",
+                "kind": "loaded",
+                "validName": true,
+                "argsParse": true,
+                "schemaValid": true
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-6.1-sol@medium|q27|3",
+          "kind": "single",
+          "acceptable": [
+            [
+              "nyc_checkbook"
+            ]
+          ],
+          "loaded1": [
+            "nyc_checkbook"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_h79ssHpZ39595A3G3BnF4TBh",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_checkbook\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_03suysfQMeKopw2d1tokmifp",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-6.1-sol@medium|q38|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "nyc_council",
+              "nyc_budget"
+            ]
+          ],
+          "loaded1": [
+            "nyc_council",
+            "nyc_budget"
+          ],
+          "score1": "exact",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_NqgNVN5cwiSn6gHOIct9cd5y",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_council\"}"
+            },
+            {
+              "id": "call_f9Hv5xWgEYceI5Dl7MIEIufi",
+              "name": "load_source",
+              "args": "{\"alias\":\"nyc_budget\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_leGk5bZhu7ebdFoD8JNmL8Xj",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        },
+        {
+          "key": "openai/gpt-6.1-sol@medium|q41|3",
+          "kind": "two",
+          "acceptable": [
+            [
+              "data_commons",
+              "socrata"
+            ]
+          ],
+          "loaded1": [
+            "data_commons"
+          ],
+          "score1": "missing",
+          "firstContent": null,
+          "firstToolCalls": [
+            {
+              "id": "call_sfLyaS87wVSdvq8sUDxOFXuW",
+              "name": "load_source",
+              "args": "{\"alias\":\"data_commons\"}"
+            }
+          ],
+          "second": {
+            "outcome": "loaded_more_only",
+            "toolCalls": [
+              {
+                "id": "call_T5azOddwGrrBICdRueZxGrtx",
+                "name": "load_source",
+                "args": "{\"alias\":\"socrata\"}"
+              }
+            ],
+            "evaluated": [
+              {
+                "name": "load_source",
+                "kind": "load_source",
+                "alias": "socrata"
+              }
+            ],
+            "content": null
+          }
+        }
+      ]
+    }
+  ]
+}

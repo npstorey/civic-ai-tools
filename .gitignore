@@ -56,3 +56,7 @@ analysis/
 
 # Logs
 *.log
+
+# The owner's local inputs for the routing benchmark (S1): R5's originals and
+# the registry pages, read by benchmark/ and never committed
+benchmark/_local/

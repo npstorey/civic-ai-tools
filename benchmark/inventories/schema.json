@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "civic-inventory/1",
+  "title": "A benchmark inventory (sources-at-scale design §3.2)",
+  "description": "Every value is a string, an array or an object: the router's canonicalJson, which hashes an inventory, refuses numbers, booleans and null. A count is written as a string; a field with nothing to say is left out.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "entries"],
+  "properties": {
+    "schema": { "const": "civic-inventory/1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "version": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$" },
+    "note": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [{ "$ref": "#/definitions/serverEntry" }, { "$ref": "#/definitions/packEntry" }]
+      }
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "minLength": 1 },
+    "alias": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,31}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["addressVariable", "requirement"],
+      "properties": {
+        "addressVariable": { "$ref": "#/definitions/text" },
+        "keyVariable": { "$ref": "#/definitions/text" },
+        "requirement": { "enum": ["required", "optional"] },
+        "defaultAddress": { "$ref": "#/definitions/text" }
+      }
+    },
+    "place": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["country", "level", "names"],
+      "properties": {
+        "country": { "type": "string", "pattern": "^(?:[A-Z]{2}|multiple)$" },
+        "level": { "enum": ["federal", "state", "local", "international", "multiple"] },
+        "names": { "type": "array", "items": { "$ref": "#/definitions/text" }, "uniqueItems": true },
+        "portalDomain": { "$ref": "#/definitions/text" }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "311-service-requests",
+          "permits-licensing",
+          "inspections",
+          "public-safety",
+          "housing",
+          "transportation",
+          "spending-contracts",
+          "budget-finance",
+          "payroll-workforce",
+          "legislation",
+          "law-rules",
+          "public-notices",
+          "demographics",
+          "economy-labor",
+          "health",
+          "education",
+          "environment",
+          "elections",
+          "property-land",
+          "government-operations"
+        ]
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readOn"],
+      "properties": {
+        "name": { "$ref": "#/definitions/text" },
+        "version": { "$ref": "#/definitions/text" },
+        "readOn": { "$ref": "#/definitions/date" }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["none", "instance-key", "reader-sign-in"] },
+        "keyIn": { "$ref": "#/definitions/text" },
+        "keyVariable": { "$ref": "#/definitions/text" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["addedOn", "from", "by", "sourceUrl"],
+      "properties": {
+        "addedOn": { "$ref": "#/definitions/date" },
+        "from": { "enum": ["registry", "portal-catalog", "hand"] },
+        "by": { "$ref": "#/definitions/text" },
+        "sourceUrl": { "$ref": "#/definitions/text" }
+      }
+    },
+    "toolsRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "toolNames", "sha256"],
+      "properties": {
+        "kind": { "enum": ["router-manifest", "fixture"] },
+        "package": { "$ref": "#/definitions/text" },
+        "sourceId": { "$ref": "#/definitions/text" },
+        "path": { "$ref": "#/definitions/text" },
+        "fixture": { "$ref": "#/definitions/text" },
+        "toolNames": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/text" }, "uniqueItems": true },
+        "sha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "guidanceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["prompt", "embedded", "inline", "none"] },
+        "fetch": { "$ref": "#/definitions/text" },
+        "pinned": { "$ref": "#/definitions/text" },
+        "pinnedSha256": { "$ref": "#/definitions/sha256" },
+        "instructions": { "$ref": "#/definitions/text" },
+        "publicationHost": { "$ref": "#/definitions/text" },
+        "path": { "$ref": "#/definitions/text" },
+        "blockSha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "serverEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "alias",
+        "sourceId",
+        "displayName",
+        "description",
+        "freshness",
+        "configuration",
+        "consentDefault",
+        "serverType",
+        "place",
+        "categories",
+        "provenance",
+        "toolsRef"
+      ],
+      "properties": {
+        "kind": { "const": "server" },
+        "id": { "$ref": "#/definitions/text" },
+        "alias": { "$ref": "#/definitions/alias" },
+        "sourceId": { "$ref": "#/definitions/text" },
+        "displayName": { "$ref": "#/definitions/text" },
+        "description": { "$ref": "#/definitions/text" },
+        "freshness": { "$ref": "#/definitions/text" },
+        "freshnessSource": { "$ref": "#/definitions/text" },
+        "configuration": { "$ref": "#/definitions/configuration" },
+        "consentDefault": { "enum": ["on", "ask-first"] },
+        "publisher": { "$ref": "#/definitions/text" },
+        "serverType": { "enum": ["socrata", "ckan", "arcgis", "mcp-remote", "npm-package", "custom"] },
+        "place": { "$ref": "#/definitions/place" },
+        "categories": { "$ref": "#/definitions/categories" },
+        "registry": { "$ref": "#/definitions/registry" },
+        "authentication": { "$ref": "#/definitions/authentication" },
+        "licence": { "$ref": "#/definitions/text" },
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "toolsRef": { "$ref": "#/definitions/toolsRef" },
+        "guidanceRef": { "$ref": "#/definitions/guidanceRef" }
+      }
+    },
+    "packEntry": {
+      "description": "A pack (design §3.2, §4): a base server's tools with fixed arguments. Defined for P1, which writes the first ones.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "alias", "base", "filter", "author", "version", "place", "categories", "description", "freshness", "provenance"],
+      "properties": {
+        "kind": { "const": "pack" },
+        "alias": { "$ref": "#/definitions/alias" },
+        "sourceId": { "$ref": "#/definitions/text" },
+        "displayName": { "$ref": "#/definitions/text" },
+        "base": { "$ref": "#/definitions/text" },
+        "filter": { "type": "object", "additionalProperties": { "type": "string" } },
+        "guidance": { "$ref": "#/definitions/guidanceRef" },
+        "author": { "$ref": "#/definitions/text" },
+        "version": { "$ref": "#/definitions/text" },
+        "hash": { "$ref": "#/definitions/sha256" },
+        "licence": { "$ref": "#/definitions/text" },
+        "place": { "$ref": "#/definitions/place" },
+        "categories": { "$ref": "#/definitions/categories" },
+        "description": { "$ref": "#/definitions/text" },
+        "freshness": { "$ref": "#/definitions/text" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    }
+  }
+}

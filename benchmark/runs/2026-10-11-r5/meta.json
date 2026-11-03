@@ -1,0 +1,304 @@
+{
+  "runId": "2026-10-11-run-171124",
+  "mode": "run",
+  "startedAt": "2026-10-11T17:11:24.725Z",
+  "today": "2026-10-11",
+  "argv": [
+    "--cap",
+    "30"
+  ],
+  "models": [
+    {
+      "spec": "openai/gpt-4o",
+      "slug": "openai/gpt-4o",
+      "control": true,
+      "catalogId": "openai/gpt-4o",
+      "settings": null,
+      "requestParameters": {
+        "max_tokens": 4000
+      }
+    },
+    {
+      "spec": "openai/gpt-5.4",
+      "slug": "openai/gpt-5.4",
+      "control": true,
+      "catalogId": "openai/gpt-5.4",
+      "settings": null,
+      "requestParameters": {
+        "max_tokens": 4000
+      }
+    },
+    {
+      "spec": "google/gemini-3.5-flash-lite",
+      "slug": "google/gemini-3.5-flash-lite",
+      "control": true,
+      "catalogId": "google/gemini-3.5-flash-lite",
+      "settings": null,
+      "requestParameters": {
+        "max_tokens": 4000
+      }
+    },
+    {
+      "spec": "anthropic/claude-sonnet-4.6",
+      "slug": "anthropic/claude-sonnet-4.6",
+      "control": true,
+      "catalogId": "anthropic/claude-sonnet-4-6",
+      "settings": null,
+      "requestParameters": {
+        "max_tokens": 4000
+      }
+    },
+    {
+      "spec": "anthropic/claude-sonnet-5.5@medium",
+      "slug": "anthropic/claude-sonnet-5.5",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "medium"
+      },
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "medium"
+      }
+    },
+    {
+      "spec": "google/gemini-3.8-flash@medium",
+      "slug": "google/gemini-3.8-flash",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "medium"
+      },
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "medium"
+      }
+    },
+    {
+      "spec": "anthropic/claude-opus-5.5@medium",
+      "slug": "anthropic/claude-opus-5.5",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "medium"
+      },
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "medium"
+      }
+    },
+    {
+      "spec": "anthropic/claude-haiku-5.5@low",
+      "slug": "anthropic/claude-haiku-5.5",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "low"
+      },
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "low"
+      }
+    },
+    {
+      "spec": "openai/gpt-6.1-sol@medium",
+      "slug": "openai/gpt-6.1-sol",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "medium"
+      },
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "medium"
+      }
+    }
+  ],
+  "repeats": 3,
+  "questionIds": [
+    "q01",
+    "q02",
+    "q03",
+    "q04",
+    "q05",
+    "q06",
+    "q07",
+    "q08",
+    "q09",
+    "q10",
+    "q11",
+    "q12",
+    "q13",
+    "q14",
+    "q15",
+    "q16",
+    "q17",
+    "q18",
+    "q19",
+    "q20",
+    "q21",
+    "q22",
+    "q23",
+    "q24",
+    "q25",
+    "q26",
+    "q27",
+    "q28",
+    "q29",
+    "q30",
+    "q31",
+    "q32",
+    "q33",
+    "q34",
+    "q35",
+    "q36",
+    "q37",
+    "q38",
+    "q39",
+    "q40",
+    "q41",
+    "q42",
+    "q43",
+    "q44",
+    "q45",
+    "q46",
+    "q47",
+    "q48",
+    "q49"
+  ],
+  "expectedRows": 1323,
+  "cap": 30,
+  "concurrency": 6,
+  "hashes": {
+    "directory": "be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7",
+    "questions": "82968e5841ff3636d00bc725c91dd7065c45434bf044a66ae4faa3167ed2c48d",
+    "loads": "f9e018df5cf15e3d250e758ef3691ea8d88ddca536b3ee6cddb0457c271ed86e",
+    "baselines": "b2a015bf16f17dd75f2c82b8a38a7232d84c93ba82a25f4118a0f32193f44e33"
+  },
+  "pricingSource": "https://openrouter.ai/api/v1/models read 2026-10-11T17:11:23.930Z",
+  "pricing": {
+    "openai/gpt-4o": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "2.5",
+      "completion": "10",
+      "input_cache_read": "1.25"
+    },
+    "openai/gpt-5.4": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "2.5",
+      "completion": "15",
+      "web_search": "0.01",
+      "input_cache_read": "0.25",
+      "overrides": [
+        {
+          "min_prompt_tokens": 272000,
+          "prompt": "5",
+          "completion": "22.5",
+          "input_cache_read": "0.5"
+        }
+      ]
+    },
+    "google/gemini-3.5-flash-lite": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.3",
+      "completion": "2.5",
+      "image": "0.3",
+      "audio": "0.3",
+      "input_audio_cache": "0.03",
+      "web_search": "0.014",
+      "internal_reasoning": "2.5",
+      "input_cache_read": "0.03",
+      "input_cache_write": "0.08333333\u00333333333"
+    },
+    "anthropic/claude-sonnet-4.6": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "3",
+      "completion": "15",
+      "web_search": "0.01",
+      "input_cache_read": "0.3",
+      "input_cache_write": "3.75",
+      "input_cache_write_1h": "6"
+    },
+    "anthropic/claude-sonnet-5.5": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "2",
+      "completion": "10",
+      "web_search": "0.01",
+      "input_cache_read": "0.1",
+      "input_cache_write": "2.5",
+      "input_cache_write_1h": "4"
+    },
+    "google/gemini-3.8-flash": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.75",
+      "completion": "3.75",
+      "image": "0.75",
+      "audio": "0.75",
+      "input_audio_cache": "0.075",
+      "web_search": "0.014",
+      "internal_reasoning": "3.75",
+      "input_cache_read": "0.075",
+      "input_cache_write": "0.04166666\u00366666667"
+    },
+    "anthropic/claude-opus-5.5": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "4",
+      "completion": "20",
+      "web_search": "0.01",
+      "input_cache_read": "0.2",
+      "input_cache_write": "5",
+      "input_cache_write_1h": "8"
+    },
+    "anthropic/claude-haiku-5.5": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.1",
+      "completion": "0.5",
+      "web_search": "0.01",
+      "input_cache_read": "0.01",
+      "input_cache_write": "0.125",
+      "input_cache_write_1h": "0.2",
+      "overrides": [
+        {
+          "min_prompt_tokens": 100000,
+          "prompt": "0.5",
+          "completion": "2.5",
+          "input_cache_read": "0.05",
+          "input_cache_write": "0.625",
+          "input_cache_write_1h": "1"
+        }
+      ]
+    },
+    "openai/gpt-6.1-sol": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "2",
+      "completion": "10",
+      "web_search": "0.01",
+      "input_cache_read": "0.1",
+      "input_cache_write": "2.5",
+      "overrides": [
+        {
+          "min_prompt_tokens": 272000,
+          "prompt": "4",
+          "completion": "15",
+          "input_cache_read": "0.2",
+          "input_cache_write": "5"
+        }
+      ]
+    }
+  },
+  "request": {
+    "tool_choice": "auto",
+    "temperature": "not sent (the app sends none)",
+    "maxTokens": 4000,
+    "baseURL": "https://openrouter.ai/api/v1"
+  },
+  "node": "v22.23.1",
+  "openaiSdk": "6.16.0",
+  "resumedRows": 0,
+  "priorSpendUsd": "0",
+  "endedAt": "2026-10-11T17:25:07.807Z",
+  "spentUsd": "18.281165",
+  "stopReason": null,
+  "completeRows": 1323,
+  "completeBaselines": 18
+}

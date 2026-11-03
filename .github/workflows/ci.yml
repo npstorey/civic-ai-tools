@@ -127,6 +127,17 @@ jobs:
       - name: Gate-table check (AGENTS.md ↔ ci.yml)
         run: npm run check:gate-table
 
+      # The routing benchmark (benchmark/, S1): the dry run with its inputs'
+      # hashes and cost bounds, the same dry run under a no-network preload,
+      # the scorer against the committed copy of R5's run, the inventory
+      # rebuild, the run path against an in-process stub of the model API,
+      # and the digit-run and tracking checks over benchmark/. Hermetic: no
+      # key, no network (the preload refuses both a fetch and a socket). The
+      # owner's local copy of R5's originals (benchmark/_local/, ignored) is
+      # absent here, so its test prints a named skip line.
+      - name: Benchmark checks
+        run: npm run check:benchmark
+
       - name: Skill-drift checker self-test
         run: npm run check:skill-drift:self-test
 

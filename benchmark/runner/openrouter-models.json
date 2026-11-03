@@ -1,0 +1,124 @@
+{
+  "source": {
+    "description": "Rows of OpenRouter's model list (GET /api/v1/models) for the catalog's three models, from R5's snapshot of the list (pricing-snapshot.json, file dated 2026-10-11), with prices written per million tokens. Read by a dry run only: a run reads the live list.",
+    "r5SnapshotSha256": "e4bd088dc5b89992036421c3da23d0fb8f88c63487887f8fa6c75c49a87de58a",
+    "fields": "id, context_length, pricing, supported_parameters, reasoning.supported_efforts"
+  },
+  "data": [
+    {
+      "id": "anthropic/claude-haiku-5.5",
+      "context_length": 1000000,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "0.1",
+        "completion": "0.5",
+        "web_search": "0.01",
+        "input_cache_read": "0.01",
+        "input_cache_write": "0.125",
+        "input_cache_write_1h": "0.2",
+        "overrides": [
+          {
+            "min_prompt_tokens": 100000,
+            "prompt": "0.5",
+            "completion": "2.5",
+            "input_cache_read": "0.05",
+            "input_cache_write": "0.625",
+            "input_cache_write_1h": "1"
+          }
+        ]
+      },
+      "supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ],
+      "reasoning": {
+        "supported_efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ]
+      }
+    },
+    {
+      "id": "anthropic/claude-sonnet-5.5",
+      "context_length": 1000000,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "2",
+        "completion": "10",
+        "web_search": "0.01",
+        "input_cache_read": "0.1",
+        "input_cache_write": "2.5",
+        "input_cache_write_1h": "4"
+      },
+      "supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ],
+      "reasoning": {
+        "supported_efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ]
+      }
+    },
+    {
+      "id": "anthropic/claude-opus-5.5",
+      "context_length": 1000000,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "4",
+        "completion": "20",
+        "web_search": "0.01",
+        "input_cache_read": "0.2",
+        "input_cache_write": "5",
+        "input_cache_write_1h": "8"
+      },
+      "supported_parameters": [
+        "include_reasoning",
+        "max_completion_tokens",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "response_format",
+        "stop",
+        "structured_outputs",
+        "tool_choice",
+        "tools",
+        "verbosity"
+      ],
+      "reasoning": {
+        "supported_efforts": [
+          "max",
+          "xhigh",
+          "high",
+          "medium",
+          "low"
+        ]
+      }
+    }
+  ]
+}
