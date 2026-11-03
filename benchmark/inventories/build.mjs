@@ -38,6 +38,55 @@ const ROUTER = `${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version}`;
 /** The inventory's identity. The version is a date and a counter (§3.3). */
 export const INVENTORY_7 = { id: 'civic-7', version: '2026-11-02.1' };
 
+/**
+ * THE COMPOSITION of each size, by source. Stated here (and in the README)
+ * in a commit before the one that adds the 1,000-entry file (the seat's
+ * ruling 3, hub #302 comment 6604092796); the build that adds the files
+ * checks every count against it.
+ *
+ * Every Socrata, CKAN and registry selection takes `active` entries only
+ * (the seat's ruling, hub #302 comment 6610180295): of the Socrata catalog's
+ * 364 rows, 363 are active.
+ *
+ *   50     the 11 real servers (today's seven and R5's four, R6); the 34
+ *          largest active US Socrata domains by dataset_count; 5 distractors
+ *          (3 near-duplicates, 2 wrapper packs).
+ *   200    the 50; the remaining 45 of the 79 active US Socrata domains with
+ *          50 or more datasets; the 70 largest of the other 138 active US
+ *          Socrata domains; the 20 largest active US CKAN portals; the first
+ *          10 MCP Registry entries in the seed's order; 5 more distractors (3
+ *          near-duplicates, 2 wrapper packs): 50 + 45 + 70 + 20 + 10 + 5 = 200.
+ *   1,000  the 200; every remaining active Socrata domain that carries a
+ *          country (95 in the catalog as copied); the 400 largest active CKAN
+ *          portals not already in, any country; the next 240 MCP Registry
+ *          entries in the seed's order; and near-duplicates to fill the file.
+ *          The 400 and the 240 are a design choice, not a measured share of
+ *          any real directory.
+ *
+ * THE REMAINDER RULE: the 1,000-entry file's near-duplicates are 1,000 less
+ * every other entry: 1,000 − (200 + 95 + 400 + 240) = 65. A catalog that
+ * moved would move the 95 and so the 65; the build stops if the count of
+ * remaining active Socrata domains with a country differs from the 95 stated.
+ *
+ * Every "largest" is by dataset_count, descending, ties broken by the
+ * catalog's `id` ascending (the `id` field, which on some rows differs from
+ * the host in the row's URL). Every "in the seed's order" ranks by
+ * the SHA-256 of the seed, a purpose and a key, joined by NUL, ascending:
+ *   SEED  'civic-ai-tools S1 P1 inventories, 2026-11-03'
+ * A near-duplicate copies the first real entry with tools (a server or a
+ * portal pack, never a registry entry or a distractor) of its size not yet
+ * copied, in the seed's order (purpose 'near-duplicate', key the alias); a
+ * wrapper wraps the next of the eleven servers in the seed's order (purpose
+ * 'wrapper', key the alias); and each of the three files lists its entries in
+ * the seed's order (purpose 'order', key the alias).
+ */
+export const COMPOSITION = Object.freeze({
+  seed: 'civic-ai-tools S1 P1 inventories, 2026-11-03',
+  50: { servers: 11, socrataLargestUS: 34, nearDuplicates: 3, wrappers: 2 },
+  200: { from50: 50, socrataUS50Plus: 45, socrataUSOther: 70, ckanUSActive: 20, registry: 10, nearDuplicates: 3, wrappers: 2 },
+  1000: { from200: 200, socrataWithCountry: 95, ckanActive: 400, registry: 240, nearDuplicates: 65 },
+});
+
 /** The day the seven were copied in, for `provenance.addedOn`. */
 const ADDED_ON = '2026-11-02';
 

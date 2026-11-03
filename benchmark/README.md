@@ -17,6 +17,7 @@ This phase (P0) moved R5's chooser-spike instrument here and added the 7-entry i
 | `runner/` | `run.mjs` and its modules; `catalog.mjs` and `app-texts.mjs` (pinned copies of the website's catalog excerpt and load-result text, each with its source commit and sha256); `openrouter-models.json` (the model-list rows a dry run prices from); `writer.mjs` (the digit-run convention); `rewrite-r5.mjs` (made the committed copy of R5's run) |
 | `runner/fixtures/` | `r5-questions.json`: R5's 49 questions, a runner fixture, **not gold** (its README) |
 | `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5. Not `analysis/`: the hub ignores any directory of that name |
+| `preregistration/` | `s1.md`: the sprint's preregistration; P1 writes its inputs section, P2 and P3 the rest |
 | `runs/2026-10-11-r5/` | R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README) |
 | `test/` | the benchmark's checks |
 | `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, and the registry pages P1 reads |
@@ -67,6 +68,34 @@ bytes, so it survives a move to a content node.
 
 The seven are the router's manifest entries: `to-manifest.mjs` hands back the router's own entry for each, after
 holding every data field, the tool names and the tools' hash to the router's.
+
+## The inventories at 50, 200 and 1,000
+
+### The composition, stated before the 1,000-entry file is built
+
+Written here, in `inventories/build.mjs` (`COMPOSITION`) and in `preregistration/s1.md`, in a commit before the one
+that adds `1000.json` (the seat's ruling 3, hub #302 comment 6604092796); the build that adds the files checks every
+count against it. Every Socrata, CKAN and registry selection takes `active` entries only (the seat's ruling, hub #302
+comment 6610180295): 363 of the Socrata catalog's 364 rows are active.
+
+| Size | Entries, by source |
+|---|---|
+| 50 | the 11 real servers (today's seven and R5's four: `nyc_budget`, `nyc_council`, `nyc_311`, `nyc_mta`); the 34 largest active US Socrata domains, as portal packs; 5 distractors (3 near-duplicates, 2 wrapper packs) |
+| 200 | the 50; the remaining 45 of the 79 active US Socrata domains with 50 or more datasets; the 70 largest of the other 138 active US Socrata domains; the 20 largest active US CKAN portals, as packs; the first 10 MCP Registry entries in the seed's order; 5 more distractors (3 near-duplicates, 2 wrapper packs). 50 + 45 + 70 + 20 + 10 + 5 = 200 |
+| 1,000 | the 200; every remaining active Socrata domain that carries a country (95 in the catalog as copied); the 400 largest active CKAN portals not already in, any country; the next 240 MCP Registry entries in the seed's order; near-duplicates to fill the file |
+
+- **The remainder rule.** The 1,000-entry file's near-duplicates are 1,000 less every other entry:
+  1,000 − (200 + 95 + 400 + 240) = **65**. A catalog that moved would move the 95 and so the 65; the build stops if
+  the count of remaining active Socrata domains with a country is not the 95 stated.
+- **The split at 1,000** between sources (400 CKAN portals, 240 registry entries) is a design choice, not a measured
+  share of any real directory.
+- **The seed** is `civic-ai-tools S1 P1 inventories, 2026-11-03`. "In the seed's order" ranks by the SHA-256 of the
+  seed, a purpose and a key, joined by NUL, ascending: the registry entries (purpose
+  `registry`, key the name); the entries a near-duplicate copies (purpose `near-duplicate`, key the alias: the first
+  real entry with tools, a server or a portal pack, of its size not yet copied); the servers a wrapper wraps (purpose
+  `wrapper`, key the alias); and each file's entry order (purpose `order`, key the alias).
+- **"Largest"** is by `dataset_count`, descending, ties broken by the catalog's `id` field ascending (on 7
+  Socrata and 50 CKAN rows the `id` is not the host in the row's `url`).
 
 ## `baseline-7`, and how its second request differs from R5's
 
