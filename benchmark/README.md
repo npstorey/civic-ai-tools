@@ -7,8 +7,9 @@ every prompt and tool through the router package (`@typedstandards/civic-typed-r
 the requests a configuration allows, and stops at the model's tool call. No source is ever called.
 
 P0 moved R5's chooser-spike instrument here and added the 7-entry inventory; P1 added the 50-, 200- and 1,000-entry
-inventories and the preregistration's inputs (`preregistration/s1.md`). P2 adds the question set and gold, P3 the
-other configurations and the rest of the preregistration.
+inventories and the preregistration's inputs (`preregistration/s1.md`); P2 added the question set and its gold, the
+second labelling, and the scorer's three routing metrics. P3 adds the other configurations and the rest of the
+preregistration.
 
 ## Layout
 
@@ -18,8 +19,9 @@ other configurations and the rest of the preregistration.
 | `inventories/sources/` | the committed sources, each read through its sha256: the website's two portal directories, the registry entries used, R5's four servers, the registry fetch's script and log (its README) |
 | `runner/` | `run.mjs` and its modules; `catalog.mjs` and `app-texts.mjs` (pinned copies of the website's catalog excerpt and load-result text, each with its source commit and sha256); `openrouter-models.json` (the model-list rows a dry run prices from); `writer.mjs` (the digit-run convention); `rewrite-r5.mjs` (made the committed copy of R5's run) |
 | `runner/fixtures/` | `r5-questions.json`: R5's 49 questions, a runner fixture, **not gold** (its README) |
-| `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5. Not `analysis/`: the hub ignores any directory of that name |
-| `preregistration/` | `s1.md`: the sprint's preregistration; P1 writes its inputs section, P2 and P3 the rest |
+| `questions/` | the question set and its gold: `7.json`, `50.json`, `200.json` and `1000.json`, one per inventory, each with its `.sha256`; `README.md` (the labelling rules), `schema.json`, `gold.mjs` (each question and its gold, written once), `build.mjs` (deterministic; `--check` rebuilds byte for byte), `labelling.md` (the second labelling and its resolutions) |
+| `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5; `metrics.mjs` (filter recall, search recall at k and the notice rate, per row). Not `analysis/`: the hub ignores any directory of that name |
+| `preregistration/` | `s1.md`: the sprint's preregistration; P1 wrote its inputs section, P2 its questions section, P3 the rest |
 | `runs/2026-10-11-r5/` | R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README) |
 | `test/` | the benchmark's checks |
 | `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, and the registry pages P1 reads |
@@ -32,7 +34,7 @@ of every gate and the healthy output of each.
 ```sh
 # Dry run: every input's sha256, the configuration, and the estimated cost bounds. No key, no network, writes nothing.
 node benchmark/runner/run.mjs --dry-run --inventory benchmark/inventories/7.json \
-  --questions benchmark/runner/fixtures/r5-questions.json --config baseline-7
+  --questions benchmark/questions/7.json --config baseline-7
 
 # A run needs --cap and a key (MODEL_API_KEY or OPENROUTER_API_KEY); the sprint's wrapper supplies both (G0-7).
 # The summary is the scorer's, written where it is told and never over a file:
@@ -76,6 +78,19 @@ The four hashes were written here and in the preregistration (`preregistration/s
 
 The seven are the router's manifest entries: `to-manifest.mjs` hands back the router's own entry for each, after
 holding every data field, the tool names and the tools' hash to the router's.
+
+## The questions and their hash
+
+149 questions, R5's 49 as the seed, each labelled against each inventory by the rules in `questions/README.md`
+(`questions/labelling.md` records the second labelling and its resolutions). Each `.sha256` is the SHA-256 of the
+router's `canonicalJson` of the parsed file, written here after the inventories' hashes (A2.3):
+
+| Questions | Labelled against | `canonicalJson` SHA-256 |
+|---|---|---|
+| `questions/7.json` | `inventories/7.json` | `62b841a6de2703decb2a16ab619190df4523cb1c114eab2f48af3924a8b61a34` |
+| `questions/50.json` | `inventories/50.json` | `2e395899521f64446fe51dd17d480ddcdedb612554c18f5e0c898a30261b0522` |
+| `questions/200.json` | `inventories/200.json` | `91dbf2f4abd51a5925624c170ef3a68873b94d54e4c8db244753386a098db9a2` |
+| `questions/1000.json` | `inventories/1000.json` | `34c5aa3140d05bbdea95ae539df335da7b34ad81ce90a793dc37434826422438` |
 
 ## The inventories at 50, 200 and 1,000
 
@@ -182,8 +197,6 @@ paths are at `8559002`; R5's runner is `chooser-spike.mjs` in the owner's copy (
 
 ## Not yet here
 
-- `questions/` and the gold (P2). The anchor's literal dry-run command, with `--questions benchmark/questions/7.json`,
-  joins the checks when P2 commits that file.
 - The configurations beyond `baseline-7` and the plain `flat-N`, the per-row reservation of A3.2, the
   per-configuration hashes of G0-9, and the preregistration's remaining sections (P3).
 - R5's `report-tools/tables.mjs` (P4 moves it to `scoring/`).
