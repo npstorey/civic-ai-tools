@@ -1,0 +1,39 @@
+{
+  "schema": "civic-run-plan/1",
+  "id": "s1-mini",
+  "description": "A test fixture: plans/s1.json's shape, every configuration and both probes, on two questions each, so the run tests drive every path against the stub in seconds. Not a preregistered plan.",
+  "models": { "main": "anthropic/claude-haiku-5.5", "builder": "anthropic/claude-haiku-5.5", "openWeight": "--open-weight <slug>" },
+  "openWeightProbe": {
+    "config": "baseline-7",
+    "inventory": "benchmark/inventories/7.json",
+    "questions": "benchmark/questions/7.json",
+    "questionIds": { "from": "q10", "to": "q11" },
+    "repeats": 1,
+    "models": ["z-ai/glm-5.3-flash", "deepseek/deepseek-v4-flash-0731", "xiaomi/mimo-v2.6-flash"],
+    "winner": "the best first-request accuracy over the offered gold; a tie goes to the model whose probe rows cost less in all; a further tie to the earlier model in this list"
+  },
+  "probe": {
+    "questionIds": { "probeIds": 2 },
+    "repeats": 1,
+    "models": ["main", "openWeight"],
+    "steps": [
+      { "id": "probe-baseline-7", "config": "baseline-7", "inventory": "benchmark/inventories/7.json", "questions": "benchmark/questions/7.json" },
+      { "id": "probe-flat-50", "config": "flat-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json" }
+    ],
+    "calibration": "as plans/s1.json"
+  },
+  "steps": [
+    { "id": "rule-50", "config": "rule-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": [], "repeats": 1 },
+    { "id": "baseline-7", "config": "baseline-7", "inventory": "benchmark/inventories/7.json", "questions": "benchmark/questions/7.json", "questionIds": { "list": ["q10", "q11"] }, "models": ["main", "openWeight"], "repeats": 2 },
+    { "id": "flat-50", "config": "flat-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": ["main", "openWeight"], "repeats": 1 },
+    { "id": "shortlist-200", "config": "shortlist-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "questionIds": { "list": ["q11", "q39"] }, "models": ["main"], "repeats": 1 },
+    { "id": "shortlist+search-200", "config": "shortlist+search-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "questionIds": { "list": ["q11", "q65"] }, "models": ["main", "openWeight"], "repeats": 1 },
+    { "id": "builder-50-reads", "config": "builder-50", "role": "builder", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": ["builder"], "repeats": 1 },
+    { "id": "builder-50", "config": "builder-50", "selectionFrom": "builder-50-reads", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": ["main", "openWeight"], "repeats": 1 },
+    { "id": "flat-1000", "config": "flat-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "questionIds": { "draw": 1, "seed": "civic-ai-tools S1 P3 flat-1000 probe, 2026-11-03" }, "models": ["main"], "repeats": 1 }
+  ],
+  "options": {
+    "A": { "description": "As the steps state." },
+    "B": { "description": "Two repeats where a step states three.", "repeats": 2, "appliesTo": "every step whose repeats are 3" }
+  }
+}

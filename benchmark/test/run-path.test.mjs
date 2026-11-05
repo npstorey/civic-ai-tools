@@ -7,7 +7,9 @@
 //     text, `load_source` and the loaded source's tools (aliased names);
 //   - every file the run writes keeps the digit-run convention, and the key
 //     appears in none of them;
-//   - the contact ledger names every request;
+//   - the contact ledger names every request: the model list, the model's
+//     endpoints list, the key check and every chat request;
+//   - a probe writes its calibration beside the run's files (P3-build);
 //   - a cap too small for the first call stops the run, records the stop and
 //     exits 2.
 
@@ -58,7 +60,7 @@ test('a stubbed probe runs end to end and writes under the convention', async ()
     assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`);
     const [runId] = readdirSync(out).filter((n) => n.startsWith('2026-11-02-probe-'));
     const dir = join(out, runId);
-    assert.deepEqual(readdirSync(dir).sort(), ['baseline.jsonl', 'contact-ledger.md', 'meta.json', 'rows.jsonl']);
+    assert.deepEqual(readdirSync(dir).sort(), ['baseline.jsonl', 'calibration.json', 'contact-ledger.md', 'meta.json', 'rows.jsonl']);
 
     for (const name of readdirSync(dir)) {
       const text = readFileSync(join(dir, name), 'utf8');
@@ -98,7 +100,7 @@ test('a stubbed probe runs end to end and writes under the convention', async ()
 
     const ledger = readFileSync(join(dir, 'contact-ledger.md'), 'utf8');
     const lines = ledger.split('\n').filter((l) => /^\| \d{4}-/.test(l));
-    assert.equal(lines.length, 2 + sent.length, 'the list, the key check and every chat request');
+    assert.equal(lines.length, 3 + sent.length, "the list, the model's endpoints, the key check and every chat request");
     assert.ok(lines.every((l) => l.includes('openrouter.ai/api/v1/')));
 
     const meta = JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8'));
@@ -137,5 +139,22 @@ test('a run without --cap is refused before anything is read', () => {
     assert.deepEqual(readdirSync(out), []);
   } finally {
     rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('a run writes under benchmark/_local/runs/ by default, which git ignores (the seat’s ruling 2, hub #302 comment 6603443479)', () => {
+  const r = spawnSync(
+    process.execPath,
+    ['--import', STUB, 'benchmark/runner/run.mjs', '--inventory', 'benchmark/inventories/7.json', '--questions', 'benchmark/runner/fixtures/r5-questions.json', '--config', 'baseline-7', '--probe', '--today', '2026-11-02', '--cap', '1'],
+    { cwd: REPO, encoding: 'utf8', env: { PATH: process.env.PATH, OPENROUTER_API_KEY: KEY } },
+  );
+  const out = /^output: (.+)$/m.exec(r.stdout)?.[1];
+  try {
+    assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`);
+    assert.match(out, /^benchmark\/_local\/runs\/2026-11-02-probe-\d{6}$/);
+    assert.equal(spawnSync('git', ['check-ignore', '-q', `${out}/meta.json`], { cwd: REPO }).status, 0, 'ignored');
+  } finally {
+    // A run directory this test made, wherever the runner put it.
+    if (out && /^benchmark\/(?:_local\/)?runs\/2026-11-02-probe-\d{6}$/.test(out)) rmSync(join(REPO, out), { recursive: true, force: true });
   }
 });
