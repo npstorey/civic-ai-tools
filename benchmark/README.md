@@ -8,8 +8,9 @@ the requests a configuration allows, and stops at the model's tool call. No sour
 
 P0 moved R5's chooser-spike instrument here and added the 7-entry inventory; P1 added the 50-, 200- and 1,000-entry
 inventories and the preregistration's inputs (`preregistration/s1.md`); P2 added the question set and its gold, the
-second labelling, and the scorer's three routing metrics. P3 adds the other configurations and the rest of the
-preregistration.
+second labelling, and the scorer's three routing metrics. P3-build added every configuration S1 preregisters, the
+per-row spend reservation, the two probes, the inputs' and the configurations' hashes, and the rest of the
+preregistration; the evaluations run at G3.
 
 ## Layout
 
@@ -17,14 +18,14 @@ preregistration.
 |---|---|
 | `inventories/` | `schema.json` (the design's §3.2 format), `build.mjs` (deterministic; `--check` rebuilds byte for byte), `rules.mjs` (the rules every entry is derived by), `to-manifest.mjs` (inventory entries to the router's manifest entries), `guidance.mjs` (the guidance a composition reads, offline), `load-text.mjs` (the fixed text a registry entry's load returns), `extract.mjs` (re-extracts two sources from the owner's local inputs), `sources.mjs`; `7.json`, `50.json`, `200.json` and `1000.json`, each with its `.sha256` |
 | `inventories/sources/` | the committed sources, each read through its sha256: the website's two portal directories, the registry entries used, R5's four servers, the registry fetch's script and log (its README) |
-| `runner/` | `run.mjs` and its modules; `catalog.mjs` and `app-texts.mjs` (pinned copies of the website's catalog excerpt and load-result text, each with its source commit and sha256); `openrouter-models.json` (the model-list rows a dry run prices from); `writer.mjs` (the digit-run convention); `rewrite-r5.mjs` (made the committed copy of R5's run) |
+| `runner/` | `run.mjs` (the command) and its modules: `session.mjs` (each configuration, through the router), `shortlist.mjs` (the place filter), `search.mjs` (BM25), `texts.mjs` (the benchmark's own tools and texts), `models.mjs` (the models and their request parameters), `engine.mjs` (the rows and the cap), `bounds.mjs` (each row's worst case), `plan.mjs` (a dry run's bounds), `calibration.mjs` (the probe's estimate), `input-hash.mjs` (the inputs' hash, A3.1), `openrouter.mjs` (reads OpenRouter's lists); `plans/s1.json` (the preregistered runs); `catalog.mjs` and `app-texts.mjs` (pinned copies of the website's catalog excerpt and load-result text, each with its source commit and sha256); `openrouter-models.json` (the model and endpoints lists a dry run prices from); `writer.mjs` (the digit-run convention); `rewrite-r5.mjs` (made the committed copy of R5's run) |
 | `runner/fixtures/` | `r5-questions.json`: R5's 49 questions, a runner fixture, **not gold** (its README) |
 | `questions/` | the question set and its gold: `7.json`, `50.json`, `200.json` and `1000.json`, one per inventory, each with its `.sha256`; `README.md` (the labelling rules), `schema.json`, `gold.mjs` (each question and its gold, written once), `build.mjs` (deterministic; `--check` rebuilds byte for byte), `labelling.md` (the second labelling and its resolutions) |
-| `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5; `metrics.mjs` (filter recall, search recall at k and the notice rate, per row). Not `analysis/`: the hub ignores any directory of that name |
+| `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5; `metrics.mjs` (filter recall, search recall at k and the notice rate, per row); `offered.mjs` (the offered gold and the split by gold); `s1.mjs` (a run's summary per step and model). Not `analysis/`: the hub ignores any directory of that name |
 | `preregistration/` | `s1.md`: the sprint's preregistration; P1 wrote its inputs section, P2 its questions section, P3 the rest |
 | `runs/2026-10-11-r5/` | R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README) |
 | `test/` | the benchmark's checks |
-| `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, and the registry pages P1 reads |
+| `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, the registry pages P1 reads, and a run's files (`_local/runs/<run-id>/`) until P4 copies them |
 
 The checks run as one root script, `npm run check:benchmark`, which CI runs; the AGENTS.md Commands table is the list
 of every gate and the healthy output of each.
@@ -32,27 +33,41 @@ of every gate and the healthy output of each.
 ## Running
 
 ```sh
-# Dry run: every input's sha256, the configuration, and the estimated cost bounds. No key, no network, writes nothing.
+# Dry run: every input's sha256, the inputs' hash, the configurations' hashes and every step's estimated cost bounds.
+# No key, no network, writes nothing.
+node benchmark/runner/run.mjs --dry-run --plan benchmark/runner/plans/s1.json
 node benchmark/runner/run.mjs --dry-run --inventory benchmark/inventories/7.json \
   --questions benchmark/questions/7.json --config baseline-7
 
-# A run needs --cap and a key (MODEL_API_KEY or OPENROUTER_API_KEY); the sprint's wrapper supplies both (G0-7).
+# At G3, in order, each with --cap and a key (MODEL_API_KEY or OPENROUTER_API_KEY); the sprint's wrapper supplies both (G0-7):
+node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --open-weight-probe --cap <usd>
+node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --probe --open-weight <slug> --cap <usd>
+node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --open-weight <slug> --calibration <file> --cap <usd>
+
+# The inputs' hash the wrapper checks before and after (A3.1):
+node benchmark/runner/input-hash.mjs
+
 # The summary is the scorer's, written where it is told and never over a file:
-node benchmark/scoring/analyze.mjs benchmark/runs/<run-id> --out benchmark/runs/<run-id>/summary.json
+node benchmark/scoring/analyze.mjs benchmark/_local/runs/<run-id> --out <file>
 ```
 
-Before it spends, a run reads OpenRouter's live model list, checks the roster against it (every slug present, tools
-supported, every request field listed as supported, the reasoning effort offered) and checks the key with one free
-call. Requests go by Node's `fetch`; no SDK. A run writes `meta.json` (every input's sha256, the configuration, the
-prices as read and when, the request parameters, the spend), `rows.jsonl`, `baseline.jsonl` and `contact-ledger.md`
-(every request's host, path and status, as it is sent; `.md` because the hub ignores `*.log`).
+A run writes under `benchmark/_local/runs/<run-id>/` (ignored); P4 copies the finished run into `benchmark/runs/<date>/`.
+Before it spends, a run reads OpenRouter's live model list and each model's endpoints list, checks the roster against
+them (every slug present, tools supported, every request field listed as supported, the reasoning effort offered, an
+endpoint up within the model's routing) and checks the key with one free call. Requests go by Node's `fetch`; no SDK.
+A run writes `meta.json` (every input's sha256, the inputs' hash, each configuration's hashes, the prices as read and
+when, the request parameters, the spend, any stop and the rows not started), `rows.jsonl` (every row tagged by its
+step), `baseline.jsonl` (a single-configuration run's token baselines) and `contact-ledger.md` (every request's host,
+path and status, as it is sent; `.md` because the hub ignores `*.log`); a probe adds `calibration.json`.
 
-**The reservation estimate errs high.** Before each call the runner reserves its worst case: the prompt estimated at
-2 characters a token (`--chars-per-token`, until a probe calibrates it; R5 used 3, and Anthropic billed R5's first
-request at 1.23 times that), the completion at its full limit, and the price of the tier the prompt would fall in,
-with any request within 25% of a tier's threshold priced at the higher tier (Haiku 5.5 is billed five times higher
-above 100,000 prompt tokens). A call that would carry the spend past `--cap` is not sent; the run records the stop
-and exits 2. A call that returns no usage keeps its reservation as spend.
+**The reservation errs high.** Before a row's first request the runner reserves the worst case of every request its
+configuration allows (two for a main row, four for a search row, one for a builder row; `runner/bounds.mjs`): each
+prompt estimated at 2 characters a token (`--chars-per-token`, until the probe's `--calibration`; R5 used 3, and
+Anthropic billed R5's first request at 1.23 times that), the completion at its full limit, at the dearest endpoint the
+request may land on, with any request within 25% of a tier's threshold priced at the higher tier (Haiku 5.5 is billed
+five times higher above 100,000 prompt tokens). A row the cap cannot hold is not started: the run records the stop and
+the rows not started, and exits 2. A row is complete, error or not started, never cut. A call that returns no usage
+keeps its worst case as spend.
 
 **The digit-run convention.** No committed file under `benchmark/` holds a run of 13 or more digits outside a full
 hex digest: costs are decimal strings of at most eight places, token counts integers, prices decimal strings in
@@ -197,6 +212,5 @@ paths are at `8559002`; R5's runner is `chooser-spike.mjs` in the owner's copy (
 
 ## Not yet here
 
-- The configurations beyond `baseline-7` and the plain `flat-N`, the per-row reservation of A3.2, the
-  per-configuration hashes of G0-9, and the preregistration's remaining sections (P3).
-- R5's `report-tools/tables.mjs` (P4 moves it to `scoring/`).
+- The evaluations' run files and the report's tables (G3, P4); R5's `report-tools/tables.mjs` (P4 moves it to
+  `scoring/`).
