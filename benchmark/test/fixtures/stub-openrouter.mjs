@@ -22,8 +22,27 @@
 // Markers in a question's text drive the A3.2 tests: `[stub:no-usage]` (a
 // reply with no usage), `[stub:status=<n>]` (that HTTP status, every time),
 // `[stub:billed=<n>]` (that many billed prompt tokens).
+//
+// STUB_PERTURB=1 perturbs the replies the way a real run's rows differ from
+// the stub's, keyed on the question's id (its number n: q07 is 7), which the
+// stub reads from benchmark/questions/7.json by the question's text; no
+// question text carries a marker and no input file changes. Under it:
+//   - n % 20 = 3:  HTTP 500 on the row's first request, every attempt (an
+//                  error row; the builder's request is a first request);
+//   - n % 20 = 7:  HTTP 500 on the request after a load (an error row after
+//                  a charged first request);
+//   - n % 20 = 13: every reply with no usage (charged at its reservation);
+//   - n % 20 = 17: usage with no reported cost (the dearest endpoint's);
+//   - every question's reply: billed prompt tokens at 3.5 to 4.1 characters
+//                  a token by n, completion tokens 15 to 314 by n, reasoning
+//                  tokens on every third question, and OpenRouter's usage
+//                  details, with a reported cost that is a float.
+// The probes' question ids (q11, q34, q39) fall in no failing class. The
+// engine's waits between attempts (2 s, 8 s) are cut to none, so a 500's
+// three attempts take no time; a request's own timeout is AbortSignal's, not
+// setTimeout, and is untouched.
 
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 
 const KEY = 'stub-not-a-credential';
 const LONG_COST = 0.1 + 0.2;
@@ -49,12 +68,47 @@ const ENDPOINTS = Object.fromEntries(
   ]),
 );
 
+const PERTURB = process.env.STUB_PERTURB === '1';
+const QUESTIONS = PERTURB ? JSON.parse(readFileSync(new URL('../../questions/7.json', import.meta.url), 'utf8')).questions : [];
+const ID_OF_TEXT = new Map(QUESTIONS.map((q) => [q.text, q.id]));
+/** The number of the question a request's user message carries: the
+ *  message itself, or (the builder's) a message that holds it. */
+const questionNumber = (content) => {
+  const id = ID_OF_TEXT.get(content) ?? QUESTIONS.filter((q) => content.includes(q.text)).sort((a, b) => b.text.length - a.text.length)[0]?.id;
+  return id ? Number(id.slice(1)) : null;
+};
+if (PERTURB) {
+  const realSetTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn, ms, ...args) => realSetTimeout(fn, ms >= 1000 ? 0 : ms, ...args);
+}
+/** A perturbed reply's usage for question number `n`, or null for none. */
+const perturbedUsage = (body, n) => {
+  if (n % 20 === 13) return null;
+  const prompt = Math.ceil(JSON.stringify(body).length / (3.5 + (n % 7) / 10));
+  const completion = 15 + ((n * 37) % 300);
+  const reasoning = n % 3 === 0 ? (n * 11) % completion : 0;
+  const promptCost = prompt * 1.3e-7;
+  const completionCost = completion * 4.1e-7;
+  return {
+    prompt_tokens: prompt,
+    completion_tokens: completion,
+    total_tokens: prompt + completion,
+    ...(n % 20 === 17 ? {} : { cost: promptCost + completionCost }),
+    is_byok: false,
+    prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 0, audio_tokens: 0, video_tokens: 0 },
+    ...(n % 20 === 17 ? {} : { cost_details: { upstream_inference_cost: promptCost + completionCost, upstream_inference_prompt_cost: promptCost, upstream_inference_completions_cost: completionCost } }),
+    completion_tokens_details: { reasoning_tokens: reasoning, image_tokens: 0, audio_tokens: 0 },
+  };
+};
+
 const marker = (text, name) => new RegExp(`\\[stub:${name}(?:=(\\d+))?\\]`).exec(text);
-const completion = (body, message, question) => {
+const completion = (body, message, question, n = null) => {
   const billed = marker(question, 'billed');
-  const usage = marker(question, 'no-usage')
-    ? null
-    : { prompt_tokens: billed ? Number(billed[1]) : Math.ceil(JSON.stringify(body).length / 4), completion_tokens: 20, total_tokens: 0, cost: LONG_COST / 1000 };
+  const usage = n !== null
+    ? perturbedUsage(body, n)
+    : marker(question, 'no-usage')
+      ? null
+      : { prompt_tokens: billed ? Number(billed[1]) : Math.ceil(JSON.stringify(body).length / 4), completion_tokens: 20, total_tokens: 0, cost: LONG_COST / 1000 };
   return {
     id: 'stub',
     model: body.model,
@@ -79,7 +133,11 @@ globalThis.fetch = async (input, init = {}) => {
   const status = marker(question, 'status');
   if (status) return reply(Number(status[1]), { error: { message: `stub status ${status[1]}` } });
   const names = (body.tools ?? []).map((t) => t.function.name);
-  const done = (message) => reply(200, completion(body, message, question));
+  const n = PERTURB && question !== 'Hello.' ? questionNumber(question) : null;
+  const firstRequest = !body.messages.some((m) => m.role === 'tool');
+  const afterLoad = names.some((x) => x.includes('__'));
+  if (n !== null && ((n % 20 === 3 && firstRequest) || (n % 20 === 7 && afterLoad))) return reply(500, { error: { message: 'stub status 500 (perturbed)' } });
+  const done = (message) => reply(200, completion(body, message, question, n));
   if (question === 'Hello.') {
     const oneToken = (body.max_completion_tokens ?? body.max_tokens) === 1;
     return reply(200, completion(body, { content: 'Hi' }, oneToken ? '[stub:no-usage]' : ''));

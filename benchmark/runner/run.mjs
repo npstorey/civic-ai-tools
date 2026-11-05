@@ -686,7 +686,12 @@ if (OW_PROBE) {
   }
   const order = steps[0].models;
   const ranked = [...perModel].sort((a, b) => (b.accuracyOffered ?? -1) - (a.accuracyOffered ?? -1) || a.costUsd - b.costUsd || order.indexOf(a.spec) - order.indexOf(b.spec));
-  extra.openWeightProbe = { rule: plan.openWeightProbe.winner, perModel, winner: ranked[0]?.spec ?? null, complete: notStarted.length === 0 };
+  // meta.json carries each accuracy as a decimal string of 8 places: as a
+  // number, a ratio such as 4/49 carries a run of 13 or more digits, which
+  // the writer refuses (writer.mjs). The ranking above and the printed line
+  // below read the number.
+  const written = perModel.map((p) => ({ ...p, accuracyOffered: p.accuracyOffered === null ? null : p.accuracyOffered.toFixed(8) }));
+  extra.openWeightProbe = { rule: plan.openWeightProbe.winner, perModel: written, winner: ranked[0]?.spec ?? null, complete: notStarted.length === 0 };
   console.log('open-weight probe: first-request accuracy on the offered gold (raw gold beside it), cost, errors');
   for (const p of perModel) console.log(`  ${p.spec.padEnd(36)} ${p.correctOffered}/${p.answered} = ${p.accuracyOffered === null ? 'n/a' : p.accuracyOffered.toFixed(4)} (raw ${p.correctRaw}/${p.answered})  $${p.costUsd.toFixed(4)}  errors ${p.errors}`);
   console.log(`  winner: ${extra.openWeightProbe.winner}${notStarted.length ? ' (the probe stopped before every row; read with care)' : ''}`);
