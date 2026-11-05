@@ -1,8 +1,51 @@
 {
   "source": {
-    "description": "Rows of OpenRouter's model list (GET /api/v1/models) for the catalog's three models, from R5's snapshot of the list (pricing-snapshot.json, file dated 2026-10-11), with prices written per million tokens. Read by a dry run only: a run reads the live list.",
-    "r5SnapshotSha256": "e4bd088dc5b89992036421c3da23d0fb8f88c63487887f8fa6c75c49a87de58a",
-    "fields": "id, context_length, pricing, supported_parameters, reasoning.supported_efforts"
+    "description": "OpenRouter's public model list and the endpoints lists of the two main models' candidates, read with no key, the fields the runner reads kept and every price written per million tokens (benchmark/runner/openrouter.mjs). Read by a dry run; a run reads both lists live.",
+    "modelList": {
+      "url": "https://openrouter.ai/api/v1/models",
+      "readAt": "2026-11-03T21:15:29Z",
+      "status": "200",
+      "models": "454",
+      "sha256": "c135d0628bb0923ccb335b2ce50ace95a4d1c23a8e672fcff769c93e33c17f67"
+    },
+    "endpoints": [
+      {
+        "model": "anthropic/claude-haiku-5.5",
+        "url": "https://openrouter.ai/api/v1/models/anthropic/claude-haiku-5.5/endpoints",
+        "readAt": "2026-11-03T21:15:51Z",
+        "status": "200",
+        "sha256": "6e494e13a30dc662b7784dab7d256a9297ad7c21f8b37d15af8614d845f45375"
+      },
+      {
+        "model": "z-ai/glm-5.3-flash",
+        "url": "https://openrouter.ai/api/v1/models/z-ai/glm-5.3-flash/endpoints",
+        "readAt": "2026-11-03T21:15:51Z",
+        "status": "200",
+        "sha256": "b77f5354f8c4ed12ce7e823ffee023f04a0f639904aa488fe5ee31c2d24f7fef"
+      },
+      {
+        "model": "deepseek/deepseek-v4-flash-0731",
+        "url": "https://openrouter.ai/api/v1/models/deepseek/deepseek-v4-flash-0731/endpoints",
+        "readAt": "2026-11-03T21:15:52Z",
+        "status": "200",
+        "sha256": "75e3bacba9919c645c63f9d7e942029b1003b676d4796e89cb5bde0bdf2396db"
+      },
+      {
+        "model": "xiaomi/mimo-v2.6-flash",
+        "url": "https://openrouter.ai/api/v1/models/xiaomi/mimo-v2.6-flash/endpoints",
+        "readAt": "2026-11-03T21:15:52Z",
+        "status": "200",
+        "sha256": "b3a98aea137295e4bc8f77b8345646a30e5970f86c378f31629401de32e9fdce"
+      },
+      {
+        "model": "qwen/qwen3.8-flash",
+        "url": "https://openrouter.ai/api/v1/models/qwen/qwen3.8-flash/endpoints",
+        "readAt": "2026-11-03T21:15:52Z",
+        "status": "200",
+        "sha256": "74bbf59ec541ae361d5f0b6ea13a13ba87a785ca6f5f868ad97cc31538bfab9d"
+      }
+    ],
+    "replaces": "R5's snapshot rows (pricing-snapshot.json, 2026-10-11, sha256 e4bd088dc5b89992036421c3da23d0fb8f88c63487887f8fa6c75c49a87de58a), which P0 copied here"
   },
   "data": [
     {
@@ -41,13 +84,20 @@
         "verbosity"
       ],
       "reasoning": {
+        "mandatory": false,
         "supported_efforts": [
           "max",
           "xhigh",
           "high",
           "medium",
-          "low"
-        ]
+          "low",
+          "none"
+        ],
+        "default_effort": "medium"
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 128000
       }
     },
     {
@@ -76,13 +126,19 @@
         "verbosity"
       ],
       "reasoning": {
+        "mandatory": true,
         "supported_efforts": [
           "max",
           "xhigh",
           "high",
           "medium",
           "low"
-        ]
+        ],
+        "default_effort": "high"
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 128000
       }
     },
     {
@@ -111,14 +167,3245 @@
         "verbosity"
       ],
       "reasoning": {
+        "mandatory": true,
         "supported_efforts": [
           "max",
           "xhigh",
           "high",
           "medium",
           "low"
-        ]
+        ],
+        "default_effort": "high"
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 128000
+      }
+    },
+    {
+      "id": "z-ai/glm-5.3-flash",
+      "context_length": 1048576,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "0.0313",
+        "completion": "0.0846",
+        "input_cache_read": "0.03"
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "min_p",
+        "parallel_tool_calls",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "reasoning": {
+        "mandatory": true,
+        "default_enabled": true,
+        "supported_efforts": [
+          "max",
+          "high",
+          "low"
+        ],
+        "default_effort": "max"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 131072
+      }
+    },
+    {
+      "id": "deepseek/deepseek-v4-flash-0731",
+      "context_length": 1048576,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "0.059",
+        "completion": "0.3",
+        "input_cache_read": "0.035"
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "min_p",
+        "parallel_tool_calls",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_a",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true,
+        "supported_efforts": [
+          "max",
+          "high",
+          "low",
+          "none"
+        ],
+        "default_effort": "high"
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 943718
+      }
+    },
+    {
+      "id": "xiaomi/mimo-v2.6-flash",
+      "context_length": 1050000,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "0.14",
+        "completion": "0.28",
+        "input_cache_read": "0.0028"
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logit_bias",
+        "logprobs",
+        "max_tokens",
+        "min_p",
+        "parallel_tool_calls",
+        "presence_penalty",
+        "reasoning",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "reasoning": {
+        "mandatory": false
+      },
+      "top_provider": {
+        "context_length": 1048576,
+        "max_completion_tokens": 131072
+      }
+    },
+    {
+      "id": "qwen/qwen3.8-flash",
+      "context_length": 1000000,
+      "pricing": {
+        "unit": "USD per million tokens; web_search and request USD per call, as listed",
+        "prompt": "0.15",
+        "completion": "0.47",
+        "input_cache_read": "0.016"
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logprobs",
+        "max_tokens",
+        "presence_penalty",
+        "reasoning",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "reasoning": {
+        "mandatory": false,
+        "default_enabled": true
+      },
+      "top_provider": {
+        "context_length": 1000000,
+        "max_completion_tokens": 131072
       }
     }
-  ]
+  ],
+  "endpoints": {
+    "anthropic/claude-haiku-5.5": [
+      {
+        "provider_name": "Amazon Bedrock",
+        "tag": "amazon-bedrock",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Amazon Bedrock",
+        "tag": "amazon-bedrock/eu-west-1",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Amazon Bedrock",
+        "tag": "amazon-bedrock/us-east-1",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Anthropic",
+        "tag": "anthropic",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Azure",
+        "tag": "azure/global",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_completion_tokens",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Azure",
+        "tag": "azure/us",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_completion_tokens",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Claude Platform on AWS",
+        "tag": "claude-on-aws",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Google",
+        "tag": "google-vertex/europe",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Google",
+        "tag": "google-vertex/global",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      },
+      {
+        "provider_name": "Google",
+        "tag": "google-vertex/us",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "tool_choice",
+          "tools",
+          "verbosity"
+        ]
+      }
+    ],
+    "z-ai/glm-5.3-flash": [
+      {
+        "provider_name": "AtlasCloud",
+        "tag": "atlas-cloud/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "seed",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "BaseTen",
+        "tag": "baseten/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "BaseTen",
+        "tag": "baseten/fp8/us",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Cohere",
+        "tag": "cohere",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "CoreWeave",
+        "tag": "coreweave/nvfp4",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.38",
+          "input_cache_read": "0.02",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Crusoe",
+        "tag": "crusoe/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Darkbloom",
+        "tag": "darkbloom/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 262144,
+        "max_completion_tokens": 65536,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.065",
+          "completion": "0.18",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "DeepInfra",
+        "tag": "deepinfra/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "DigitalOcean",
+        "tag": "digitalocean",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Fireworks",
+        "tag": "fireworks",
+        "quantization": "unknown",
+        "status": -2,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Fireworks",
+        "tag": "fireworks/us",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.225",
+          "completion": "0.75",
+          "input_cache_read": "0.045",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Friendli",
+        "tag": "friendli",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "GMICloud",
+        "tag": "gmicloud/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.075",
+          "completion": "0.25",
+          "input_cache_read": "0.015",
+          "discount": "0.5"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Inceptron",
+        "tag": "inceptron/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.16",
+          "completion": "0.6",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "InferenceNet",
+        "tag": "inference-net/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 262144,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "InferenceNet",
+        "tag": "inference-net/us",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 262144,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Makora",
+        "tag": "makora",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.24",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Mistral",
+        "tag": "mistral",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Modal",
+        "tag": "modal/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Morph",
+        "tag": "morph/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.042",
+          "completion": "0.268",
+          "input_cache_read": "0.018",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Near AI",
+        "tag": "near-ai/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.08",
+          "completion": "0.5",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Nebius",
+        "tag": "nebius/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "NextBit",
+        "tag": "nextbit/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.45",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Novita",
+        "tag": "novita/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.084",
+          "completion": "0.28",
+          "input_cache_read": "0.0168",
+          "discount": "0.44"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "OpenInference",
+        "tag": "open-inference/fp4",
+        "quantization": "fp4",
+        "status": -2,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.033",
+          "completion": "0.242",
+          "input_cache_read": "0.022",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Parasail",
+        "tag": "parasail/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Particle AI",
+        "tag": "particle-ai/nvfp4",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Phala",
+        "tag": "phala/nvfp4",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.0225",
+          "discount": "0.25"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "PrimeIntellect",
+        "tag": "primeintellect",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Reka",
+        "tag": "reka",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.3",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Relace",
+        "tag": "relace/fp4",
+        "quantization": "fp4",
+        "status": -5,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0313",
+          "completion": "0.0846",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "seed",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Sail Research",
+        "tag": "sail-research/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.175",
+          "completion": "0.625",
+          "input_cache_read": "0.0225",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Sail Research",
+        "tag": "sail-research/us",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.175",
+          "completion": "0.625",
+          "input_cache_read": "0.0225",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "SiliconFlow",
+        "tag": "siliconflow/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 262144,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "StreamLake",
+        "tag": "streamlake/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1024000,
+        "max_completion_tokens": 128000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0885",
+          "completion": "0.295",
+          "input_cache_read": "0.0177",
+          "discount": "0.41"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Together",
+        "tag": "together",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048575,
+        "max_completion_tokens": 943717,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Venice",
+        "tag": "venice",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Wafer",
+        "tag": "wafer/nvfp4",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.054",
+          "completion": "0.2",
+          "input_cache_read": "0.053",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Wafer",
+        "tag": "wafer/us",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.044",
+          "completion": "0.2",
+          "input_cache_read": "0.043",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Z.AI",
+        "tag": "z-ai/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      }
+    ],
+    "deepseek/deepseek-v4-flash-0731": [
+      {
+        "provider_name": "Alibaba",
+        "tag": "alibaba",
+        "quantization": "unknown",
+        "status": -2,
+        "context_length": 1000000,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.176",
+          "completion": "0.528",
+          "input_cache_read": "0.0176",
+          "overrides": [
+            {
+              "utc_start": 0,
+              "utc_end": 1400,
+              "prompt": "0.352",
+              "completion": "1.056",
+              "input_cache_read": "0.0352"
+            },
+            {
+              "utc_start": 1400,
+              "utc_end": 0,
+              "prompt": "0.176",
+              "completion": "0.528",
+              "input_cache_read": "0.0176"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Alibaba",
+        "tag": "alibaba/us-east-1",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.187",
+          "completion": "0.561",
+          "input_cache_read": "0.0187",
+          "overrides": [
+            {
+              "utc_start": 0,
+              "utc_end": 1400,
+              "prompt": "0.374",
+              "completion": "1.122",
+              "input_cache_read": "0.0374"
+            },
+            {
+              "utc_start": 1400,
+              "utc_end": 0,
+              "prompt": "0.187",
+              "completion": "0.561",
+              "input_cache_read": "0.0187"
+            }
+          ],
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "AtlasCloud",
+        "tag": "atlas-cloud/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.44",
+          "completion": "1.32",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Baidu",
+        "tag": "baidu/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.44",
+          "completion": "1.32",
+          "input_cache_read": "0.014",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "BaseTen",
+        "tag": "baseten/fp32",
+        "quantization": "fp32",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "BaseTen",
+        "tag": "baseten/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Chutes",
+        "tag": "chutes/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.44",
+          "completion": "1.32",
+          "input_cache_read": "0.044",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Cloudflare",
+        "tag": "cloudflare",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.44",
+          "completion": "1.32",
+          "input_cache_read": "0.014",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Cohere",
+        "tag": "cohere",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.07",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "CoreWeave",
+        "tag": "coreweave/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 262144,
+        "max_completion_tokens": 235929,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.28",
+          "input_cache_read": "0.07",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "DeepInfra",
+        "tag": "deepinfra/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.06",
+          "completion": "0.18",
+          "input_cache_read": "0.015",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "DigitalOcean",
+        "tag": "digitalocean",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.119",
+          "completion": "0.238",
+          "input_cache_read": "0.0238",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "GMICloud",
+        "tag": "gmicloud/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048575,
+        "max_completion_tokens": 943717,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.286",
+          "completion": "0.858",
+          "input_cache_read": "0.0091",
+          "discount": "0.35"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Inceptron",
+        "tag": "inceptron/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.495",
+          "input_cache_read": "0.027",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Mancer 2",
+        "tag": "mancer/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.2",
+          "completion": "0.6",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_a",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Novita",
+        "tag": "novita/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.4092",
+          "completion": "1.2276",
+          "input_cache_read": "0.02604",
+          "discount": "0.07"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Parasail",
+        "tag": "parasail/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.05",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Phala",
+        "tag": "phala",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.308",
+          "completion": "0.924",
+          "input_cache_read": "0.0196",
+          "discount": "0.3"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "PrimeIntellect",
+        "tag": "primeintellect/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 65536,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.09",
+          "completion": "0.23",
+          "input_cache_read": "0.029",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_a",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Reka",
+        "tag": "reka",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 262144,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.28",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Relace",
+        "tag": "relace/fast",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.07",
+          "completion": "0.14",
+          "input_cache_read": "0.014",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Relace",
+        "tag": "relace/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.07",
+          "completion": "0.14",
+          "input_cache_read": "0.014",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Sail Research",
+        "tag": "sail-research/fp4",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.3",
+          "input_cache_read": "0.042",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Sail Research",
+        "tag": "sail-research/us",
+        "quantization": "fp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.3",
+          "input_cache_read": "0.042",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "SiliconFlow",
+        "tag": "siliconflow/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 393216,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.22",
+          "completion": "0.66",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "StreamLake",
+        "tag": "streamlake/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1024000,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.132",
+          "completion": "0.396",
+          "input_cache_read": "0.0042",
+          "discount": "0.7"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Venice",
+        "tag": "venice",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 262144,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Wafer",
+        "tag": "wafer/fast",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.085",
+          "completion": "0.23",
+          "input_cache_read": "0.08",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Wafer",
+        "tag": "wafer/us",
+        "quantization": "nvfp4",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.059",
+          "completion": "0.3",
+          "input_cache_read": "0.035",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      }
+    ],
+    "xiaomi/mimo-v2.6-flash": [
+      {
+        "provider_name": "Cohere",
+        "tag": "cohere",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 384000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.003",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "parallel_tool_calls",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Darkbloom",
+        "tag": "darkbloom/fp4",
+        "quantization": "fp4",
+        "status": -2,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.28",
+          "input_cache_read": "0.05",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "DeepInfra",
+        "tag": "deepinfra/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 943718,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.0028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logit_bias",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "GMICloud",
+        "tag": "gmicloud/bf16",
+        "quantization": "bf16",
+        "status": 0,
+        "context_length": 1050000,
+        "max_completion_tokens": 945000,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.112",
+          "completion": "0.224",
+          "input_cache_read": "0.0024",
+          "discount": "0.2"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "response_format",
+          "seed",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Io Net",
+        "tag": "io-net/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048320,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.28",
+          "input_cache_read": "0.003",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Makora",
+        "tag": "makora/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.28",
+          "input_cache_read": "0.002",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Venice",
+        "tag": "venice/fp8",
+        "quantization": "fp8",
+        "status": -2,
+        "context_length": 1000000,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.175",
+          "completion": "0.35",
+          "input_cache_read": "0.00375",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Xiaomi",
+        "tag": "xiaomi/fp8",
+        "quantization": "fp8",
+        "status": 0,
+        "context_length": 1048576,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.0028",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "response_format",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ]
+      }
+    ],
+    "qwen/qwen3.8-flash": [
+      {
+        "provider_name": "Alibaba",
+        "tag": "alibaba",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.47",
+          "input_cache_read": "0.016",
+          "input_cache_write": "0.2",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      },
+      {
+        "provider_name": "Alibaba",
+        "tag": "alibaba/us-east-1",
+        "quantization": "unknown",
+        "status": 0,
+        "context_length": 1000000,
+        "max_completion_tokens": 131072,
+        "pricing": {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.47",
+          "input_cache_read": "0.016",
+          "discount": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ]
+      }
+    ]
+  }
 }

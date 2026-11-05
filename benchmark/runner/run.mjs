@@ -1,39 +1,56 @@
 #!/usr/bin/env node
 // The benchmark's runner: R5's chooser-spike runner (`chooser-spike.mjs`),
-// moved into the hub as a program it owns (S1 P0).
+// moved into the hub as a program it owns (S1 P0), with every configuration
+// S1 preregisters (P3-build; session.mjs names them).
 //
-// For each model × question × repeat it sends the app's first in-loop request
-// (the directory as the system prompt, `load_source` the only tool) and
-// records which aliases the model loads. When it loads at least one source,
-// it sends one second request as the app builds it today: the system prompt
-// recomposed over the loaded sources, the loaded sources' tools beside
-// `load_source`, and the app's load-result text. No tool is executed and no
-// source is called: the second request ends at the model's tool call, which
-// is scored against the loaded schemas. Every prompt and tool comes from the
-// router (`session.mjs`); benchmark/README.md names how this differs from R5.
+// For each row (a model × question × repeat of a configuration) it sends the
+// app's in-loop requests: the directory as the system prompt, `load_source`
+// (and in a search row `find_source`) the tools; after a load, the system
+// prompt recomposed over the loaded sources and their tools, as the app
+// builds it today. No source is called: the request after a load ends at the
+// model's tool call, which is scored against the loaded schemas. Every prompt
+// and tool comes from the router (`session.mjs`) or, for the benchmark's own
+// tools, `texts.mjs`; benchmark/README.md names how this differs from R5.
 //
 // Usage (from the repository root):
-//   node benchmark/runner/run.mjs --inventory <file> --questions <file> --config <name>
-//     [--models a,b@effort] [--repeats 3] [--cap <usd>] [--concurrency 6]
-//     [--dry-run] [--probe] [--today YYYY-MM-DD] [--chars-per-token 2]
-//     [--out-dir benchmark/runs] [--resume <run-id>]
 //
-//   --dry-run  prints every input's sha256, the configuration and the
-//              estimated cost bounds, from the recorded model list
+//   One configuration (P0's form):
+//     node benchmark/runner/run.mjs --inventory <file> --questions <file> --config <name>
+//       [--models a,b] [--repeats 3] [--probe] [--cap <usd>] ...
+//
+//   The preregistered plan (benchmark/runner/plans/s1.json):
+//     node benchmark/runner/run.mjs --plan <file> --open-weight-probe --cap <usd>
+//     node benchmark/runner/run.mjs --plan <file> --probe --open-weight <slug> --cap <usd>
+//     node benchmark/runner/run.mjs --plan <file> --open-weight <slug> --calibration <file> --cap <usd> [--option A|B]
+//
+//   Common: [--dry-run] [--concurrency 6] [--today YYYY-MM-DD]
+//     [--chars-per-token 2 | --calibration <file>] [--out-dir benchmark/_local/runs] [--resume <run-id>]
+//
+//   --dry-run  prints every input's sha256, the inputs' hash (A3.1), each
+//              configuration's hashes (G0-9) and every step's estimated cost
+//              bounds, from the committed model-list snapshot
 //              (openrouter-models.json). Makes no network call (fetch is
 //              disabled before anything runs), needs no key, writes nothing.
-//   --probe    the two first questions of the file's `probeIds` (or of the
-//              file), one repeat, on the models given.
-//   --cap      required for a run that calls a model. Each call reserves its
-//              worst case first; a call that would carry spend plus what is
-//              in flight past the cap is not sent, the run writes what it
-//              has, records the stop in meta.json and exits 2.
+//              Under a plan with no --open-weight, the open-weight model's
+//              bound is the highest of the three candidates'.
+//   --probe    one configuration: the two first questions of the file's
+//              `probeIds`, one repeat. Under a plan: the plan's probe steps on
+//              both main models. Either writes calibration.json in the run
+//              directory (calibration.mjs).
+//   --open-weight-probe  under a plan: the three candidates on R5's 49 seed
+//              questions over the 7-entry inventory, baseline-7, one repeat;
+//              prints the comparison and the winner.
+//   --cap      required for a run that calls a model. Every row reserves its
+//              worst case first (engine.mjs, bounds.mjs); a row the cap cannot
+//              hold is not started, the run writes what it has, records the
+//              stop and the rows not started in meta.json, and exits 2.
 //
-// Before it spends, a run reads OpenRouter's live model list, checks the
-// roster against it (roster.mjs) and checks the key with one free call. The
-// key is read from MODEL_API_KEY, else OPENROUTER_API_KEY, and is never
-// printed or written. Requests go by Node's own fetch (no SDK). Output:
-// <out-dir>/<run-id>/{meta.json, rows.jsonl, baseline.jsonl, contact-ledger.md},
+// Before it spends, a run reads OpenRouter's live model list and each model's
+// endpoints list, checks the roster against them (roster.mjs) and checks the
+// key with one free call. The key is read from MODEL_API_KEY, else
+// OPENROUTER_API_KEY, and is never printed or written. Requests go by Node's
+// own fetch (no SDK). Output: <out-dir>/<run-id>/{meta.json, rows.jsonl,
+// baseline.jsonl, contact-ledger.md}, and calibration.json after a probe,
 // every JSON file under the digit-run convention (writer.mjs). The summary is
 // the scorer's: node benchmark/scoring/analyze.mjs <run dir> --out <file>.
 
@@ -43,21 +60,27 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { join, relative, resolve } from 'node:path';
 import { canonicalJson, sha256Hex } from '@typedstandards/civic-typed-router';
 import { REPO_ROOT, SOCRATA_GUIDANCE_FILE_SHA256, SOCRATA_GUIDANCE_PATH } from '../inventories/guidance.mjs';
-import { scoreLoad } from '../scoring/score.mjs';
-import { CATALOG_EXCERPT, CATALOG_SOURCE, modelRequestParameters, modelRequestSettings } from './catalog.mjs';
-import { APP_SOURCE, MAX_TOKENS, UNKNOWN_TOOL_TEXT } from './app-texts.mjs';
-import { CHARS_PER_TOKEN_DEFAULT, costOfUsage, estimateTokens, pricingPerMillion, TIER_MARGIN, worstCost } from './pricing.mjs';
+import { CORRECT } from '../scoring/score.mjs';
+import { rowScores } from '../scoring/offered.mjs';
+import { CATALOG_SOURCE } from './catalog.mjs';
+import { APP_SOURCE, MAX_TOKENS } from './app-texts.mjs';
+import { CHARS_PER_TOKEN_DEFAULT, pricingPerMillion, TIER_MARGIN } from './pricing.mjs';
 import { checkRoster } from './roster.mjs';
 import { createSession } from './session.mjs';
-import { baselineBody, baselineLadder, firstBody, secondBody } from './requests.mjs';
-import { planBounds } from './plan.mjs';
+import { stepBounds } from './plan.mjs';
 import { openLedger } from './ledger.mjs';
 import { jsonDocument, jsonLine } from './writer.mjs';
+import { createEngine } from './engine.mjs';
+import { createIndex } from './search.mjs';
+import { createShortlister } from './shortlist.mjs';
+import { HAIKU_SLUG, OPEN_WEIGHT_CANDIDATES, reservationPricings, resolveModel } from './models.mjs';
+import { BASE_URL, endpointRow, endpointsUrl, MODEL_LIST_URL, modelRow } from './openrouter.mjs';
+import { calibrate } from './calibration.mjs';
+import { INPUT_HASH_RECIPE, inputHash } from './input-hash.mjs';
 
-const BASE_URL = 'https://openrouter.ai/api/v1';
 const REQUEST_TIMEOUT_MS = 180_000;
-const DEFAULT_MODELS = 'anthropic/claude-haiku-5.5';
-const USAGE = 'usage: node benchmark/runner/run.mjs --inventory <file> --questions <file> --config <name> [--dry-run] [--probe] [--models a,b@effort] [--repeats n] [--cap usd] [--concurrency n] [--today YYYY-MM-DD] [--chars-per-token n] [--out-dir dir] [--resume run-id]';
+const USAGE =
+  'usage: node benchmark/runner/run.mjs (--inventory <file> --questions <file> --config <name> | --plan <file> [--open-weight <slug>] [--option A|B] [--open-weight-probe]) [--dry-run] [--probe] [--models a,b] [--repeats n] [--cap usd] [--concurrency n] [--today YYYY-MM-DD] [--chars-per-token n | --calibration file] [--out-dir dir] [--resume run-id]';
 
 // --- Arguments ---
 let opts;
@@ -67,15 +90,20 @@ try {
       inventory: { type: 'string' },
       questions: { type: 'string' },
       config: { type: 'string' },
-      models: { type: 'string', default: DEFAULT_MODELS },
+      plan: { type: 'string' },
+      'open-weight': { type: 'string' },
+      'open-weight-probe': { type: 'boolean', default: false },
+      option: { type: 'string', default: 'A' },
+      models: { type: 'string' },
       repeats: { type: 'string' },
       cap: { type: 'string' },
       concurrency: { type: 'string', default: '6' },
       'dry-run': { type: 'boolean', default: false },
       probe: { type: 'boolean', default: false },
       today: { type: 'string' },
-      'chars-per-token': { type: 'string', default: String(CHARS_PER_TOKEN_DEFAULT) },
-      'out-dir': { type: 'string', default: 'benchmark/runs' },
+      'chars-per-token': { type: 'string' },
+      calibration: { type: 'string' },
+      'out-dir': { type: 'string', default: 'benchmark/_local/runs' },
       resume: { type: 'string' },
     },
     strict: true,
@@ -87,6 +115,8 @@ try {
 }
 const DRY = opts['dry-run'];
 const PROBE = opts.probe;
+const OW_PROBE = opts['open-weight-probe'];
+const PLAN = opts.plan ?? null;
 
 if (DRY) {
   // The dry run makes no network call: fetch is disabled outright, before any
@@ -100,20 +130,25 @@ const bad = (why) => {
   console.error(`bad arguments: ${why}\n${USAGE}`);
   process.exit(2);
 };
-const REPEATS = Number(opts.repeats ?? (PROBE ? '1' : '3'));
 const CAP = opts.cap === undefined ? null : Number(opts.cap);
 const CONCURRENCY = Number(opts.concurrency);
-const CHARS_PER_TOKEN = Number(opts['chars-per-token']);
+const CHARS_PER_TOKEN = Number(opts['chars-per-token'] ?? CHARS_PER_TOKEN_DEFAULT);
 const TODAY = opts.today ?? new Date().toISOString().split('T')[0];
-if (!opts.inventory || !opts.questions || !opts.config) bad('--inventory, --questions and --config are required');
-if (!(REPEATS > 0) || !Number.isInteger(REPEATS)) bad('--repeats must be a positive integer');
+if (PLAN && (opts.inventory || opts.questions || opts.config)) bad('--plan takes no --inventory, --questions or --config');
+if (!PLAN && (!opts.inventory || !opts.questions || !opts.config)) bad('--inventory, --questions and --config are required (or --plan)');
+if (!PLAN && (OW_PROBE || opts['open-weight'])) bad('--open-weight-probe and --open-weight need --plan');
+if (PROBE && OW_PROBE) bad('--probe and --open-weight-probe are two runs');
+if (opts.repeats !== undefined && !(Number(opts.repeats) > 0 && Number.isInteger(Number(opts.repeats)))) bad('--repeats must be a positive integer');
+if (PLAN && opts.repeats !== undefined) bad('a plan states its repeats; use --option');
 if (!(CONCURRENCY > 0) || !Number.isInteger(CONCURRENCY)) bad('--concurrency must be a positive integer');
 if (!(CHARS_PER_TOKEN > 0)) bad('--chars-per-token must be positive');
+if (opts.calibration && opts['chars-per-token']) bad('--calibration and --chars-per-token are two estimates; give one');
 if (CAP !== null && !(CAP > 0)) bad('--cap must be a positive number of dollars');
 if (!DRY && CAP === null) bad('--cap <usd> is required for a run that calls a model');
 if (!/^\d{4}-\d{2}-\d{2}$/.test(TODAY)) bad('--today must be YYYY-MM-DD');
-const modelSpecs = opts.models.split(',').map((s) => s.trim()).filter(Boolean);
-if (!modelSpecs.length) bad('--models names no model');
+if (!['A', 'B'].includes(opts.option)) bad('--option is A or B');
+if (PLAN && !DRY && !OW_PROBE && !opts['open-weight']) bad('--open-weight <slug> is required: the model the open-weight probe chose at G3');
+if (PLAN && !DRY && !PROBE && !OW_PROBE && !opts.calibration) bad('--calibration <file> is required for the evaluations: the two-question probe calibrates the estimate first');
 
 // --- Inputs, each with its sha256 ---
 const repoPath = (p) => {
@@ -128,49 +163,109 @@ const input = (role, path, extra = {}) => {
   return entry;
 };
 const here = (rel) => new URL(rel, import.meta.url).pathname;
+const atRoot = (p) => (resolve(p) === p ? p : join(REPO_ROOT, p));
 
-const inventoryText = readFileSync(opts.inventory, 'utf8');
-const inventory = JSON.parse(inventoryText);
-const inventoryCanonical = sha256Hex(canonicalJson(inventory));
-const recordedPath = `${opts.inventory}.sha256`;
-const recorded = existsSync(recordedPath) ? readFileSync(recordedPath, 'utf8').trim() : null;
-if (recorded !== inventoryCanonical) {
-  console.error(`${repoPath(opts.inventory)}: its canonical hash ${inventoryCanonical} does not match ${repoPath(recordedPath)} (${recorded ?? 'missing'})`);
-  process.exit(1);
+const plan = PLAN ? JSON.parse(readFileSync(PLAN, 'utf8')) : null;
+if (PLAN) input('plan', PLAN, { id: plan.id, option: opts.option });
+
+const inventories = new Map();
+function loadInventory(path) {
+  const key = repoPath(path);
+  if (inventories.has(key)) return inventories.get(key);
+  const inventory = JSON.parse(readFileSync(path, 'utf8'));
+  const canonical = sha256Hex(canonicalJson(inventory));
+  const recordedPath = `${path}.sha256`;
+  const recorded = existsSync(recordedPath) ? readFileSync(recordedPath, 'utf8').trim() : null;
+  if (recorded !== canonical) {
+    console.error(`${key}: its canonical hash ${canonical} does not match ${repoPath(recordedPath)} (${recorded ?? 'missing'})`);
+    process.exit(1);
+  }
+  input('inventory', path, { canonicalSha256: canonical, id: inventory.id, version: inventory.version, entries: inventory.entries.length });
+  inventories.set(key, { inventory, canonical });
+  return inventories.get(key);
 }
-input('inventory', opts.inventory, { canonicalSha256: inventoryCanonical, id: inventory.id, version: inventory.version, entries: inventory.entries.length });
-const questionsFile = JSON.parse(readFileSync(opts.questions, 'utf8'));
-input('questions', opts.questions, { questions: questionsFile.questions.length });
+const questionFiles = new Map();
+function loadQuestions(path) {
+  const key = repoPath(path);
+  if (!questionFiles.has(key)) {
+    const file = JSON.parse(readFileSync(path, 'utf8'));
+    input('questions', path, { questions: file.questions.length });
+    questionFiles.set(key, file);
+  }
+  return questionFiles.get(key);
+}
+const qnum = (id) => Number(id.replace(/^\D+/, ''));
+/** A step's questions, by its `questionIds` (plans/s1.json). */
+function pickQuestions(file, ids) {
+  const all = file.questions;
+  if (!ids) return all;
+  if (ids.list) return all.filter((q) => ids.list.includes(q.id));
+  if (ids.from) return all.filter((q) => qnum(q.id) >= qnum(ids.from) && qnum(q.id) <= qnum(ids.to));
+  if (ids.probeIds) {
+    const want = (file.probeIds ?? all.map((q) => q.id)).slice(0, ids.probeIds);
+    return all.filter((q) => want.includes(q.id));
+  }
+  if (ids.draw) {
+    const rank = (id) => createHash('sha256').update(`${ids.seed}\0${id}`).digest('hex');
+    const drawn = new Set([...all].sort((a, b) => (rank(a.id) < rank(b.id) ? -1 : 1)).slice(0, ids.draw).map((q) => q.id));
+    return all.filter((q) => drawn.has(q.id));
+  }
+  throw new Error(`questionIds: no rule for ${JSON.stringify(ids)}`);
+}
+
+// --- The steps ---
+const ROLE_MODELS = (role) => {
+  if (role === 'main' || role === 'builder') return [HAIKU_SLUG];
+  if (role === 'openWeight') return opts['open-weight'] ? [opts['open-weight']] : DRY ? [...OPEN_WEIGHT_CANDIDATES] : [];
+  return [role];
+};
+let steps;
+if (!PLAN) {
+  const file = loadQuestions(opts.questions);
+  loadInventory(opts.inventory);
+  const specs = (opts.models ?? HAIKU_SLUG).split(',').map((s) => s.trim()).filter(Boolean);
+  if (!specs.length) bad('--models names no model');
+  steps = [{ id: opts.config, config: opts.config, inventory: opts.inventory, questions: pickQuestions(file, PROBE ? { probeIds: 2 } : null), models: specs, repeats: Number(opts.repeats ?? (PROBE ? '1' : '3')), role: 'main', baselines: true }];
+} else if (OW_PROBE) {
+  const p = plan.openWeightProbe;
+  const specs = opts.models ? opts.models.split(',').map((s) => s.trim()) : p.models;
+  steps = [{ id: 'open-weight-probe', config: p.config, inventory: atRoot(p.inventory), questions: pickQuestions(loadQuestions(atRoot(p.questions)), p.questionIds), models: specs, repeats: p.repeats, role: 'main' }];
+} else if (PROBE) {
+  steps = plan.probe.steps.map((s) => ({ id: s.id, config: s.config, inventory: atRoot(s.inventory), questions: pickQuestions(loadQuestions(atRoot(s.questions)), plan.probe.questionIds), models: plan.probe.models.flatMap(ROLE_MODELS), repeats: plan.probe.repeats, role: 'main' }));
+} else {
+  const b = plan.options[opts.option];
+  steps = plan.steps.map((s) => ({
+    id: s.id,
+    config: s.config,
+    inventory: atRoot(s.inventory),
+    questions: pickQuestions(loadQuestions(atRoot(s.questions)), s.questionIds),
+    models: s.models.flatMap(ROLE_MODELS),
+    repeats: b.repeats && s.repeats === 3 ? b.repeats : s.repeats,
+    role: s.role ?? 'main',
+    selectionFrom: s.selectionFrom ?? null,
+  }));
+}
+for (const s of steps) loadInventory(s.inventory);
+
 input('catalog excerpt', here('./catalog.mjs'), { pins: `${CATALOG_SOURCE.repository} ${CATALOG_SOURCE.path} sha256 ${CATALOG_SOURCE.sha256}` });
 input('app texts', here('./app-texts.mjs'), { pins: `${APP_SOURCE.repository} ${APP_SOURCE.routingMode.path} sha256 ${APP_SOURCE.routingMode.sha256}` });
+input('benchmark texts', here('./texts.mjs'));
 input('socrata guidance', join(REPO_ROOT, SOCRATA_GUIDANCE_PATH));
 if (fileSha256(join(REPO_ROOT, SOCRATA_GUIDANCE_PATH)) !== SOCRATA_GUIDANCE_FILE_SHA256) throw new Error('the socrata guidance pin changed under the run');
 const ROUTER_PACKAGE = JSON.parse(readFileSync(join(REPO_ROOT, 'packages/civic-typed-router/package.json'), 'utf8'));
-
-const questions = (() => {
-  if (!PROBE) return questionsFile.questions;
-  const ids = (questionsFile.probeIds ?? questionsFile.questions.map((q) => q.id)).slice(0, 2);
-  return questionsFile.questions.filter((q) => ids.includes(q.id));
-})();
-
-// --- Models and their request settings ---
-function resolveModel(spec) {
-  const [slug, effort] = spec.split('@');
-  const entry = CATALOG_EXCERPT.find((e) => e.id === slug || e.endpointModel === slug);
-  const settings = effort ? { reasoningEffort: effort } : entry ? modelRequestSettings(entry) : undefined;
-  return {
-    spec,
-    slug,
-    control: Boolean(entry),
-    catalogId: entry?.id ?? null,
-    settings: settings ?? null,
-    params: (limit) => modelRequestParameters(settings, limit),
-  };
+let calibration = null;
+if (opts.calibration) {
+  calibration = JSON.parse(readFileSync(opts.calibration, 'utf8'));
+  input('calibration', opts.calibration, { models: Object.entries(calibration.models ?? {}).map(([s, m]) => `${s} ${m.charsPerToken}`).join(', ') });
 }
-const models = modelSpecs.map(resolveModel);
+const INPUT_HASH = inputHash(REPO_ROOT);
+
+// --- Models ---
+const specs = [...new Set(steps.flatMap((s) => s.models))];
+const resolved = new Map(specs.map((s) => [s, resolveModel(s)]));
 
 // --- The run directory and ledger (a run only) ---
-const runId = opts.resume ?? `${TODAY}-${PROBE ? 'probe' : 'run'}-${new Date().toISOString().slice(11, 19).replaceAll(':', '')}`;
+const runId = opts.resume ?? `${TODAY}-${OW_PROBE ? 'ow-probe' : PROBE ? 'probe' : 'run'}-${new Date().toISOString().slice(11, 19).replaceAll(':', '')}`;
 const runDir = resolve(opts['out-dir'], runId);
 let ledger = null;
 if (!DRY) {
@@ -178,14 +273,8 @@ if (!DRY) {
   ledger = openLedger(join(runDir, 'contact-ledger.md'), runId);
 }
 
-// --- Prices: OpenRouter's live list in a run; the recorded rows in a dry run ---
-async function readModelList() {
-  if (DRY) {
-    const path = here('./openrouter-models.json');
-    input('model list', path);
-    return { source: `${repoPath(path)} (recorded; no network in a dry run)`, data: JSON.parse(readFileSync(path, 'utf8')).data };
-  }
-  const url = `${BASE_URL}/models`;
+// --- Prices: OpenRouter's live lists in a run; the snapshot in a dry run ---
+async function getJson(url) {
   let res;
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
@@ -194,24 +283,73 @@ async function readModelList() {
     throw e;
   }
   ledger.record('GET', url, res.status);
-  if (!res.ok) throw new Error(`model list: HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   const text = await res.text();
-  return { source: `${url} read ${new Date().toISOString()}`, sha256: createHash('sha256').update(text).digest('hex'), data: JSON.parse(text).data };
+  return { text, sha256: createHash('sha256').update(text).digest('hex'), json: JSON.parse(text) };
 }
-const list = await readModelList();
-const pricing = {};
-for (const m of models) {
-  const row = list.data.find((x) => x.id === m.slug);
-  if (row) pricing[m.slug] = row.pricing.unit ? row.pricing : pricingPerMillion(row.pricing);
+async function readLists() {
+  if (DRY) {
+    const path = here('./openrouter-models.json');
+    input('model list', path);
+    const snap = JSON.parse(readFileSync(path, 'utf8'));
+    return { source: `${repoPath(path)} (snapshot read ${snap.source?.modelList?.readAt ?? 'earlier'}; no network in a dry run)`, data: snap.data, endpoints: snap.endpoints ?? {} };
+  }
+  const list = await getJson(MODEL_LIST_URL);
+  const endpoints = {};
+  const endpointSources = [];
+  for (const slug of new Set([...resolved.values()].map((m) => m.slug))) {
+    try {
+      const e = await getJson(endpointsUrl(slug));
+      endpoints[slug] = e.json.data.endpoints.map(endpointRow);
+      endpointSources.push({ model: slug, sha256: e.sha256 });
+    } catch (e) {
+      endpointSources.push({ model: slug, error: String(e.message) });
+    }
+  }
+  return { source: `${MODEL_LIST_URL} read ${new Date().toISOString()}`, sha256: list.sha256, data: list.json.data.map((r) => (resolved.has(r.id) || [...resolved.values()].some((m) => m.slug === r.id) ? modelRow(r) : { id: r.id })), endpoints, endpointSources };
 }
-const rosterProblems = checkRoster(models, list, MAX_TOKENS);
+const lists = await readLists();
+const modelInfo = new Map();
+for (const [spec, m] of resolved) {
+  const row = lists.data.find((x) => x.id === m.slug);
+  if (!row?.pricing) continue;
+  const listPricing = row.pricing.unit ? row.pricing : pricingPerMillion(row.pricing);
+  const cpt = calibration ? calibration.models?.[m.slug]?.charsPerToken : CHARS_PER_TOKEN;
+  if (calibration && !(cpt > 0)) bad(`--calibration has no figure for ${m.slug}`);
+  modelInfo.set(spec, { m, listPricing, reservationPricings: reservationPricings(m, { pricing: listPricing }, lists.endpoints[m.slug]), cpt, contextLength: row.context_length ?? null });
+}
+const rosterProblems = checkRoster([...resolved.values()], lists, MAX_TOKENS, lists.endpoints);
 
-// --- The configuration, built through the router ---
-const session = await createSession({ inventory, configName: opts.config, today: TODAY });
-const outside = [...new Set(questions.flatMap((q) => q.acceptable.flat()).filter((a) => !session.entryByAlias(a)))].sort();
+// --- Sessions: one per inventory and configuration, built through the router ---
+const sessions = new Map();
+async function sessionFor(step) {
+  const key = `${repoPath(step.inventory)}|${step.config}`;
+  if (!sessions.has(key)) {
+    const { inventory, canonical } = loadInventory(step.inventory);
+    const session = await createSession({ inventory, configName: step.config, today: TODAY, routerPackage: ROUTER_PACKAGE, inventoryHash: canonical });
+    sessions.set(key, { session, index: createIndex(inventory.entries), shortlister: createShortlister(inventory) });
+  }
+  return sessions.get(key);
+}
+for (const s of steps) {
+  const ss = await sessionFor(s);
+  s.session = ss.session;
+  s.index = ss.index;
+  s.shortlister = ss.shortlister;
+  s.kind = s.role === 'builder' ? 'builder-read' : s.session.config.kind;
+}
+const configurations = {};
+for (const s of steps) {
+  const name = s.session.config.name;
+  if (configurations[name]) continue;
+  const h = s.session.hashes();
+  configurations[name] = { rule: s.session.config.rule, requestsPerRow: s.session.config.requestsPerRow, routingConfiguration: h.routingConfiguration, routingConfigurationHash: h.routingConfigurationHash, firstRequestDefinition: h.firstRequestDefinition, firstRequestDefinitionHash: h.firstRequestDefinitionHash };
+}
 
-function printPlanHeader() {
-  console.log(`benchmark ${DRY ? 'DRY RUN' : PROBE ? 'probe' : 'run'}: config ${session.config.name} (${session.config.rule}); today ${TODAY}`);
+const fmt = (n) => `$${n.toFixed(2)}`;
+function printHeader() {
+  const mode = DRY ? 'DRY RUN' : OW_PROBE ? 'open-weight probe' : PROBE ? 'probe' : PLAN ? 'evaluations' : 'run';
+  console.log(`benchmark ${mode}: ${PLAN ? `plan ${plan.id} (option ${opts.option})` : `config ${steps[0].session.config.name} (${steps[0].session.config.rule})`}; today ${TODAY}`);
   console.log('inputs (sha256 of the file):');
   for (const i of inputs) {
     const extra = Object.entries(i)
@@ -221,36 +359,79 @@ function printPlanHeader() {
     console.log(`  ${i.role.padEnd(17)} ${i.sha256}  ${i.path}${extra ? `\n  ${''.padEnd(17)} ${extra}` : ''}`);
   }
   console.log(`  router            ${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version} (workspace)`);
-  console.log(`directory: ${session.directoryAliases.length} of ${inventory.entries.length} entries listed: ${session.directoryAliases.join(', ')}`);
-  if (session.config.unconfigured.length) console.log(`  unconfigured: ${session.config.unconfigured.join(', ')}`);
-  if (outside.length) console.log(`  note: the questions' labels name aliases this directory does not list: ${outside.join(', ')}`);
-  console.log(`rows: ${models.length} model(s) × ${questions.length} question(s) × ${REPEATS} repeat(s) = ${models.length * questions.length * REPEATS}; concurrency ${CONCURRENCY}; cap ${CAP === null ? 'none given' : `$${CAP.toFixed(2)}`}`);
-  console.log(`prices: ${list.source}`);
+  console.log(`inputs' hash (A3.1, node benchmark/runner/input-hash.mjs): ${INPUT_HASH.hash} over ${INPUT_HASH.files.length} files`);
+  if (!PLAN) {
+    const s = steps[0];
+    console.log(`directory: ${s.session.directoryAliases.length} of ${s.session.inventory.entries.length} entries listed: ${s.session.directoryAliases.join(', ')}`);
+    if (s.session.config.unconfigured.length) console.log(`  unconfigured: ${s.session.config.unconfigured.join(', ')}`);
+    const outside = [...new Set(s.questions.flatMap((q) => q.acceptable.flat()).filter((a) => !s.session.entryByAlias(a)))].sort();
+    if (outside.length) console.log(`  note: the questions' labels name aliases this directory does not list: ${outside.join(', ')}`);
+    console.log(`rows: ${s.models.length} model(s) × ${s.questions.length} question(s) × ${s.repeats} repeat(s) = ${s.models.length * s.questions.length * s.repeats}; concurrency ${CONCURRENCY}; cap ${CAP === null ? 'none given' : `$${CAP.toFixed(2)}`}`);
+  } else {
+    console.log('configurations (G0-9): routing-configuration hash; harness-definition hash of the first request');
+    for (const [name, c] of Object.entries(configurations)) console.log(`  ${name.padEnd(22)} ${c.routingConfigurationHash}  ${c.firstRequestDefinitionHash}`);
+    console.log(`steps: ${steps.length}; concurrency ${CONCURRENCY}; cap ${CAP === null ? 'none given' : `$${CAP.toFixed(2)}`}`);
+  }
+  console.log(`prices: ${lists.source}`);
   if (rosterProblems.length) {
     console.log('roster problems:');
     for (const p of rosterProblems) console.log(`  - ${p}`);
-  } else console.log('roster: every model on the list, tools and every request field supported');
+  } else console.log('roster: every model on the list, tools and every request field supported, an endpoint up within its routing');
 }
 
 async function printPlan() {
-  const priced = models.filter((m) => pricing[m.slug]);
-  const plan = await planBounds({ session, models: priced, questions, repeats: REPEATS, pricing, charsPerToken: CHARS_PER_TOKEN });
-  const fmt = (n) => `$${n.toFixed(2)}`;
+  const estimate = calibration ? `calibrated (${repoPath(opts.calibration)}): ${Object.entries(calibration.models).map(([s, m]) => `${s} ${m.charsPerToken}`).join(', ')} characters a token` : `${CHARS_PER_TOKEN} characters a token${CHARS_PER_TOKEN === CHARS_PER_TOKEN_DEFAULT ? ' (uncalibrated)' : ''}`;
   console.log('estimated cost bounds (USD):');
-  for (const p of plan.perModel) {
-    const m = models.find((x) => x.spec === p.spec);
-    console.log(`  - ${p.spec.padEnd(34)} ${JSON.stringify(m.params(MAX_TOKENS)).padEnd(58)} calls ≤ ${String(p.calls).padStart(5)}  floor ${fmt(p.floor).padStart(8)}  ceiling ${fmt(p.ceiling).padStart(8)}  hard ${fmt(p.hard).padStart(8)}`);
+  const total = { calls: 0, floor: 0, ceiling: 0, completions: 0, reserved: 0, largestRow: 0 };
+  const perModel = new Map();
+  for (const s of steps) {
+    const baselines = s.baselines ? await s.session.baselines() : null;
+    // The open-weight model's bound, before G3 fixes it: the highest of the
+    // candidates', per step.
+    const groups = new Map();
+    for (const spec of s.models) {
+      const group = PLAN && OPEN_WEIGHT_CANDIDATES.includes(spec) && !opts['open-weight'] && !OW_PROBE ? 'open-weight (highest of the three)' : spec;
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(spec);
+    }
+    if (!s.models.length) console.log(`  ${s.id.padEnd(24)} no model: ${s.questions.length} rows, no request`);
+    for (const [group, members] of groups) {
+      let best = null;
+      for (const spec of members) {
+        const mi = modelInfo.get(spec);
+        if (!mi) continue;
+        const b = await stepBounds({ session: s.session, kind: s.kind, mi, questions: s.questions, repeats: s.repeats, shortlister: s.shortlister, baselines });
+        if (!best || b.ceiling > best.b.ceiling) best = { spec, b };
+      }
+      if (!best) {
+        console.log(`  ${s.id.padEnd(24)} ${group}: no price`);
+        continue;
+      }
+      const { b } = best;
+      const label = members.length > 1 ? `${group}: ${best.spec}` : group;
+      const params = JSON.stringify(modelInfo.get(best.spec).m.params(MAX_TOKENS));
+      if (PLAN) console.log(`  ${s.id.padEnd(24)} ${label.padEnd(56)} rows ${String(s.questions.length * s.repeats).padStart(4)}  calls ≤ ${String(b.calls).padStart(5)}  floor ${fmt(b.floor).padStart(7)}  ceiling ${fmt(b.ceiling).padStart(7)}  reserved ${fmt(b.reserved).padStart(8)}  largest row ${fmt(b.largestRow)}`);
+      else console.log(`  - ${best.spec.padEnd(34)} ${params.padEnd(58)} calls ≤ ${String(b.calls).padStart(5)}  floor ${fmt(b.floor).padStart(8)}  ceiling ${fmt(b.ceiling).padStart(8)}  hard ${fmt(b.reserved).padStart(8)}`);
+      for (const k of ['calls', 'floor', 'ceiling', 'completions', 'reserved']) total[k] += b[k];
+      total.largestRow = Math.max(total.largestRow, b.largestRow);
+      const pm = perModel.get(group) ?? { calls: 0, floor: 0, ceiling: 0, completions: 0, reserved: 0 };
+      for (const k of ['calls', 'floor', 'ceiling', 'completions', 'reserved']) pm[k] += b[k];
+      perModel.set(group, pm);
+    }
   }
-  console.log(`  total: calls ≤ ${plan.total.calls}; floor ${fmt(plan.total.floor)}; ceiling ${fmt(plan.total.ceiling)}; hard ceiling ${fmt(plan.total.hard)}`);
-  console.log(`  estimate: ${CHARS_PER_TOKEN} characters a token${CHARS_PER_TOKEN === CHARS_PER_TOKEN_DEFAULT ? ' (uncalibrated)' : ''}; a request within ${TIER_MARGIN * 100}% of a price tier's threshold is priced at that tier.`);
-  console.log(`  floor: prompts at 5 characters a token, no completions; ceiling: completions at their limit (${MAX_TOKENS}; a baseline's ladder 1, 16, 1),`);
-  console.log('  second requests carrying the larger of the largest label and the largest source, plus the first response at its limit;');
-  console.log('  hard: second requests carrying every listed source. A run prices actual usage.');
-  return plan;
+  if (PLAN) for (const [g, pm] of perModel) console.log(`  by model: ${g.padEnd(40)} calls ≤ ${pm.calls}; floor ${fmt(pm.floor)}; ceiling ${fmt(pm.ceiling)} (completions at their limit ${fmt(pm.completions)}); reserved ${fmt(pm.reserved)}`);
+  console.log(`  total: calls ≤ ${total.calls}; floor ${fmt(total.floor)}; ceiling ${fmt(total.ceiling)}; hard ceiling ${fmt(total.reserved)}`);
+  console.log(`  of the ceiling, completions at their full limit: ${fmt(total.completions)}; prompts: ${fmt(total.ceiling - total.completions)}`);
+  if (PLAN) console.log(`  the largest single row's reservation: ${fmt(total.largestRow)}; at concurrency ${CONCURRENCY}, at most ${fmt(total.largestRow * CONCURRENCY)} is held in flight beyond the spend`);
+  console.log(`  estimate: ${estimate}; a request within ${TIER_MARGIN * 100}% of a price tier's threshold is priced at that tier, at the dearest endpoint it may land on.`);
+  console.log(`  floor: prompts at 5 characters a token, no completions; ceiling: completions at their limit (${MAX_TOKENS}, reasoning among them; a baseline's ladder 1, 16, 1),`);
+  console.log("  the request after a load carrying the larger of the largest label and the largest single source, plus each earlier response at its limit;");
+  console.log('  hard ceiling: every row reserved at its worst case (bounds.mjs), summed. A run prices actual usage.');
+  return total;
 }
 
-printPlanHeader();
-const plan = await printPlan();
+printHeader();
+const bounds = await printPlan();
 if (DRY) {
   console.log('DRY RUN: no network call was made; nothing was written.');
   process.exit(rosterProblems.length ? 1 : 0);
@@ -300,325 +481,161 @@ function validatorFor(tool) {
   }
   return validators.get(name);
 }
+for (const mi of modelInfo.values()) mi.validatorFor = validatorFor;
 
 const rowsPath = join(runDir, 'rows.jsonl');
 const basePath = join(runDir, 'baseline.jsonl');
 const metaPath = join(runDir, 'meta.json');
 const readLines = (path) => (existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
-const readDone = (path) => new Set(readLines(path).filter((r) => r.status === 'complete').map((r) => r.key));
-const doneRows = readDone(rowsPath);
-const doneBase = readDone(basePath);
-// The cap covers the whole run directory, across resumed sessions.
+const priorRows = readLines(rowsPath);
+const priorBase = readLines(basePath);
+const done = new Set([...priorRows, ...priorBase].filter((r) => r.status === 'complete' || r.status === 'error').map((r) => r.key));
 const num = (v) => (v === null || v === undefined ? 0 : Number(v));
-const priorSpend = [rowsPath, basePath]
-  .flatMap(readLines)
-  .reduce((s, r) => s + num(r.first?.cost?.charged) + num(r.second?.cost?.charged) + num(r.cost?.charged), 0);
+const rowSpend = (r) => (r.costUsd !== undefined ? num(r.costUsd) : num(r.first?.cost?.charged) + num(r.second?.cost?.charged)) + num(r.cost?.charged) + (r.tried ?? []).reduce((t, s) => t + num(s.cost?.charged), 0);
+// The cap covers the whole run directory, across resumed sessions.
+const priorSpend = [...priorRows, ...priorBase].reduce((s, r) => s + rowSpend(r), 0);
 
-const rowKeys = [];
-for (let r = 1; r <= REPEATS; r++) for (const q of questions) for (const m of models) rowKeys.push({ m, q, r });
+const rowKey = (s, spec, q, r) => (s.kind === 'rule' ? `${s.id}|rule|${q.id}` : s.kind === 'builder-read' ? `${s.id}|builder|${q.id}` : PLAN ? `${s.id}|${spec}|${q.id}|${r}` : `${spec}|${q.id}|${r}`);
+const expected = steps.map((s) => ({ id: s.id, config: s.session.config.name, rows: s.kind === 'rule' ? s.questions.length : s.kind === 'builder-read' ? s.questions.length : s.models.length * s.questions.length * s.repeats }));
 
 const meta = {
   runId,
-  mode: PROBE ? 'probe' : 'run',
-  config: { name: session.config.name, rule: session.config.rule, unconfigured: session.config.unconfigured, directory: session.directoryAliases },
+  mode: OW_PROBE ? 'open-weight-probe' : PROBE ? 'probe' : PLAN ? 'evaluations' : 'run',
+  ...(PLAN ? { plan: { path: repoPath(PLAN), sha256: fileSha256(PLAN), id: plan.id, option: opts.option }, openWeight: opts['open-weight'] ?? null } : {}),
+  ...(!PLAN ? { config: { name: steps[0].session.config.name, rule: steps[0].session.config.rule, unconfigured: steps[0].session.config.unconfigured, directory: steps[0].session.directoryAliases } } : {}),
   startedAt: new Date().toISOString(),
   today: TODAY,
   argv: process.argv.slice(2),
-  models: models.map((m) => ({ spec: m.spec, slug: m.slug, control: m.control, catalogId: m.catalogId, settings: m.settings, requestParameters: m.params(MAX_TOKENS) })),
-  repeats: REPEATS,
-  questionIds: questions.map((q) => q.id),
-  expectedRows: rowKeys.length,
+  inputsHash: { recipe: INPUT_HASH_RECIPE, hash: INPUT_HASH.hash, files: INPUT_HASH.files.length },
+  configurations,
+  steps: expected,
+  models: [...modelInfo.values()].map((mi) => ({ spec: mi.m.spec, slug: mi.m.slug, control: mi.m.control, catalogId: mi.m.catalogId, settings: mi.m.settings, routing: mi.m.routing, requestParameters: mi.m.params(MAX_TOKENS), charsPerToken: mi.cpt, contextLength: mi.contextLength, reservationPricings: mi.reservationPricings })),
+  repeats: steps.length === 1 ? steps[0].repeats : null,
+  questionIds: steps.length === 1 ? steps[0].questions.map((q) => q.id) : null,
+  expectedRows: expected.reduce((s, x) => s + x.rows, 0),
   cap: CAP,
   concurrency: CONCURRENCY,
   inputs,
   router: `${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version}`,
-  estimate: { charsPerToken: CHARS_PER_TOKEN, tierMargin: TIER_MARGIN, plan: { calls: plan.total.calls, floorUsd: plan.total.floor, ceilingUsd: plan.total.ceiling, hardUsd: plan.total.hard } },
-  pricingSource: list.source,
-  modelListSha256: list.sha256 ?? null,
-  pricing,
+  estimate: { charsPerToken: calibration ? 'calibrated, per model' : CHARS_PER_TOKEN, calibration: opts.calibration ? { path: repoPath(opts.calibration), sha256: fileSha256(opts.calibration) } : null, tierMargin: TIER_MARGIN, plan: { calls: bounds.calls, floorUsd: bounds.floor, ceilingUsd: bounds.ceiling, hardUsd: bounds.reserved } },
+  pricingSource: lists.source,
+  modelListSha256: lists.sha256 ?? null,
+  endpointSources: lists.endpointSources ?? null,
+  pricing: Object.fromEntries([...modelInfo.values()].map((mi) => [mi.m.slug, mi.listPricing])),
   request: { tool_choice: 'auto', temperature: 'not sent (the app sends none)', maxTokens: MAX_TOKENS, baseURL: BASE_URL, client: 'node fetch' },
   node: process.version,
-  resumedRows: doneRows.size,
+  resumedRows: done.size,
   priorSpendUsd: priorSpend,
 };
 const writeMeta = (extra = {}) => writeFileSync(metaPath, jsonDocument({ ...meta, ...extra }));
 writeMeta();
 
-// --- Spend accounting and the cap ---
-let spent = priorSpend;
-let reserved = 0;
-let stopReason = null;
-function reserve(m, body, limit) {
-  const est = worstCost(pricing[m.slug], estimateTokens(body, CHARS_PER_TOKEN), limit, TIER_MARGIN);
-  if (spent + reserved + est > CAP) {
-    stopReason ??= `cap: $${spent.toFixed(4)} spent + $${reserved.toFixed(4)} in flight + $${est.toFixed(4)} next > $${CAP}`;
-    return null;
-  }
-  reserved += est;
-  return est;
-}
-
-const truncate = (s, n) => (typeof s === 'string' && s.length > n ? `${s.slice(0, n)}…[${s.length} chars]` : s);
-const RETRYABLE = (s) => s === null || s === 408 || s === 429 || s >= 500;
-
-async function chat(body) {
-  const url = `${BASE_URL}/chat/completions`;
-  let res;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (e) {
-    ledger.record('POST', url, `error: ${e.name}`);
-    throw Object.assign(new Error(`${e.name}: ${e.message}`), { status: null });
-  }
-  const text = await res.text();
-  let json = null;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    json = null;
-  }
-  const failed = !res.ok || !json || json.error;
-  const status = !res.ok ? res.status : json?.error ? (Number(json.error.code) || 502) : res.status;
-  ledger.record('POST', url, failed ? `${status} (refused)` : status);
-  if (failed) throw Object.assign(new Error(`HTTP ${status}: ${truncate(json?.error ? JSON.stringify(json.error) : text, 600)}`), { status });
-  return json;
-}
-
-async function call(m, body, limit) {
-  const est = reserve(m, body, limit);
-  if (est === null) return { status: 'skipped_cap' };
-  const attempts = [];
-  try {
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      const t0 = Date.now();
-      try {
-        const res = await chat(body);
-        const latencyMs = Date.now() - t0;
-        const usage = res.usage ?? null;
-        const cost = costOfUsage(pricing[m.slug], usage);
-        // A call that returns no usage keeps its worst case as spend (R8).
-        const charged = usage ? Math.max(cost.computed, cost.reported ?? 0) : est;
-        spent += charged;
-        return { status: 'ok', res, latencyMs, attempts: attempts.length + 1, usage, cost: { ...cost, charged, reservedUsd: est } };
-      } catch (e) {
-        const err = { status: e.status ?? null, message: truncate(String(e.message), 600) };
-        attempts.push({ ...err, latencyMs: Date.now() - t0 });
-        if (!RETRYABLE(err.status) || attempt === 3) return { status: 'error', error: err, attempts };
-        await new Promise((r) => setTimeout(r, attempt === 1 ? 2000 : 8000));
-      }
-    }
-  } finally {
-    reserved -= est;
-  }
-}
-
-function summarizeMessage(msg) {
-  return {
-    content: truncate(msg?.content ?? null, 800),
-    toolCalls: (msg?.tool_calls ?? []).map((tc) => ({ id: tc.id, name: tc.function?.name, args: truncate(tc.function?.arguments ?? '', 1500) })),
-  };
-}
-const parseAlias = (raw) => {
-  try {
-    return JSON.parse(raw || '{}').alias;
-  } catch {
-    return undefined;
-  }
-};
-
-async function runRow({ m, q, r }) {
-  const key = `${m.spec}|${q.id}|${r}`;
-  const row = { key, config: session.config.name, model: m.slug, spec: m.spec, control: m.control, qid: q.id, kind: q.kind, repeat: r, acceptable: q.acceptable };
-
-  // First request: load_source is the only tool.
-  const body1 = firstBody(session, m, q);
-  const c1 = await call(m, body1, MAX_TOKENS);
-  if (c1.status !== 'ok') {
-    row.status = c1.status === 'skipped_cap' ? 'incomplete_cap' : 'error';
-    row.first = c1.status === 'error' ? { error: c1.error, attempts: c1.attempts } : { skipped: 'cap' };
-    return row;
-  }
-  const msg1 = c1.res.choices?.[0]?.message ?? {};
-  const calls1 = msg1.tool_calls ?? [];
-  const loaded = [];
-  const invalidAliases = [];
-  const otherCalls = [];
-  const toolMessages = [];
-  for (const tc of calls1) {
-    const name = tc.function?.name;
-    let content;
-    if (name === 'load_source') {
-      const alias = parseAlias(tc.function.arguments);
-      if (alias && session.entryByAlias(alias)) {
-        content = loaded.includes(alias) ? session.loadResultText.alreadyLoaded(alias) : session.loadResultText.loaded(alias);
-        if (!loaded.includes(alias)) loaded.push(alias);
-      } else {
-        invalidAliases.push(tc.function?.arguments ?? '');
-        content = session.loadResultText.notOffered;
-      }
-    } else {
-      otherCalls.push(name);
-      content = UNKNOWN_TOOL_TEXT(name);
-    }
-    toolMessages.push({ role: 'tool', tool_call_id: tc.id, content });
-  }
-  row.first = {
-    latencyMs: c1.latencyMs,
-    attempts: c1.attempts,
-    promptChars: JSON.stringify(body1).length,
-    usage: c1.usage,
-    cost: c1.cost,
-    finishReason: c1.res.choices?.[0]?.finish_reason ?? null,
-    respondedModel: c1.res.model ?? null,
-    ...summarizeMessage(msg1),
-    firstCallName: calls1[0]?.function?.name ?? null,
-    loadCalls: calls1.filter((tc) => tc.function?.name === 'load_source').length,
-    invalidAliases,
-    otherCalls,
-  };
-  row.firstCallIsLoad = calls1[0]?.function?.name === 'load_source';
-  row.loaded1 = [...loaded];
-  row.score1 = scoreLoad(loaded, q.acceptable);
-
-  if (!loaded.length) {
-    row.second = null;
-    row.loaded2 = [...loaded];
-    row.score2 = row.score1;
-    row.status = 'complete';
-    row.costUsd = c1.cost.charged;
-    return row;
-  }
-
-  // Second request, as the app builds it after these loads.
-  const state = await session.afterLoads(loaded.map((a) => session.entryByAlias(a).sourceId));
-  const body2 = secondBody(m, body1, msg1, toolMessages, state);
-  const c2 = await call(m, body2, MAX_TOKENS);
-  if (c2.status !== 'ok') {
-    row.status = c2.status === 'skipped_cap' ? 'incomplete_cap' : 'complete';
-    row.second = c2.status === 'error' ? { outcome: 'error', error: c2.error, attempts: c2.attempts, promptChars: JSON.stringify(body2).length } : { skipped: 'cap' };
-    row.loaded2 = [...loaded];
-    row.score2 = row.score1;
-    row.costUsd = c1.cost.charged;
-    return row;
-  }
-  const msg2 = c2.res.choices?.[0]?.message ?? {};
-  const s2 = summarizeMessage(msg2);
-  const offeredByName = new Map(state.tools.map((t) => [t.function.name, t]));
-  const nearMiss = (name) => {
-    for (const a of loaded) if (offeredByName.has(`${a}__${name}`)) return `bare upstream name of ${a}__${name}`;
-    const target = session.router.sourceForAliasedName(name);
-    if (target) return `a tool of ${session.aliasOf(target.sourceId)}, which was not loaded`;
-    return null;
-  };
-  const loaded2 = [...loaded];
-  const evaluated = (msg2.tool_calls ?? []).map((tc) => {
-    const name = tc.function?.name;
-    const raw = tc.function?.arguments ?? '';
-    if (name === 'load_source') {
-      const alias = parseAlias(raw);
-      if (alias && session.entryByAlias(alias) && !loaded2.includes(alias)) loaded2.push(alias);
-      return { name, kind: 'load_source', alias: alias ?? null };
-    }
-    const tool = offeredByName.get(name);
-    if (!tool) return { name, kind: 'unknown', validName: false, nearMiss: nearMiss(name), args: truncate(raw, 400) };
-    let args;
-    try {
-      args = raw ? JSON.parse(raw) : {};
-    } catch {
-      return { name, kind: 'loaded', validName: true, argsParse: false, schemaValid: false, args: truncate(raw, 400) };
-    }
-    const v = validatorFor(tool);
-    if (v.compileError) return { name, kind: 'loaded', validName: true, argsParse: true, schemaValid: null, schemaNote: v.compileError };
-    const ok = v(args);
-    return {
-      name,
-      kind: 'loaded',
-      validName: true,
-      argsParse: true,
-      schemaValid: Boolean(ok),
-      ...(ok ? {} : { schemaErrors: (v.errors ?? []).slice(0, 5).map((e) => `${e.dataPath || '/'} ${e.message}`), args: truncate(raw, 400) }),
-    };
-  });
-  const loadedCalls = evaluated.filter((e) => e.kind === 'loaded');
-  const unknownCalls = evaluated.filter((e) => e.kind === 'unknown');
-  let outcome;
-  if (loadedCalls.length && !unknownCalls.length && loadedCalls.every((e) => e.schemaValid)) outcome = 'valid_tool_call';
-  else if (loadedCalls.length || unknownCalls.length) outcome = 'invalid_tool_call';
-  else if (evaluated.length) outcome = 'loaded_more_only';
-  else outcome = 'no_tool_call';
-  row.second = {
-    latencyMs: c2.latencyMs,
-    attempts: c2.attempts,
-    promptChars: JSON.stringify(body2).length,
-    usage: c2.usage,
-    cost: c2.cost,
-    finishReason: c2.res.choices?.[0]?.finish_reason ?? null,
-    respondedModel: c2.res.model ?? null,
-    content: s2.content,
-    toolCalls: s2.toolCalls,
-    evaluated,
-    outcome,
-    offeredToolCount: state.tools.length,
-  };
-  row.loaded2 = loaded2;
-  row.score2 = scoreLoad(loaded2, q.acceptable);
-  row.status = 'complete';
-  row.costUsd = c1.cost.charged + c2.cost.charged;
-  return row;
-}
-
-// Token baselines (R5): the ladder of `baselineLadder`; a step that returns no
-// usage is re-sent at the next step (R8). Recorded either way.
-async function runBaseline(m, name, b) {
-  const key = `${m.spec}|${name}`;
-  const tried = [];
-  let lastOk = null;
-  for (const step of baselineLadder(m)) {
-    const body = baselineBody(m, b, step.params);
-    const c = await call(m, body, step.limit);
-    if (c.status === 'skipped_cap') return { key, model: m.slug, spec: m.spec, baseline: name, status: 'incomplete_cap', tried };
-    if (c.status === 'ok' && c.usage) {
-      return { key, model: m.slug, spec: m.spec, baseline: name, status: 'complete', sent: step.note, toolCount: b.tools.length, systemChars: b.system.length, usage: c.usage, cost: c.cost, latencyMs: c.latencyMs, tried };
-    }
-    if (c.status === 'ok') {
-      lastOk = { step, c };
-      tried.push({ sent: step.note, note: 'no usage returned', cost: c.cost });
-    } else tried.push({ sent: step.note, error: c.error });
-  }
-  if (lastOk) {
-    return { key, model: m.slug, spec: m.spec, baseline: name, status: 'complete', sent: lastOk.step.note, toolCount: b.tools.length, systemChars: b.system.length, usage: null, cost: lastOk.c.cost, latencyMs: lastOk.c.latencyMs, tried };
-  }
-  return { key, model: m.slug, spec: m.spec, baseline: name, status: 'error', tried };
-}
-
-// --- Work queue ---
-const baselines = await session.baselines();
-const tasks = [];
-for (const m of models) for (const [name, b] of Object.entries(baselines)) if (!doneBase.has(`${m.spec}|${name}`)) tasks.push({ type: 'baseline', m, name, b });
-for (const k of rowKeys) if (!doneRows.has(`${k.m.spec}|${k.q.id}|${k.r}`)) tasks.push({ type: 'row', ...k });
-
-let next = 0;
+const rowsByKey = new Map(priorRows.map((r) => [r.key, r]));
 let finished = 0;
 const t0 = Date.now();
-async function worker() {
-  while (next < tasks.length && !stopReason) {
-    const t = tasks[next++];
-    const out = t.type === 'row' ? await runRow(t) : await runBaseline(t.m, t.name, t.b);
-    appendFileSync(t.type === 'row' ? rowsPath : basePath, jsonLine(out));
+const engine = createEngine({
+  ledger,
+  apiKey,
+  baseUrl: BASE_URL,
+  cap: CAP,
+  writeRow: (kind, out) => {
+    appendFileSync(kind === 'baseline' ? basePath : rowsPath, jsonLine(out));
+    if (kind !== 'baseline') rowsByKey.set(out.key, out);
+  },
+  log: (t, out, s) => {
     finished++;
-    if (finished % 25 === 0 || finished === tasks.length) console.log(`  ${finished}/${tasks.length} done, $${spent.toFixed(3)} spent, ${Math.round((Date.now() - t0) / 1000)} s`);
-  }
-}
-console.log(`run ${runId}: ${tasks.length} tasks (${doneRows.size} rows already complete)`);
-await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+    if (finished % 25 === 0) console.log(`  ${finished} done (step ${t.step?.id ?? 'baselines'}), $${s.spent.toFixed(3)} spent, $${s.reserved.toFixed(3)} reserved, ${Math.round((Date.now() - t0) / 1000)} s`);
+  },
+});
+engine.priorSpend = priorSpend;
 
-const completeRows = readDone(rowsPath).size;
-writeMeta({ endedAt: new Date().toISOString(), spentUsd: spent, stopReason, completeRows, completeBaselines: readDone(basePath).size });
-console.log(`done: ${completeRows}/${rowKeys.length} rows complete; $${spent.toFixed(4)} spent in this run directory (of which $${priorSpend.toFixed(4)} before this session)${stopReason ? `; stopped — ${stopReason}` : ''}`);
+const notStarted = [];
+const notStartedWhy = {};
+console.log(`run ${runId}: ${steps.length} step(s); ${done.size} row(s) already done`);
+for (const s of steps) {
+  const tasks = [];
+  if (s.baselines) {
+    const baselines = await s.session.baselines();
+    for (const spec of s.models) for (const [name, b] of Object.entries(baselines)) if (!done.has(`${spec}|${name}`)) tasks.push({ type: 'baseline', key: `${spec}|${name}`, mi: modelInfo.get(spec), name, b });
+  }
+  const selections = new Map();
+  if (s.selectionFrom) for (const r of rowsByKey.values()) if (r.step === s.selectionFrom && r.role === 'builder') selections.set(r.qid, r);
+  for (let r = 1; r <= (s.kind === 'rule' || s.kind === 'builder-read' ? 1 : s.repeats); r++) {
+    for (const q of s.questions) {
+      const specsHere = s.kind === 'rule' ? [null] : s.models;
+      for (const spec of specsHere) {
+        const key = rowKey(s, spec, q, r);
+        if (done.has(key)) continue;
+        const base = { key, step: s, session: s.session, index: s.index, q, r, mi: spec ? modelInfo.get(spec) : null };
+        if (s.kind === 'rule') tasks.push({ ...base, type: 'rule' });
+        else if (s.kind === 'builder-read') tasks.push({ ...base, type: 'builder' });
+        else if (s.kind === 'search') tasks.push({ ...base, type: 'search', dir: s.session.directoryFor(s.shortlister.shortlist(q.text).aliases.map((a) => s.session.entry(a).sourceId)) });
+        else if (s.kind === 'shortlist') tasks.push({ ...base, type: 'main', dir: s.session.directoryFor(s.shortlister.shortlist(q.text).aliases.map((a) => s.session.entry(a).sourceId)) });
+        else if (s.kind === 'builder') {
+          const b = selections.get(q.id);
+          if (!b || b.status !== 'complete') {
+            notStarted.push(key);
+            notStartedWhy[key] = b ? 'its builder row is an error' : 'no builder row';
+            continue;
+          }
+          tasks.push({ ...base, type: 'main', dir: s.session.directoryFor(b.selection.map((a) => s.session.entry(a).sourceId)) });
+        } else tasks.push({ ...base, type: 'main', dir: s.session.full });
+      }
+    }
+  }
+  if (engine.stopReason) {
+    for (const t of tasks) notStarted.push(t.key);
+    continue;
+  }
+  notStarted.push(...(await engine.runTasks(tasks, CONCURRENCY)));
+}
+
+// --- The end: meta, and the probes' outputs ---
+const allRows = [...rowsByKey.values()];
+const lastBase = new Map(readLines(basePath).map((b) => [b.key, b]));
+const completeRows = allRows.filter((r) => r.status === 'complete').length;
+const errorRows = allRows.filter((r) => r.status === 'error').length;
+const byStep = {};
+for (const k of notStarted) {
+  const step = PLAN ? k.split('|')[0] : steps[0].id;
+  byStep[step] = (byStep[step] ?? 0) + 1;
+}
+const extra = {
+  endedAt: new Date().toISOString(),
+  spentUsd: engine.spent,
+  stopReason: engine.stopReason,
+  completeRows,
+  errorRows,
+  uniqueRows: completeRows + errorRows,
+  completeBaselines: [...lastBase.values()].filter((b) => b.status === 'complete').length,
+  rowsNotStarted: { count: notStarted.length, byStep, keys: notStarted, ...(Object.keys(notStartedWhy).length ? { why: notStartedWhy } : {}) },
+};
+
+if (PROBE) {
+  const cal = { ...calibrate(allRows), runId, rowsSha256: existsSync(rowsPath) ? fileSha256(rowsPath) : null };
+  writeFileSync(join(runDir, 'calibration.json'), jsonDocument(cal));
+  extra.calibration = cal.models;
+  console.log('calibration (calibration.json): characters a token, per model');
+  for (const [slug, c] of Object.entries(cal.models)) console.log(`  ${slug.padEnd(36)} ${c.charsPerToken} (fewest ${c.fewestCharsPerToken} over ${c.requests} requests, less 10%)`);
+  console.log(`  the calibrated bound: node benchmark/runner/run.mjs --dry-run --plan ${PLAN ? repoPath(PLAN) : '<plan>'} --open-weight <slug> --calibration ${repoPath(join(runDir, 'calibration.json'))}`);
+}
+if (OW_PROBE) {
+  const perModel = [];
+  for (const spec of steps[0].models) {
+    const rows = allRows.filter((r) => r.spec === spec && r.role === 'main');
+    const answered = rows.filter((r) => r.status === 'complete' && r.first && !r.first.error);
+    const correct = answered.filter((r) => CORRECT.has(rowScores(r).offered.score1)).length;
+    const correctRaw = answered.filter((r) => CORRECT.has(rowScores(r).raw.score1)).length;
+    perModel.push({ spec, rows: rows.length, answered: answered.length, errors: rows.filter((r) => r.status === 'error').length, correctOffered: correct, accuracyOffered: answered.length ? correct / answered.length : null, correctRaw, costUsd: rows.reduce((s, r) => s + num(r.costUsd), 0) });
+  }
+  const order = steps[0].models;
+  const ranked = [...perModel].sort((a, b) => (b.accuracyOffered ?? -1) - (a.accuracyOffered ?? -1) || a.costUsd - b.costUsd || order.indexOf(a.spec) - order.indexOf(b.spec));
+  extra.openWeightProbe = { rule: plan.openWeightProbe.winner, perModel, winner: ranked[0]?.spec ?? null, complete: notStarted.length === 0 };
+  console.log('open-weight probe: first-request accuracy on the offered gold (raw gold beside it), cost, errors');
+  for (const p of perModel) console.log(`  ${p.spec.padEnd(36)} ${p.correctOffered}/${p.answered} = ${p.accuracyOffered === null ? 'n/a' : p.accuracyOffered.toFixed(4)} (raw ${p.correctRaw}/${p.answered})  $${p.costUsd.toFixed(4)}  errors ${p.errors}`);
+  console.log(`  winner: ${extra.openWeightProbe.winner}${notStarted.length ? ' (the probe stopped before every row; read with care)' : ''}`);
+}
+writeMeta(extra);
+console.log(`done: ${completeRows} complete, ${errorRows} error, ${notStarted.length} not started; $${engine.spent.toFixed(4)} spent in this run directory (of which $${priorSpend.toFixed(4)} before this session)${engine.stopReason ? `; stopped — ${engine.stopReason}` : ''}`);
 console.log(`output: ${repoPath(runDir)}`);
-process.exit(stopReason ? 2 : 0);
+process.exit(engine.stopReason ? 2 : 0);

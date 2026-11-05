@@ -1,0 +1,54 @@
+{
+  "schema": "civic-run-plan/1",
+  "id": "s1",
+  "description": "Sprint S1's preregistered runs (benchmark/preregistration/s1.md): the open-weight probe, the two-question probe, then the evaluations in G0-3a's order. One invocation runs one of the three; the evaluations write one run directory with every step's rows. The open-weight model is a run argument (--open-weight), fixed at G3, so this file does not change after G2.",
+  "models": {
+    "main": "anthropic/claude-haiku-5.5",
+    "builder": "anthropic/claude-haiku-5.5",
+    "openWeight": "--open-weight <slug>: one of openWeightProbe.models, chosen at G3"
+  },
+  "openWeightProbe": {
+    "config": "baseline-7",
+    "inventory": "benchmark/inventories/7.json",
+    "questions": "benchmark/questions/7.json",
+    "questionIds": { "from": "q01", "to": "q49" },
+    "repeats": 1,
+    "models": ["z-ai/glm-5.3-flash", "deepseek/deepseek-v4-flash-0731", "xiaomi/mimo-v2.6-flash"],
+    "winner": "the best first-request accuracy over the offered gold; a tie goes to the model whose probe rows cost less in all; a further tie to the earlier model in this list"
+  },
+  "probe": {
+    "questionIds": { "probeIds": 2 },
+    "repeats": 1,
+    "models": ["main", "openWeight"],
+    "steps": [
+      { "id": "probe-baseline-7", "config": "baseline-7", "inventory": "benchmark/inventories/7.json", "questions": "benchmark/questions/7.json" },
+      { "id": "probe-flat-1000", "config": "flat-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json" }
+    ],
+    "calibration": "per model, the fewest characters (of the request body's JSON) per billed prompt token over the probe's requests, less 10%"
+  },
+  "steps": [
+    { "id": "rule-50", "config": "rule-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": [], "repeats": 1 },
+    { "id": "rule-200", "config": "rule-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": [], "repeats": 1 },
+    { "id": "rule-1000", "config": "rule-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": [], "repeats": 1 },
+    { "id": "baseline-7", "config": "baseline-7", "inventory": "benchmark/inventories/7.json", "questions": "benchmark/questions/7.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "flat-50", "config": "flat-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "flat-200", "config": "flat-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist-50", "config": "shortlist-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist-200", "config": "shortlist-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist-1000", "config": "shortlist-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist+search-50", "config": "shortlist+search-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist+search-200", "config": "shortlist+search-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "shortlist+search-1000", "config": "shortlist+search-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "builder-50-reads", "config": "builder-50", "role": "builder", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["builder"], "repeats": 1 },
+    { "id": "builder-50", "config": "builder-50", "selectionFrom": "builder-50-reads", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "builder-200-reads", "config": "builder-200", "role": "builder", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["builder"], "repeats": 1 },
+    { "id": "builder-200", "config": "builder-200", "selectionFrom": "builder-200-reads", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "builder-1000-reads", "config": "builder-1000", "role": "builder", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["builder"], "repeats": 1 },
+    { "id": "builder-1000", "config": "builder-1000", "selectionFrom": "builder-1000-reads", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3 },
+    { "id": "flat-1000", "config": "flat-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "questionIds": { "draw": 50, "seed": "civic-ai-tools S1 P3 flat-1000 probe, 2026-11-03" }, "models": ["main"], "repeats": 1 }
+  ],
+  "options": {
+    "A": { "description": "As the steps state: three repeats on every 450-row configuration." },
+    "B": { "description": "Two repeats on every 450-row configuration (each step with three repeats); the builder reads, the rule steps and the flat-1000 probe unchanged.", "repeats": 2, "appliesTo": "every step whose repeats are 3" }
+  }
+}
