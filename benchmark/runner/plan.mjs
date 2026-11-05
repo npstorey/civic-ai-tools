@@ -64,15 +64,20 @@ export async function rowDirectory({ session, kind, q, shortlister }) {
 }
 
 /** One step's bounds for one model (`mi`: the model, its pricings, its
- *  characters per token and context length). */
-export async function stepBounds({ session, kind, mi, questions, repeats, shortlister, baselines = null }) {
-  const p = mi.reservationPricings;
+ *  characters per token and context length). With `completion` (tokens) each
+ *  completion of the ceiling, and each earlier response a later request
+ *  carries, is counted at that many tokens instead of the limit; with
+ *  `pricings` the ceiling is priced at those; with `ceilingOnly` the floor
+ *  and the reservations are not computed. The three are how "the calibrated
+ *  bound" is computed (run.mjs). */
+export async function stepBounds({ session, kind, mi, questions, repeats, shortlister, baselines = null, completion = MAX_TOKENS, pricings = null, ceilingOnly = false }) {
+  const p = pricings ?? mi.reservationPricings;
   const cpt = mi.cpt;
   const out = { calls: 0, floor: 0, ceiling: 0, completions: 0, reserved: 0, largestRow: 0 };
   // A request's worst cost; `rep` times its completion share is added to
   // `out.completions`, so the ceiling can be read as prompts plus completions.
   let rep = 1;
-  const worst = (tokens, limit = MAX_TOKENS) => {
+  const worst = (tokens, limit = completion) => {
     const t = Math.min(tokens, mi.contextLength ?? Infinity);
     const all = worstCostOver(p, t, limit, TIER_MARGIN);
     out.completions += rep * (all - worstCostOver(p, t, 0, TIER_MARGIN));
@@ -84,10 +89,11 @@ export async function stepBounds({ session, kind, mi, questions, repeats, shortl
     rep = repeats;
     if (kind === 'builder-read') {
       const body = builderBody(session.full, mi.m, q);
-      const res = reservationOf(await slotBounds({ session, kind, dir: session.full, m: mi.m, q, cpt, contextLength: mi.contextLength }), p, TIER_MARGIN);
       out.calls += repeats;
-      out.floor += repeats * worstCostOver(p, estimateTokens(body, FLOOR_CHARS_PER_TOKEN), 0, 0);
       out.ceiling += repeats * worst(estimateTokens(body, cpt));
+      if (ceilingOnly) continue;
+      const res = reservationOf(await slotBounds({ session, kind, dir: session.full, m: mi.m, q, cpt, contextLength: mi.contextLength }), p, TIER_MARGIN);
+      out.floor += repeats * worstCostOver(p, estimateTokens(body, FLOOR_CHARS_PER_TOKEN), 0, 0);
       out.reserved += repeats * res.usd;
       out.largestRow = Math.max(out.largestRow, res.usd);
       continue;
@@ -106,7 +112,7 @@ export async function stepBounds({ session, kind, mi, questions, repeats, shortl
     let largest = 0;
     for (const set of candidates) largest = Math.max(largest, JSON.stringify(await plannedSecondBody(wide, mi.m, q, set, { search })).length);
     let smallest = null;
-    for (const set of labels) {
+    for (const set of ceilingOnly ? [] : labels) {
       const chars = JSON.stringify(await plannedSecondBody(dir, mi.m, q, set, { search })).length;
       smallest = smallest === null ? chars : Math.min(smallest, chars);
     }
@@ -114,13 +120,14 @@ export async function stepBounds({ session, kind, mi, questions, repeats, shortl
     let ceiling = worst(estimateTokens(body1, cpt));
     if (search) {
       const hits10 = session.directoryFor([...dir.ids, ...r.byLine.filter((id) => !dir.ids.includes(id)).slice(0, BM25.top)]);
-      ceiling += worst(estimateTokens(selectionBody(hits10, mi.m, q, { search }), cpt) + MAX_TOKENS);
-      ceiling += worst(estimateTokens(selectionBody(wide, mi.m, q, { search }), cpt) + 2 * MAX_TOKENS);
+      ceiling += worst(estimateTokens(selectionBody(hits10, mi.m, q, { search }), cpt) + completion);
+      ceiling += worst(estimateTokens(selectionBody(wide, mi.m, q, { search }), cpt) + 2 * completion);
     }
-    if (candidates.length) ceiling += worst(Math.ceil(largest / cpt) + rounds * MAX_TOKENS);
-    const res = reservationOf(await slotBounds({ session, kind: search ? 'search' : 'main', dir, m: mi.m, q, cpt, contextLength: mi.contextLength }), p, TIER_MARGIN);
+    if (candidates.length) ceiling += worst(Math.ceil(largest / cpt) + rounds * completion);
     out.calls += repeats * (search ? 2 + FIND_SOURCE_LIMIT : 2);
     out.ceiling += repeats * ceiling;
+    if (ceilingOnly) continue;
+    const res = reservationOf(await slotBounds({ session, kind: search ? 'search' : 'main', dir, m: mi.m, q, cpt, contextLength: mi.contextLength }), p, TIER_MARGIN);
     out.floor += repeats * (worstCostOver(p, estimateTokens(body1, FLOOR_CHARS_PER_TOKEN), 0, 0) + (smallest === null ? 0 : worstCostOver(p, Math.floor(smallest / FLOOR_CHARS_PER_TOKEN), 0, 0)));
     out.reserved += repeats * res.usd;
     out.largestRow = Math.max(out.largestRow, res.usd);

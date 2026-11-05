@@ -155,3 +155,20 @@ test("P3-build: the per-configuration hashes are the router's, for every configu
     assert.ok(table.includes(`| \`${config}\` | \`${canonicalJson(h.routingConfiguration)}\` | \`${h.routingConfigurationHash}\` | \`${h.firstRequestDefinitionHash}\` |`), config);
   }
 });
+
+test('P3-build, tree 4: the cap paragraph states "the calibrated bound" as the seat ruled it, word for word with the code', async () => {
+  const prereg = read('preregistration/s1.md');
+  const cal = await load('runner/calibration.mjs');
+  const cap = section(prereg, 'Repeats, cap, run order and fallback (P3)');
+  assert.match(cap, /hub #302 comment 6617296646/);
+  assert.match(cap, /"The calibrated bound" is\n  the plan's dry run recomputed at G3 with:/);
+  cal.CALIBRATED_BOUND_POINTS.forEach((point, i) => assert.ok(cap.includes(`  ${i + 1}. ${point}\n`), `point ${i + 1}`));
+  for (const rule of cal.CALIBRATED_BOUND_UNCHANGED) assert.ok(cap.includes(`  - ${rule}\n`), rule.slice(0, 40));
+  assert.equal(cal.CAP_LIMIT_USD, 100);
+  assert.deepEqual(cal.capDecision(100, 200), { option: 'A', cap: 100 });
+  assert.deepEqual(cal.capDecision(100.01, 99.2), { option: 'B', cap: 100 });
+  assert.deepEqual(cal.capDecision(150, 100.01), { option: null, cap: null });
+  const models = section(prereg, 'Models and request parameters (P3)');
+  assert.ok(models.includes('node benchmark/runner/calibration.mjs --probe'), 'the calibration step is named');
+  assert.match(models, /schema `civic-calibration\/2`/);
+});

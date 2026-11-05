@@ -85,12 +85,16 @@ export function endpointEligible(endpoint, routing) {
   return Number(endpoint.pricing.prompt) <= routing.max_price.prompt && Number(endpoint.pricing.completion) <= routing.max_price.completion;
 }
 
+/** The price ceilings a model's provider routing enforces, as a pricing
+ *  object (per million tokens); null for a model with no routing. */
+export const routingCeilings = (model) => (model.routing ? { prompt: String(model.routing.max_price.prompt), completion: String(model.routing.max_price.completion) } : null);
+
 /** The per-million pricing objects a request to `model` may be billed at:
  *  its eligible endpoints' and, under routing, the ceilings. Falls back to
  *  the list row's pricing when no endpoints were read. */
 export function reservationPricings(model, listRow, endpoints) {
   const eligible = (endpoints ?? []).filter((e) => endpointEligible(e, model.routing)).map((e) => e.pricing);
-  const ceilings = model.routing ? [{ prompt: String(model.routing.max_price.prompt), completion: String(model.routing.max_price.completion) }] : [];
+  const ceilings = model.routing ? [routingCeilings(model)] : [];
   const out = [...eligible, ...ceilings];
   return out.length ? out : [listRow.pricing];
 }

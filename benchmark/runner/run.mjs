@@ -37,6 +37,10 @@
 //              `probeIds`, one repeat. Under a plan: the plan's probe steps on
 //              both main models. Either writes calibration.json in the run
 //              directory (calibration.mjs).
+//   The calibration file the evaluations read is calibration.mjs's, from the
+//   two probes' runs and R5's rows; under it, a dry run of the plan with
+//   --open-weight prints "the calibrated bound" for options A and B, the
+//   option it implies and its --cap (or that the run does not start).
 //   --open-weight-probe  under a plan: the three candidates on R5's 49 seed
 //              questions over the 7-entry inventory, baseline-7, one repeat;
 //              prints the comparison and the winner.
@@ -73,9 +77,9 @@ import { jsonDocument, jsonLine } from './writer.mjs';
 import { createEngine } from './engine.mjs';
 import { createIndex } from './search.mjs';
 import { createShortlister } from './shortlist.mjs';
-import { HAIKU_SLUG, OPEN_WEIGHT_CANDIDATES, reservationPricings, resolveModel } from './models.mjs';
+import { HAIKU_SLUG, OPEN_WEIGHT_CANDIDATES, reservationPricings, resolveModel, routingCeilings } from './models.mjs';
 import { BASE_URL, endpointRow, endpointsUrl, MODEL_LIST_URL, modelRow } from './openrouter.mjs';
-import { calibrate } from './calibration.mjs';
+import { calibrate, CAP_LIMIT_USD, capDecision } from './calibration.mjs';
 import { INPUT_HASH_RECIPE, inputHash } from './input-hash.mjs';
 
 const REQUEST_TIMEOUT_MS = 180_000;
@@ -430,8 +434,59 @@ async function printPlan() {
   return total;
 }
 
+/** "The calibrated bound" (the seat's ruling, hub #302 comment 6617296646;
+ *  the preregistration's "Repeats, cap, run order and fallback"): the plan's
+ *  ceiling recomputed with each model's calibrated characters per token, each
+ *  completion (and each earlier response a later request carries) at twice
+ *  the model's largest billed completion, and the open-weight model at its
+ *  routing's price ceilings; Haiku 5.5 at its dearest endpoint, as the dry
+ *  run prices it. For option A and option B, and the option and `--cap` it
+ *  implies. Only the evaluations' plan, with --calibration and --open-weight. */
+async function calibratedBound() {
+  const missing = [];
+  if (!opts['open-weight']) missing.push('--open-weight <slug>');
+  for (const spec of new Set(steps.flatMap((s) => s.models))) {
+    const slug = resolved.get(spec).slug;
+    if (!(calibration.models?.[slug]?.largestCompletion > 0)) missing.push(`a largest billed completion for ${slug}`);
+  }
+  console.log(`the calibrated bound (benchmark/preregistration/s1.md, "Repeats, cap, run order and fallback"):`);
+  if (missing.length) {
+    console.log(`  not computed: it needs ${missing.join(' and ')} (node benchmark/runner/calibration.mjs --probe <run dir> --open-weight-probe <run dir> --out <file>)`);
+    return null;
+  }
+  const repeatsOf = (id, option) => {
+    const s = plan.steps.find((x) => x.id === id);
+    const o = plan.options[option];
+    return o.repeats && s.repeats === 3 ? o.repeats : s.repeats;
+  };
+  const bound = { A: 0, B: 0 };
+  const perModel = {};
+  for (const s of steps) {
+    for (const spec of s.models) {
+      const mi = modelInfo.get(spec);
+      const cal = calibration.models[mi.m.slug];
+      const ceilings = routingCeilings(mi.m);
+      const b = await stepBounds({ session: s.session, kind: s.kind, mi, questions: s.questions, repeats: 1, shortlister: s.shortlister, completion: cal.completionAllowance ?? 2 * cal.largestCompletion, pricings: ceilings ? [ceilings] : null, ceilingOnly: true });
+      for (const option of ['A', 'B']) bound[option] += repeatsOf(s.id, option) * b.ceiling;
+      perModel[mi.m.slug] = (perModel[mi.m.slug] ?? 0) + repeatsOf(s.id, opts.option) * b.ceiling;
+    }
+  }
+  for (const [slug, c] of Object.entries(calibration.models).filter(([slug]) => perModel[slug] !== undefined)) {
+    const ceilings = routingCeilings(resolveModel(slug));
+    console.log(`  ${slug.padEnd(36)} ${c.charsPerToken} characters a token; each completion at ${c.completionAllowance ?? 2 * c.largestCompletion} tokens (twice ${c.largestCompletion}); ${ceilings ? `at its routing's ceilings, $${ceilings.prompt} / $${ceilings.completion} a million` : 'at its dearest endpoint'}; option ${opts.option} ${fmt(perModel[slug])}`);
+  }
+  const d = capDecision(bound.A, bound.B);
+  console.log(`  option A: ${fmt(bound.A)}`);
+  console.log(`  option B: ${fmt(bound.B)}`);
+  if (d.option === 'A') console.log(`  option A applies (its bound is at most $${CAP_LIMIT_USD}): --cap ${d.cap}`);
+  else if (d.option === 'B') console.log(`  option B applies (option A's bound passes $${CAP_LIMIT_USD}): --option B --cap ${d.cap}`);
+  else console.log(`  the run does not start: option B's calibrated bound passes $${CAP_LIMIT_USD}, and no fallback beyond B is ruled; the seat brings it to the owner.`);
+  return { optionA: bound.A, optionB: bound.B, applies: d.option, cap: d.cap };
+}
+
 printHeader();
 const bounds = await printPlan();
+const calibrated = PLAN && !PROBE && !OW_PROBE && calibration ? await calibratedBound() : null;
 if (DRY) {
   console.log('DRY RUN: no network call was made; nothing was written.');
   process.exit(rosterProblems.length ? 1 : 0);
@@ -517,7 +572,7 @@ const meta = {
   concurrency: CONCURRENCY,
   inputs,
   router: `${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version}`,
-  estimate: { charsPerToken: calibration ? 'calibrated, per model' : CHARS_PER_TOKEN, calibration: opts.calibration ? { path: repoPath(opts.calibration), sha256: fileSha256(opts.calibration) } : null, tierMargin: TIER_MARGIN, plan: { calls: bounds.calls, floorUsd: bounds.floor, ceilingUsd: bounds.ceiling, hardUsd: bounds.reserved } },
+  estimate: { charsPerToken: calibration ? 'calibrated, per model' : CHARS_PER_TOKEN, calibration: opts.calibration ? { path: repoPath(opts.calibration), sha256: fileSha256(opts.calibration) } : null, tierMargin: TIER_MARGIN, plan: { calls: bounds.calls, floorUsd: bounds.floor, ceilingUsd: bounds.ceiling, hardUsd: bounds.reserved }, calibratedBound: calibrated && { optionAUsd: calibrated.optionA, optionBUsd: calibrated.optionB, applies: calibrated.applies, capUsd: calibrated.cap } },
   pricingSource: lists.source,
   modelListSha256: lists.sha256 ?? null,
   endpointSources: lists.endpointSources ?? null,
@@ -617,7 +672,8 @@ if (PROBE) {
   extra.calibration = cal.models;
   console.log('calibration (calibration.json): characters a token, per model');
   for (const [slug, c] of Object.entries(cal.models)) console.log(`  ${slug.padEnd(36)} ${c.charsPerToken} (fewest ${c.fewestCharsPerToken} over ${c.requests} requests, less 10%)`);
-  console.log(`  the calibrated bound: node benchmark/runner/run.mjs --dry-run --plan ${PLAN ? repoPath(PLAN) : '<plan>'} --open-weight <slug> --calibration ${repoPath(join(runDir, 'calibration.json'))}`);
+  console.log(`  the calibration file the bound reads: node benchmark/runner/calibration.mjs --probe ${repoPath(runDir)} --open-weight-probe <run dir> --out <file>`);
+  console.log(`  then the calibrated bound: node benchmark/runner/run.mjs --dry-run --plan ${PLAN ? repoPath(PLAN) : '<plan>'} --open-weight <slug> --calibration <file>`);
 }
 if (OW_PROBE) {
   const perModel = [];

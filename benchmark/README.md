@@ -42,6 +42,7 @@ node benchmark/runner/run.mjs --dry-run --inventory benchmark/inventories/7.json
 # At G3, in order, each with --cap and a key (MODEL_API_KEY or OPENROUTER_API_KEY); the sprint's wrapper supplies both (G0-7):
 node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --open-weight-probe --cap <usd>
 node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --probe --open-weight <slug> --cap <usd>
+node benchmark/runner/calibration.mjs --probe <run dir> --open-weight-probe <run dir> --out <file>  # then --dry-run with it: the calibrated bound
 node benchmark/runner/run.mjs --plan benchmark/runner/plans/s1.json --open-weight <slug> --calibration <file> --cap <usd>
 
 # The inputs' hash the wrapper checks before and after (A3.1):
