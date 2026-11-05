@@ -30,6 +30,7 @@ import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CORRECT } from './score.mjs';
+import { summarizeS1 } from './s1.mjs';
 import { jsonDocument } from '../runner/writer.mjs';
 
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
@@ -52,6 +53,12 @@ export function summarize({ metaText, rowsText, baseText }) {
   };
   const rows = lastByKey(rowsText);
   const base = lastByKey(baseText);
+  // A run of the S1 runner (meta.json carries its steps) is summarized per
+  // step and model (s1.mjs); R5's runs keep R5's summary, below.
+  if (Array.isArray(meta.steps)) {
+    const files = { 'rows.jsonl': sha256(rowsText), 'baseline.jsonl': sha256(baseText), 'meta.json': sha256(metaText) };
+    return summarizeS1({ meta, rows, base, files, rowLines: rowsText.split('\n').filter(Boolean).length });
+  }
 
   const pct = (n, d) => (d ? Number((n / d).toFixed(4)) : null);
   const median = (xs) => {
@@ -244,6 +251,13 @@ function main() {
     throw e;
   }
   console.log(`${summary.runId}: ${summary.completeRows}/${summary.expectedRows} rows complete (${summary.uniqueRows} unique keys, ${summary.rowLines} lines); $${summary.spentUsd}`);
+  if (summary.groups) {
+    for (const g of summary.groups) {
+      const acc = g.offered ? ` acc1 offered ${g.offered.firstRequest} raw ${g.raw.firstRequest} filter ${g.filterRecall.rate} search@10 ${g.searchRecall.at10.rate} notice ${g.notice.rate} err ${g.errors}` : g.searchRecall ? ` search@5 ${g.searchRecall.at5.rate} search@10 ${g.searchRecall.at10.rate}` : ` empty ${g.emptySelections} dropped ${g.droppedAliases}`;
+      console.log(`  ${g.step.padEnd(24)} ${String(g.model ?? g.role).padEnd(36)}${acc}${g.costUsd !== undefined ? ` $${g.costUsd}` : ''}`);
+    }
+    return;
+  }
   for (const m of summary.models) {
     console.log(
       `  ${m.spec.padEnd(36)} load-first ${m.firstCallIsLoad.onSourceQuestions} acc1 ${m.aliasAccuracy.firstRequest} acc2 ${m.aliasAccuracy.afterSecondRequest} over ${m.overLoading} noLoad(none) ${m.noLoadOnNoSource.rate} consist ${m.consistency.questionsAllRepeatsSame} 2nd-valid ${m.secondRequest.validRate} (${m.secondRequest.made}) tok ${m.tokens.firstRequestPromptMedian}/${m.tokens.baselines.T1_everything?.promptTokens} err ${m.errors} $${m.costUsd}`,

@@ -1,0 +1,1623 @@
+{
+  "schema": "civic-questions/1",
+  "inventory": {
+    "path": "benchmark/inventories/200.json",
+    "id": "civic-200",
+    "version": "2026-11-03.1",
+    "canonicalSha256": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+  },
+  "note": "The benchmark's questions, labelled against benchmark/inventories/200.json by the rules in benchmark/questions/README.md, after the inventories' hashes were recorded and before any model call. Built by benchmark/questions/build.mjs from gold.mjs.",
+  "probeIds": [
+    "q11",
+    "q34",
+    "q39"
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "kind": "single",
+      "text": "How many building permits did Chicago issue in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["chicago_socrata_com"],
+        ["data_cityofchicago_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "Differs from R5's label [[\"socrata\"]]: this inventory adds chicago_socrata_com (the Socrata portal pack for chicago.socrata.com), data_cityofchicago_org (the Socrata portal pack for data.cityofchicago.org) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q02",
+      "kind": "single",
+      "text": "What were the most common restaurant inspection violations in New York City last year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "Differs from R5's label [[\"socrata\"]]: this inventory adds data_cityofnewyork_us (the Socrata portal pack for data.cityofnewyork.us) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q03",
+      "kind": "single",
+      "text": "How many car break-ins were reported in San Francisco in the past six months?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "data_sf_gov lists 4 datasets, so it holds nothing in particular (rule 6). Differs from R5's label [[\"socrata\"]]: this inventory adds socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q04",
+      "kind": "single",
+      "text": "Which Seattle neighborhoods had the most code compliance complaints this year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "performance_seattle_gov is a performance portal (rule 6). Differs from R5's label [[\"socrata\"]]: this inventory adds socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q05",
+      "kind": "single",
+      "text": "How many noise complaints did New York City 311 receive last month?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "Counting complaints needs the 311 dataset on NYC Open Data; nyc_311 only looks up requests by number (R5's note). Differs from R5's label [[\"socrata\"]]: this inventory adds data_cityofnewyork_us (the Socrata portal pack for data.cityofnewyork.us) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q06",
+      "kind": "single",
+      "text": "What was average weekday subway ridership in New York in 2025?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "MTA ridership is published on data.ny.gov, a Socrata portal; nyc_mta covers alerts, outages and station lookup only (R5's note). Differs from R5's label [[\"socrata\"]]: this inventory adds data_ny_gov (the Socrata portal pack for data.ny.gov) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q07",
+      "kind": "single",
+      "text": "What is the median household income in Cuyahoga County, Ohio?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "Differs from R5's label [[\"data_commons\"]]: this inventory adds data_commons_pack (a wrapper over data_commons)."
+    },
+    {
+      "id": "q08",
+      "kind": "single",
+      "text": "How has the unemployment rate in Texas changed over the last ten years?",
+      "strata": {"place": "named-state", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "data_texas_gov names Texas, but a portal pack is not taken to hold a statistical series (rule 4). Differs from R5's label [[\"data_commons\"]]: this inventory adds data_commons_pack (a wrapper over data_commons)."
+    },
+    {
+      "id": "q09",
+      "kind": "single",
+      "text": "What share of adults in Mississippi have a bachelor's degree?",
+      "strata": {"place": "named-state", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "data_mmcp_ms_gov names Mississippi but is the state's medical cannabis program. Differs from R5's label [[\"data_commons\"]]: this inventory adds data_commons_pack (a wrapper over data_commons)."
+    },
+    {
+      "id": "q10",
+      "kind": "single",
+      "text": "How many pothole requests did Boston's 311 receive last month?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ],
+      "note": "Differs from R5's label [[\"boston\"]]: this inventory adds boston_pack (a wrapper over boston)."
+    },
+    {
+      "id": "q11",
+      "kind": "single",
+      "text": "What does the New York City Charter say about the powers of the Public Advocate?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_charter"]
+      ]
+    },
+    {
+      "id": "q12",
+      "kind": "single",
+      "text": "Which section of the NYC Administrative Code covers noise from construction sites?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_charter"]
+      ]
+    },
+    {
+      "id": "q13",
+      "kind": "single",
+      "text": "What do the Rules of the City of New York require of a restaurant that wants to operate a sidewalk cafe?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_charter"]
+      ]
+    },
+    {
+      "id": "q14",
+      "kind": "single",
+      "text": "Which Boston neighborhoods had the most building permits issued in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ],
+      "note": "Differs from R5's label [[\"boston\"]]: this inventory adds boston_pack (a wrapper over boston)."
+    },
+    {
+      "id": "q15",
+      "kind": "single",
+      "text": "What is the average assessed value of residential properties in Dorchester?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ],
+      "note": "Differs from R5's label [[\"boston\"]]: this inventory adds boston_pack (a wrapper over boston)."
+    },
+    {
+      "id": "q16",
+      "kind": "single",
+      "text": "Which organizations received City Council discretionary funding in Queens in fiscal year 2025?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_budget"]
+      ]
+    },
+    {
+      "id": "q17",
+      "kind": "single",
+      "text": "List the Council discretionary awards to the Brooklyn Public Library since fiscal year 2020.",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_budget"]
+      ]
+    },
+    {
+      "id": "q18",
+      "kind": "single",
+      "text": "What capital project changes did the City Council make under Section 254 in fiscal year 2024?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_budget"]
+      ]
+    },
+    {
+      "id": "q19",
+      "kind": "single",
+      "text": "Who sponsored Int. 0001-2024 in the New York City Council, and what is its status?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nyc_council"]
+      ]
+    },
+    {
+      "id": "q20",
+      "kind": "single",
+      "text": "When is the next hearing of the City Council's Committee on Housing and Buildings?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_council"]
+      ]
+    },
+    {
+      "id": "q21",
+      "kind": "single",
+      "text": "What bills has the Council member for District 39 sponsored this session?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nyc_council"]
+      ]
+    },
+    {
+      "id": "q22",
+      "kind": "single",
+      "text": "What is the status of New York State Senate bill S1234 in the 2025-2026 session?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nys_legislation"]
+      ]
+    },
+    {
+      "id": "q23",
+      "kind": "single",
+      "text": "Which bills in the New York State Assembly this session deal with rent stabilization?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nys_legislation"]
+      ]
+    },
+    {
+      "id": "q24",
+      "kind": "single",
+      "text": "What does section 120.05 of the New York State Penal Law say?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nys_legislation"]
+      ]
+    },
+    {
+      "id": "q25",
+      "kind": "single",
+      "text": "What public hearings have been announced in the City Record this week?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_record"]
+      ]
+    },
+    {
+      "id": "q26",
+      "kind": "single",
+      "text": "Which open procurement solicitations has the NYC Department of Transportation published?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_record"],
+        ["tender"]
+      ],
+      "note": "tender covers US procurement opportunities (rule 8). Differs from R5's label [[\"nyc_record\"]]: this inventory adds tender (a registry entry, rule 8)."
+    },
+    {
+      "id": "q27",
+      "kind": "single",
+      "text": "How much did the City of New York pay its ten largest vendors in fiscal year 2025?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"]
+      ],
+      "note": "Differs from R5's label [[\"nyc_checkbook\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q28",
+      "kind": "single",
+      "text": "What active contracts does the NYC Department of Sanitation hold, and what are they worth?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"]
+      ],
+      "note": "Differs from R5's label [[\"nyc_checkbook\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q29",
+      "kind": "single",
+      "text": "How much has New York City spent with Verizon this fiscal year?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"]
+      ],
+      "note": "Differs from R5's label [[\"nyc_checkbook\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q30",
+      "kind": "single",
+      "text": "Is alternate side parking in effect in New York City tomorrow?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_311"]
+      ]
+    },
+    {
+      "id": "q31",
+      "kind": "single",
+      "text": "What is the status of NYC 311 service request 311-12345678?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["nyc_311"]
+      ],
+      "note": "A lookup by number is the lookup server's; the 311 dataset on NYC Open Data is not taken to answer it (rule 5)."
+    },
+    {
+      "id": "q32",
+      "kind": "single",
+      "text": "Are New York City public schools open on Monday?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_311"]
+      ]
+    },
+    {
+      "id": "q33",
+      "kind": "single",
+      "text": "Are there any service alerts on the L train right now?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_mta"]
+      ]
+    },
+    {
+      "id": "q34",
+      "kind": "two",
+      "text": "Do Boston neighborhoods with more 311 complaints have lower median household incomes?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "2", "trap": "none"},
+      "acceptable": [
+        ["boston", "data_commons"],
+        ["boston", "data_commons_pack"],
+        ["boston_pack", "data_commons"],
+        ["boston_pack", "data_commons_pack"]
+      ],
+      "note": "Judgment: Data Commons has no neighborhood figures, but its census-tract series can be aggregated to Boston's neighborhoods, so R5's label is kept. Differs from R5's label [[\"boston\",\"data_commons\"]]: this inventory adds boston_pack (a wrapper over boston) and data_commons_pack (a wrapper over data_commons)."
+    },
+    {
+      "id": "q35",
+      "kind": "single",
+      "text": "Which subway station elevators in Manhattan are out of service today?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["nyc_mta"]
+      ],
+      "note": "Today's outages are the lookup server's; the MTA's past outage records on data.ny.gov are not taken to answer it (rule 5)."
+    },
+    {
+      "id": "q36",
+      "kind": "two",
+      "text": "Compare Chicago's annual building permit counts with its population growth over the past five years.",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "2", "trap": "none"},
+      "acceptable": [
+        ["chicago_socrata_com", "data_commons"],
+        ["chicago_socrata_com", "data_commons_pack"],
+        ["data_cityofchicago_org", "data_commons"],
+        ["data_cityofchicago_org", "data_commons_pack"],
+        ["data_commons", "socrata"],
+        ["data_commons", "socrata_pack"],
+        ["data_commons_pack", "socrata"],
+        ["data_commons_pack", "socrata_pack"]
+      ],
+      "note": "Differs from R5's label [[\"socrata\",\"data_commons\"]]: this inventory adds chicago_socrata_com (the Socrata portal pack for chicago.socrata.com), data_cityofchicago_org (the Socrata portal pack for data.cityofchicago.org), data_commons_pack (a wrapper over data_commons) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q37",
+      "kind": "two",
+      "text": "What does the NYC Administrative Code require of sidewalk cafes, and how many sidewalk cafe licenses are active in the city now?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "2", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us", "nyc_charter"],
+        ["nyc_charter", "socrata"],
+        ["nyc_charter", "socrata_pack"]
+      ],
+      "note": "Differs from R5's label [[\"nyc_charter\",\"socrata\"]]: this inventory adds data_cityofnewyork_us (the Socrata portal pack for data.cityofnewyork.us) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q38",
+      "kind": "two",
+      "text": "Which Council members sponsored the most bills last year, and how much discretionary funding did each of them allocate in fiscal year 2026?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "2", "trap": "none"},
+      "acceptable": [
+        ["nyc_budget", "nyc_council"]
+      ]
+    },
+    {
+      "id": "q39",
+      "kind": "none",
+      "text": "What is the difference between a median and a mean?",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q40",
+      "kind": "two",
+      "text": "Which procurement awards did the NYC Department of Sanitation announce in the City Record this year, and how much has the city paid those vendors so far?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "2", "trap": "none"},
+      "acceptable": [
+        ["nyc_checkbook", "nyc_record"],
+        ["nyc_checkbook_pack", "nyc_record"]
+      ],
+      "note": "Differs from R5's label [[\"nyc_record\",\"nyc_checkbook\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q41",
+      "kind": "two",
+      "text": "How does the poverty rate in the Bronx compare with the number of housing maintenance violations issued there last year?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "2", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_cityofnewyork_us", "data_commons"],
+        ["data_cityofnewyork_us", "data_commons_pack"],
+        ["data_commons", "socrata"],
+        ["data_commons", "socrata_pack"],
+        ["data_commons_pack", "socrata"],
+        ["data_commons_pack", "socrata_pack"]
+      ],
+      "note": "bronx_lehman_cuny_edu, Lehman College's Bronx portal, holds neither the statistics nor the City's violations (rules 4 and 6). Differs from R5's label [[\"data_commons\",\"socrata\"]]: this inventory adds data_cityofnewyork_us (the Socrata portal pack for data.cityofnewyork.us), data_commons_pack (a wrapper over data_commons) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q42",
+      "kind": "none",
+      "text": "Write a two-sentence thank-you note to volunteers who cleaned up a neighborhood park.",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q43",
+      "kind": "none",
+      "text": "How do I convert a percentage into a decimal?",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q44",
+      "kind": "none",
+      "text": "In one paragraph, what is open data?",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q45",
+      "kind": "ambiguous",
+      "text": "How many potholes were reported last year?",
+      "strata": {"place": "ambiguous-place", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        [],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "No place is named: asking which, or loading an entry that covers pothole reports for many places, is acceptable (rule 10). Differs from R5's label [[],[\"socrata\"],[\"boston\"]]: this inventory adds socrata_pack (a wrapper over socrata); R5 also accepted boston, which covers one city, and rule 10 does not."
+    },
+    {
+      "id": "q46",
+      "kind": "ambiguous",
+      "text": "How much is New York City spending on parks?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_budget"],
+        ["nyc_budget", "nyc_checkbook"],
+        ["nyc_budget", "nyc_checkbook_pack"],
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"]
+      ],
+      "note": "Read as the City's spending (Checkbook NYC), as the Council's discretionary awards to parks groups, or as both (rule 10). Differs from R5's label [[\"nyc_checkbook\"],[\"nyc_budget\"],[\"nyc_checkbook\",\"nyc_budget\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q47",
+      "kind": "ambiguous",
+      "text": "What laws govern street vendors in New York City?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_charter"],
+        ["nyc_charter", "nyc_council"],
+        ["nyc_charter", "nys_legislation"]
+      ],
+      "note": "Read as the City's law, the City's law with the Council's pending bills, or the City's law with the State's (rule 10)."
+    },
+    {
+      "id": "q48",
+      "kind": "ambiguous",
+      "text": "What is the average salary of an NYPD police officer?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "City payroll is on Checkbook NYC and on NYC Open Data (Citywide Payroll) (R5's note). Differs from R5's label [[\"nyc_checkbook\"],[\"socrata\"]]: this inventory adds data_cityofnewyork_us (the Socrata portal pack for data.cityofnewyork.us), nyc_checkbook_pack (a wrapper over nyc_checkbook) and socrata_pack (a wrapper over socrata)."
+    },
+    {
+      "id": "q49",
+      "kind": "ambiguous",
+      "text": "What contracts did the NYC Department of Sanitation award recently?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_checkbook"],
+        ["nyc_checkbook", "nyc_record"],
+        ["nyc_checkbook_pack"],
+        ["nyc_checkbook_pack", "nyc_record"],
+        ["nyc_record"]
+      ],
+      "note": "Award notices are in the City Record; registered contracts are in Checkbook NYC (R5's note). Differs from R5's label [[\"nyc_record\"],[\"nyc_checkbook\"],[\"nyc_record\",\"nyc_checkbook\"]]: this inventory adds nyc_checkbook_pack (a wrapper over nyc_checkbook)."
+    },
+    {
+      "id": "q50",
+      "kind": "single",
+      "text": "How many 311 complaints about illegally parked cars were filed in Brooklyn last month?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q51",
+      "kind": "single",
+      "text": "How many 311 complaints about no heat or hot water did New York City receive last winter?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q52",
+      "kind": "single",
+      "text": "How many elevator and escalator outages did New York City subway stations have in 2025?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "nyc_mta reports today's outages, not a year's (rule 5); the MTA's records are New York State's (rule 4)."
+    },
+    {
+      "id": "q53",
+      "kind": "single",
+      "text": "Which New York City subway lines had the most service alerts over the past year?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "nyc_mta reports today's alerts, not a year's (rule 5); the MTA's records are New York State's (rule 4)."
+    },
+    {
+      "id": "q54",
+      "kind": "single",
+      "text": "Is the A train running with delays right now?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["nyc_mta"]
+      ]
+    },
+    {
+      "id": "q55",
+      "kind": "single",
+      "text": "Is garbage collection on its normal schedule in New York City today?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["nyc_311"]
+      ]
+    },
+    {
+      "id": "q56",
+      "kind": "single",
+      "text": "Are there any planned service changes on the Q train this weekend?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["nyc_mta"]
+      ]
+    },
+    {
+      "id": "q57",
+      "kind": "single",
+      "text": "How many 311 complaints about rats were reported in Manhattan in 2025?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "counting-vs-lookup"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q58",
+      "kind": "single",
+      "text": "How many electric vehicles are registered in Seattle?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_wa_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q59",
+      "kind": "single",
+      "text": "How many active liquor licenses are there in Brooklyn?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q60",
+      "kind": "single",
+      "text": "How many patients were discharged from hospitals in Manhattan in 2023?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["health_data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q61",
+      "kind": "single",
+      "text": "How much sales tax revenue did the State of Texas send to the City of Austin last year?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_texas_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q62",
+      "kind": "single",
+      "text": "How many homes in Hartford, Connecticut, sold for more than $500,000 last year?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ct_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "Judgment: a town records its own deeds, and the State publishes every town's sales on data.ct.gov."
+    },
+    {
+      "id": "q63",
+      "kind": "single",
+      "text": "How many new corporations were registered in Queens last year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q64",
+      "kind": "single",
+      "text": "How many vehicles crossed the Verrazzano-Narrows Bridge last month?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q65",
+      "kind": "single",
+      "text": "How many state-licensed hospitals and nursing homes are there in the Bronx?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_ny_gov"],
+        ["health_data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q66",
+      "kind": "single",
+      "text": "How many students were enrolled in each Detroit public school last year?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_michigan_gov"],
+        ["future_michigan_gov"],
+        ["mischooldata_data_socrata_com"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "detroitdata_org is published by a civil-society group, not the City or the State (rule 6)."
+    },
+    {
+      "id": "q67",
+      "kind": "single",
+      "text": "How much did the Commonwealth of Massachusetts pay vendors based in Boston last year?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["cthru_data_socrata_com"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q68",
+      "kind": "single",
+      "text": "How many licensed electricians are there in Austin, Texas?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "state-portal-vs-city-server"},
+      "acceptable": [
+        ["data_texas_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q69",
+      "kind": "two",
+      "text": "Compare the number of restaurant inspections New York City did last year with the number New York State did in the rest of the state.",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "2", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_cityofnewyork_us", "data_ny_gov"],
+        ["data_cityofnewyork_us", "health_data_ny_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "The socrata server reaches both portals; a pack reaches only its own, so the packs answer only as a pair (rules 2 and 6)."
+    },
+    {
+      "id": "q70",
+      "kind": "two",
+      "text": "Which city issued more building permits in 2025, Chicago or Austin?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "2", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["chicago_socrata_com", "datahub_austintexas_gov"],
+        ["data_cityofchicago_org", "datahub_austintexas_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "The socrata server reaches both portals; a pack reaches only its own, so the packs answer only as a pair (rules 2 and 6)."
+    },
+    {
+      "id": "q71",
+      "kind": "single",
+      "text": "Which Boston neighborhoods had the most crime incidents reported in 2025?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ]
+    },
+    {
+      "id": "q72",
+      "kind": "single",
+      "text": "How many vehicles did traffic counters record on Champaign County roads last year?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_ccrpc_org"]
+      ],
+      "note": "Judgment: the county's regional planning commission keeps its traffic counts. boston, the CKAN packs' base, covers Boston only (rule 6)."
+    },
+    {
+      "id": "q73",
+      "kind": "single",
+      "text": "How many fire and medical calls did Pompano Beach, Florida, respond to last year?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_pompanobeachfl_gov"]
+      ],
+      "note": "boston, the CKAN packs' base, covers Boston only (rule 6)."
+    },
+    {
+      "id": "q74",
+      "kind": "single",
+      "text": "Which parcels in Winchester, Virginia, are zoned for commercial use?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["opendata_winchesterva_gov"]
+      ],
+      "note": "boston, the CKAN packs' base, covers Boston only (rule 6)."
+    },
+    {
+      "id": "q75",
+      "kind": "single",
+      "text": "How many people in Fresno County are enrolled in Medi-Cal?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_ca_gov"],
+        ["data_chhs_ca_gov"]
+      ],
+      "note": "Medi-Cal enrollment is the State's record, not a statistical series a Data Commons description names (rule 4). Both California portals are the State's (rule 6); boston, the CKAN packs' base, covers Boston only."
+    },
+    {
+      "id": "q76",
+      "kind": "single",
+      "text": "How much did the City of New York pay Con Edison in fiscal year 2025?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"]
+      ]
+    },
+    {
+      "id": "q77",
+      "kind": "two",
+      "text": "How many building permits did Cambridge and Somerville, Massachusetts, each issue in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "2", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_cambridgema_gov", "data_somervillema_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "The socrata server reaches both portals; a pack reaches only its own, so the packs answer only as a pair (rules 2 and 6)."
+    },
+    {
+      "id": "q78",
+      "kind": "two",
+      "text": "Compare the number of 311 service requests Oakland and Los Angeles received in 2025.",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "2", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_lacity_org", "data_oaklandca_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "The socrata server reaches both portals; a pack reaches only its own, so the packs answer only as a pair (rules 2 and 6)."
+    },
+    {
+      "id": "q79",
+      "kind": "single",
+      "text": "How many people work for the State of Oklahoma, by agency?",
+      "strata": {"place": "named-state", "category": "budget-spending", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["data_ok_gov"]
+      ],
+      "note": "boston, the CKAN packs' base, covers Boston only (rule 6)."
+    },
+    {
+      "id": "q80",
+      "kind": "single",
+      "text": "What were Hawaii's state government revenues in 2024?",
+      "strata": {"place": "named-state", "category": "budget-spending", "sources": "1", "trap": "pack-vs-base"},
+      "acceptable": [
+        ["opendata_hawaii_gov"]
+      ],
+      "note": "boston, the CKAN packs' base, covers Boston only (rule 6)."
+    },
+    {
+      "id": "q81",
+      "kind": "single",
+      "text": "How many building permits did Cook County issue for unincorporated areas in 2024?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["cookcounty_data_socrata_com"],
+        ["datacatalog_cookcountyil_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "performance_cookcountyil_gov is at a performance address (rule 6)."
+    },
+    {
+      "id": "q82",
+      "kind": "single",
+      "text": "How many restaurant inspections did Montgomery County, Maryland, carry out last year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["data_montgomerycountymd_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q83",
+      "kind": "single",
+      "text": "How many 311 requests did Kansas City, Kansas, receive last year?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        []
+      ],
+      "note": "data_kcmo_org is Kansas City, Missouri's portal. No entry in this inventory holds Kansas City, Kansas's 311 requests."
+    },
+    {
+      "id": "q84",
+      "kind": "single",
+      "text": "Which bills about congestion pricing did the New York City Council introduce in 2023?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nyc_council"]
+      ]
+    },
+    {
+      "id": "q85",
+      "kind": "single",
+      "text": "What does New York State law require employers to pay fast food workers?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nys_legislation"]
+      ]
+    },
+    {
+      "id": "q86",
+      "kind": "single",
+      "text": "What does New York City's own law say about minimum pay for app-based food delivery workers?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nyc_charter"]
+      ]
+    },
+    {
+      "id": "q87",
+      "kind": "single",
+      "text": "When does the Boston City Council next meet, and what is on its agenda?",
+      "strata": {"place": "named-city", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        []
+      ],
+      "note": "boston's description names no council records, and nyc_council is New York City's. No entry in this inventory holds the Boston City Council's meetings."
+    },
+    {
+      "id": "q88",
+      "kind": "single",
+      "text": "How much did Fulton County, Georgia, spend on its jail last year?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["data_fultoncountyga_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "sharefulton_fultoncountyga_gov is the county Board of Health's, performance_fultoncountyga_gov is a performance portal, and atlanta_data_socrata_com is the City of Atlanta's (rule 6)."
+    },
+    {
+      "id": "q89",
+      "kind": "single",
+      "text": "Who represents the 39th District in the New York State Senate?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["nys_legislation"]
+      ]
+    },
+    {
+      "id": "q90",
+      "kind": "single",
+      "text": "Which Prince George's County roads had the most pothole repair requests in 2025?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "same-category-two-jurisdictions"},
+      "acceptable": [
+        ["data_princegeorgescountymd_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "performance_princegeorges_55dd30 is a performance portal (rule 6)."
+    },
+    {
+      "id": "q91",
+      "kind": "single",
+      "text": "What letter grades did Manhattan restaurants receive in their most recent health inspections?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "health_data_ny_gov is the State Department of Health's portal; the City's own health department grades its restaurants (rule 4)."
+    },
+    {
+      "id": "q92",
+      "kind": "single",
+      "text": "What is the median gross rent in Boston?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "boston's description says it holds no census statistics."
+    },
+    {
+      "id": "q93",
+      "kind": "single",
+      "text": "What share of Seattle residents were born outside the United States?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ]
+    },
+    {
+      "id": "q94",
+      "kind": "single",
+      "text": "What was New Jersey's unemployment rate in 2025?",
+      "strata": {"place": "named-state", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "jersey_opendata is the Channel Island of Jersey's portal, and data_nj_gov is not taken to hold a statistical series (rule 4)."
+    },
+    {
+      "id": "q95",
+      "kind": "single",
+      "text": "How much did New York City spend on NYPD overtime in fiscal year 2025?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["nyc_checkbook"],
+        ["nyc_checkbook_pack"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "nyc_budget holds the Council's discretionary funding, not agency spending; payroll is in Checkbook NYC and on NYC Open Data."
+    },
+    {
+      "id": "q96",
+      "kind": "single",
+      "text": "What was the population of Honolulu in 2020?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ]
+    },
+    {
+      "id": "q97",
+      "kind": "single",
+      "text": "How many veterans in Texas receive VA disability compensation?",
+      "strata": {"place": "named-state", "category": "other", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"],
+        ["socrata"],
+        ["socrata_pack"],
+        ["www_datahub_va_gov"]
+      ],
+      "note": "Judgment: the VA keeps the benefit records, and the census measures veterans' service-connected disability ratings by state; data_texas_gov holds neither."
+    },
+    {
+      "id": "q98",
+      "kind": "single",
+      "text": "How many Section 8 housing vouchers are in use in Baltimore?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds the federal housing voucher program's records."
+    },
+    {
+      "id": "q99",
+      "kind": "single",
+      "text": "What is the average commute time for residents of Prince George's County, Maryland?",
+      "strata": {"place": "named-city", "category": "census-statistics", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "performance_princegeorges_55dd30 is a performance portal and not a statistical series (rules 4 and 6)."
+    },
+    {
+      "id": "q100",
+      "kind": "single",
+      "text": "Which U.S. airports had the most delayed flights in 2025?",
+      "strata": {"place": "federal", "category": "transit", "sources": "1", "trap": "distractor-match"},
+      "acceptable": [
+        ["data_bts_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q101",
+      "kind": "single",
+      "text": "How many registered voters are there in each Boston ward?",
+      "strata": {"place": "named-city", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ]
+    },
+    {
+      "id": "q102",
+      "kind": "single",
+      "text": "Who won the 2024 U.S. Senate election in Ohio, and by how many votes?",
+      "strata": {"place": "named-state", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds U.S. election results."
+    },
+    {
+      "id": "q103",
+      "kind": "single",
+      "text": "Which candidates for governor of Hawaii raised the most campaign money in 2022?",
+      "strata": {"place": "named-state", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["hicscdata_hawaii_gov"],
+        ["opendata_hawaii_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Campaign Spending Commission among them (rule 6)."
+    },
+    {
+      "id": "q104",
+      "kind": "single",
+      "text": "How many votes did each candidate receive in Boston's 2025 preliminary municipal election?",
+      "strata": {"place": "named-city", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["boston"],
+        ["boston_pack"]
+      ]
+    },
+    {
+      "id": "q105",
+      "kind": "single",
+      "text": "How many people voted in the 2024 presidential election in each state?",
+      "strata": {"place": "federal", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds U.S. election results."
+    },
+    {
+      "id": "q106",
+      "kind": "single",
+      "text": "Who is running for New York City Council in District 5 this year?",
+      "strata": {"place": "named-city", "category": "elections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "nyc_council holds the Council's legislation, not its candidates. No entry in this inventory holds U.S. election candidates."
+    },
+    {
+      "id": "q107",
+      "kind": "single",
+      "text": "Which homes in Williamson County, Texas, had the largest increases in appraised value this year?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_wcad_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q108",
+      "kind": "single",
+      "text": "How many residential properties sold in Connecticut in 2023, and at what median price?",
+      "strata": {"place": "named-state", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_ct_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q109",
+      "kind": "single",
+      "text": "What were the median assessed values of homes in each Cook County township last year?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["cookcounty_data_socrata_com"],
+        ["datacatalog_cookcountyil_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q110",
+      "kind": "single",
+      "text": "What is the median rent for an apartment in Dubai Marina?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Dubai's real estate records."
+    },
+    {
+      "id": "q111",
+      "kind": "single",
+      "text": "How many vacant lots does the City of Cleveland own?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Cleveland's property records."
+    },
+    {
+      "id": "q112",
+      "kind": "single",
+      "text": "Which buildings in New York City have the most open housing code violations?",
+      "strata": {"place": "named-city", "category": "property", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q113",
+      "kind": "single",
+      "text": "Which defense contractors received the largest federal contract awards last month?",
+      "strata": {"place": "federal", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "tender lists procurement opportunities, not awards. No entry in this inventory holds federal contract awards."
+    },
+    {
+      "id": "q114",
+      "kind": "single",
+      "text": "What contracts has the City of Austin awarded for road construction since 2024?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["datahub_austintexas_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q115",
+      "kind": "single",
+      "text": "Which companies won Brazilian federal government tenders this month?",
+      "strata": {"place": "federal", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Brazil's public procurement awards."
+    },
+    {
+      "id": "q116",
+      "kind": "single",
+      "text": "Which companies is the NYC Parks Department planning to give contracts to, according to this month's public notices?",
+      "strata": {"place": "named-city", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["nyc_record"]
+      ]
+    },
+    {
+      "id": "q117",
+      "kind": "single",
+      "text": "What highway construction contracts has the Hawaii Department of Transportation awarded since 2024?",
+      "strata": {"place": "named-state", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["highways_hidot_hawaii_gov"],
+        ["opendata_hawaii_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "opendata_hawaii_gov, the State of Hawaii's general portal, holds the records of the State's bodies, its Department of Transportation among them (rule 6)."
+    },
+    {
+      "id": "q118",
+      "kind": "single",
+      "text": "Which UK local councils have open tenders for waste collection services?",
+      "strata": {"place": "federal", "category": "procurement", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["tender"]
+      ],
+      "note": "tender covers UK procurement opportunities (rule 8)."
+    },
+    {
+      "id": "q119",
+      "kind": "single",
+      "text": "What was the average weekday ridership on CTA bus route 9 last year?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["chicago_socrata_com"],
+        ["data_cityofchicago_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q120",
+      "kind": "single",
+      "text": "How many trips did riders take on Bay Area transit systems in 2024?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_bayareametro_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "Judgment: the region's transportation commission keeps ridership for every operator it funds."
+    },
+    {
+      "id": "q121",
+      "kind": "single",
+      "text": "How many taxi trips started at JFK Airport in January 2025?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q122",
+      "kind": "single",
+      "text": "What is the average daily ridership of the Staten Island Ferry?",
+      "strata": {"place": "named-city", "category": "transit", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q123",
+      "kind": "single",
+      "text": "Which Kansas City, Missouri, neighborhoods had the most 311 complaints about trash pickup last year?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_kcmo_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q124",
+      "kind": "single",
+      "text": "How many pothole complaints did New Orleans receive in 2025?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_nola_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q125",
+      "kind": "single",
+      "text": "How has the U.S. poverty rate changed since 2010?",
+      "strata": {"place": "federal", "category": "census-statistics", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ]
+    },
+    {
+      "id": "q126",
+      "kind": "single",
+      "text": "Which U.S. state has the highest share of residents without health insurance?",
+      "strata": {"place": "federal", "category": "census-statistics", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_commons"],
+        ["data_commons_pack"]
+      ]
+    },
+    {
+      "id": "q127",
+      "kind": "single",
+      "text": "What was the City of Pittsburgh's general fund revenue in 2024?",
+      "strata": {"place": "named-city", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["fiscalfocus_pittsburghpa_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q128",
+      "kind": "single",
+      "text": "How much did the State of Alaska spend on education in fiscal year 2025?",
+      "strata": {"place": "named-state", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["socrata"],
+        ["socrata_pack"],
+        ["stateofalaska_data_socrata_com"]
+      ]
+    },
+    {
+      "id": "q129",
+      "kind": "single",
+      "text": "What does Section 230 of the Communications Decency Act say?",
+      "strata": {"place": "federal", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds the text of U.S. federal law."
+    },
+    {
+      "id": "q130",
+      "kind": "single",
+      "text": "Which bills about artificial intelligence were introduced in the U.S. Congress in 2025?",
+      "strata": {"place": "federal", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds the U.S. Congress's bills."
+    },
+    {
+      "id": "q131",
+      "kind": "single",
+      "text": "Which climate laws did the Danish parliament pass in 2024?",
+      "strata": {"place": "federal", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds the Danish parliament's records."
+    },
+    {
+      "id": "q132",
+      "kind": "single",
+      "text": "Which New Mexico city councils discussed water rights at their meetings this year?",
+      "strata": {"place": "named-state", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["perfect_world"]
+      ]
+    },
+    {
+      "id": "q133",
+      "kind": "single",
+      "text": "How many building permits did Austin issue for solar panel installations in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["datahub_austintexas_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q134",
+      "kind": "single",
+      "text": "How many dog licenses did New York City issue last year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q135",
+      "kind": "single",
+      "text": "Which Chicago restaurants failed food inspections in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["chicago_socrata_com"],
+        ["data_cityofchicago_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q136",
+      "kind": "single",
+      "text": "How many shootings did the Chicago Police Department record in 2025?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["chicago_socrata_com"],
+        ["data_cityofchicago_org"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q137",
+      "kind": "single",
+      "text": "How many traffic crashes with injuries happened in New York City in 2025?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_cityofnewyork_us"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q138",
+      "kind": "single",
+      "text": "What is the average teacher salary in Michigan public schools?",
+      "strata": {"place": "named-state", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_michigan_gov"],
+        ["future_michigan_gov"],
+        ["mischooldata_data_socrata_com"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q139",
+      "kind": "single",
+      "text": "What crimes were reported in Baton Rouge last month?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        ["data_brla_gov"],
+        ["socrata"],
+        ["socrata_pack"]
+      ]
+    },
+    {
+      "id": "q140",
+      "kind": "none",
+      "text": "What is the difference between a city's operating budget and its capital budget?",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q141",
+      "kind": "none",
+      "text": "Draft a short email to my city council member asking for a new crosswalk.",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q142",
+      "kind": "none",
+      "text": "What does FOIL stand for, and how does a public records request work in general?",
+      "strata": {"place": "no-place", "category": "none", "sources": "0", "trap": "none"},
+      "acceptable": [
+        []
+      ]
+    },
+    {
+      "id": "q143",
+      "kind": "ambiguous",
+      "text": "What is the population of Springfield?",
+      "strata": {"place": "ambiguous-place", "category": "census-statistics", "sources": "1", "trap": "none"},
+      "acceptable": [
+        [],
+        ["data_commons"],
+        ["data_commons_pack"]
+      ],
+      "note": "Springfield fits many places: asking which, or loading Data Commons, which covers them all, is acceptable (rule 10)."
+    },
+    {
+      "id": "q144",
+      "kind": "ambiguous",
+      "text": "What did the city council vote on last week?",
+      "strata": {"place": "ambiguous-place", "category": "legislation-law", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No city is named: asking which, or loading an entry that covers council votes for many cities, is acceptable (rule 10). No entry in this inventory holds a city council's votes."
+    },
+    {
+      "id": "q145",
+      "kind": "ambiguous",
+      "text": "How many police officers does the city employ, and what are they paid?",
+      "strata": {"place": "ambiguous-place", "category": "budget-spending", "sources": "1", "trap": "none"},
+      "acceptable": [
+        [],
+        ["socrata"],
+        ["socrata_pack"]
+      ],
+      "note": "No city is named: asking which, or loading an entry that covers payroll for many places, is acceptable (rule 10)."
+    },
+    {
+      "id": "q146",
+      "kind": "single",
+      "text": "How many building permits did Boise, Idaho, issue in 2025?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Boise's building permits."
+    },
+    {
+      "id": "q147",
+      "kind": "single",
+      "text": "How many 311 calls did Toledo, Ohio, receive last year?",
+      "strata": {"place": "named-city", "category": "311-service-requests", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Toledo's 311 requests."
+    },
+    {
+      "id": "q148",
+      "kind": "single",
+      "text": "How many restaurant inspections were carried out in Phoenix last year?",
+      "strata": {"place": "named-city", "category": "permits-inspections", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds restaurant inspections in Phoenix."
+    },
+    {
+      "id": "q149",
+      "kind": "single",
+      "text": "How many eviction cases were filed in Philadelphia last year?",
+      "strata": {"place": "named-city", "category": "other", "sources": "1", "trap": "none"},
+      "acceptable": [
+        []
+      ],
+      "note": "No entry in this inventory holds Philadelphia's eviction filings."
+    }
+  ]
+}

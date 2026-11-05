@@ -1,0 +1,3020 @@
+{
+  "schema": "civic-inventory/1",
+  "id": "civic-50",
+  "version": "2026-11-03.1",
+  "note": "The 11 real servers (the seven and R5 four), the 34 largest US Socrata portals as packs, and 5 constructed distractors. Composition and rules: build.mjs and the README.",
+  "seed": "civic-ai-tools S1 P1 inventories, 2026-11-03",
+  "entries": [
+    {
+      "kind": "pack",
+      "alias": "datahub_austintexas_gov",
+      "sourceId": "datahub_austintexas_gov",
+      "displayName": "City Data Hub | City of Austin",
+      "base": "socrata",
+      "filter": {
+        "portal": "datahub.austintexas.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Austin",
+          "Austin"
+        ],
+        "portalDomain": "datahub.austintexas.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "City Data Hub | City of Austin. An open data portal on Socrata, published by City of Austin (Local government, United States), with 712 datasets. Tools: the Socrata server's, with the portal fixed to datahub.austintexas.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://datahub.austintexas.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "datahub.austintexas.gov",
+        "datasetCount": "712",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp",
+      "alias": "nyc_record",
+      "sourceId": "nyc-record",
+      "displayName": "NYC City Record MCP Server",
+      "description": "Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online.",
+      "freshness": "Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily.",
+      "freshnessSource": "The publisher's README for version 1.1.0, \"Data source\" (github.com/BetaNYC/nyc-record-mcp): the City Record Online dataset on NYC Open Data \"is updated daily and includes notices published in the official City Record since 2015\".",
+      "configuration": {
+        "addressVariable": "NYC_RECORD_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "public-notices",
+        "spending-contracts"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-record.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-record",
+        "toolNames": [
+          "search_notices",
+          "get_notices_by_agency",
+          "get_notices_by_type",
+          "get_procurement_notices",
+          "get_public_hearings",
+          "get_open_solicitations",
+          "get_notices_by_date_range"
+        ],
+        "sha256": "29d8a4a27d67db62324b36a36bb8325a92c68c63fd2236ed5aff11494efae147",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-record-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "citydata_mesaaz_gov",
+      "sourceId": "citydata_mesaaz_gov",
+      "displayName": "City of Mesa Internal Performance Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "citydata.mesaaz.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Mesa",
+          "Mesa"
+        ],
+        "portalDomain": "citydata.mesaaz.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "City of Mesa Internal Performance Portal. An open data portal on Socrata, published by City of Mesa (Local government, United States), with 304 datasets. Tools: the Socrata server's, with the portal fixed to citydata.mesaaz.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://citydata.mesaaz.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "citydata.mesaaz.gov",
+        "datasetCount": "304",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "highways_hidot_hawaii_gov",
+      "sourceId": "highways_hidot_hawaii_gov",
+      "displayName": "State of Hawaii Department of Transportation",
+      "base": "socrata",
+      "filter": {
+        "portal": "highways.hidot.hawaii.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "Hawaii Department of Transportation"
+        ],
+        "portalDomain": "highways.hidot.hawaii.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "State of Hawaii Department of Transportation. An open data portal on Socrata, published by Hawaii Department of Transportation (Regional government, United States), with 302 datasets. Tools: the Socrata server's, with the portal fixed to highways.hidot.hawaii.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://highways.hidot.hawaii.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "highways.hidot.hawaii.gov",
+        "datasetCount": "302",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_kingcounty_gov",
+      "sourceId": "data_kingcounty_gov",
+      "displayName": "King County Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.kingcounty.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "King County",
+          "King"
+        ],
+        "portalDomain": "data.kingcounty.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "King County Open Data. An open data portal on Socrata, published by King County (Local government, United States), with 268 datasets. Tools: the Socrata server's, with the portal fixed to data.kingcounty.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.kingcounty.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.kingcounty.gov",
+        "datasetCount": "268",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-checkbook-mcp@https://github.com/BetaNYC/nyc-checkbook-mcp",
+      "alias": "nyc_checkbook",
+      "sourceId": "nyc-checkbook",
+      "displayName": "NYC Checkbook MCP Server",
+      "description": "New York City government spending as the Comptroller's Checkbook NYC publishes it: contracts (citywide, NYCHA and NYCEDC), payments to vendors, budget and revenue figures by agency and fiscal year, and payroll by agency and title. Covers New York City only. Does not hold the adopted budget's text, Council discretionary awards, or employee names.",
+      "freshness": "Live: every call queries Checkbook NYC as it stands, and the server spaces its requests at least 1.1 seconds apart.",
+      "freshnessSource": "The publisher's README for version 1.6.3, \"API notes and limits\" (github.com/BetaNYC/nyc-checkbook-mcp): every outbound request goes to the Checkbook NYC API, rate-limited to one request per second and spaced at least 1.1 seconds apart.",
+      "configuration": {
+        "addressVariable": "NYC_CHECKBOOK_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "ask-first",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "spending-contracts",
+        "budget-finance",
+        "payroll-workforce"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-checkbook.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-checkbook",
+        "toolNames": [
+          "smart_search",
+          "search_contracts",
+          "get_contract",
+          "search_spending",
+          "search_budget",
+          "search_payroll",
+          "search_revenue",
+          "get_agency_spending",
+          "search_nycedc_contracts",
+          "search_nycha_contracts"
+        ],
+        "sha256": "8533854573290f09f70c9aa4ded251a7e6a36752076c77b7ceb2663b8cbf3a1f",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-checkbook-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "datacatalog_cookcountyil_gov",
+      "sourceId": "datacatalog_cookcountyil_gov",
+      "displayName": "Cook County Government Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "datacatalog.cookcountyil.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Cook County, IL",
+          "Cook"
+        ],
+        "portalDomain": "datacatalog.cookcountyil.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Cook County Government Open Data. An open data portal on Socrata, published by Cook County, IL (Local government, United States), with 523 datasets. Tools: the Socrata server's, with the portal fixed to datacatalog.cookcountyil.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://datacatalog.cookcountyil.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "datacatalog.cookcountyil.gov",
+        "datasetCount": "523",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-charter-laws-rules@https://github.com/BetaNYC/nyc-charter-laws-rules",
+      "alias": "nyc_charter",
+      "sourceId": "nyc-charter",
+      "displayName": "NYC Charter, Laws and Rules MCP Server",
+      "description": "New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress.",
+      "freshness": "Pinned to version 0.3.1 of the publisher's package and the index it bundles: the Charter and the Administrative Code are current through Local Law 2026/147, enacted September 12, 2026, and the Rules through rules effective October 4, 2026.",
+      "freshnessSource": "The publisher's release page for v0.3.1 (github.com/BetaNYC/nyc-charter-laws-rules/releases/tag/v0.3.1), and the currency lines the 0.3.1 server's get_version tool returned at capture (src/__fixtures__/nyc-charter-tools.json, getVersion).",
+      "configuration": {
+        "addressVariable": "NYC_CHARTER_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "law-rules"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-charter.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-charter",
+        "toolNames": [
+          "search",
+          "get_section",
+          "list_titles",
+          "get_title",
+          "get_version"
+        ],
+        "sha256": "ec5168ccc6f566ac264773a7d5561e9dd4cd161365034b9955dcc44e9dafa8ec",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-charter-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "internal_open_piercecountywa_gov",
+      "sourceId": "internal_open_piercecountywa_gov",
+      "displayName": "Pierce County, WA Data Catalog",
+      "base": "socrata",
+      "filter": {
+        "portal": "internal.open.piercecountywa.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Pierce County",
+          "Pierce"
+        ],
+        "portalDomain": "internal.open.piercecountywa.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Pierce County, WA Data Catalog. An open data portal on Socrata, published by Pierce County (Local government, United States), with 876 datasets. Tools: the Socrata server's, with the portal fixed to internal.open.piercecountywa.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://internal.open.piercecountywa.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "internal.open.piercecountywa.gov",
+        "datasetCount": "876",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "datahub_smcgov_org",
+      "sourceId": "datahub_smcgov_org",
+      "displayName": "San Mateo County Data Catalog",
+      "base": "socrata",
+      "filter": {
+        "portal": "datahub.smcgov.org"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "County of San Mateo",
+          "San Mateo"
+        ],
+        "portalDomain": "datahub.smcgov.org"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "San Mateo County Data Catalog. An open data portal on Socrata, published by County of San Mateo (Local government, United States), with 443 datasets. Tools: the Socrata server's, with the portal fixed to datahub.smcgov.org.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://datahub.smcgov.org",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "datahub.smcgov.org",
+        "datasetCount": "443",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-311-mcp@1.1.0",
+      "alias": "nyc_311",
+      "sourceId": "nyc-311",
+      "displayName": "nyc-311-mcp",
+      "description": "MCP server for the NYC 311 Public API — city-services calendar, emergency/weather status alerts, and 311 service-request lookup",
+      "freshness": "Live: queries the NYC 311 Public API at request time.",
+      "freshnessSource": "@betanyc/nyc-311-mcp 1.1.0 dist (api.nyc.gov)",
+      "configuration": {
+        "addressVariable": "NYC_311_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "311-service-requests",
+        "government-operations"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7), one of its four servers outside today's seven, copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-311-mcp/v/1.1.0",
+        "file": "benchmark/inventories/sources/r5-servers.json",
+        "fileSha256": "26526aa977681040b049606f3f45ffc14e535427be76395b9a0b17263544125d"
+      },
+      "toolsRef": {
+        "kind": "fixture",
+        "path": "benchmark/inventories/sources/r5-servers.json",
+        "sourceId": "nyc-311",
+        "toolNames": [
+          "get_calendar",
+          "get_status",
+          "get_service_request",
+          "get_service_request_list"
+        ],
+        "sha256": "065c7047f057a662c55cbc9666c945e37f8e2a53032523d74bf02e016904c38b"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server",
+      "alias": "socrata",
+      "sourceId": "socrata",
+      "displayName": "Socrata MCP Server",
+      "description": "Socrata open data portals: records that cities and states publish, such as 311 requests, building permits, inspections, crime, housing violations, payroll, licenses and transit ridership. Covers NYC, Chicago, SF, Seattle, LA, state portals such as data.ny.gov, and hundreds of other portals. Cannot reach Boston's city data, and returns only the datasets each portal's publisher posts, so it is not the source for census demographics.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "freshnessSource": "socrata-mcp-server at 3163601 (0.9.2), the hosted Socrata server: get_data sends its catalog, query and metrics requests to the portal on each call (src/tools/socrata-tools.ts); fetch keeps a result for five minutes (src/utils/cache.ts, documentCache).",
+      "configuration": {
+        "addressVariable": "SOCRATA_MCP_URL",
+        "requirement": "required"
+      },
+      "consentDefault": "on",
+      "publisher": "npstorey",
+      "serverType": "socrata",
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/socrata.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      },
+      "guidanceRef": {
+        "kind": "prompt",
+        "fetch": "skill-guidance",
+        "pinned": "packages/civic-typed-router/src/__fixtures__/socrata-guidance.json",
+        "pinnedSha256": "599aa75316cfdad80697b04eee52c1459fb5c4112327ce81b657419d288e5c03",
+        "blockSha256": "904740fcb799b0ff0d93a6f663bdfe05692c2dc81f8eb11e4bc5c131088ddb26"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "www_datahub_va_gov",
+      "sourceId": "www_datahub_va_gov",
+      "displayName": "Department of Veterans Affairs Data Hub",
+      "base": "socrata",
+      "filter": {
+        "portal": "www.datahub.va.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "federal",
+        "names": [
+          "U.S. Department of Veterans Affairs",
+          "Department"
+        ],
+        "portalDomain": "www.datahub.va.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Department of Veterans Affairs Data Hub. An open data portal on Socrata, published by U.S. Department of Veterans Affairs (Central government, United States), with 528 datasets. Tools: the Socrata server's, with the portal fixed to www.datahub.va.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://www.datahub.va.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "datahub.va.gov",
+        "datasetCount": "528",
+        "ownerType": "Central government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_mo_gov",
+      "sourceId": "data_mo_gov",
+      "displayName": "State of Missouri Open data portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.mo.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Missouri",
+          "Missouri"
+        ],
+        "portalDomain": "data.mo.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "State of Missouri Open data portal. An open data portal on Socrata, published by State of Missouri (Regional government, United States), with 262 datasets. Tools: the Socrata server's, with the portal fixed to data.mo.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.mo.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.mo.gov",
+        "datasetCount": "262",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_cdc_gov",
+      "sourceId": "data_cdc_gov",
+      "displayName": "Data | Centers for Disease Control and Prevention - CDC",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.cdc.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "federal",
+        "names": [
+          "Centers for Disease Control and Prevention"
+        ],
+        "portalDomain": "data.cdc.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Data | Centers for Disease Control and Prevention - CDC. An open data portal on Socrata, published by Centers for Disease Control and Prevention (Central government, United States), with 1084 datasets. Tools: the Socrata server's, with the portal fixed to data.cdc.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.cdc.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.cdc.gov",
+        "datasetCount": "1084",
+        "ownerType": "Central government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_wa_gov",
+      "sourceId": "data_wa_gov",
+      "displayName": "Washington State Open Data Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.wa.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Washington",
+          "Washington"
+        ],
+        "portalDomain": "data.wa.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Washington State Open Data Portal. An open data portal on Socrata, published by State of Washington (Regional government, United States), with 1070 datasets. Tools: the Socrata server's, with the portal fixed to data.wa.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.wa.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.wa.gov",
+        "datasetCount": "1070",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "mta-mcp@https://github.com/BetaNYC/mta-mcp#0a727d2",
+      "alias": "nyc_mta",
+      "sourceId": "nyc-mta",
+      "displayName": "mta-mcp",
+      "description": "MCP server for NYC subway service alerts, elevator and escalator outages, and station lookup, from MTA's public feeds. Build from source; not on npm; status alpha.",
+      "freshness": "Live MTA feeds for alerts and outages; station names from a bundled snapshot of MTA's static GTFS.",
+      "freshnessSource": "BetaNYC/mta-mcp@0a727d2 README lines 59-66",
+      "configuration": {
+        "addressVariable": "NYC_MTA_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "serverType": "custom",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "transportation"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7), one of its four servers outside today's seven, copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "https://github.com/BetaNYC/mta-mcp",
+        "file": "benchmark/inventories/sources/r5-servers.json",
+        "fileSha256": "26526aa977681040b049606f3f45ffc14e535427be76395b9a0b17263544125d"
+      },
+      "toolsRef": {
+        "kind": "fixture",
+        "path": "benchmark/inventories/sources/r5-servers.json",
+        "sourceId": "nyc-mta",
+        "toolNames": [
+          "check_route_on_date",
+          "get_service_alerts",
+          "resolve_station",
+          "get_accessibility_outages"
+        ],
+        "sha256": "e0c6aae46f065c2ed343ae46c229db1a339c4f569ec72fa5cf034243489d4f2e"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_cambridgema_gov",
+      "sourceId": "data_cambridgema_gov",
+      "displayName": "City of Cambridge, MA Open Data Catalog",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.cambridgema.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Cambridge, Ma",
+          "Cambridge, Ma"
+        ],
+        "portalDomain": "data.cambridgema.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "City of Cambridge, MA Open Data Catalog. An open data portal on Socrata, published by City of Cambridge, Ma (Local government, United States), with 280 datasets. Tools: the Socrata server's, with the portal fixed to data.cambridgema.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.cambridgema.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.cambridgema.gov",
+        "datasetCount": "280",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "chicago_socrata_com",
+      "sourceId": "chicago_socrata_com",
+      "displayName": "Chicago Open Data Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "chicago.socrata.com"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Chicago",
+          "Chicago"
+        ],
+        "portalDomain": "chicago.socrata.com"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Chicago Open Data Portal. An open data portal on Socrata, published by City of Chicago (Local government, United States), with 919 datasets. Tools: the Socrata server's, with the portal fixed to chicago.socrata.com.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://chicago.socrata.com",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "chicago.socrata.com",
+        "datasetCount": "919",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_pa_gov_2",
+      "sourceId": "data_pa_gov_2",
+      "displayName": "Open Data Pennsylvania",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.pa.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Pennsylvania",
+          "Pennsylvania"
+        ],
+        "portalDomain": "data.pa.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Open Data Pennsylvania. An open data site on Socrata, maintained by State of Pennsylvania (Regional government, United States), with 352 data sets. Tools: the Socrata service's, with the site fixed to data.pa.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "benchmark/inventories/build.mjs, a constructed distractor: the near-duplicate rule (rules.mjs) over `data_pa_gov`",
+        "sourceUrl": "benchmark/inventories/rules.mjs"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      },
+      "synthetic": "true",
+      "distractor": {
+        "kind": "near-duplicate",
+        "of": "data_pa_gov"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_cityofchicago_org",
+      "sourceId": "data_cityofchicago_org",
+      "displayName": "Chicago, Il Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.cityofchicago.org"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "The City of Chicago",
+          "Chicago"
+        ],
+        "portalDomain": "data.cityofchicago.org"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Chicago, Il Open Data. An open data portal on Socrata, published by The City of Chicago (Local government, United States), with 919 datasets. Tools: the Socrata server's, with the portal fixed to data.cityofchicago.org.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.cityofchicago.org",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.cityofchicago.org",
+        "datasetCount": "919",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_pa_gov",
+      "sourceId": "data_pa_gov",
+      "displayName": "Open Data Pennsylvania",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.pa.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Pennsylvania",
+          "Pennsylvania"
+        ],
+        "portalDomain": "data.pa.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Open Data Pennsylvania. An open data portal on Socrata, published by State of Pennsylvania (Regional government, United States), with 352 datasets. Tools: the Socrata server's, with the portal fixed to data.pa.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.pa.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.pa.gov",
+        "datasetCount": "352",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "health_data_ny_gov",
+      "sourceId": "health_data_ny_gov",
+      "displayName": "Health Data NY",
+      "base": "socrata",
+      "filter": {
+        "portal": "health.data.ny.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "New York Department of Health",
+          "Health"
+        ],
+        "portalDomain": "health.data.ny.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Health Data NY. An open data portal on Socrata, published by New York Department of Health (Regional government, United States), with 315 datasets. Tools: the Socrata server's, with the portal fixed to health.data.ny.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://health.data.ny.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "health.data.ny.gov",
+        "datasetCount": "315",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "healthdata_tn_gov",
+      "sourceId": "healthdata_tn_gov",
+      "displayName": "TDH Health Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "healthdata.tn.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "Tennessee Department of Health",
+          "TDH Health"
+        ],
+        "portalDomain": "healthdata.tn.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "TDH Health Data. An open data portal on Socrata, published by Tennessee Department of Health (Regional government, United States), with 288 datasets. Tools: the Socrata server's, with the portal fixed to healthdata.tn.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://healthdata.tn.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "healthdata.tn.gov",
+        "datasetCount": "288",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_colorado_gov",
+      "sourceId": "data_colorado_gov",
+      "displayName": "Colorado Information Marketplace",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.colorado.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Colorado",
+          "Colorado",
+          "Colorado Information Marketplace"
+        ],
+        "portalDomain": "data.colorado.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Colorado Information Marketplace. An open data portal on Socrata, published by State of Colorado (Regional government, United States), with 639 datasets. Tools: the Socrata server's, with the portal fixed to data.colorado.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.colorado.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.colorado.gov",
+        "datasetCount": "639",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_ct_gov",
+      "sourceId": "data_ct_gov",
+      "displayName": "Connecticut Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.ct.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Connecticut",
+          "Connecticut"
+        ],
+        "portalDomain": "data.ct.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Connecticut Open Data. An open data portal on Socrata, published by State of Connecticut (Regional government, United States), with 605 datasets. Tools: the Socrata server's, with the portal fixed to data.ct.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.ct.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.ct.gov",
+        "datasetCount": "605",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "datahub_smcgov_org_2",
+      "sourceId": "datahub_smcgov_org_2",
+      "displayName": "San Mateo County Data Catalog",
+      "base": "socrata",
+      "filter": {
+        "portal": "datahub.smcgov.org"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "County of San Mateo",
+          "San Mateo"
+        ],
+        "portalDomain": "datahub.smcgov.org"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "San Mateo County Data Catalog. An open data site on Socrata, maintained by County of San Mateo (Local government, United States), with 443 data sets. Tools: the Socrata service's, with the site fixed to datahub.smcgov.org.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "benchmark/inventories/build.mjs, a constructed distractor: the near-duplicate rule (rules.mjs) over `datahub_smcgov_org`",
+        "sourceUrl": "benchmark/inventories/rules.mjs"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      },
+      "synthetic": "true",
+      "distractor": {
+        "kind": "near-duplicate",
+        "of": "datahub_smcgov_org"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-council-mcp@2.6.0",
+      "alias": "nyc_council",
+      "sourceId": "nyc-council",
+      "displayName": "nyc-council-mcp",
+      "description": "MCP server for NYC Council legislative data — hybrid local SQLite index + live Legistar API",
+      "freshness": "Live Legistar API, plus a local index built from an archive of Council legislation where the deployment provides one.",
+      "freshnessSource": "@betanyc/nyc-council-mcp 2.6.0 dist/server.js:15-21 (modes) and dist/index.js (index subcommand)",
+      "configuration": {
+        "addressVariable": "NYC_COUNCIL_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "legislation"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7), one of its four servers outside today's seven, copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-council-mcp/v/2.6.0",
+        "file": "benchmark/inventories/sources/r5-servers.json",
+        "fileSha256": "26526aa977681040b049606f3f45ffc14e535427be76395b9a0b17263544125d"
+      },
+      "toolsRef": {
+        "kind": "fixture",
+        "path": "benchmark/inventories/sources/r5-servers.json",
+        "sourceId": "nyc-council",
+        "toolNames": [
+          "search_bills",
+          "search_legislation",
+          "search_events",
+          "list_committees",
+          "recent_bills",
+          "upcoming_events",
+          "aggregate_bills",
+          "vote_breakdown",
+          "get_voting_record",
+          "get_bill_history",
+          "co_sponsors",
+          "get_bill_hearings",
+          "get_event_bills",
+          "get_bill",
+          "get_upcoming_hearings",
+          "get_council_member",
+          "get_committee",
+          "get_votes",
+          "list_recent_legislation",
+          "search_legislation_live"
+        ],
+        "sha256": "13bbd45456176c2a373ca8acddee8d66f95720d1af4b20170d1d6121999f9af1"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nys-openlegislation-mcp@https://github.com/BetaNYC/nys-openlegislation-mcp",
+      "alias": "nys_legislation",
+      "sourceId": "nys-legislation",
+      "displayName": "NYS Open Legislation MCP Server",
+      "description": "New York State's legislature through the Senate's Open Legislation API: bills and resolutions since 2009 with their text, status, votes and updates, the State's consolidated laws by section, Senate and Assembly members, committees and their meetings, floor calendars, agendas, and floor and hearing transcripts. Covers New York State only. Does not hold New York City's own law (the Charter, the Administrative Code or the Rules) or federal law.",
+      "freshness": "Live: every call queries the Senate's Open Legislation API as it stands.",
+      "freshnessSource": "The publisher's README for version 2.4.0, \"Local corpus (optional)\" (github.com/BetaNYC/nys-openlegislation-mcp): \"By default the server queries the live NYS Open Legislation API on every request\"; the package ships no local corpus.",
+      "configuration": {
+        "addressVariable": "NYS_LEGISLATION_HOSTING",
+        "requirement": "optional"
+      },
+      "consentDefault": "ask-first",
+      "publisher": "BetaNYC",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "New York State",
+          "New York"
+        ]
+      },
+      "categories": [
+        "legislation",
+        "law-rules"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/nys-legislation.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nys-legislation",
+        "toolNames": [
+          "search_bills",
+          "get_bill",
+          "list_bills",
+          "get_bill_votes",
+          "get_bill_updates",
+          "list_laws",
+          "get_law_tree",
+          "get_law_section",
+          "list_members",
+          "get_member",
+          "search_members",
+          "list_committees",
+          "get_committee",
+          "get_committee_meetings",
+          "list_calendars",
+          "get_calendar",
+          "list_agendas",
+          "get_agenda",
+          "list_floor_transcripts",
+          "get_floor_transcript",
+          "list_hearing_transcripts",
+          "get_hearing_transcript",
+          "get_updates",
+          "search"
+        ],
+        "sha256": "81dc325fe4ad1ec02c92fa4806ffdf168dab5c65a698a0650e87b0fa45aacad4",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nys-legislation-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "opendata_maryland_gov",
+      "sourceId": "opendata_maryland_gov",
+      "displayName": "Open Data | opendata.maryland.gov",
+      "base": "socrata",
+      "filter": {
+        "portal": "opendata.maryland.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "State of Maryland",
+          "Maryland"
+        ],
+        "portalDomain": "opendata.maryland.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Open Data | opendata.maryland.gov. An open data portal on Socrata, published by State of Maryland (Local government, United States), with 1539 datasets. Tools: the Socrata server's, with the portal fixed to opendata.maryland.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://opendata.maryland.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "opendata.maryland.gov",
+        "datasetCount": "1539",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_cityofnewyork_us",
+      "sourceId": "data_cityofnewyork_us",
+      "displayName": "NYC Open Data Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.cityofnewyork.us"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of New York",
+          "New York",
+          "NYC"
+        ],
+        "portalDomain": "data.cityofnewyork.us"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "NYC Open Data Portal. An open data portal on Socrata, published by City of New York (Local government, United States), with 2405 datasets. Tools: the Socrata server's, with the portal fixed to data.cityofnewyork.us.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.cityofnewyork.us",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.cityofnewyork.us",
+        "datasetCount": "2405",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "citydata_mesaaz_gov_2",
+      "sourceId": "citydata_mesaaz_gov_2",
+      "displayName": "City of Mesa Internal Performance Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "citydata.mesaaz.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Mesa",
+          "Mesa"
+        ],
+        "portalDomain": "citydata.mesaaz.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "City of Mesa Internal Performance Portal. An open data site on Socrata, maintained by City of Mesa (Local government, United States), with 304 data sets. Tools: the Socrata service's, with the site fixed to citydata.mesaaz.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "benchmark/inventories/build.mjs, a constructed distractor: the near-duplicate rule (rules.mjs) over `citydata_mesaaz_gov`",
+        "sourceUrl": "benchmark/inventories/rules.mjs"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      },
+      "synthetic": "true",
+      "distractor": {
+        "kind": "near-duplicate",
+        "of": "citydata_mesaaz_gov"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_oregon_gov",
+      "sourceId": "data_oregon_gov",
+      "displayName": "Oregon Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.oregon.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Oregon",
+          "Oregon"
+        ],
+        "portalDomain": "data.oregon.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Oregon Open Data. An open data portal on Socrata, published by State of Oregon (Regional government, United States), with 539 datasets. Tools: the Socrata server's, with the portal fixed to data.oregon.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.oregon.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.oregon.gov",
+        "datasetCount": "539",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_ny_gov",
+      "sourceId": "data_ny_gov",
+      "displayName": "New York Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.ny.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of New York",
+          "New York"
+        ],
+        "portalDomain": "data.ny.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "New York Open Data. An open data portal on Socrata, published by State of New York (Regional government, United States), with 1034 datasets. Tools: the Socrata server's, with the portal fixed to data.ny.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.ny.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.ny.gov",
+        "datasetCount": "1034",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_lacity_org",
+      "sourceId": "data_lacity_org",
+      "displayName": "Los Angeles Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.lacity.org"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Los Angeles",
+          "Los Angeles"
+        ],
+        "portalDomain": "data.lacity.org"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Los Angeles Open Data. An open data portal on Socrata, published by City of Los Angeles (Local government, United States), with 361 datasets. Tools: the Socrata server's, with the portal fixed to data.lacity.org.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.lacity.org",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.lacity.org",
+        "datasetCount": "361",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "chronicdata_cdc_gov",
+      "sourceId": "chronicdata_cdc_gov",
+      "displayName": "Data | Centers for Disease Control and Prevention - CDC Chronic Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "chronicdata.cdc.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "federal",
+        "names": [
+          "Centers for Disease Control and Prevention"
+        ],
+        "portalDomain": "chronicdata.cdc.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Data | Centers for Disease Control and Prevention - CDC Chronic Data. An open data portal on Socrata, published by Centers for Disease Control and Prevention (Central government, United States), with 1084 datasets. Tools: the Socrata server's, with the portal fixed to chronicdata.cdc.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://chronicdata.cdc.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "chronicdata.cdc.gov",
+        "datasetCount": "1084",
+        "ownerType": "Central government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_commons_pack",
+      "sourceId": "data_commons_pack",
+      "displayName": "Google Data Commons MCP Server (pack)",
+      "base": "data-commons",
+      "filter": {},
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "demographics",
+        "economy-labor",
+        "health",
+        "education",
+        "environment"
+      ],
+      "description": "A pack over Google Data Commons MCP Server (`data_commons`): its tools under one alias, with no argument fixed. Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods.",
+      "freshness": "Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "benchmark/inventories/build.mjs, a constructed distractor: the wrapper template (rules.mjs) over `data_commons`",
+        "sourceUrl": "benchmark/inventories/rules.mjs"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "data-commons",
+        "toolNames": [
+          "search_indicators",
+          "get_observations"
+        ],
+        "sha256": "0e3712e8e93d02b9c9476e29737b7826af46738f9e44f180d2a092160cab0185"
+      },
+      "synthetic": "true",
+      "distractor": {
+        "kind": "wrapper",
+        "of": "data_commons"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_oaklandca_gov",
+      "sourceId": "data_oaklandca_gov",
+      "displayName": "City of Oakland Open Data Platform",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.oaklandca.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Oakland",
+          "Oakland"
+        ],
+        "portalDomain": "data.oaklandca.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "City of Oakland Open Data Platform. An open data portal on Socrata, published by City of Oakland (Local government, United States), with 313 datasets. Tools: the Socrata server's, with the portal fixed to data.oaklandca.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.oaklandca.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.oaklandca.gov",
+        "datasetCount": "313",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@betanyc/nyc-budget-mcp@1.3.1",
+      "alias": "nyc_budget",
+      "sourceId": "nyc-budget",
+      "displayName": "@betanyc/nyc-budget-mcp — NYC Budget MCP server",
+      "description": "MCP server for BetaNYC's New York City Budget data — Council discretionary funding (Schedule C, FY2015–FY2027 awards), Terms & Conditions, Section 254 capital changes, Transparency Resolutions (FY2010–FY2024 + FY2026), and the FY2008–FY2027 Legistar crosswalk.",
+      "freshness": "Bundled database in package 1.3.1 (published 2026-08-11); coverage varies by dataset and fiscal year.",
+      "freshnessSource": "@betanyc/nyc-budget-mcp 1.3.1 data/budget.db and README coverage table (lines 31-35)",
+      "configuration": {
+        "addressVariable": "NYC_BUDGET_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "serverType": "npm-package",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "budget-finance",
+        "spending-contracts"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "R5's frozen directory (directory.json, sha256 be0874030f0c95dd6083fd3d1e8fdfae4fa956ff848c7b67d4c25c1053e5dea7), one of its four servers outside today's seven, copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-budget-mcp/v/1.3.1",
+        "file": "benchmark/inventories/sources/r5-servers.json",
+        "fileSha256": "26526aa977681040b049606f3f45ffc14e535427be76395b9a0b17263544125d"
+      },
+      "toolsRef": {
+        "kind": "fixture",
+        "path": "benchmark/inventories/sources/r5-servers.json",
+        "sourceId": "nyc-budget",
+        "toolNames": [
+          "search_awards",
+          "get_awards_by_ein",
+          "search_transparency_resolutions",
+          "get_legistar_link",
+          "search_capital_projects",
+          "get_terms_conditions",
+          "list_available_fiscal_years"
+        ],
+        "sha256": "b50fc6f2ea476095bf131b0ffa3a6ccac0d11eba949fe4fdb1bd656085970191"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "performance_princegeorges_55dd30",
+      "sourceId": "performance_princegeorges_55dd30",
+      "displayName": "CountyStat | Prince George's CountyStat | CountyStat | Prince George's County",
+      "base": "socrata",
+      "filter": {
+        "portal": "performance.princegeorgescountymd.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Prince George's County",
+          "CountyStat"
+        ],
+        "portalDomain": "performance.princegeorgescountymd.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "CountyStat | Prince George's CountyStat | CountyStat | Prince George's County. An open data portal on Socrata, published by Prince George's County (Local government, United States), with 263 datasets. Tools: the Socrata server's, with the portal fixed to performance.princegeorgescountymd.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://performance.princegeorgescountymd.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "performance.princegeorgescountymd.gov",
+        "datasetCount": "263",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "performance_smcgov_org",
+      "sourceId": "performance_smcgov_org",
+      "displayName": "San Mateo Performance Dashboards",
+      "base": "socrata",
+      "filter": {
+        "portal": "performance.smcgov.org"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "County of San Mateo",
+          "San Mateo"
+        ],
+        "portalDomain": "performance.smcgov.org"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "San Mateo Performance Dashboards. An open data portal on Socrata, published by County of San Mateo (Local government, United States), with 899 datasets. Tools: the Socrata server's, with the portal fixed to performance.smcgov.org.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://performance.smcgov.org",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "performance.smcgov.org",
+        "datasetCount": "899",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_texas_gov",
+      "sourceId": "data_texas_gov",
+      "displayName": "Texas Open Data Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.texas.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "State of Texas",
+          "Texas"
+        ],
+        "portalDomain": "data.texas.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Texas Open Data Portal. An open data portal on Socrata, published by State of Texas (Regional government, United States), with 828 datasets. Tools: the Socrata server's, with the portal fixed to data.texas.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.texas.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.texas.gov",
+        "datasetCount": "828",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit",
+      "alias": "data_commons",
+      "sourceId": "data-commons",
+      "displayName": "Google Data Commons MCP Server",
+      "description": "Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods.",
+      "freshness": "Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).",
+      "freshnessSource": "The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub's docs/skills/data-commons.md): \"ACS releases annually\" and \"Surface the vintage\". The server is Google's datacommons-mcp (github.com/datacommonsorg/agent-toolkit).",
+      "configuration": {
+        "addressVariable": "DATA_COMMONS_MCP_URL",
+        "keyVariable": "DATA_COMMONS_API_KEY",
+        "requirement": "required",
+        "defaultAddress": "https://api.datacommons.org/mcp"
+      },
+      "consentDefault": "on",
+      "publisher": "Google",
+      "authentication": {
+        "kind": "instance-key",
+        "keyVariable": "DATA_COMMONS_API_KEY"
+      },
+      "serverType": "mcp-remote",
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "demographics",
+        "economy-labor",
+        "health",
+        "education",
+        "environment"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/data-commons.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "data-commons",
+        "toolNames": [
+          "search_indicators",
+          "get_observations"
+        ],
+        "sha256": "0e3712e8e93d02b9c9476e29737b7826af46738f9e44f180d2a092160cab0185"
+      },
+      "guidanceRef": {
+        "kind": "embedded",
+        "instructions": "none",
+        "publicationHost": "civicaitools.org",
+        "blockSha256": "483cbe0ab1ac655ea507339d74bad6965ff022549b0f061f28b6783466577909"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "performance_seattle_gov",
+      "sourceId": "performance_seattle_gov",
+      "displayName": "Seattle Performance Portal",
+      "base": "socrata",
+      "filter": {
+        "portal": "performance.seattle.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Seattle",
+          "Seattle"
+        ],
+        "portalDomain": "performance.seattle.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Seattle Performance Portal. An open data portal on Socrata, published by City of Seattle (Local government, United States), with 932 datasets. Tools: the Socrata server's, with the portal fixed to performance.seattle.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://performance.seattle.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "performance.seattle.gov",
+        "datasetCount": "932",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "nyc_checkbook_pack",
+      "sourceId": "nyc_checkbook_pack",
+      "displayName": "NYC Checkbook MCP Server (pack)",
+      "base": "nyc-checkbook",
+      "filter": {},
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "New York City",
+          "NYC"
+        ]
+      },
+      "categories": [
+        "spending-contracts",
+        "budget-finance",
+        "payroll-workforce"
+      ],
+      "description": "A pack over NYC Checkbook MCP Server (`nyc_checkbook`): its tools under one alias, with no argument fixed. New York City government spending as the Comptroller's Checkbook NYC publishes it: contracts (citywide, NYCHA and NYCEDC), payments to vendors, budget and revenue figures by agency and fiscal year, and payroll by agency and title. Covers New York City only. Does not hold the adopted budget's text, Council discretionary awards, or employee names.",
+      "freshness": "Live: every call queries Checkbook NYC as it stands, and the server spaces its requests at least 1.1 seconds apart.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "hand",
+        "by": "benchmark/inventories/build.mjs, a constructed distractor: the wrapper template (rules.mjs) over `nyc_checkbook`",
+        "sourceUrl": "benchmark/inventories/rules.mjs"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "nyc-checkbook",
+        "toolNames": [
+          "smart_search",
+          "search_contracts",
+          "get_contract",
+          "search_spending",
+          "search_budget",
+          "search_payroll",
+          "search_revenue",
+          "get_agency_spending",
+          "search_nycedc_contracts",
+          "search_nycha_contracts"
+        ],
+        "sha256": "8533854573290f09f70c9aa4ded251a7e6a36752076c77b7ceb2663b8cbf3a1f",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-checkbook-tools.json"
+      },
+      "synthetic": "true",
+      "distractor": {
+        "kind": "wrapper",
+        "of": "nyc_checkbook"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_montgomerycountymd_gov",
+      "sourceId": "data_montgomerycountymd_gov",
+      "displayName": "Montgomery County, Md Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.montgomerycountymd.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Montgomery County",
+          "Montgomery"
+        ],
+        "portalDomain": "data.montgomerycountymd.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Montgomery County, Md Open Data. An open data portal on Socrata, published by Montgomery County (Local government, United States), with 471 datasets. Tools: the Socrata server's, with the portal fixed to data.montgomerycountymd.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.montgomerycountymd.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.montgomerycountymd.gov",
+        "datasetCount": "471",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "opencontext@https://data-mcp.boston.gov/mcp",
+      "alias": "boston",
+      "sourceId": "boston-opencontext",
+      "displayName": "Boston OpenContext MCP Server",
+      "description": "Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics.",
+      "freshness": "Live: each call queries the CKAN data store behind data.boston.gov; each dataset updates on the City's schedule (311 daily, crime weekly, assessor annually).",
+      "freshnessSource": "The Boston guidance this package embeds (src/civic/boston.ts, hand-synced from the hub's docs/skills/boston.md): OpenContext \"fronts the CKAN DataStore powering Analyze Boston (data.boston.gov)\"; \"Update cadence varies. 311 daily, assessor annually, crime weekly.\"",
+      "configuration": {
+        "addressVariable": "BOSTON_OPENCONTEXT_MCP_URL",
+        "requirement": "optional"
+      },
+      "consentDefault": "on",
+      "publisher": "City of Boston",
+      "serverType": "mcp-remote",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Boston",
+          "City of Boston"
+        ]
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "property-land",
+        "elections",
+        "education"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-02",
+        "from": "hand",
+        "by": "the router's manifest (@typedstandards/civic-typed-router@0.6.0), copied by benchmark/inventories/build.mjs",
+        "sourceUrl": "packages/civic-typed-router/src/civic/boston.ts"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "boston-opencontext",
+        "toolNames": [
+          "ckan__search_datasets",
+          "ckan__get_dataset",
+          "ckan__query_data",
+          "ckan__get_schema",
+          "ckan__execute_sql",
+          "ckan__aggregate_data"
+        ],
+        "sha256": "5942af354c9eafbd179f2fe70fd503f75fb55b6f9c492eea9f8410da06aa53e6"
+      },
+      "guidanceRef": {
+        "kind": "embedded",
+        "instructions": "none",
+        "publicationHost": "civicaitools.org",
+        "blockSha256": "d253d94f9b0d784bc0de4cb6e2af02f6b113ab48ef5d366410f025524b7a531d"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "data_bayareametro_gov",
+      "sourceId": "data_bayareametro_gov",
+      "displayName": "Bay Area Metro Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "data.bayareametro.gov"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "Metropolitan Transportation Commission",
+          "Bay Area Metro"
+        ],
+        "portalDomain": "data.bayareametro.gov"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Bay Area Metro Open Data. An open data portal on Socrata, published by Metropolitan Transportation Commission (Regional government, United States), with 1993 datasets. Tools: the Socrata server's, with the portal fixed to data.bayareametro.gov.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://data.bayareametro.gov",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "data.bayareametro.gov",
+        "datasetCount": "1993",
+        "ownerType": "Regional government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "www_dallasopendata_com",
+      "sourceId": "www_dallasopendata_com",
+      "displayName": "Dallas, Tx Open Data",
+      "base": "socrata",
+      "filter": {
+        "portal": "www.dallasopendata.com"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "City of Dallas",
+          "Dallas"
+        ],
+        "portalDomain": "www.dallasopendata.com"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Dallas, Tx Open Data. An open data portal on Socrata, published by City of Dallas (Local government, United States), with 342 datasets. Tools: the Socrata server's, with the portal fixed to www.dallasopendata.com.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://www.dallasopendata.com",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "dallasopendata.com",
+        "datasetCount": "342",
+        "ownerType": "Local government",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    },
+    {
+      "kind": "pack",
+      "alias": "bronx_lehman_cuny_edu",
+      "sourceId": "bronx_lehman_cuny_edu",
+      "displayName": "Lehman College Community Connect: Bronx Information Portal | Bronx Information Portal | Lehman College",
+      "base": "socrata",
+      "filter": {
+        "portal": "bronx.lehman.cuny.edu"
+      },
+      "guidance": {
+        "kind": "none"
+      },
+      "author": "benchmark/inventories/build.mjs",
+      "version": "1.0.0",
+      "place": {
+        "country": "US",
+        "level": "state",
+        "names": [
+          "Lehman College, City University of New York",
+          "Lehman College Community Connect"
+        ],
+        "portalDomain": "bronx.lehman.cuny.edu"
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "housing",
+        "transportation",
+        "payroll-workforce"
+      ],
+      "description": "Lehman College Community Connect: Bronx Information Portal | Bronx Information Portal | Lehman College. An open data portal on Socrata, published by Lehman College, City University of New York (Academy, United States), with 352 datasets. Tools: the Socrata server's, with the portal fixed to bronx.lehman.cuny.edu.",
+      "freshness": "Live: queries reach the portal when they are made (a dataset's metadata or a single record may be reused for up to five minutes); each dataset updates on its publisher's schedule.",
+      "provenance": {
+        "addedOn": "2026-11-03",
+        "from": "portal-catalog",
+        "by": "benchmark/inventories/build.mjs, the portal-pack template over one row of the website's data/portals/socrata.json",
+        "sourceUrl": "https://bronx.lehman.cuny.edu",
+        "file": "benchmark/inventories/sources/socrata.json",
+        "commit": "85590020eae4ab72795afd7e8e6cd81589e8ac23",
+        "fileSha256": "97f6131d3a434e643cb24d9038864a72cacf8ff44961894c3dffe0d5ac2397e9"
+      },
+      "catalog": {
+        "platform": "socrata",
+        "id": "bronx.lehman.cuny.edu",
+        "datasetCount": "352",
+        "ownerType": "Academy",
+        "status": "active"
+      },
+      "toolsRef": {
+        "kind": "router-manifest",
+        "package": "@typedstandards/civic-typed-router@0.6.0",
+        "sourceId": "socrata",
+        "toolNames": [
+          "get_data",
+          "search",
+          "fetch"
+        ],
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+      }
+    }
+  ]
+}

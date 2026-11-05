@@ -1,0 +1,14 @@
+{
+  "schema": "civic-run-plan/1",
+  "id": "s1-bound",
+  "description": "A test fixture for the calibrated bound's dry run: two builder-read steps over two questions, one on Haiku 5.5 and one on the open-weight model with three repeats (so options A and B differ), whose requests a test can price by hand. Not a preregistered plan, and only for dry runs.",
+  "models": { "main": "anthropic/claude-haiku-5.5", "builder": "anthropic/claude-haiku-5.5", "openWeight": "--open-weight <slug>" },
+  "steps": [
+    { "id": "reads-haiku", "config": "builder-50", "role": "builder", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": ["main"], "repeats": 1 },
+    { "id": "reads-open-weight", "config": "builder-50", "role": "builder", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "questionIds": { "list": ["q11", "q34"] }, "models": ["openWeight"], "repeats": 3 }
+  ],
+  "options": {
+    "A": { "description": "As the steps state." },
+    "B": { "description": "Two repeats where a step states three.", "repeats": 2, "appliesTo": "every step whose repeats are 3" }
+  }
+}

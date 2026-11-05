@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "civic-questions/1",
+  "title": "A benchmark question file: the questions, labelled against one inventory (sources-at-scale design §2.2)",
+  "description": "Every value is a string, an array or an object: the router's canonicalJson, which hashes the file, refuses numbers, booleans and null. The strata's values are defined in benchmark/questions/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "inventory", "note", "probeIds", "questions"],
+  "properties": {
+    "schema": { "const": "civic-questions/1" },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "id", "version", "canonicalSha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^benchmark/inventories/(?:7|50|200|1000)\\.json$" },
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "canonicalSha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "note": { "$ref": "#/definitions/text" },
+    "probeIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/definitions/id" }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/question" }
+    }
+  },
+  "definitions": {
+    "text": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "pattern": "^q[0-9]{2,3}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "alias": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,31}$" },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "text", "strata", "acceptable"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "kind": { "enum": ["single", "two", "none", "ambiguous"] },
+        "text": { "$ref": "#/definitions/text" },
+        "strata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["place", "category", "sources", "trap"],
+          "properties": {
+            "place": { "enum": ["named-city", "named-state", "federal", "no-place", "ambiguous-place"] },
+            "category": {
+              "enum": [
+                "311-service-requests",
+                "permits-inspections",
+                "budget-spending",
+                "procurement",
+                "legislation-law",
+                "transit",
+                "census-statistics",
+                "elections",
+                "property",
+                "other",
+                "none"
+              ]
+            },
+            "sources": { "enum": ["0", "1", "2"] },
+            "trap": {
+              "enum": [
+                "none",
+                "counting-vs-lookup",
+                "state-portal-vs-city-server",
+                "pack-vs-base",
+                "same-category-two-jurisdictions",
+                "distractor-match"
+              ]
+            }
+          }
+        },
+        "acceptable": {
+          "description": "Every acceptable set of aliases; [[]] is no source in this inventory, and [] among several sets is 'load nothing' (README, rules 3 and 10).",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "#/definitions/alias" }
+          }
+        },
+        "note": { "$ref": "#/definitions/text" }
+      }
+    }
+  }
+}

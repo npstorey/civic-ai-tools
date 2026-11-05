@@ -8,8 +8,9 @@
 //         and writes nothing.
 //
 // The questions are R5's 49, a runner fixture, not gold (fixtures/README.md).
-// When P2 commits benchmark/questions/7.json, the anchor's literal command
-// joins these.
+// The anchor's literal command, over the benchmark's own questions
+// (`--questions benchmark/questions/7.json`, P2), runs beside it: the seat's
+// ruling 1 at G0 (hub #302 comment 6591846951).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -77,6 +78,21 @@ test("A0.1: the dry run exits 0 and prints every input's sha256 and the estimate
   assert.match(run.stdout, /DRY RUN: no network call was made; nothing was written\./);
 });
 
+test("A0.1, literal: the anchor's dry run over benchmark/questions/7.json exits 0 and prints every input's sha256", () => {
+  // node benchmark/runner/run.mjs --dry-run --inventory benchmark/inventories/7.json --questions benchmark/questions/7.json --config baseline-7
+  const literal = COMMAND.map((arg) => (arg === 'benchmark/runner/fixtures/r5-questions.json' ? 'benchmark/questions/7.json' : arg));
+  assert.deepEqual(literal, ['benchmark/runner/run.mjs', '--dry-run', '--inventory', 'benchmark/inventories/7.json', '--questions', 'benchmark/questions/7.json', '--config', 'baseline-7']);
+  const run = node(literal);
+  assert.equal(run.status, 0, `exit ${run.status}\n${run.stderr}`);
+  for (const rel of [...INPUTS.filter((r) => r !== 'benchmark/runner/fixtures/r5-questions.json'), 'benchmark/questions/7.json']) {
+    assert.ok(run.stdout.includes(`${sha256(rel)}  ${rel}`), `the dry run prints ${rel}'s sha256`);
+  }
+  const questions = JSON.parse(readFileSync(join(REPO, 'benchmark/questions/7.json'), 'utf8')).questions.length;
+  assert.ok(run.stdout.includes(`questions ${questions}\n`), 'the question count is printed');
+  assert.match(run.stdout, /total: calls ≤ \d+; floor \$\d+\.\d\d; ceiling \$\d+\.\d\d; hard ceiling \$\d+\.\d\d/);
+  assert.match(run.stdout, /DRY RUN: no network call was made; nothing was written\./);
+});
+
 test('A0.2: under a no-network preload, the dry run still exits 0 and writes nothing', () => {
   const treeBefore = benchmarkTree();
   const statusBefore = gitStatus();
@@ -99,5 +115,6 @@ test('A0.2, the test of the test: the preload refuses a fetch and a socket', () 
 test('A0.6: build.mjs --check rebuilds 7.json byte for byte', () => {
   const run = node(['benchmark/inventories/build.mjs', '--check']);
   assert.equal(run.status, 0, `exit ${run.status}\n${run.stderr}`);
-  assert.match(run.stdout, /7\.json, 7\.json\.sha256 rebuilt byte for byte/);
+  // P1 adds the larger files after 7.json's pair (inventories.test.mjs, A1.1).
+  assert.match(run.stdout, /: 7\.json, 7\.json\.sha256\b.* rebuilt byte for byte/);
 });

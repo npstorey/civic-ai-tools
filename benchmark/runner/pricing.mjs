@@ -92,3 +92,21 @@ export function costOfUsage(pricing, usage) {
   const computed = (prompt - cached) * price.in + cached * price.cacheRead + (usage.completion_tokens ?? 0) * price.out;
   return { computed, reported: typeof usage.cost === 'number' ? usage.cost : null };
 }
+
+/** The worst case over several pricing objects: a request that may land on
+ *  any of several endpoints is reserved at the dearest (models.mjs). */
+export function worstCostOver(pricings, promptTokens, completionLimit, margin = TIER_MARGIN) {
+  return Math.max(...pricings.map((p) => worstCost(p, promptTokens, completionLimit, margin)));
+}
+
+/** What a call cost: as `costOfUsage`, and the amount the run charges to its
+ *  spend. With usage, the larger of the cost at the listed price and the cost
+ *  OpenRouter reported; when no cost was reported, the larger of the listed
+ *  price's and the dearest endpoint's. With no usage, the reservation. */
+export function chargeOf(listPricing, reservationPricings, usage, reservedUsd) {
+  const cost = costOfUsage(listPricing, usage);
+  if (!usage) return { ...cost, charged: reservedUsd, chargedAs: 'reservation (no usage returned)' };
+  if (cost.reported !== null) return { ...cost, charged: Math.max(cost.computed, cost.reported), chargedAs: 'larger of computed and reported' };
+  const dearest = Math.max(cost.computed, ...reservationPricings.map((p) => costOfUsage(p, usage).computed));
+  return { ...cost, charged: dearest, chargedAs: 'dearest endpoint (no cost reported)' };
+}
