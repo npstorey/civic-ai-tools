@@ -24,7 +24,7 @@ preregistration. The owner ran the evaluations at G3; P4 committed the run and w
 | `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5; `metrics.mjs` (filter recall, search recall at k and the notice rate, per row); `offered.mjs` (the offered gold and the split by gold); `s1.mjs` (a run's summary per step and model). Not `analysis/`: the hub ignores any directory of that name |
 | `preregistration/` | `s1.md`: the sprint's preregistration; P1 wrote its inputs section, P2 its questions section, P3 the rest |
 | `runs/` | `2026-10-11-r5/`: R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README); `2026-11-05/`: G3's run as the owner's run wrote it, each run directory with the scorer's summary over it, the wrapper's records, and the report's tables (below) |
-| `report/` | `tables.mjs` (renders the report's tables from the summaries alone); outside the inputs' hash, as it measures nothing |
+| `report/` | `tables.mjs` (renders the report's tables from the summaries alone) and `quotes.mjs` (prints each quote the report makes, cut from a named row); outside the inputs' hash, as they measure nothing |
 | `test/` | the benchmark's checks |
 | `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, the registry pages P1 reads, and a run's files (`_local/runs/<run-id>/`), which P4 copied into `runs/2026-11-05/` |
 
@@ -239,6 +239,7 @@ byte, and each summary's `files` are the committed files' sha256 (`test/run-2026
 ```sh
 node benchmark/scoring/analyze.mjs benchmark/runs/2026-11-05/2026-11-05-run-191511 --out <file>  # equals its summary.json
 node benchmark/report/tables.mjs benchmark/runs/2026-11-05 --check  # tables.out.md is what the summaries render
+node benchmark/report/quotes.mjs  # each quote in the report, with its row key
 ```
 
 ## The report (P4)
@@ -253,6 +254,8 @@ D1 confirmed, qualified or overturned on the two models measured.
   The block between the two markers is that file verbatim (A4.1), and every number it prints is a value of a summary,
   printed as the summary holds it (the seat's condition, comment 6662114479); `test/report-tables.test.mjs` checks
   both. The prose below names no figure: where it compares two, it names the table that holds them.
+- **Every quote** is cut from a named row of the evaluations' `rows.jsonl` by `report/quotes.mjs` and sits beside
+  its row key; `test/report-quotes.test.mjs` finds each one verbatim in that row (O2).
 - **A row** is one question, one repeat and one model of one step, so a figure per row is a figure per question. Each
   main step asks the question set three times of each model (the Rows column). `flat-1000` ran on Haiku 5.5 only, one
   repeat, over its drawn questions (preregistration, "`rule-N`, and `flat-1000`"). A builder read is one row per
@@ -552,8 +555,182 @@ as a cross-check, not a pass or fail test (caveats).
 
 <!-- tables.out.md: end -->
 
+### What the tables show
+
+Each reading names the table that holds its figures. No interval is computed (the preregistration names none), and
+some of the differences read here are small.
+
+1. **Filter recall.** The place filter's shortlist is below the design's line at 50, 200 and 1,000 entries, and lower
+   at each larger size ("Filter recall"; the same shortlist under `shortlist-N` and `shortlist+search-N`, and the same
+   for both models). The builder's selection is at or above the line at every size, per question and per row.
+   `baseline-7`'s directory is the six configured of the seven, so a question whose only gold is Boston misses there.
+2. **Directory accuracy.** Among the capped steps, `builder-N`'s first request is the highest at every size on both
+   models and on both golds, `shortlist-N`'s the lowest, and `shortlist+search-N`'s between ("Directory accuracy").
+   Over-loading on the offered gold is highest under `shortlist-N` at every size: when the shortlist drops the gold,
+   the offered gold is "load nothing", and any load scores `over`. Every configuration's first request is below R5's
+   0.986–1.0, `baseline-7`'s included (caveats).
+3. **Search recall at k.** When the model searched after a filter miss, the first ten hits held the gold in most rows,
+   on both models at every size ("Search recall at k"). The same search over the question's own text (`rule-N`) finds
+   it less often, over a wider denominator, every question whose gold needs a source. Lexical search is enough on this
+   evidence; the design's embedding fallback is not called for.
+4. **The notice rate.** Haiku 5.5 searched in fewer than half of its filter misses at every size; GLM-5.3-Flash in
+   about half or more ("The notice rate"). `find_source` recovers a miss in the rows where the model calls it, and the
+   models often do not call it.
+5. **Tokens, latency and cost.** The capped steps' first-request prompt and cost per row stay of one order at 50, 200
+   and 1,000; the flat directory's grow with the inventory, and at 1,000 its first-request prompt is above the
+   100,000-token price step (Haiku 5.5 is billed five times higher there) and its cost per row is the run's highest
+   ("Tokens per question"; "Latency and cost per question"). The builder adds its read, which the summary prices per
+   step, not per question; the read of the 1,000-entry directory is the run's dearest step. At the cap, the first
+   request's median latency stays near `baseline-7`'s on Haiku 5.5 and below it on GLM-5.3-Flash, whose first-request
+   p90 is longer than Haiku 5.5's on most steps.
+6. **The break point.** On Haiku 5.5, `flat-N`'s first request is not below `shortlist+search-N`'s at 50 or at 200, so
+   no break point is reached through 200; on GLM-5.3-Flash, it is below at 50 and not at 200 ("The flat directory
+   against the capped shortlist with search"). Of the three shapes, the flat directory's first request is the highest
+   on Haiku 5.5 at 50 and 200, and the builder's is the highest on GLM-5.3-Flash at every size and on Haiku 5.5 at
+   1,000, where flat is a cost point only ("The three shapes at each size").
+
+### The failure classes, quoted
+
+The counts are in "The failure classes, first request" and "The request after a load, the picks and the errors". The
+rows quoted below are named by key: first the question, as the rule step's row records it (its one search's query is
+the question's text), then the model's call or text. Every quote is verbatim from the evaluations' `rows.jsonl`, and
+… marks a cut (`node benchmark/report/quotes.mjs` prints each with its key). The texts are model output, quoted as
+data.
+
+- **`over`: a load where the inventory holds no source.** At 7 entries a question about a place none of the seven
+  covers has "load nothing" as its gold, and the models often load the Socrata server anyway.
+  - `rule-50|rule|q73`, the question: “How many fire and medical calls did Pompano Beach, Florida, respond to last year?”
+  - `baseline-7|anthropic/claude-haiku-5.5|q73|1`, the first request: “load_source” with “{"alias": "socrata"}”
+- **Raw against offered gold: a source the step does not offer.** `baseline-7` lists six of the seven, not Boston. A
+  question whose gold is Boston scores `missing` on the raw gold when the model declines, and correct on the offered.
+  - `rule-50|rule|q10`, the question: “How many pothole requests did Boston's 311 receive last month?”
+  - `baseline-7|anthropic/claude-haiku-5.5|q10|1`, the first request, which calls nothing: “I can't answer this with the sources I have. The Socrata connector can't reach Boston's city data, and none of the other sources hold Boston 311 records.…”
+- **`wrong`: a filter miss the model did not notice.** The place filter's shortlist lacks the gold, and the model
+  loads a listed source without calling `find_source`.
+  - `rule-50|rule|q16`, the question: “Which organizations received City Council discretionary funding in Queens in fiscal year 2025?”
+  - `shortlist+search-50|anthropic/claude-haiku-5.5|q16|1`, the first request: “{"alias": "socrata"}”
+- **A filter miss noticed and recovered.**
+  - `rule-50|rule|q15`, the question: “What is the average assessed value of residential properties in Dorchester?”
+  - `shortlist+search-50|anthropic/claude-haiku-5.5|q15|1`, the first request “find_source” with “{"query": "Boston property assessment records residential assessed value by neighborhood (Dorchester)"}”, then the load “{"alias": "boston"}”
+- **`wrong`: a city's own small pack where the gold is the general server.** The labels take a portal that lists few
+  datasets as holding nothing in particular (labelling rule 6).
+  - `rule-200|rule|q03`, the question: “How many car break-ins were reported in San Francisco in the past six months?”
+  - `shortlist+search-200|anthropic/claude-haiku-5.5|q03|1`, the first request: “{"alias": "data_sf_gov"}”
+- **`wrong`: a stale catalog row.** Seattle's row in the copied Socrata catalog lists no datasets, so its pack is not
+  gold (caveats).
+  - `rule-1000|rule|q04`, the question: “Which Seattle neighborhoods had the most code compliance complaints this year?”
+  - `shortlist-1000|anthropic/claude-haiku-5.5|q04|1`, the first request: “{"alias": "data_seattle_gov"}”
+- **An MCP Registry entry picked first.** Correct on the labels; a registry entry loads no tools, and is scored on the
+  first request only.
+  - `rule-200|rule|q118`, the question: “Which UK local councils have open tenders for waste collection services?”
+  - `flat-200|anthropic/claude-haiku-5.5|q118|1`, the first request: “{"alias": "tender"}”
+- **The builder selected nothing for a question that needs a source.** Its main rows then send no request (the "No
+  request" column).
+  - `rule-50|rule|q127`, the question: “What was the City of Pittsburgh's general fund revenue in 2024?”
+  - `builder-50-reads|builder|q127`, the read: “{"aliases": []}”, recorded as “empty selection”
+- **The request after a load: no tool call.** A clarifying question.
+  - `baseline-7|anthropic/claude-haiku-5.5|q143|2`, the second request: “"Springfield" is the name of many places in the U.S., so I need to know which one you mean.…”
+- **The request after a load: a call that fails its schema.**
+  - `baseline-7|z-ai/glm-5.3-flash|q51|1`, the second request: “socrata__get_data”, with the schema error “/ should have required property 'type'”
+
+### Caveats
+
+- **The comparisons.**
+  - R5's 0.986–1.0 is a **cross-check, not a pass or fail test** (the seat's ruling, comment 6593327786). It carries
+    the differences in the `baseline-7` table above, and one more: R5's 49 questions were labelled against R5's
+    eleven entries, while S1's 149 are labelled against each of the four inventories by S1's rules, and the seven hold
+    none of R5's four NYC servers, so a question R5 labelled to one of them has no source at 7 (each such label's
+    `note` in `questions/7.json` says so). The summary holds no split by question, so this report does not attribute
+    `baseline-7`'s gap to R5's range.
+  - **Offered and raw gold are reported side by side** in every accuracy table; neither replaces the other.
+  - No interval is computed for any figure, and no difference is tested.
+- **The counts.**
+  - The pick counts: correct first loads that held a synthetic copy (a near-duplicate or a wrapper, counted correct
+    wherever its original is, labelling rule 9, so the copies measure crowding and over-loading, not wrong picks);
+    first picks that were an MCP Registry entry (which loads no tools); first picks that were a CKAN pack (which
+    carries Boston OpenContext's tools as a stand-in for a generic CKAN server).
+  - **Error rows are in no denominator** (preregistration, "Metric definitions"). The run has none: the run
+    directories table's Error rows column, and each step's.
+- **The data.**
+  - **The stale Seattle and Austin catalog rows.** In the copied Socrata catalog, Seattle's and Austin's rows list no
+    datasets (as do other rows of the 1,000-entry file), so their packs' descriptions say so and the labels do not take
+    them as gold (labelling rule 6; P2's note, hub #302 comment 6614538094). A model that picks one is scored `wrong`
+    (quoted above).
+  - **The place filter was written after the questions were frozen, by an author who had read them** (the
+    preregistration says so; the seat's note, comment 6617296646). Its filter recall is reported as a caveat: on
+    questions its author had not read it may be lower than measured, and the measured figure is already below the
+    design's line.
+  - `flat-1000` ran on one model over a drawn subset of the questions, one repeat: a cost point, not compared.
+- **The run's history.**
+  - **P3-fix (#305)**, a serialization fix made before any model call (the open-weight probe's accuracy written to
+    `meta.json` as an 8-place string), moved the inputs' hash `2347faa3…` → `3d4b5271…` (G2's amendment, comment
+    6662456277). The run ran at the moved hash.
+  - **G3 writes no `baseline.jsonl`**: a plan run records no single-configuration token baselines, so this report
+    has no T0 or T1 baseline column as R5's had.
+  - **Step 5's first start stopped at `op`**, which was not signed in, before any model call; no run directory was made
+    and nothing was spent. Its output is kept as `g3/step-5.op-not-signed-in.out`, and step 5 was run again with the
+    same three values (the seat's ruling, comment 6666737354).
+- **The money.** Recorded spend is at list price, the larger of the computed and the reported cost of each request.
+  Through the BYOK route above, Haiku requests billed the owner's Anthropic account or, where they fell back,
+  OpenRouter's credits, so OpenRouter's balance fell by less than the recorded figure. The calibrated bound and the
+  cap the evaluations ran under are in `g3/step-4.out` and `g3/sitting-1.json`.
+
+### The decision table for D1 (proposed for G4's ruling)
+
+D1 = A (the rulings file): a deterministic shortlist (configuration ∩ consent ∩ place), the directory over it capped at
+about 25 lines, and `find_source` over the inventory; no pre-flight model call; the builder a benchmark configuration.
+"Not decided until S1 reports the six numbers." S1 configured every entry, so it measured the place part of the
+shortlist only. Each row names the table that holds its figures.
+
+| What D1 = A rests on (design §1.4) | Haiku 5.5 | GLM-5.3-Flash | Sonnet 5.5 | Opus 5.5 | Proposed reading |
+|---|---|---|---|---|---|
+| The deterministic place filter keeps the gold: filter recall at or above about 0.95 at 50, 200 and 1,000 ("Filter recall") | below the line at every size | the same shortlist: below at every size | unmeasured | unmeasured | **overturned**, for the place filter as the shortlist rule |
+| A directory capped at about 25 lines chooses well ("Directory accuracy"; "The three shapes at each size") | with the builder's shortlist, the highest capped step at every size and the highest compared at 1,000; the uncapped flat directory is higher at 50 and 200 | with the builder's shortlist, the highest of the three shapes at every size | unmeasured | unmeasured | **confirmed** for the cap, with the builder's shortlist; every step is below R5's cross-check range |
+| `find_source` makes a filter miss recoverable ("Search recall at k"; "The notice rate") | when it searched, the first ten hits held the gold in most rows; it searched in fewer than half of its misses | the same recall; it searched in about half or more | unmeasured | unmeasured | **qualified**: the search finds the source; the model's notice is partial, so recovery is measured, not assured |
+| Lexical search first, embeddings only if lexical recall fails ("Search recall at k") | lexical recall at ten high where the model searched | the same | unmeasured | unmeasured | **confirmed**: no embedding search is called for |
+| The cap bounds the per-request cost; the flat directory's grows with the inventory ("Tokens per question"; "Latency and cost per question") | the capped cost per row stays of one order at every size; flat's grows and at 1,000 crosses the price step | the same through 200 (`flat-1000` ran on Haiku 5.5 only) | unmeasured | unmeasured | **confirmed**; the builder's read of the 1,000-entry directory is the run's dearest step |
+| The flat directory's break point ("The flat directory against the capped shortlist with search") | not reached through 200 | below at 50, not at 200: no consistent break point | unmeasured (its `flat-200` is in the larger models' stage) | unmeasured | **not established**: the reason to leave flat stays its cost, as §1.4 says |
+| The builder stays a benchmark configuration unless it wins on recall at 200–1,000 where the deterministic shortlist loses (§1.4, D/E) | it wins on filter recall at every size, and its first request is above the place filter's with search at every size | the same | unmeasured | unmeasured | **the condition is met**: by §1.4 it becomes the shortlist rule for large inventories, with `find_source` behind it (E), which S1 did not run |
+
+**Proposed reading: D1 qualified**, on Haiku 5.5 and GLM-5.3-Flash, with Sonnet 5.5 and Opus 5.5 unmeasured. The
+capped directory and `find_source` stand: over the builder's shortlist the capped directory is the most accurate capped
+step at every size, near or above the uncapped flat directory, at a bounded cost per row; and lexical search finds a
+missed source when the model asks. The deterministic place filter does not stand as the shortlist rule at any size
+measured: its recall is below the design's line, and the model's notice of a miss is too partial to make that up. The
+builder meets the condition §1.4 set for replacing it, at every size and on both models, so the shape this report
+proposes for S3 is §1.4's E: the builder's selection as the shortlist, the capped directory over it, and `find_source`
+behind it. That adds the pre-flight model call D1 = A excluded, recorded as a span of its own (§1.2, §5.2). An owner who reads that clause as essential to D1 = A would rule D1 overturned in favour of E; the measurements
+are the same either way.
+
+### What S3 should build, and what it must not (proposed for G4's ruling)
+
+S3 should build:
+
+- the capped directory, about 25 lines, over a shortlist, with `find_source` over the inventory and §1.5's mechanism (a
+  hit joins the next request's directory set and `load_source` enum), which S1 measured only as the runner's
+  simulation;
+- `find_source` as a lexical (BM25) search, as S1 ran it; embeddings only if a later measurement finds lexical recall
+  failing;
+- for inventories of 200 to 1,000 entries, the builder's selection as the shortlist rule (§1.4's E), its call a span of
+  its own in the record (§5.2), and the routing configuration recorded with it (§1.4: the rule and its version, the
+  cap, the search and its version, the inventory's id, version and hash);
+- before committing to E: a measurement of E itself (S1 ran the builder without `find_source` behind it), and a priced
+  builder read at the inventory's size, since the read of 1,000 entries is the run's dearest step;
+- the configuration and consent parts of the deterministic shortlist as the design has them: S1 configured every entry
+  and measured neither.
+
+S3 must not:
+
+- ship the place filter as the only shortlist rule at 50, 200 or 1,000 entries;
+- rest a claim that a filter miss is recoverable on `find_source` alone: the notice rate is partial on both models
+  (S2's stub transport measures the unnoticed miss);
+- ship the flat directory (A) at 1,000 entries, for its cost per request and the price step;
+- carry any reading here to Sonnet 5.5, Opus 5.5 or a Google model, or to a real registry or CKAN server's tools
+  (preregistration, "What the run will not conclude").
+
 ## Not yet here
 
-- The report's readings, its quotes, its caveats and the decision table for G4 (P4).
+- The larger models' stage (Sonnet 5.5 and Opus 5.5; preregistration, "The larger models' stage"), until funded.
+- The cold read (P5).
 - R5's `report-tools/tables.mjs` is adapted at `report/tables.mjs`, outside the inputs' hash (the seat's ruling (a),
   comment 6662114479), not under `scoring/`.
