@@ -133,8 +133,10 @@ jobs:
       # rebuild, the run path against an in-process stub of the model API,
       # and the digit-run and tracking checks over benchmark/. Hermetic: no
       # key, no network (the preload refuses both a fetch and a socket). The
-      # owner's local copy of R5's originals (benchmark/_local/, ignored) is
-      # absent here, so its test prints a named skip line.
+      # owner's local copies (benchmark/_local/, ignored: R5's originals and
+      # the registry pages) are absent here, so two tests print a named skip
+      # line: the originals test and the sources' re-extraction (extract
+      # --check).
       - name: Benchmark checks
         run: npm run check:benchmark
 
