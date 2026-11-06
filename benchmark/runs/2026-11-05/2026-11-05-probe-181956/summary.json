@@ -1,0 +1,494 @@
+{
+  "files": {
+    "rows.jsonl": "e5b8e7e75077b0b27daac5b2a68897118aa7b4d1b1612f6bf80a19ac12a3638d",
+    "baseline.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "meta.json": "a5d123764ac89dcebe57d8ba834a38eedc93d1ddd5ccff57be85b072b9904606"
+  },
+  "runId": "2026-11-05-probe-181956",
+  "mode": "probe",
+  "today": "2026-11-05",
+  "plan": {
+    "path": "benchmark/runner/plans/s1.json",
+    "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+    "id": "s1",
+    "option": "A"
+  },
+  "openWeight": "z-ai/glm-5.3-flash",
+  "inputsHash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+  "expectedRows": 8,
+  "uniqueRows": 8,
+  "completeRows": 8,
+  "errorRows": 0,
+  "notStarted": 0,
+  "stopReason": null,
+  "rowLines": 8,
+  "spentUsd": "0.3878",
+  "configurations": {
+    "baseline-7": {
+      "routingConfigurationHash": "21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-1000": {
+      "routingConfigurationHash": "26975d048b3757d428da8503cef6173e6eed18f0753635d4fb122504303c7700",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    }
+  },
+  "groups": [
+    {
+      "step": "probe-baseline-7",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 2,
+      "complete": 2,
+      "errors": 0,
+      "uniqueRows": 2,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 2,
+        "firstRequest": 0.5,
+        "afterSecondRequest": 0.5,
+        "overLoading": 0,
+        "counts1": {
+          "exact": 1,
+          "wrong": 1
+        },
+        "counts2": {
+          "exact": 1,
+          "wrong": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "offered": {
+        "n": 2,
+        "firstRequest": 0.5,
+        "afterSecondRequest": 0.5,
+        "overLoading": 0.5,
+        "counts1": {
+          "exact": 1,
+          "over": 1
+        },
+        "counts2": {
+          "exact": 1,
+          "over": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          },
+          "no-source": {
+            "n": 1,
+            "correct1": 0,
+            "correct2": 0
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 2,
+        "hits": 1,
+        "rate": 0.5
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 1,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 1,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 2,
+        "outcomes": {
+          "valid_tool_call": 2
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1830.5,
+        "firstRequestPromptMin": 1828,
+        "firstRequestPromptMax": 1833,
+        "reasoningTokens": 531,
+        "promptPerRowMedian": 13209,
+        "completionPerRowMedian": 519,
+        "completionPerRequestMedian": 270.5,
+        "directoryShareMedian": 0.8122
+      },
+      "latencyMs": {
+        "firstMedian": 2210,
+        "firstP90": 3390,
+        "secondMedian": 2182,
+        "secondP90": 3357
+      },
+      "costUsd": "0.0032",
+      "costPerRowMean": 0.0016
+    },
+    {
+      "step": "probe-baseline-7",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 2,
+      "complete": 2,
+      "errors": 0,
+      "uniqueRows": 2,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 2,
+        "firstRequest": 0.5,
+        "afterSecondRequest": 0.5,
+        "overLoading": 0,
+        "counts1": {
+          "exact": 1,
+          "missing": 1
+        },
+        "counts2": {
+          "exact": 1,
+          "missing": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "offered": {
+        "n": 2,
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "overLoading": 0,
+        "counts1": {
+          "exact": 2
+        },
+        "counts2": {
+          "exact": 2
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          },
+          "no-source": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 2,
+        "hits": 1,
+        "rate": 0.5
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 1,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.5,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 1,
+        "outcomes": {
+          "valid_tool_call": 1
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1147.5,
+        "firstRequestPromptMin": 1147,
+        "firstRequestPromptMax": 1148,
+        "reasoningTokens": 96,
+        "promptPerRowMedian": 2289.5,
+        "completionPerRowMedian": 256.5,
+        "completionPerRequestMedian": 41,
+        "directoryShareMedian": 0.8017
+      },
+      "latencyMs": {
+        "firstMedian": 4268,
+        "firstP90": 7268,
+        "secondMedian": 984,
+        "secondP90": 984
+      },
+      "costUsd": "0.0006",
+      "costPerRowMean": 0.0003
+    },
+    {
+      "step": "probe-flat-1000",
+      "config": "flat-1000",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 2,
+      "complete": 2,
+      "errors": 0,
+      "uniqueRows": 2,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 2,
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "overLoading": 0,
+        "counts1": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "counts2": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 2,
+            "correct2": 2
+          }
+        }
+      },
+      "offered": {
+        "n": 2,
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "overLoading": 0,
+        "counts1": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "counts2": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 2,
+            "correct2": 2
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 2,
+        "hits": 2,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 1,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 2,
+        "outcomes": {
+          "valid_tool_call": 2
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 161333.5,
+        "firstRequestPromptMin": 161331,
+        "firstRequestPromptMax": 161336,
+        "reasoningTokens": 256,
+        "promptPerRowMedian": 328512,
+        "completionPerRowMedian": 357.5,
+        "completionPerRequestMedian": 176,
+        "directoryShareMedian": 0.9413
+      },
+      "latencyMs": {
+        "firstMedian": 3920,
+        "firstP90": 4519,
+        "secondMedian": 4153,
+        "secondP90": 4794
+      },
+      "costUsd": "0.3303",
+      "costPerRowMean": 0.1651
+    },
+    {
+      "step": "probe-flat-1000",
+      "config": "flat-1000",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 2,
+      "complete": 2,
+      "errors": 0,
+      "uniqueRows": 2,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 2,
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "overLoading": 0,
+        "counts1": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "counts2": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 2,
+            "correct2": 2
+          }
+        }
+      },
+      "offered": {
+        "n": 2,
+        "firstRequest": 1,
+        "afterSecondRequest": 1,
+        "overLoading": 0,
+        "counts1": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "counts2": {
+          "acceptable": 1,
+          "exact": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 2,
+            "correct1": 2,
+            "correct2": 2
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 2,
+        "hits": 2,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 1,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 2,
+        "outcomes": {
+          "valid_tool_call": 2
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 103286.5,
+        "firstRequestPromptMin": 103286,
+        "firstRequestPromptMax": 103287,
+        "reasoningTokens": 538,
+        "promptPerRowMedian": 210361.5,
+        "completionPerRowMedian": 347.5,
+        "completionPerRequestMedian": 96,
+        "directoryShareMedian": 0.9411
+      },
+      "latencyMs": {
+        "firstMedian": 4840,
+        "firstP90": 5628,
+        "secondMedian": 14418.5,
+        "secondP90": 15350
+      },
+      "costUsd": "0.0538",
+      "costPerRowMean": 0.0269
+    }
+  ]
+}

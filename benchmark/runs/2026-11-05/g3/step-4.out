@@ -1,0 +1,99 @@
+benchmark DRY RUN: plan s1 (option A); today 2026-11-05
+inputs (sha256 of the file):
+  plan              69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a  benchmark/runner/plans/s1.json
+                    id s1; option A
+  questions         3ef367790523d2d61e34cb8a480190298b55e07aef822e3d7ff8e48222a59782  benchmark/questions/50.json
+                    questions 149
+  questions         c9b84ff45f4b4ccbe0f0db10fd5c7de69e24ae663135fa385f5ac7620388ab94  benchmark/questions/200.json
+                    questions 149
+  questions         e327b845447cb5f73bb0612abe9acb001f539cde0ec879ffdce9fd20f65fa5cd  benchmark/questions/1000.json
+                    questions 149
+  questions         f94b7c259451d776787a61747d4ef8c743d639da79a19b9d8def677d7474ef04  benchmark/questions/7.json
+                    questions 149
+  inventory         8d6ab025979e2488f77f01c6847bd6553018ad17bbaf0aeb32e76fd9a1660a41  benchmark/inventories/50.json
+                    canonicalSha256 d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee; id civic-50; version 2026-11-03.1; entries 50
+  inventory         489c0655925cd5f1f325e7d75e7373cf9f086a6d619a1590ddb2cdbb914aba1d  benchmark/inventories/200.json
+                    canonicalSha256 ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02; id civic-200; version 2026-11-03.1; entries 200
+  inventory         b514fcbe9f039d85a2b069de7bd8e899cad36a5aca7bfe632249161210e7f146  benchmark/inventories/1000.json
+                    canonicalSha256 16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c; id civic-1000; version 2026-11-03.1; entries 1000
+  inventory         95d1ff746b26a19784ac6ff90eeab22679e42518e3913f73064706832c9ac2ef  benchmark/inventories/7.json
+                    canonicalSha256 1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882; id civic-7; version 2026-11-02.1; entries 7
+  catalog excerpt   97c105b455b6c01be2d269d29a9755f0549064ee8ae3fcd5f72a64109b5e0faa  benchmark/runner/catalog.mjs
+                    pins npstorey/civic-ai-tools-website src/lib/model-catalog.ts sha256 a2a1576be84df3b0767f9566db05873790ae1c6106bf23a4cb5c4af7be3b341f
+  app texts         ffa8abf823e98d3976dbf2ad67fdc67abde3f95b6ad013b284ff302f32ae5f71  benchmark/runner/app-texts.mjs
+                    pins npstorey/civic-ai-tools-website src/lib/mcp/routing-mode.ts sha256 db796ba0805f074c9f0887722c2a8556784c8762130264375d2fbd06fdab19a1
+  benchmark texts   315c9c9a9d503ba154c6334c0a3f4b04e3ccd9bd104f085b90b4dd5467e5e765  benchmark/runner/texts.mjs
+  socrata guidance  599aa75316cfdad80697b04eee52c1459fb5c4112327ce81b657419d288e5c03  packages/civic-typed-router/src/__fixtures__/socrata-guidance.json
+  calibration       e5685cc10340af0734110a23c92fac1d7a97e53d2f3d1f60b9157281d63073eb  benchmark/_local/g3/calibration.json
+                    models anthropic/claude-haiku-5.5 2.31, z-ai/glm-5.3-flash 3.6087
+  model list        ff6728748344e0d56ae033145ffc3332b77d723c709f7b4fe87eb5be48173fc6  benchmark/runner/openrouter-models.json
+  router            @typedstandards/civic-typed-router@0.6.0 (workspace)
+inputs' hash (A3.1, node benchmark/runner/input-hash.mjs): 3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34 over 39 files
+configurations (G0-9): routing-configuration hash; harness-definition hash of the first request
+  rule-50                6fed2f8ef197cb8446da405a304e171f4ab090f249ab59aed39d18ffd56fc37b  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  rule-200               a7c730e2030f279924e1315009efbebb9aabb2cbc9887c0473cae371e903cfec  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  rule-1000              42da58e15e76d00d7109b9acad999d6c3909ef743c905cc6685d5816f54f6746  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  baseline-7             21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  flat-50                45ceed5056d7e6eb18539024b99cdc0fe77dfd7db73709b675dda83c899f8abe  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  flat-200               1d8433d1ae40341d5990e4c54bc03427d116e800c9cea64a6dc2bbaa9f0b58f7  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist-50           640e589f4bea46c37df8928e7d35f8409b0b5540526c48ddee2b00d7f93e1608  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist-200          ff2cf0aa216d25d220f6c48d83f6d6ecac7b9dce2ddcd2920eea40cf1217e635  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist-1000         60cc6b3819c19a493fcc810ef991fc0f989095ede0f16d1375b483a946404376  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist+search-50    ba91fc0817390b35d58172ae139f728e244823ba3cdcccedd1d4db42963fbcbf  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist+search-200   84358bba5f0e29e41bbd06f32bd0bcfc92096eda422d9993ba83ddb054d7e0c3  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  shortlist+search-1000  25434e23206312fd996e78acd8fa5e7710b3e76f3c49858dc87eabfb2fe38469  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  builder-50             f3adb773f1161daea675f9c7a917c03c8ffcf1748f0fc7fd7f7ca9ef1f716233  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  builder-200            33396b9aefdf0d59aa9e7c729a56c628282acd774a31225be5bad5b68db48d17  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  builder-1000           9a54a537fd1f1003399935a4b204f8e5ae7a74dcdbfa8b973793113c2ac0af00  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+  flat-1000              26975d048b3757d428da8503cef6173e6eed18f0753635d4fb122504303c7700  2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19
+steps: 19; concurrency 6; cap none given
+prices: benchmark/runner/openrouter-models.json (snapshot read 2026-11-03T21:15:29Z; no network in a dry run)
+roster: every model on the list, tools and every request field supported, an endpoint up within its routing
+estimated cost bounds (USD):
+  rule-50                  no model: 149 rows, no request
+  rule-200                 no model: 149 rows, no request
+  rule-1000                no model: 149 rows, no request
+  baseline-7               anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.24  ceiling   $3.06  reserved   $40.59  largest row $0.09
+  baseline-7               z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.33  ceiling   $3.20  reserved    $8.55  largest row $0.02
+  flat-50                  anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.54  ceiling   $3.93  reserved   $80.85  largest row $0.18
+  flat-50                  z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.74  ceiling   $3.96  reserved   $15.90  largest row $0.04
+  flat-200                 anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $1.78  ceiling   $6.91  reserved  $174.86  largest row $0.39
+  flat-200                 z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $2.43  ceiling   $6.56  reserved   $33.35  largest row $0.07
+  shortlist-50             anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.19  ceiling   $3.05  reserved   $47.82  largest row $0.13
+  shortlist-50             z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.25  ceiling   $3.19  reserved    $9.82  largest row $0.03
+  shortlist-200            anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.15  ceiling   $3.09  reserved   $48.73  largest row $0.13
+  shortlist-200            z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.20  ceiling   $3.22  reserved    $9.99  largest row $0.03
+  shortlist-1000           anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.17  ceiling   $3.14  reserved   $50.34  largest row $0.13
+  shortlist-1000           z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.23  ceiling   $3.27  reserved   $10.29  largest row $0.03
+  shortlist+search-50      anthropic/claude-haiku-5.5                               rows  447  calls ≤  1788  floor   $0.20  ceiling   $6.80  reserved  $245.33  largest row $0.56
+  shortlist+search-50      z-ai/glm-5.3-flash                                       rows  447  calls ≤  1788  floor   $0.27  ceiling   $7.37  reserved   $46.17  largest row $0.11
+  shortlist+search-200     anthropic/claude-haiku-5.5                               rows  447  calls ≤  1788  floor   $0.16  ceiling   $6.91  reserved  $248.33  largest row $0.57
+  shortlist+search-200     z-ai/glm-5.3-flash                                       rows  447  calls ≤  1788  floor   $0.22  ceiling   $7.47  reserved   $46.71  largest row $0.11
+  shortlist+search-1000    anthropic/claude-haiku-5.5                               rows  447  calls ≤  1788  floor   $0.18  ceiling   $7.04  reserved  $250.77  largest row $0.58
+  shortlist+search-1000    z-ai/glm-5.3-flash                                       rows  447  calls ≤  1788  floor   $0.25  ceiling   $7.59  reserved   $47.15  largest row $0.11
+  builder-50-reads         anthropic/claude-haiku-5.5                               rows  149  calls ≤   149  floor   $0.08  ceiling   $0.50  reserved    $0.50  largest row $0.00
+  builder-50               anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.38  ceiling   $3.48  reserved   $64.10  largest row $0.14
+  builder-50               z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.52  ceiling   $3.57  reserved   $12.81  largest row $0.03
+  builder-200-reads        anthropic/claude-haiku-5.5                               rows  149  calls ≤   149  floor   $0.30  ceiling   $0.98  reserved    $0.98  largest row $0.01
+  builder-200              anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.31  ceiling   $3.52  reserved   $62.78  largest row $0.14
+  builder-200              z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.42  ceiling   $3.60  reserved   $12.60  largest row $0.03
+  builder-1000-reads       anthropic/claude-haiku-5.5                               rows  149  calls ≤   149  floor   $1.29  ceiling  $15.55  reserved   $15.55  largest row $0.10
+  builder-1000             anthropic/claude-haiku-5.5                               rows  447  calls ≤   894  floor   $0.31  ceiling   $3.55  reserved   $63.66  largest row $0.14
+  builder-1000             z-ai/glm-5.3-flash                                       rows  447  calls ≤   894  floor   $0.43  ceiling   $3.62  reserved   $12.76  largest row $0.03
+  flat-1000                anthropic/claude-haiku-5.5                               rows   50  calls ≤   100  floor   $0.87  ceiling  $11.45  reserved   $33.53  largest row $0.67
+  by model: anthropic/claude-haiku-5.5               calls ≤ 13957; floor $7.13; ceiling $82.97 (completions at their limit $32.90); reserved $1428.72
+  by model: z-ai/glm-5.3-flash                       calls ≤ 13410; floor $6.28; ceiling $56.64 (completions at their limit $32.18); reserved $266.11
+  total: calls ≤ 27367; floor $13.41; ceiling $139.61; hard ceiling $1694.83
+  of the ceiling, completions at their full limit: $65.08; prompts: $74.53
+  the largest single row's reservation: $0.67; at concurrency 6, at most $4.02 is held in flight beyond the spend
+  estimate: calibrated (benchmark/_local/g3/calibration.json): anthropic/claude-haiku-5.5 2.31, z-ai/glm-5.3-flash 3.6087 characters a token; a request within 25% of a price tier's threshold is priced at that tier, at the dearest endpoint it may land on.
+  floor: prompts at 5 characters a token, no completions; ceiling: completions at their limit (4000, reasoning among them; a baseline's ladder 1, 16, 1),
+  the request after a load carrying the larger of the largest label and the largest single source, plus each earlier response at its limit;
+  hard ceiling: every row reserved at its worst case (bounds.mjs), summed. A run prices actual usage.
+the calibrated bound (benchmark/preregistration/s1.md, "Repeats, cap, run order and fallback"):
+  anthropic/claude-haiku-5.5           2.31 characters a token; each completion at 1246 tokens (twice 623); at its dearest endpoint; option A $56.59
+  z-ai/glm-5.3-flash                   3.6087 characters a token; each completion at 1782 tokens (twice 891); at its routing's ceilings, $0.15 / $0.6 a million; option A $34.78
+  option A: $91.37
+  option B: $69.60
+  option A applies (its bound is at most $100): --cap 92
+DRY RUN: no network call was made; nothing was written.

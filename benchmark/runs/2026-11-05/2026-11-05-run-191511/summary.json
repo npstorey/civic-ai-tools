@@ -1,0 +1,3864 @@
+{
+  "files": {
+    "rows.jsonl": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c",
+    "baseline.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "meta.json": "d0d90efe66f12b773de4f510e2aa4a31992acce2fb07fe850bba904a4d25b41b"
+  },
+  "runId": "2026-11-05-run-191511",
+  "mode": "evaluations",
+  "today": "2026-11-05",
+  "plan": {
+    "path": "benchmark/runner/plans/s1.json",
+    "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+    "id": "s1",
+    "option": "A"
+  },
+  "openWeight": "z-ai/glm-5.3-flash",
+  "inputsHash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+  "expectedRows": 11672,
+  "uniqueRows": 11672,
+  "completeRows": 11672,
+  "errorRows": 0,
+  "notStarted": 0,
+  "stopReason": null,
+  "rowLines": 11672,
+  "spentUsd": "34.3373",
+  "configurations": {
+    "rule-50": {
+      "routingConfigurationHash": "6fed2f8ef197cb8446da405a304e171f4ab090f249ab59aed39d18ffd56fc37b",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "rule-200": {
+      "routingConfigurationHash": "a7c730e2030f279924e1315009efbebb9aabb2cbc9887c0473cae371e903cfec",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "rule-1000": {
+      "routingConfigurationHash": "42da58e15e76d00d7109b9acad999d6c3909ef743c905cc6685d5816f54f6746",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "baseline-7": {
+      "routingConfigurationHash": "21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-50": {
+      "routingConfigurationHash": "45ceed5056d7e6eb18539024b99cdc0fe77dfd7db73709b675dda83c899f8abe",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-200": {
+      "routingConfigurationHash": "1d8433d1ae40341d5990e4c54bc03427d116e800c9cea64a6dc2bbaa9f0b58f7",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-50": {
+      "routingConfigurationHash": "640e589f4bea46c37df8928e7d35f8409b0b5540526c48ddee2b00d7f93e1608",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-200": {
+      "routingConfigurationHash": "ff2cf0aa216d25d220f6c48d83f6d6ecac7b9dce2ddcd2920eea40cf1217e635",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-1000": {
+      "routingConfigurationHash": "60cc6b3819c19a493fcc810ef991fc0f989095ede0f16d1375b483a946404376",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-50": {
+      "routingConfigurationHash": "ba91fc0817390b35d58172ae139f728e244823ba3cdcccedd1d4db42963fbcbf",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-200": {
+      "routingConfigurationHash": "84358bba5f0e29e41bbd06f32bd0bcfc92096eda422d9993ba83ddb054d7e0c3",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-1000": {
+      "routingConfigurationHash": "25434e23206312fd996e78acd8fa5e7710b3e76f3c49858dc87eabfb2fe38469",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-50": {
+      "routingConfigurationHash": "f3adb773f1161daea675f9c7a917c03c8ffcf1748f0fc7fd7f7ca9ef1f716233",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-200": {
+      "routingConfigurationHash": "33396b9aefdf0d59aa9e7c729a56c628282acd774a31225be5bad5b68db48d17",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-1000": {
+      "routingConfigurationHash": "9a54a537fd1f1003399935a4b204f8e5ae7a74dcdbfa8b973793113c2ac0af00",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-1000": {
+      "routingConfigurationHash": "26975d048b3757d428da8503cef6173e6eed18f0753635d4fb122504303c7700",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    }
+  },
+  "groups": [
+    {
+      "step": "rule-50",
+      "config": "rule-50",
+      "role": "rule",
+      "rows": 149,
+      "searchRecall": {
+        "at5": {
+          "n": 113,
+          "hits": 70,
+          "rate": 0.6195
+        },
+        "at10": {
+          "n": 113,
+          "hits": 86,
+          "rate": 0.7611
+        }
+      },
+      "goldClasses": {
+        "need-source": 113,
+        "no-source": 33,
+        "open": 3
+      }
+    },
+    {
+      "step": "rule-200",
+      "config": "rule-200",
+      "role": "rule",
+      "rows": 149,
+      "searchRecall": {
+        "at5": {
+          "n": 121,
+          "hits": 84,
+          "rate": 0.6942
+        },
+        "at10": {
+          "n": 121,
+          "hits": 96,
+          "rate": 0.7934
+        }
+      },
+      "goldClasses": {
+        "need-source": 121,
+        "no-source": 25,
+        "open": 3
+      }
+    },
+    {
+      "step": "rule-1000",
+      "config": "rule-1000",
+      "role": "rule",
+      "rows": 149,
+      "searchRecall": {
+        "at5": {
+          "n": 131,
+          "hits": 83,
+          "rate": 0.6336
+        },
+        "at10": {
+          "n": 131,
+          "hits": 92,
+          "rate": 0.7023
+        }
+      },
+      "goldClasses": {
+        "need-source": 131,
+        "no-source": 14,
+        "open": 4
+      }
+    },
+    {
+      "step": "baseline-7",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7159,
+        "afterSecondRequest": 0.7159,
+        "overLoading": 0.1834,
+        "counts1": {
+          "acceptable": 21,
+          "exact": 299,
+          "missing": 25,
+          "over": 82,
+          "wrong": 20
+        },
+        "counts2": {
+          "acceptable": 21,
+          "exact": 299,
+          "missing": 25,
+          "over": 82,
+          "wrong": 20
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 291,
+            "correct1": 244,
+            "correct2": 244
+          },
+          "no-source": {
+            "n": 147,
+            "correct1": 70,
+            "correct2": 70
+          },
+          "open": {
+            "n": 9,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7584,
+        "afterSecondRequest": 0.7584,
+        "overLoading": 0.1879,
+        "counts1": {
+          "acceptable": 21,
+          "exact": 318,
+          "missing": 6,
+          "over": 84,
+          "wrong": 18
+        },
+        "counts2": {
+          "acceptable": 21,
+          "exact": 318,
+          "missing": 6,
+          "over": 84,
+          "wrong": 18
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 270,
+            "correct1": 244,
+            "correct2": 244
+          },
+          "no-source": {
+            "n": 168,
+            "correct1": 89,
+            "correct2": 89
+          },
+          "open": {
+            "n": 9,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 426,
+        "rate": 0.953
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 21,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.7808,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8054,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 349,
+        "outcomes": {
+          "invalid_tool_call": 5,
+          "valid_tool_call": 344
+        },
+        "validRate": 0.9857
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1148,
+        "firstRequestPromptMin": 1139,
+        "firstRequestPromptMax": 1198,
+        "reasoningTokens": 48257,
+        "promptPerRowMedian": 7474,
+        "completionPerRowMedian": 125,
+        "completionPerRequestMedian": 47,
+        "directoryShareMedian": 0.8037
+      },
+      "latencyMs": {
+        "firstMedian": 1369,
+        "firstP90": 4900,
+        "secondMedian": 1577,
+        "secondP90": 6280
+      },
+      "costUsd": "0.3055",
+      "costPerRowMean": 0.0007
+    },
+    {
+      "step": "baseline-7",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7159,
+        "afterSecondRequest": 0.7159,
+        "overLoading": 0.217,
+        "counts1": {
+          "acceptable": 21,
+          "exact": 299,
+          "missing": 20,
+          "over": 97,
+          "wrong": 10
+        },
+        "counts2": {
+          "acceptable": 21,
+          "exact": 299,
+          "missing": 20,
+          "over": 97,
+          "wrong": 10
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 291,
+            "correct1": 263,
+            "correct2": 263
+          },
+          "no-source": {
+            "n": 147,
+            "correct1": 51,
+            "correct2": 51
+          },
+          "open": {
+            "n": 9,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7606,
+        "afterSecondRequest": 0.7606,
+        "overLoading": 0.2192,
+        "counts1": {
+          "acceptable": 21,
+          "exact": 319,
+          "over": 98,
+          "wrong": 9
+        },
+        "counts2": {
+          "acceptable": 21,
+          "exact": 319,
+          "over": 98,
+          "wrong": 9
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 270,
+            "correct1": 263,
+            "correct2": 263
+          },
+          "no-source": {
+            "n": 168,
+            "correct1": 71,
+            "correct2": 71
+          },
+          "open": {
+            "n": 9,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 426,
+        "rate": 0.953
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 21,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8389,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.9195,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 375,
+        "outcomes": {
+          "no_tool_call": 2,
+          "valid_tool_call": 373
+        },
+        "validRate": 0.9947
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1827,
+        "firstRequestPromptMin": 1815,
+        "firstRequestPromptMax": 1850,
+        "reasoningTokens": 79054,
+        "promptPerRowMedian": 15895,
+        "completionPerRowMedian": 427,
+        "completionPerRequestMedian": 179,
+        "directoryShareMedian": 0.8143
+      },
+      "latencyMs": {
+        "firstMedian": 1856,
+        "firstP90": 3367,
+        "secondMedian": 1993,
+        "secondP90": 2864
+      },
+      "costUsd": "0.6244",
+      "costPerRowMean": 0.0014
+    },
+    {
+      "step": "flat-50",
+      "config": "flat-50",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7248,
+        "afterSecondRequest": 0.7248,
+        "overLoading": 0.1298,
+        "counts1": {
+          "acceptable": 162,
+          "exact": 162,
+          "missing": 10,
+          "over": 58,
+          "wrong": 55
+        },
+        "counts2": {
+          "acceptable": 162,
+          "exact": 162,
+          "missing": 10,
+          "over": 69,
+          "wrong": 44
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 261,
+            "correct2": 261
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 55,
+            "correct2": 55
+          },
+          "open": {
+            "n": 9,
+            "correct1": 8,
+            "correct2": 8
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7248,
+        "afterSecondRequest": 0.7248,
+        "overLoading": 0.1298,
+        "counts1": {
+          "acceptable": 162,
+          "exact": 162,
+          "missing": 10,
+          "over": 58,
+          "wrong": 55
+        },
+        "counts2": {
+          "acceptable": 162,
+          "exact": 162,
+          "missing": 10,
+          "over": 69,
+          "wrong": 44
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 261,
+            "correct2": 261
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 55,
+            "correct2": 55
+          },
+          "open": {
+            "n": 9,
+            "correct1": 8,
+            "correct2": 8
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 447,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 2,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8434,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7114,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 377,
+        "outcomes": {
+          "loaded_more_only": 15,
+          "no_tool_call": 4,
+          "valid_tool_call": 358
+        },
+        "validRate": 0.9496
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 6064,
+        "firstRequestPromptMin": 6055,
+        "firstRequestPromptMax": 6110,
+        "reasoningTokens": 54563,
+        "promptPerRowMedian": 13718,
+        "completionPerRowMedian": 88,
+        "completionPerRequestMedian": 35,
+        "directoryShareMedian": 0.9239
+      },
+      "latencyMs": {
+        "firstMedian": 1319,
+        "firstP90": 4983,
+        "secondMedian": 1357,
+        "secondP90": 8187
+      },
+      "costUsd": "0.6309",
+      "costPerRowMean": 0.0014
+    },
+    {
+      "step": "flat-50",
+      "config": "flat-50",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8121,
+        "afterSecondRequest": 0.8121,
+        "overLoading": 0.1253,
+        "counts1": {
+          "acceptable": 183,
+          "exact": 180,
+          "missing": 1,
+          "over": 56,
+          "wrong": 27
+        },
+        "counts2": {
+          "acceptable": 183,
+          "exact": 180,
+          "missing": 1,
+          "over": 56,
+          "wrong": 27
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 303,
+            "correct2": 303
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 51,
+            "correct2": 51
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8121,
+        "afterSecondRequest": 0.8121,
+        "overLoading": 0.1253,
+        "counts1": {
+          "acceptable": 183,
+          "exact": 180,
+          "missing": 1,
+          "over": 56,
+          "wrong": 27
+        },
+        "counts2": {
+          "acceptable": 183,
+          "exact": 180,
+          "missing": 1,
+          "over": 56,
+          "wrong": 27
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 303,
+            "correct2": 303
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 51,
+            "correct2": 51
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 447,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 23,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8635,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8456,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 386,
+        "outcomes": {
+          "invalid_tool_call": 1,
+          "valid_tool_call": 385
+        },
+        "validRate": 0.9974
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 9233,
+        "firstRequestPromptMin": 9221,
+        "firstRequestPromptMax": 9256,
+        "reasoningTokens": 62676,
+        "promptPerRowMedian": 20848,
+        "completionPerRowMedian": 259,
+        "completionPerRequestMedian": 137,
+        "directoryShareMedian": 0.9263
+      },
+      "latencyMs": {
+        "firstMedian": 1864,
+        "firstP90": 3005,
+        "secondMedian": 1230,
+        "secondP90": 2550
+      },
+      "costUsd": "1.0424",
+      "costPerRowMean": 0.0023
+    },
+    {
+      "step": "flat-200",
+      "config": "flat-200",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8568,
+        "afterSecondRequest": 0.8568,
+        "overLoading": 0.094,
+        "counts1": {
+          "acceptable": 239,
+          "exact": 144,
+          "over": 42,
+          "wrong": 22
+        },
+        "counts2": {
+          "acceptable": 239,
+          "exact": 144,
+          "over": 42,
+          "wrong": 22
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 331,
+            "correct2": 331
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 45,
+            "correct2": 45
+          },
+          "open": {
+            "n": 9,
+            "correct1": 7,
+            "correct2": 7
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8568,
+        "afterSecondRequest": 0.8568,
+        "overLoading": 0.094,
+        "counts1": {
+          "acceptable": 239,
+          "exact": 144,
+          "over": 42,
+          "wrong": 22
+        },
+        "counts2": {
+          "acceptable": 239,
+          "exact": 144,
+          "over": 42,
+          "wrong": 22
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 331,
+            "correct2": 331
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 45,
+            "correct2": 45
+          },
+          "open": {
+            "n": 9,
+            "correct1": 7,
+            "correct2": 7
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 447,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 11,
+        "firstPickRegistry": 7,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8837,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8658,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 395,
+        "outcomes": {
+          "invalid_tool_call": 2,
+          "no_tool_call": 7,
+          "valid_tool_call": 386
+        },
+        "validRate": 0.9772
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 34843,
+        "firstRequestPromptMin": 34831,
+        "firstRequestPromptMax": 34866,
+        "reasoningTokens": 56545,
+        "promptPerRowMedian": 72069,
+        "completionPerRowMedian": 243,
+        "completionPerRequestMedian": 123,
+        "directoryShareMedian": 0.9407
+      },
+      "latencyMs": {
+        "firstMedian": 1925,
+        "firstP90": 3034,
+        "secondMedian": 1439,
+        "secondP90": 2690
+      },
+      "costUsd": "3.1657",
+      "costPerRowMean": 0.0071
+    },
+    {
+      "step": "flat-200",
+      "config": "flat-200",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7942,
+        "afterSecondRequest": 0.7942,
+        "overLoading": 0.0895,
+        "counts1": {
+          "acceptable": 220,
+          "exact": 135,
+          "missing": 15,
+          "over": 40,
+          "wrong": 37
+        },
+        "counts2": {
+          "acceptable": 220,
+          "exact": 135,
+          "missing": 15,
+          "over": 45,
+          "wrong": 32
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 298,
+            "correct2": 298
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 48,
+            "correct2": 48
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7942,
+        "afterSecondRequest": 0.7942,
+        "overLoading": 0.0895,
+        "counts1": {
+          "acceptable": 220,
+          "exact": 135,
+          "missing": 15,
+          "over": 40,
+          "wrong": 37
+        },
+        "counts2": {
+          "acceptable": 220,
+          "exact": 135,
+          "missing": 15,
+          "over": 45,
+          "wrong": 32
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 298,
+            "correct2": 298
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 48,
+            "correct2": 48
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 447,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 2,
+        "firstPickRegistry": 8,
+        "firstPickCkanPack": 17
+      },
+      "firstCallIsLoad": 0.8456,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.6711,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 378,
+        "outcomes": {
+          "loaded_more_only": 6,
+          "no_tool_call": 17,
+          "valid_tool_call": 355
+        },
+        "validRate": 0.9392
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 22883,
+        "firstRequestPromptMin": 22874,
+        "firstRequestPromptMax": 22926,
+        "reasoningTokens": 172212,
+        "promptPerRowMedian": 47334,
+        "completionPerRowMedian": 98,
+        "completionPerRequestMedian": 42,
+        "directoryShareMedian": 0.94
+      },
+      "latencyMs": {
+        "firstMedian": 1434,
+        "firstP90": 4716,
+        "secondMedian": 1850,
+        "secondP90": 16489
+      },
+      "costUsd": "1.823",
+      "costPerRowMean": 0.0041
+    },
+    {
+      "step": "shortlist-50",
+      "config": "shortlist-50",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.689,
+        "afterSecondRequest": 0.689,
+        "overLoading": 0.1477,
+        "counts1": {
+          "acceptable": 173,
+          "exact": 135,
+          "missing": 8,
+          "over": 66,
+          "wrong": 65
+        },
+        "counts2": {
+          "acceptable": 173,
+          "exact": 135,
+          "missing": 8,
+          "over": 67,
+          "wrong": 64
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 251,
+            "correct2": 251
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 48,
+            "correct2": 48
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7047,
+        "afterSecondRequest": 0.7047,
+        "overLoading": 0.2327,
+        "counts1": {
+          "acceptable": 135,
+          "exact": 180,
+          "missing": 1,
+          "over": 104,
+          "wrong": 27
+        },
+        "counts2": {
+          "acceptable": 135,
+          "exact": 180,
+          "missing": 1,
+          "over": 105,
+          "wrong": 26
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 294,
+            "correct1": 251,
+            "correct2": 251
+          },
+          "no-source": {
+            "n": 144,
+            "correct1": 55,
+            "correct2": 55
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 402,
+        "rate": 0.8993
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 45,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 1,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8546,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7584,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 382,
+        "outcomes": {
+          "invalid_tool_call": 2,
+          "loaded_more_only": 1,
+          "no_tool_call": 2,
+          "valid_tool_call": 377
+        },
+        "validRate": 0.9869
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 855,
+        "firstRequestPromptMin": 808,
+        "firstRequestPromptMax": 2014,
+        "reasoningTokens": 38781,
+        "promptPerRowMedian": 5305,
+        "completionPerRowMedian": 93,
+        "completionPerRequestMedian": 38,
+        "directoryShareMedian": 0.7436
+      },
+      "latencyMs": {
+        "firstMedian": 1070,
+        "firstP90": 4109,
+        "secondMedian": 1406,
+        "secondP90": 6344
+      },
+      "costUsd": "0.3349",
+      "costPerRowMean": 0.0007
+    },
+    {
+      "step": "shortlist-50",
+      "config": "shortlist-50",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7002,
+        "afterSecondRequest": 0.7002,
+        "overLoading": 0.1655,
+        "counts1": {
+          "acceptable": 180,
+          "exact": 133,
+          "missing": 6,
+          "over": 74,
+          "wrong": 54
+        },
+        "counts2": {
+          "acceptable": 180,
+          "exact": 133,
+          "missing": 6,
+          "over": 74,
+          "wrong": 54
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 265,
+            "correct2": 265
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 39,
+            "correct2": 39
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7136,
+        "afterSecondRequest": 0.7136,
+        "overLoading": 0.2528,
+        "counts1": {
+          "acceptable": 139,
+          "exact": 180,
+          "over": 113,
+          "wrong": 15
+        },
+        "counts2": {
+          "acceptable": 139,
+          "exact": 180,
+          "over": 113,
+          "wrong": 15
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 294,
+            "correct1": 265,
+            "correct2": 265
+          },
+          "no-source": {
+            "n": 144,
+            "correct1": 45,
+            "correct2": 45
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 402,
+        "rate": 0.8993
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 45,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 22,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8926,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8523,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 399,
+        "outcomes": {
+          "no_tool_call": 8,
+          "valid_tool_call": 391
+        },
+        "validRate": 0.9799
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1353,
+        "firstRequestPromptMin": 1331,
+        "firstRequestPromptMax": 3118,
+        "reasoningTokens": 70448,
+        "promptPerRowMedian": 8592,
+        "completionPerRowMedian": 354,
+        "completionPerRequestMedian": 151,
+        "directoryShareMedian": 0.7575
+      },
+      "latencyMs": {
+        "firstMedian": 1890,
+        "firstP90": 3099,
+        "secondMedian": 1501,
+        "secondP90": 2598
+      },
+      "costUsd": "0.5274",
+      "costPerRowMean": 0.0012
+    },
+    {
+      "step": "shortlist-200",
+      "config": "shortlist-200",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7271,
+        "afterSecondRequest": 0.7271,
+        "overLoading": 0.123,
+        "counts1": {
+          "acceptable": 232,
+          "exact": 93,
+          "missing": 8,
+          "over": 55,
+          "wrong": 59
+        },
+        "counts2": {
+          "acceptable": 232,
+          "exact": 93,
+          "missing": 8,
+          "over": 55,
+          "wrong": 59
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 280,
+            "correct2": 280
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 36,
+            "correct2": 36
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.745,
+        "afterSecondRequest": 0.745,
+        "overLoading": 0.226,
+        "counts1": {
+          "acceptable": 229,
+          "exact": 104,
+          "over": 101,
+          "wrong": 13
+        },
+        "counts2": {
+          "acceptable": 229,
+          "exact": 104,
+          "over": 101,
+          "wrong": 13
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 309,
+            "correct1": 280,
+            "correct2": 280
+          },
+          "no-source": {
+            "n": 129,
+            "correct1": 44,
+            "correct2": 44
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 393,
+        "rate": 0.8792
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 54,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 32,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8949,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8456,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 400,
+        "outcomes": {
+          "no_tool_call": 6,
+          "valid_tool_call": 394
+        },
+        "validRate": 0.985
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1772,
+        "firstRequestPromptMin": 1592,
+        "firstRequestPromptMax": 3378,
+        "reasoningTokens": 64645,
+        "promptPerRowMedian": 8755,
+        "completionPerRowMedian": 321,
+        "completionPerRequestMedian": 140,
+        "directoryShareMedian": 0.8074
+      },
+      "latencyMs": {
+        "firstMedian": 1873,
+        "firstP90": 3021,
+        "secondMedian": 1339,
+        "secondP90": 2503
+      },
+      "costUsd": "0.5114",
+      "costPerRowMean": 0.0011
+    },
+    {
+      "step": "shortlist-200",
+      "config": "shortlist-200",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7025,
+        "afterSecondRequest": 0.7025,
+        "overLoading": 0.1096,
+        "counts1": {
+          "acceptable": 212,
+          "exact": 102,
+          "missing": 9,
+          "over": 49,
+          "wrong": 75
+        },
+        "counts2": {
+          "acceptable": 212,
+          "exact": 102,
+          "missing": 9,
+          "over": 52,
+          "wrong": 72
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 259,
+            "correct2": 259
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 46,
+            "correct2": 46
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7226,
+        "afterSecondRequest": 0.7226,
+        "overLoading": 0.2103,
+        "counts1": {
+          "acceptable": 209,
+          "exact": 114,
+          "over": 94,
+          "wrong": 30
+        },
+        "counts2": {
+          "acceptable": 209,
+          "exact": 114,
+          "over": 97,
+          "wrong": 27
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 309,
+            "correct1": 259,
+            "correct2": 259
+          },
+          "no-source": {
+            "n": 129,
+            "correct1": 55,
+            "correct2": 55
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 393,
+        "rate": 0.8792
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 54,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 10,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 13
+      },
+      "firstCallIsLoad": 0.8635,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7181,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 386,
+        "outcomes": {
+          "invalid_tool_call": 1,
+          "loaded_more_only": 3,
+          "no_tool_call": 5,
+          "valid_tool_call": 377
+        },
+        "validRate": 0.9767
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1105,
+        "firstRequestPromptMin": 980,
+        "firstRequestPromptMax": 2193,
+        "reasoningTokens": 47869,
+        "promptPerRowMedian": 5600,
+        "completionPerRowMedian": 84,
+        "completionPerRequestMedian": 35,
+        "directoryShareMedian": 0.7965
+      },
+      "latencyMs": {
+        "firstMedian": 1158,
+        "firstP90": 4338,
+        "secondMedian": 1419.5,
+        "secondP90": 7696
+      },
+      "costUsd": "0.361",
+      "costPerRowMean": 0.0008
+    },
+    {
+      "step": "shortlist-1000",
+      "config": "shortlist-1000",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.6286,
+        "afterSecondRequest": 0.6286,
+        "overLoading": 0.094,
+        "counts1": {
+          "acceptable": 215,
+          "exact": 66,
+          "missing": 33,
+          "over": 42,
+          "wrong": 91
+        },
+        "counts2": {
+          "acceptable": 215,
+          "exact": 66,
+          "missing": 33,
+          "over": 48,
+          "wrong": 85
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 248,
+            "correct2": 248
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 21,
+            "correct2": 21
+          },
+          "open": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7002,
+        "afterSecondRequest": 0.7002,
+        "overLoading": 0.2103,
+        "counts1": {
+          "acceptable": 200,
+          "exact": 113,
+          "missing": 1,
+          "over": 94,
+          "wrong": 39
+        },
+        "counts2": {
+          "acceptable": 200,
+          "exact": 113,
+          "missing": 1,
+          "over": 100,
+          "wrong": 33
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 309,
+            "correct1": 248,
+            "correct2": 248
+          },
+          "no-source": {
+            "n": 129,
+            "correct1": 56,
+            "correct2": 56
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 363,
+        "rate": 0.8121
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 84,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 6,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8591,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7315,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 384,
+        "outcomes": {
+          "loaded_more_only": 6,
+          "no_tool_call": 2,
+          "valid_tool_call": 376
+        },
+        "validRate": 0.9792
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1459,
+        "firstRequestPromptMin": 1235,
+        "firstRequestPromptMax": 2555,
+        "reasoningTokens": 32328,
+        "promptPerRowMedian": 6232,
+        "completionPerRowMedian": 86,
+        "completionPerRequestMedian": 35,
+        "directoryShareMedian": 0.836
+      },
+      "latencyMs": {
+        "firstMedian": 1197,
+        "firstP90": 5069,
+        "secondMedian": 1433.5,
+        "secondP90": 5753
+      },
+      "costUsd": "0.3962",
+      "costPerRowMean": 0.0009
+    },
+    {
+      "step": "shortlist-1000",
+      "config": "shortlist-1000",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.6868,
+        "afterSecondRequest": 0.6868,
+        "overLoading": 0.0738,
+        "counts1": {
+          "acceptable": 238,
+          "exact": 69,
+          "missing": 16,
+          "over": 33,
+          "wrong": 91
+        },
+        "counts2": {
+          "acceptable": 238,
+          "exact": 69,
+          "missing": 16,
+          "over": 33,
+          "wrong": 91
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 276,
+            "correct2": 276
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 21,
+            "correct2": 21
+          },
+          "open": {
+            "n": 12,
+            "correct1": 10,
+            "correct2": 10
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7226,
+        "afterSecondRequest": 0.7226,
+        "overLoading": 0.2304,
+        "counts1": {
+          "acceptable": 225,
+          "exact": 98,
+          "over": 103,
+          "wrong": 21
+        },
+        "counts2": {
+          "acceptable": 225,
+          "exact": 98,
+          "over": 103,
+          "wrong": 21
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 309,
+            "correct1": 276,
+            "correct2": 276
+          },
+          "no-source": {
+            "n": 129,
+            "correct1": 38,
+            "correct2": 38
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 363,
+        "rate": 0.8121
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 84,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 31,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.9083,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8121,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 406,
+        "outcomes": {
+          "invalid_tool_call": 2,
+          "loaded_more_only": 1,
+          "no_tool_call": 12,
+          "valid_tool_call": 391
+        },
+        "validRate": 0.9631
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 2308,
+        "firstRequestPromptMin": 1980,
+        "firstRequestPromptMax": 3939,
+        "reasoningTokens": 68850,
+        "promptPerRowMedian": 9941,
+        "completionPerRowMedian": 301,
+        "completionPerRequestMedian": 143,
+        "directoryShareMedian": 0.8446
+      },
+      "latencyMs": {
+        "firstMedian": 1851,
+        "firstP90": 2845,
+        "secondMedian": 1293.5,
+        "secondP90": 2702
+      },
+      "costUsd": "0.5608",
+      "costPerRowMean": 0.0013
+    },
+    {
+      "step": "shortlist+search-50",
+      "config": "shortlist+search-50",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7293,
+        "afterSecondRequest": 0.7271,
+        "overLoading": 0.132,
+        "counts1": {
+          "acceptable": 175,
+          "exact": 151,
+          "missing": 10,
+          "over": 59,
+          "wrong": 52
+        },
+        "counts2": {
+          "acceptable": 174,
+          "exact": 151,
+          "missing": 9,
+          "over": 67,
+          "wrong": 46
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 266,
+            "correct2": 265
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 51,
+            "correct2": 51
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.736,
+        "afterSecondRequest": 0.7338,
+        "overLoading": 0.17,
+        "counts1": {
+          "acceptable": 142,
+          "exact": 187,
+          "missing": 7,
+          "over": 76,
+          "wrong": 35
+        },
+        "counts2": {
+          "acceptable": 141,
+          "exact": 187,
+          "missing": 6,
+          "over": 84,
+          "wrong": 29
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 319,
+            "correct1": 266,
+            "correct2": 265
+          },
+          "no-source": {
+            "n": 119,
+            "correct1": 54,
+            "correct2": 54
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 402,
+        "rate": 0.8993
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 26,
+          "hits": 23,
+          "rate": 0.8846
+        },
+        "at10": {
+          "n": 26,
+          "hits": 25,
+          "rate": 0.9615
+        }
+      },
+      "notice": {
+        "n": 45,
+        "hits": 26,
+        "rate": 0.5778
+      },
+      "searches": {
+        "rowsThatSearched": 103,
+        "calls": 113,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 1,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.6779,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.6644,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 379,
+        "outcomes": {
+          "invalid_tool_call": 4,
+          "loaded_more_only": 8,
+          "no_tool_call": 2,
+          "valid_tool_call": 365
+        },
+        "validRate": 0.9631
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1103,
+        "firstRequestPromptMin": 937,
+        "firstRequestPromptMax": 3296,
+        "reasoningTokens": 29037,
+        "promptPerRowMedian": 5723,
+        "completionPerRowMedian": 101,
+        "completionPerRequestMedian": 35,
+        "directoryShareMedian": 0.6702
+      },
+      "latencyMs": {
+        "firstMedian": 1096,
+        "firstP90": 3834,
+        "secondMedian": 1312,
+        "secondP90": 4553
+      },
+      "costUsd": "0.3967",
+      "costPerRowMean": 0.0009
+    },
+    {
+      "step": "shortlist+search-50",
+      "config": "shortlist+search-50",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.774,
+        "afterSecondRequest": 0.774,
+        "overLoading": 0.123,
+        "counts1": {
+          "acceptable": 184,
+          "exact": 162,
+          "missing": 1,
+          "over": 55,
+          "wrong": 45
+        },
+        "counts2": {
+          "acceptable": 184,
+          "exact": 162,
+          "missing": 1,
+          "over": 56,
+          "wrong": 44
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 284,
+            "correct2": 284
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 53,
+            "correct2": 53
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7763,
+        "afterSecondRequest": 0.7763,
+        "overLoading": 0.1946,
+        "counts1": {
+          "acceptable": 142,
+          "exact": 205,
+          "over": 87,
+          "wrong": 13
+        },
+        "counts2": {
+          "acceptable": 142,
+          "exact": 205,
+          "over": 88,
+          "wrong": 12
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 306,
+            "correct1": 284,
+            "correct2": 284
+          },
+          "no-source": {
+            "n": 132,
+            "correct1": 54,
+            "correct2": 54
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 402,
+        "rate": 0.8993
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 12,
+          "hits": 12,
+          "rate": 1
+        },
+        "at10": {
+          "n": 12,
+          "hits": 12,
+          "rate": 1
+        }
+      },
+      "notice": {
+        "n": 45,
+        "hits": 12,
+        "rate": 0.2667
+      },
+      "searches": {
+        "rowsThatSearched": 47,
+        "calls": 53,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 15,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8166,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8658,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 390,
+        "outcomes": {
+          "loaded_more_only": 1,
+          "no_tool_call": 5,
+          "valid_tool_call": 384
+        },
+        "validRate": 0.9846
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1690,
+        "firstRequestPromptMin": 1506,
+        "firstRequestPromptMax": 5326,
+        "reasoningTokens": 62111,
+        "promptPerRowMedian": 8928,
+        "completionPerRowMedian": 328,
+        "completionPerRequestMedian": 145,
+        "directoryShareMedian": 0.6479
+      },
+      "latencyMs": {
+        "firstMedian": 1869,
+        "firstP90": 2839,
+        "secondMedian": 1411.5,
+        "secondP90": 2740
+      },
+      "costUsd": "0.5358",
+      "costPerRowMean": 0.0012
+    },
+    {
+      "step": "shortlist+search-200",
+      "config": "shortlist+search-200",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7785,
+        "afterSecondRequest": 0.7763,
+        "overLoading": 0.1007,
+        "counts1": {
+          "acceptable": 235,
+          "exact": 113,
+          "missing": 1,
+          "over": 45,
+          "wrong": 53
+        },
+        "counts2": {
+          "acceptable": 234,
+          "exact": 113,
+          "missing": 1,
+          "over": 46,
+          "wrong": 53
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 296,
+            "correct2": 295
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 43,
+            "correct2": 43
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7808,
+        "afterSecondRequest": 0.7785,
+        "overLoading": 0.1812,
+        "counts1": {
+          "acceptable": 232,
+          "exact": 117,
+          "over": 81,
+          "wrong": 17
+        },
+        "counts2": {
+          "acceptable": 231,
+          "exact": 117,
+          "over": 82,
+          "wrong": 17
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 326,
+            "correct1": 296,
+            "correct2": 295
+          },
+          "no-source": {
+            "n": 112,
+            "correct1": 44,
+            "correct2": 44
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 393,
+        "rate": 0.8792
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 17,
+          "hits": 17,
+          "rate": 1
+        },
+        "at10": {
+          "n": 17,
+          "hits": 17,
+          "rate": 1
+        }
+      },
+      "notice": {
+        "n": 54,
+        "hits": 17,
+        "rate": 0.3148
+      },
+      "searches": {
+        "rowsThatSearched": 42,
+        "calls": 43,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 22,
+        "firstPickRegistry": 6,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8255,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8523,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 397,
+        "outcomes": {
+          "loaded_more_only": 1,
+          "no_tool_call": 7,
+          "valid_tool_call": 389
+        },
+        "validRate": 0.9798
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 2110,
+        "firstRequestPromptMin": 1767,
+        "firstRequestPromptMax": 4953,
+        "reasoningTokens": 59406,
+        "promptPerRowMedian": 9117,
+        "completionPerRowMedian": 316,
+        "completionPerRequestMedian": 136,
+        "directoryShareMedian": 0.7177
+      },
+      "latencyMs": {
+        "firstMedian": 1828,
+        "firstP90": 2783,
+        "secondMedian": 1234,
+        "secondP90": 2610
+      },
+      "costUsd": "0.5273",
+      "costPerRowMean": 0.0012
+    },
+    {
+      "step": "shortlist+search-200",
+      "config": "shortlist+search-200",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7651,
+        "afterSecondRequest": 0.7651,
+        "overLoading": 0.0872,
+        "counts1": {
+          "acceptable": 228,
+          "exact": 114,
+          "missing": 2,
+          "over": 39,
+          "wrong": 64
+        },
+        "counts2": {
+          "acceptable": 228,
+          "exact": 114,
+          "missing": 1,
+          "over": 50,
+          "wrong": 54
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 290,
+            "correct2": 290
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 43,
+            "correct2": 43
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7673,
+        "afterSecondRequest": 0.7673,
+        "overLoading": 0.1477,
+        "counts1": {
+          "acceptable": 225,
+          "exact": 118,
+          "missing": 1,
+          "over": 66,
+          "wrong": 37
+        },
+        "counts2": {
+          "acceptable": 225,
+          "exact": 118,
+          "over": 77,
+          "wrong": 27
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 335,
+            "correct1": 290,
+            "correct2": 290
+          },
+          "no-source": {
+            "n": 103,
+            "correct1": 44,
+            "correct2": 44
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 393,
+        "rate": 0.8792
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 27,
+          "hits": 26,
+          "rate": 0.963
+        },
+        "at10": {
+          "n": 27,
+          "hits": 26,
+          "rate": 0.963
+        }
+      },
+      "notice": {
+        "n": 54,
+        "hits": 27,
+        "rate": 0.5
+      },
+      "searches": {
+        "rowsThatSearched": 82,
+        "calls": 87,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 11,
+        "firstPickRegistry": 10,
+        "firstPickCkanPack": 14
+      },
+      "firstCallIsLoad": 0.7427,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7248,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 397,
+        "outcomes": {
+          "invalid_tool_call": 2,
+          "loaded_more_only": 11,
+          "no_tool_call": 11,
+          "valid_tool_call": 373
+        },
+        "validRate": 0.9395
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1378,
+        "firstRequestPromptMin": 1109,
+        "firstRequestPromptMax": 3436,
+        "reasoningTokens": 29211,
+        "promptPerRowMedian": 5915,
+        "completionPerRowMedian": 85,
+        "completionPerRequestMedian": 33,
+        "directoryShareMedian": 0.7249
+      },
+      "latencyMs": {
+        "firstMedian": 1143,
+        "firstP90": 4049,
+        "secondMedian": 1241,
+        "secondP90": 4918
+      },
+      "costUsd": "0.4018",
+      "costPerRowMean": 0.0009
+    },
+    {
+      "step": "shortlist+search-1000",
+      "config": "shortlist+search-1000",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7338,
+        "afterSecondRequest": 0.7248,
+        "overLoading": 0.085,
+        "counts1": {
+          "acceptable": 242,
+          "exact": 86,
+          "missing": 17,
+          "over": 38,
+          "wrong": 64
+        },
+        "counts2": {
+          "acceptable": 240,
+          "exact": 84,
+          "missing": 14,
+          "over": 56,
+          "wrong": 53
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 295,
+            "correct2": 291
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 21,
+            "correct2": 21
+          },
+          "open": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7629,
+        "afterSecondRequest": 0.7539,
+        "overLoading": 0.132,
+        "counts1": {
+          "acceptable": 224,
+          "exact": 117,
+          "missing": 4,
+          "over": 59,
+          "wrong": 43
+        },
+        "counts2": {
+          "acceptable": 222,
+          "exact": 115,
+          "missing": 1,
+          "over": 77,
+          "wrong": 32
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 359,
+            "correct1": 295,
+            "correct2": 291
+          },
+          "no-source": {
+            "n": 79,
+            "correct1": 37,
+            "correct2": 37
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 363,
+        "rate": 0.8121
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 51,
+          "hits": 49,
+          "rate": 0.9608
+        },
+        "at10": {
+          "n": 51,
+          "hits": 50,
+          "rate": 0.9804
+        }
+      },
+      "notice": {
+        "n": 84,
+        "hits": 51,
+        "rate": 0.6071
+      },
+      "searches": {
+        "rowsThatSearched": 94,
+        "calls": 95,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 10,
+        "firstPickRegistry": 22,
+        "firstPickCkanPack": 18
+      },
+      "firstCallIsLoad": 0.7204,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.651,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 403,
+        "outcomes": {
+          "invalid_tool_call": 1,
+          "loaded_more_only": 22,
+          "no_tool_call": 9,
+          "valid_tool_call": 371
+        },
+        "validRate": 0.9206
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1739,
+        "firstRequestPromptMin": 1364,
+        "firstRequestPromptMax": 3650,
+        "reasoningTokens": 29236,
+        "promptPerRowMedian": 6596,
+        "completionPerRowMedian": 87,
+        "completionPerRequestMedian": 33,
+        "directoryShareMedian": 0.7653
+      },
+      "latencyMs": {
+        "firstMedian": 1087,
+        "firstP90": 3677,
+        "secondMedian": 1401,
+        "secondP90": 4339
+      },
+      "costUsd": "0.4381",
+      "costPerRowMean": 0.001
+    },
+    {
+      "step": "shortlist+search-1000",
+      "config": "shortlist+search-1000",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7517,
+        "afterSecondRequest": 0.7315,
+        "overLoading": 0.0895,
+        "counts1": {
+          "acceptable": 253,
+          "exact": 83,
+          "missing": 9,
+          "over": 40,
+          "wrong": 62
+        },
+        "counts2": {
+          "acceptable": 247,
+          "exact": 80,
+          "missing": 9,
+          "over": 49,
+          "wrong": 62
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 303,
+            "correct2": 294
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 21,
+            "correct2": 21
+          },
+          "open": {
+            "n": 12,
+            "correct1": 12,
+            "correct2": 12
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7718,
+        "afterSecondRequest": 0.7517,
+        "overLoading": 0.1879,
+        "counts1": {
+          "acceptable": 234,
+          "exact": 111,
+          "over": 84,
+          "wrong": 18
+        },
+        "counts2": {
+          "acceptable": 228,
+          "exact": 108,
+          "over": 93,
+          "wrong": 18
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 340,
+            "correct1": 303,
+            "correct2": 294
+          },
+          "no-source": {
+            "n": 98,
+            "correct1": 33,
+            "correct2": 33
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 363,
+        "rate": 0.8121
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 35,
+          "hits": 31,
+          "rate": 0.8857
+        },
+        "at10": {
+          "n": 35,
+          "hits": 31,
+          "rate": 0.8857
+        }
+      },
+      "notice": {
+        "n": 84,
+        "hits": 35,
+        "rate": 0.4167
+      },
+      "searches": {
+        "rowsThatSearched": 38,
+        "calls": 38,
+        "limitTexts": 0
+      },
+      "picks": {
+        "correctWithSyntheticCopy": 31,
+        "firstPickRegistry": 22,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8367,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7987,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 409,
+        "outcomes": {
+          "loaded_more_only": 12,
+          "no_tool_call": 11,
+          "valid_tool_call": 386
+        },
+        "validRate": 0.9438
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 2620,
+        "firstRequestPromptMin": 2155,
+        "firstRequestPromptMax": 4231,
+        "reasoningTokens": 59682,
+        "promptPerRowMedian": 10205,
+        "completionPerRowMedian": 313,
+        "completionPerRequestMedian": 135.5,
+        "directoryShareMedian": 0.7725
+      },
+      "latencyMs": {
+        "firstMedian": 1787,
+        "firstP90": 2623,
+        "secondMedian": 1310,
+        "secondP90": 2680
+      },
+      "costUsd": "0.5636",
+      "costPerRowMean": 0.0013
+    },
+    {
+      "step": "builder-50-reads",
+      "config": "builder-50",
+      "role": "builder",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 149,
+      "complete": 149,
+      "errors": 0,
+      "emptySelections": 17,
+      "droppedAliases": 1,
+      "outcomes": {
+        "empty selection": 17,
+        "selection": 132
+      },
+      "selectionFilterRecall": {
+        "n": 149,
+        "hits": 146,
+        "rate": 0.9799
+      },
+      "costUsd": "0.1479"
+    },
+    {
+      "step": "builder-50",
+      "config": "builder-50",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 51,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.774,
+        "afterSecondRequest": 0.774,
+        "overLoading": 0.1342,
+        "counts1": {
+          "acceptable": 176,
+          "exact": 170,
+          "missing": 3,
+          "over": 60,
+          "wrong": 38
+        },
+        "counts2": {
+          "acceptable": 176,
+          "exact": 170,
+          "missing": 3,
+          "over": 67,
+          "wrong": 31
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 286,
+            "correct2": 286
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 52,
+            "correct2": 52
+          },
+          "open": {
+            "n": 9,
+            "correct1": 8,
+            "correct2": 8
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7808,
+        "afterSecondRequest": 0.7808,
+        "overLoading": 0.1499,
+        "counts1": {
+          "acceptable": 123,
+          "exact": 226,
+          "over": 67,
+          "wrong": 31
+        },
+        "counts2": {
+          "acceptable": 123,
+          "exact": 226,
+          "over": 74,
+          "wrong": 24
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 330,
+            "correct1": 286,
+            "correct2": 286
+          },
+          "no-source": {
+            "n": 114,
+            "correct1": 60,
+            "correct2": 60
+          },
+          "open": {
+            "n": 3,
+            "correct1": 3,
+            "correct2": 3
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 438,
+        "rate": 0.9799
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 9,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 9,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8635,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7383,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 386,
+        "outcomes": {
+          "loaded_more_only": 7,
+          "no_tool_call": 5,
+          "valid_tool_call": 374
+        },
+        "validRate": 0.9689
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 610,
+        "firstRequestPromptMin": 437,
+        "firstRequestPromptMax": 2133,
+        "reasoningTokens": 18149,
+        "promptPerRowMedian": 3998,
+        "completionPerRowMedian": 63,
+        "completionPerRequestMedian": 29,
+        "directoryShareMedian": 0.6154
+      },
+      "latencyMs": {
+        "firstMedian": 847.5,
+        "firstP90": 2320,
+        "secondMedian": 984,
+        "secondP90": 3694
+      },
+      "costUsd": "0.2494",
+      "costPerRowMean": 0.0006
+    },
+    {
+      "step": "builder-50",
+      "config": "builder-50",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 51,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.7919,
+        "afterSecondRequest": 0.7919,
+        "overLoading": 0.1544,
+        "counts1": {
+          "acceptable": 177,
+          "exact": 177,
+          "missing": 3,
+          "over": 69,
+          "wrong": 21
+        },
+        "counts2": {
+          "acceptable": 177,
+          "exact": 177,
+          "missing": 3,
+          "over": 69,
+          "wrong": 21
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 339,
+            "correct1": 297,
+            "correct2": 297
+          },
+          "no-source": {
+            "n": 99,
+            "correct1": 48,
+            "correct2": 48
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.7987,
+        "afterSecondRequest": 0.7987,
+        "overLoading": 0.1678,
+        "counts1": {
+          "acceptable": 124,
+          "exact": 233,
+          "over": 75,
+          "wrong": 15
+        },
+        "counts2": {
+          "acceptable": 124,
+          "exact": 233,
+          "over": 75,
+          "wrong": 15
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 330,
+            "correct1": 297,
+            "correct2": 297
+          },
+          "no-source": {
+            "n": 114,
+            "correct1": 57,
+            "correct2": 57
+          },
+          "open": {
+            "n": 3,
+            "correct1": 3,
+            "correct2": 3
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 438,
+        "rate": 0.9799
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 9,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 5,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8725,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.906,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 390,
+        "outcomes": {
+          "valid_tool_call": 390
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 999,
+        "firstRequestPromptMin": 753,
+        "firstRequestPromptMax": 3307,
+        "reasoningTokens": 37593,
+        "promptPerRowMedian": 6385,
+        "completionPerRowMedian": 241,
+        "completionPerRequestMedian": 111,
+        "directoryShareMedian": 0.6323
+      },
+      "latencyMs": {
+        "firstMedian": 1614,
+        "firstP90": 2156,
+        "secondMedian": 1107,
+        "secondP90": 2300
+      },
+      "costUsd": "0.3497",
+      "costPerRowMean": 0.0008
+    },
+    {
+      "step": "builder-200-reads",
+      "config": "builder-200",
+      "role": "builder",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 149,
+      "complete": 149,
+      "errors": 0,
+      "emptySelections": 13,
+      "droppedAliases": 0,
+      "outcomes": {
+        "empty selection": 13,
+        "selection": 136
+      },
+      "selectionFilterRecall": {
+        "n": 149,
+        "hits": 148,
+        "rate": 0.9933
+      },
+      "costUsd": "0.5017"
+    },
+    {
+      "step": "builder-200",
+      "config": "builder-200",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 39,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8233,
+        "afterSecondRequest": 0.8233,
+        "overLoading": 0.1208,
+        "counts1": {
+          "acceptable": 234,
+          "exact": 134,
+          "over": 54,
+          "wrong": 25
+        },
+        "counts2": {
+          "acceptable": 234,
+          "exact": 134,
+          "over": 62,
+          "wrong": 17
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 321,
+            "correct2": 321
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 39,
+            "correct2": 39
+          },
+          "open": {
+            "n": 9,
+            "correct1": 8,
+            "correct2": 8
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8233,
+        "afterSecondRequest": 0.8233,
+        "overLoading": 0.1298,
+        "counts1": {
+          "acceptable": 171,
+          "exact": 197,
+          "over": 58,
+          "wrong": 21
+        },
+        "counts2": {
+          "acceptable": 171,
+          "exact": 197,
+          "over": 66,
+          "wrong": 13
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 360,
+            "correct1": 321,
+            "correct2": 321
+          },
+          "no-source": {
+            "n": 81,
+            "correct1": 41,
+            "correct2": 41
+          },
+          "open": {
+            "n": 6,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 444,
+        "rate": 0.9933
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 3,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 14,
+        "firstPickRegistry": 8,
+        "firstPickCkanPack": 16
+      },
+      "firstCallIsLoad": 0.8971,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.7181,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 401,
+        "outcomes": {
+          "loaded_more_only": 9,
+          "no_tool_call": 10,
+          "valid_tool_call": 382
+        },
+        "validRate": 0.9526
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 646.5,
+        "firstRequestPromptMin": 423,
+        "firstRequestPromptMax": 1516,
+        "reasoningTokens": 12816,
+        "promptPerRowMedian": 3238.5,
+        "completionPerRowMedian": 60,
+        "completionPerRequestMedian": 28,
+        "directoryShareMedian": 0.6496
+      },
+      "latencyMs": {
+        "firstMedian": 764,
+        "firstP90": 2213,
+        "secondMedian": 925,
+        "secondP90": 2963
+      },
+      "costUsd": "0.2234",
+      "costPerRowMean": 0.0005
+    },
+    {
+      "step": "builder-200",
+      "config": "builder-200",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 39,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8523,
+        "afterSecondRequest": 0.8523,
+        "overLoading": 0.1141,
+        "counts1": {
+          "acceptable": 240,
+          "exact": 141,
+          "over": 51,
+          "wrong": 15
+        },
+        "counts2": {
+          "acceptable": 240,
+          "exact": 141,
+          "over": 51,
+          "wrong": 15
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 363,
+            "correct1": 330,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 75,
+            "correct1": 42,
+            "correct2": 42
+          },
+          "open": {
+            "n": 9,
+            "correct1": 9,
+            "correct2": 9
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8523,
+        "afterSecondRequest": 0.8523,
+        "overLoading": 0.1208,
+        "counts1": {
+          "acceptable": 178,
+          "exact": 203,
+          "over": 54,
+          "wrong": 12
+        },
+        "counts2": {
+          "acceptable": 178,
+          "exact": 203,
+          "over": 54,
+          "wrong": 12
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 360,
+            "correct1": 330,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 81,
+            "correct1": 45,
+            "correct2": 45
+          },
+          "open": {
+            "n": 6,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 444,
+        "rate": 0.9933
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 3,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 20,
+        "firstPickRegistry": 9,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.8926,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8591,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 399,
+        "outcomes": {
+          "invalid_tool_call": 4,
+          "no_tool_call": 9,
+          "valid_tool_call": 386
+        },
+        "validRate": 0.9674
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1061.5,
+        "firstRequestPromptMin": 733,
+        "firstRequestPromptMax": 2353,
+        "reasoningTokens": 35903,
+        "promptPerRowMedian": 5029.5,
+        "completionPerRowMedian": 223.5,
+        "completionPerRequestMedian": 105,
+        "directoryShareMedian": 0.6659
+      },
+      "latencyMs": {
+        "firstMedian": 1638,
+        "firstP90": 2100,
+        "secondMedian": 1046,
+        "secondP90": 2320
+      },
+      "costUsd": "0.3004",
+      "costPerRowMean": 0.0007
+    },
+    {
+      "step": "builder-1000-reads",
+      "config": "builder-1000",
+      "role": "builder",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 149,
+      "complete": 149,
+      "errors": 0,
+      "emptySelections": 8,
+      "droppedAliases": 0,
+      "outcomes": {
+        "empty selection": 8,
+        "selection": 141
+      },
+      "selectionFilterRecall": {
+        "n": 149,
+        "hits": 146,
+        "rate": 0.9799
+      },
+      "costUsd": "11.1883"
+    },
+    {
+      "step": "builder-1000",
+      "config": "builder-1000",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 24,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8277,
+        "afterSecondRequest": 0.8076,
+        "overLoading": 0.0805,
+        "counts1": {
+          "acceptable": 254,
+          "exact": 116,
+          "missing": 4,
+          "over": 36,
+          "wrong": 37
+        },
+        "counts2": {
+          "acceptable": 247,
+          "exact": 114,
+          "missing": 4,
+          "over": 54,
+          "wrong": 28
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 339,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 25,
+            "correct2": 25
+          },
+          "open": {
+            "n": 12,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8345,
+        "afterSecondRequest": 0.8143,
+        "overLoading": 0.1074,
+        "counts1": {
+          "acceptable": 183,
+          "exact": 190,
+          "missing": 1,
+          "over": 48,
+          "wrong": 25
+        },
+        "counts2": {
+          "acceptable": 176,
+          "exact": 188,
+          "missing": 1,
+          "over": 66,
+          "wrong": 16
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 384,
+            "correct1": 339,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 57,
+            "correct1": 28,
+            "correct2": 28
+          },
+          "open": {
+            "n": 6,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 438,
+        "rate": 0.9799
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 9,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 9,
+        "firstPickRegistry": 50,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.9351,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.745,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 418,
+        "outcomes": {
+          "loaded_more_only": 19,
+          "no_tool_call": 41,
+          "valid_tool_call": 358
+        },
+        "validRate": 0.8565
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 650,
+        "firstRequestPromptMin": 429,
+        "firstRequestPromptMax": 1138,
+        "reasoningTokens": 9834,
+        "promptPerRowMedian": 3250,
+        "completionPerRowMedian": 61,
+        "completionPerRequestMedian": 28,
+        "directoryShareMedian": 0.6401
+      },
+      "latencyMs": {
+        "firstMedian": 731,
+        "firstP90": 1744,
+        "secondMedian": 993,
+        "secondP90": 3293
+      },
+      "costUsd": "0.2167",
+      "costPerRowMean": 0.0005
+    },
+    {
+      "step": "builder-1000",
+      "config": "builder-1000",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 447,
+      "complete": 447,
+      "errors": 0,
+      "uniqueRows": 447,
+      "noRequestRows": 24,
+      "raw": {
+        "n": 447,
+        "firstRequest": 0.8568,
+        "afterSecondRequest": 0.8054,
+        "overLoading": 0.0805,
+        "counts1": {
+          "acceptable": 263,
+          "exact": 120,
+          "missing": 3,
+          "over": 36,
+          "wrong": 25
+        },
+        "counts2": {
+          "acceptable": 248,
+          "exact": 112,
+          "missing": 3,
+          "over": 60,
+          "wrong": 24
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 393,
+            "correct1": 353,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 42,
+            "correct1": 24,
+            "correct2": 24
+          },
+          "open": {
+            "n": 12,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "offered": {
+        "n": 447,
+        "firstRequest": 0.8635,
+        "afterSecondRequest": 0.8121,
+        "overLoading": 0.1074,
+        "counts1": {
+          "acceptable": 185,
+          "exact": 201,
+          "over": 48,
+          "wrong": 13
+        },
+        "counts2": {
+          "acceptable": 170,
+          "exact": 193,
+          "over": 72,
+          "wrong": 12
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 384,
+            "correct1": 353,
+            "correct2": 330
+          },
+          "no-source": {
+            "n": 57,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "open": {
+            "n": 6,
+            "correct1": 6,
+            "correct2": 6
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 447,
+        "hits": 438,
+        "rate": 0.9799
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 9,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 12,
+        "firstPickRegistry": 53,
+        "firstPickCkanPack": 15
+      },
+      "firstCallIsLoad": 0.9329,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": 0.8456,
+        "n": 149
+      },
+      "secondRequest": {
+        "made": 417,
+        "outcomes": {
+          "loaded_more_only": 31,
+          "no_tool_call": 21,
+          "valid_tool_call": 365
+        },
+        "validRate": 0.8753
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1058,
+        "firstRequestPromptMin": 740,
+        "firstRequestPromptMax": 1803,
+        "reasoningTokens": 40836,
+        "promptPerRowMedian": 5008,
+        "completionPerRowMedian": 230,
+        "completionPerRequestMedian": 110.5,
+        "directoryShareMedian": 0.6562
+      },
+      "latencyMs": {
+        "firstMedian": 1609,
+        "firstP90": 2103,
+        "secondMedian": 1137,
+        "secondP90": 2370
+      },
+      "costUsd": "0.2992",
+      "costPerRowMean": 0.0007
+    },
+    {
+      "step": "flat-1000",
+      "config": "flat-1000",
+      "role": "main",
+      "model": "anthropic/claude-haiku-5.5",
+      "rows": 50,
+      "complete": 50,
+      "errors": 0,
+      "uniqueRows": 50,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 50,
+        "firstRequest": 0.82,
+        "afterSecondRequest": 0.8,
+        "overLoading": 0.12,
+        "counts1": {
+          "acceptable": 28,
+          "exact": 13,
+          "missing": 1,
+          "over": 6,
+          "wrong": 2
+        },
+        "counts2": {
+          "acceptable": 27,
+          "exact": 13,
+          "missing": 1,
+          "over": 7,
+          "wrong": 2
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 42,
+            "correct1": 35,
+            "correct2": 34
+          },
+          "no-source": {
+            "n": 5,
+            "correct1": 3,
+            "correct2": 3
+          },
+          "open": {
+            "n": 3,
+            "correct1": 3,
+            "correct2": 3
+          }
+        }
+      },
+      "offered": {
+        "n": 50,
+        "firstRequest": 0.82,
+        "afterSecondRequest": 0.8,
+        "overLoading": 0.12,
+        "counts1": {
+          "acceptable": 28,
+          "exact": 13,
+          "missing": 1,
+          "over": 6,
+          "wrong": 2
+        },
+        "counts2": {
+          "acceptable": 27,
+          "exact": 13,
+          "missing": 1,
+          "over": 7,
+          "wrong": 2
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 42,
+            "correct1": 35,
+            "correct2": 34
+          },
+          "no-source": {
+            "n": 5,
+            "correct1": 3,
+            "correct2": 3
+          },
+          "open": {
+            "n": 3,
+            "correct1": 3,
+            "correct2": 3
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 50,
+        "hits": 50,
+        "rate": 1
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 0,
+        "hits": 0,
+        "rate": null
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 5,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.88,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 44,
+        "outcomes": {
+          "loaded_more_only": 2,
+          "no_tool_call": 3,
+          "valid_tool_call": 39
+        },
+        "validRate": 0.8864
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 161328.5,
+        "firstRequestPromptMin": 161318,
+        "firstRequestPromptMax": 161345,
+        "reasoningTokens": 7766,
+        "promptPerRowMedian": 325140,
+        "completionPerRowMedian": 321,
+        "completionPerRequestMedian": 152.5,
+        "directoryShareMedian": 0.9413
+      },
+      "latencyMs": {
+        "firstMedian": 3217.5,
+        "firstP90": 5900,
+        "secondMedian": 3240,
+        "secondP90": 6487
+      },
+      "costUsd": "7.7135",
+      "costPerRowMean": 0.1543
+    }
+  ]
+}

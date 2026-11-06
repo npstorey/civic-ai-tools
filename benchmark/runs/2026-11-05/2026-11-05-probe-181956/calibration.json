@@ -1,0 +1,28 @@
+{
+  "schema": "civic-calibration/1",
+  "rule": "per model, the fewest characters of a request body's JSON per billed prompt token over the probe's requests that returned usage, less 10%, rounded down to four places",
+  "models": {
+    "anthropic/claude-haiku-5.5": {
+      "charsPerToken": 2.31,
+      "fewestCharsPerToken": 2.5666,
+      "requests": 8,
+      "fewestAt": {
+        "key": "probe-flat-1000|anthropic/claude-haiku-5.5|q34|1",
+        "chars": 414097,
+        "promptTokens": 161336
+      }
+    },
+    "z-ai/glm-5.3-flash": {
+      "charsPerToken": 3.6087,
+      "fewestCharsPerToken": 4.0097,
+      "requests": 7,
+      "fewestAt": {
+        "key": "probe-flat-1000|z-ai/glm-5.3-flash|q11|1",
+        "chars": 414157,
+        "promptTokens": 103287
+      }
+    }
+  },
+  "runId": "2026-11-05-probe-181956",
+  "rowsSha256": "e5b8e7e75077b0b27daac5b2a68897118aa7b4d1b1612f6bf80a19ac12a3638d"
+}
