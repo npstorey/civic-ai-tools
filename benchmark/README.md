@@ -580,9 +580,11 @@ some of the differences read here are small.
    and 1,000; the flat directory's grow with the inventory, and at 1,000 its first-request prompt is above the
    100,000-token price step (Haiku 5.5 is billed five times higher there) and its cost per row is the run's highest
    ("Tokens per question"; "Latency and cost per question"). The builder adds its read, which the summary prices per
-   step, not per question; the read of the 1,000-entry directory is the run's dearest step. At the cap, the first
-   request's median latency stays near `baseline-7`'s on Haiku 5.5 and below it on GLM-5.3-Flash, whose first-request
-   p90 is longer than Haiku 5.5's on most steps.
+   step, not per question; the read of the 1,000-entry directory is the run's dearest step. Each read step's cost in
+   the summary, over its 149 reads, is $0.0010, $0.0034 and $0.0751 a question at 50, 200 and 1,000 (P5's cold read,
+   after the run), so "of one order" is the figure for the capped main rows, not for the builder with its read. At the
+   cap, the first request's median latency stays near `baseline-7`'s on Haiku 5.5 and below it on GLM-5.3-Flash, whose
+   first-request p90 is longer than Haiku 5.5's on most steps.
 6. **The break point.** On Haiku 5.5, `flat-N`'s first request is not below `shortlist+search-N`'s at 50 or at 200, so
    no break point is reached through 200; on GLM-5.3-Flash, it is below at 50 and not at 200 ("The flat directory
    against the capped shortlist with search"). Of the three shapes, the flat directory's first request is the highest
@@ -643,7 +645,14 @@ data.
     `note` in `questions/7.json` says so). The summary holds no split by question, so this report does not attribute
     `baseline-7`'s gap to R5's range.
   - **Offered and raw gold are reported side by side** in every accuracy table; neither replaces the other.
-  - No interval is computed for any figure, and no difference is tested.
+  - This report computes no interval and tests no difference; the cold read's figures below are the exception.
+  - P5's cold read (hub #302 comment 6687124516) computed these after the run, outside the preregistration: on the
+    first request's raw gold, paired by question and repeat over 447 pairs with an exact two-sided McNemar test,
+    GLM-5.3-Flash's `flat-50` at 0.7248 against `shortlist+search-50` at 0.7293 is 36 against 38 discordant rows,
+    p 0.91, and Haiku 5.5's `flat-200` at 0.8568 against `builder-200` at 0.8523 is 13 against 11, p 0.84; the
+    builder's filter recall at 50 and at 1,000 is 146 of 149 questions, Wilson 95% [0.9425, 0.9931], an interval
+    that includes the design's 0.95. None of the three is settled by the run: the first qualifies reading 6 at 50,
+    the second reading 6 and decision row 2 at 200, and the third reading 1's "at or above the line" at 50 and 1,000.
 - **The counts.**
   - The pick counts: correct first loads that held a synthetic copy (a near-duplicate or a wrapper, counted correct
     wherever its original is, labelling rule 9, so the copies measure crowding and over-loading, not wrong picks);
@@ -688,7 +697,7 @@ shortlist only. Each row names the table that holds its figures.
 | A directory capped at about 25 lines chooses well ("Directory accuracy"; "The three shapes at each size") | with the builder's shortlist, the highest capped step at every size and the highest compared at 1,000; the uncapped flat directory is higher at 50 and 200 | with the builder's shortlist, the highest of the three shapes at every size | unmeasured | unmeasured | **confirmed** for the cap, with the builder's shortlist; every step is below R5's cross-check range |
 | `find_source` makes a filter miss recoverable ("Search recall at k"; "The notice rate") | when it searched, the first ten hits held the gold in most rows; it searched in fewer than half of its misses | the same recall; it searched in about half or more | unmeasured | unmeasured | **qualified**: the search finds the source; the model's notice is partial, so recovery is measured, not assured |
 | Lexical search first, embeddings only if lexical recall fails ("Search recall at k") | lexical recall at ten high where the model searched | the same | unmeasured | unmeasured | **confirmed**: no embedding search is called for |
-| The cap bounds the per-request cost; the flat directory's grows with the inventory ("Tokens per question"; "Latency and cost per question") | the capped cost per row stays of one order at every size; flat's grows and at 1,000 crosses the price step | the same through 200 (`flat-1000` ran on Haiku 5.5 only) | unmeasured | unmeasured | **confirmed**; the builder's read of the 1,000-entry directory is the run's dearest step |
+| The cap bounds the per-request cost; the flat directory's grows with the inventory ("Tokens per question"; "Latency and cost per question") | the capped cost per row stays of one order at every size; flat's grows and at 1,000 crosses the price step; the builder's read adds $0.0010, $0.0034 and $0.0751 a question at 50, 200 and 1,000, so "of one order" is the capped main rows' figure, not the builder's with its read | the same through 200 (`flat-1000` ran on Haiku 5.5 only) | unmeasured | unmeasured | **confirmed**; the builder's read of the 1,000-entry directory is the run's dearest step |
 | The flat directory's break point ("The flat directory against the capped shortlist with search") | not reached through 200 | below at 50, not at 200: no consistent break point | unmeasured (its `flat-200` is in the larger models' stage) | unmeasured | **not established**: the reason to leave flat stays its cost, as §1.4 says |
 | The builder stays a benchmark configuration unless it wins on recall at 200–1,000 where the deterministic shortlist loses (§1.4, D/E) | it wins on filter recall at every size, and its first request is above the place filter's with search at every size | the same | unmeasured | unmeasured | **the condition is met**: by §1.4 it becomes the shortlist rule for large inventories, with `find_source` behind it (E), which S1 did not run |
 
@@ -731,6 +740,5 @@ S3 must not:
 ## Not yet here
 
 - The larger models' stage (Sonnet 5.5 and Opus 5.5; preregistration, "The larger models' stage"), until funded.
-- The cold read (P5).
 - R5's `report-tools/tables.mjs` is adapted at `report/tables.mjs`, outside the inputs' hash (the seat's ruling (a),
   comment 6662114479), not under `scoring/`.
