@@ -1,0 +1,49 @@
+{
+  "schema": "s1-g3-sitting-1/1",
+  "runCommit": "933be10011e2383e90181ab923b35e489d4ecc31",
+  "inputHash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+  "hashes": {
+    "beforeStep1": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+    "afterStep4": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34"
+  },
+  "runDirectories": {
+    "openWeightProbe": "benchmark/_local/runs/2026-11-05-ow-probe-181703",
+    "probe": "benchmark/_local/runs/2026-11-05-probe-181956"
+  },
+  "winner": "z-ai/glm-5.3-flash",
+  "calibration": {
+    "path": "benchmark/_local/g3/calibration.json",
+    "sha256": "e5685cc10340af0734110a23c92fac1d7a97e53d2f3d1f60b9157281d63073eb"
+  },
+  "step4": {
+    "path": "benchmark/_local/g3/step-4.out",
+    "sha256": "157db39c7a597f89cf1cea8a2e0a4cf020dd6aad284aa5ed94acd43ca9183482",
+    "optionAUsd": "91.37",
+    "optionBUsd": "69.60",
+    "option": "A",
+    "cap": "92",
+    "decision": "option A applies (its bound is at most $100): --cap 92"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "exitCode": 0,
+      "spentUsd": 0.12270758
+    },
+    {
+      "step": 2,
+      "exitCode": 0,
+      "spentUsd": 0.3878174
+    },
+    {
+      "step": 3,
+      "exitCode": 0,
+      "spentUsd": null
+    },
+    {
+      "step": 4,
+      "exitCode": 0,
+      "spentUsd": null
+    }
+  ]
+}

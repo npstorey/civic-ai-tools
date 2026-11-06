@@ -1,0 +1,67 @@
+{
+  "schema": "civic-calibration/2",
+  "rule": "per model, the fewest characters of a request body's JSON per billed prompt token over the probe's requests that returned usage, less 10%, rounded down to four places",
+  "completionRule": "per model, the most completion tokens one request billed (completion_tokens, which carries reasoning tokens; the reasoning tokens where reported larger), over the two-question probe's rows, the open-weight probe's rows of its winner, and for Haiku 5.5 R5's committed rows",
+  "openWeight": "z-ai/glm-5.3-flash",
+  "sources": {
+    "probe": {
+      "runId": "2026-11-05-probe-181956",
+      "rowsSha256": "e5b8e7e75077b0b27daac5b2a68897118aa7b4d1b1612f6bf80a19ac12a3638d"
+    },
+    "openWeightProbe": {
+      "runId": "2026-11-05-ow-probe-181703",
+      "rowsSha256": "8d615c4b954fe0f789c6f60c06cfbdadb618074c30740fdf4de6b7c2300a15da",
+      "winner": "z-ai/glm-5.3-flash"
+    },
+    "r5": {
+      "path": "benchmark/runs/2026-10-11-r5/rows.jsonl",
+      "rowsSha256": "9ee373f69ba63226d9319bfb29305ce640b557d0f4800deea189b2496d832af9"
+    }
+  },
+  "models": {
+    "anthropic/claude-haiku-5.5": {
+      "charsPerToken": 2.31,
+      "fewestCharsPerToken": 2.5666,
+      "requests": 8,
+      "fewestAt": {
+        "key": "probe-flat-1000|anthropic/claude-haiku-5.5|q34|1",
+        "chars": 414097,
+        "promptTokens": 161336
+      },
+      "largestCompletion": 623,
+      "completionAllowance": 1246,
+      "completionsFrom": {
+        "probe": {
+          "requests": 8,
+          "largest": 444
+        },
+        "r5": {
+          "requests": 281,
+          "largest": 623
+        }
+      }
+    },
+    "z-ai/glm-5.3-flash": {
+      "charsPerToken": 3.6087,
+      "fewestCharsPerToken": 4.0097,
+      "requests": 7,
+      "fewestAt": {
+        "key": "probe-flat-1000|z-ai/glm-5.3-flash|q11|1",
+        "chars": 414157,
+        "promptTokens": 103287
+      },
+      "largestCompletion": 891,
+      "completionAllowance": 1782,
+      "completionsFrom": {
+        "probe": {
+          "requests": 7,
+          "largest": 482
+        },
+        "openWeightProbe": {
+          "requests": 86,
+          "largest": 891
+        }
+      }
+    }
+  }
+}

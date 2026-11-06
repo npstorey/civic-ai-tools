@@ -10,7 +10,7 @@ P0 moved R5's chooser-spike instrument here and added the 7-entry inventory; P1 
 inventories and the preregistration's inputs (`preregistration/s1.md`); P2 added the question set and its gold, the
 second labelling, and the scorer's three routing metrics. P3-build added every configuration S1 preregisters, the
 per-row spend reservation, the two probes, the inputs' and the configurations' hashes, and the rest of the
-preregistration; the evaluations run at G3.
+preregistration. The owner ran the evaluations at G3; P4 committed the run (below).
 
 ## Layout
 
@@ -23,9 +23,9 @@ preregistration; the evaluations run at G3.
 | `questions/` | the question set and its gold: `7.json`, `50.json`, `200.json` and `1000.json`, one per inventory, each with its `.sha256`; `README.md` (the labelling rules), `schema.json`, `gold.mjs` (each question and its gold, written once), `build.mjs` (deterministic; `--check` rebuilds byte for byte), `labelling.md` (the second labelling and its resolutions) |
 | `scoring/` | `analyze.mjs` (the scorer) and `score.mjs` (the load classes), moved from R5; `metrics.mjs` (filter recall, search recall at k and the notice rate, per row); `offered.mjs` (the offered gold and the split by gold); `s1.mjs` (a run's summary per step and model). Not `analysis/`: the hub ignores any directory of that name |
 | `preregistration/` | `s1.md`: the sprint's preregistration; P1 wrote its inputs section, P2 its questions section, P3 the rest |
-| `runs/2026-10-11-r5/` | R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README) |
+| `runs/` | `2026-10-11-r5/`: R5's run, rewritten once under the digit-run convention, with the scorer's summary over it (its README); `2026-11-05/`: G3's run as the owner's run wrote it, each run directory with the scorer's summary over it, and the wrapper's records (below) |
 | `test/` | the benchmark's checks |
-| `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, the registry pages P1 reads, and a run's files (`_local/runs/<run-id>/`) until P4 copies them |
+| `_local/` | ignored, never committed: the owner's copy of R5's instrument and originals, the registry pages P1 reads, and a run's files (`_local/runs/<run-id>/`), which P4 copied into `runs/2026-11-05/` |
 
 The checks run as one root script, `npm run check:benchmark`, which CI runs; the AGENTS.md Commands table is the list
 of every gate and the healthy output of each.
@@ -52,7 +52,7 @@ node benchmark/runner/input-hash.mjs
 node benchmark/scoring/analyze.mjs benchmark/_local/runs/<run-id> --out <file>
 ```
 
-A run writes under `benchmark/_local/runs/<run-id>/` (ignored); P4 copies the finished run into `benchmark/runs/<date>/`.
+A run writes under `benchmark/_local/runs/<run-id>/` (ignored); P4 copied G3's run into `benchmark/runs/2026-11-05/`.
 Before it spends, a run reads OpenRouter's live model list and each model's endpoints list, checks the roster against
 them (every slug present, tools supported, every request field listed as supported, the reasoning effort offered, an
 endpoint up within the model's routing) and checks the key with one free call. Requests go by Node's `fetch`; no SDK.
@@ -211,7 +211,34 @@ paths are at `8559002`; R5's runner is `chooser-spike.mjs` in the owner's copy (
 | A load of an Ask-first source (NYC Checkbook, NYS Open Legislation) | loaded | the app pauses to ask the reader, or declines with no pause (`routing-mode.ts:300-313`); the benchmark loads it as an On source |
 | A call of any tool but `load_source` on the first request | `Error: unknown tool …` (`chooser-spike.mjs:446`) | the app's dispatch refuses it; the benchmark keeps R5's text (`app-texts.mjs`) |
 
+## G3's run, committed (`runs/2026-11-05/`)
+
+The owner ran G3 through the sprint's wrapper in two sittings on 2026-11-05, at `933be10011e2383e90181ab923b35e489d4ecc31`
+(the wrapper's `RUN_COMMIT`), with the inputs' hash `3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34`
+before step 1, after step 4, before step 5 and after step 5 (G2's amendment, hub #302 comment 6662456277). P4 copied the
+run's files out of the run worktree's ignored `benchmark/_local/` byte for byte: no run file is rewritten, and each run
+directory keeps its name, which is its `runId`.
+
+| Path | What it is |
+|---|---|
+| `2026-11-05-ow-probe-181703/` | step 1, the open-weight probe (G0-3b): `meta.json`, `rows.jsonl`, `contact-ledger.md`, and the scorer's `summary.json` |
+| `2026-11-05-probe-181956/` | step 2, the two-question probe beside the probe's winner: the same four, and `calibration.json` |
+| `2026-11-05-run-191511/` | step 5, the evaluations: `meta.json`, `rows.jsonl`, `contact-ledger.md`, `summary.json` |
+| `g3/` | the wrapper's records: `calibration.json` (step 3's file, the calibration step 5 ran under), `sitting-1.json`, `step-3.out` and `step-4.out` (those steps' printed output; step 4's is the calibrated bound) and `step-5.op-not-signed-in.out` (step 5's first start, which stopped before any model call; kept under the seat's ruling, comment 6666737354). Not committed: the wrapper's `npm-ci.out`, and the printed output of steps 1, 2 and 5, which carries the account's balance (the owner's ruling); `test/run-2026-11-05.test.mjs` checks that no committed run file holds that line |
+
+**The evaluations' `rows.jsonl` is committed whole** (the seat's O1, comment 6669754364): 50,426,681 bytes, sha256
+`316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c`, under Git's 50 MiB warning, with no split and no Git
+LFS. `test/run-2026-11-05.test.mjs` holds its byte count and sha256 to the values measured at G3, and checks that this
+file restates the sha256. G3 wrote no `baseline.jsonl` (a plan run writes none), so each summary's
+`files["baseline.jsonl"]` is the sha256 of the empty text, as the scorer reads an absent file.
+
+**Re-scored with no key** (A3.3): the scorer over each run directory reproduces that directory's `summary.json` byte for
+byte, and each summary's `files` are the committed files' sha256 (`test/run-2026-11-05.test.mjs`).
+
+```sh
+node benchmark/scoring/analyze.mjs benchmark/runs/2026-11-05/2026-11-05-run-191511 --out <file>  # equals its summary.json
+```
+
 ## Not yet here
 
-- The evaluations' run files and the report's tables (G3, P4); R5's `report-tools/tables.mjs` (P4 moves it to
-  `scoring/`).
+- The report (P4): its tables, its quotes, its caveats and the decision table for G4.

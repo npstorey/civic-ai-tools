@@ -1,0 +1,457 @@
+{
+  "files": {
+    "rows.jsonl": "8d615c4b954fe0f789c6f60c06cfbdadb618074c30740fdf4de6b7c2300a15da",
+    "baseline.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "meta.json": "a1f88e1975502c07a86b9862f19119914975ddb6ff5e95b4800afb2a322d30a6"
+  },
+  "runId": "2026-11-05-ow-probe-181703",
+  "mode": "open-weight-probe",
+  "today": "2026-11-05",
+  "plan": {
+    "path": "benchmark/runner/plans/s1.json",
+    "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+    "id": "s1",
+    "option": "A"
+  },
+  "openWeight": null,
+  "inputsHash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+  "expectedRows": 147,
+  "uniqueRows": 147,
+  "completeRows": 147,
+  "errorRows": 0,
+  "notStarted": 0,
+  "stopReason": null,
+  "rowLines": 147,
+  "spentUsd": "0.1227",
+  "configurations": {
+    "baseline-7": {
+      "routingConfigurationHash": "21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4",
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    }
+  },
+  "groups": [
+    {
+      "step": "open-weight-probe",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "z-ai/glm-5.3-flash",
+      "rows": 49,
+      "complete": 49,
+      "errors": 0,
+      "uniqueRows": 49,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 49,
+        "firstRequest": 0.7347,
+        "afterSecondRequest": 0.7347,
+        "overLoading": 0.1633,
+        "counts1": {
+          "acceptable": 4,
+          "exact": 32,
+          "missing": 4,
+          "over": 8,
+          "wrong": 1
+        },
+        "counts2": {
+          "acceptable": 4,
+          "exact": 32,
+          "missing": 4,
+          "over": 8,
+          "wrong": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 32,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 16,
+            "correct1": 8,
+            "correct2": 8
+          },
+          "open": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "offered": {
+        "n": 49,
+        "firstRequest": 0.8163,
+        "afterSecondRequest": 0.8163,
+        "overLoading": 0.1633,
+        "counts1": {
+          "acceptable": 4,
+          "exact": 36,
+          "over": 8,
+          "wrong": 1
+        },
+        "counts2": {
+          "acceptable": 4,
+          "exact": 36,
+          "over": 8,
+          "wrong": 1
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 28,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 20,
+            "correct1": 12,
+            "correct2": 12
+          },
+          "open": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 49,
+        "hits": 45,
+        "rate": 0.9184
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 4,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.7551,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 37,
+        "outcomes": {
+          "invalid_tool_call": 1,
+          "valid_tool_call": 36
+        },
+        "validRate": 0.973
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1147,
+        "firstRequestPromptMin": 1141,
+        "firstRequestPromptMax": 1190,
+        "reasoningTokens": 2812,
+        "promptPerRowMedian": 6769,
+        "completionPerRowMedian": 104,
+        "completionPerRequestMedian": 34.5,
+        "directoryShareMedian": 0.8032
+      },
+      "latencyMs": {
+        "firstMedian": 1538,
+        "firstP90": 5934,
+        "secondMedian": 1835,
+        "secondP90": 5418
+      },
+      "costUsd": "0.0475",
+      "costPerRowMean": 0.001
+    },
+    {
+      "step": "open-weight-probe",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "deepseek/deepseek-v4-flash-0731",
+      "rows": 49,
+      "complete": 49,
+      "errors": 0,
+      "uniqueRows": 49,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 49,
+        "firstRequest": 0.6327,
+        "afterSecondRequest": 0.6327,
+        "overLoading": 0.2857,
+        "counts1": {
+          "acceptable": 2,
+          "exact": 29,
+          "over": 14,
+          "wrong": 4
+        },
+        "counts2": {
+          "acceptable": 2,
+          "exact": 29,
+          "over": 14,
+          "wrong": 4
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 32,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 16,
+            "correct1": 4,
+            "correct2": 4
+          },
+          "open": {
+            "n": 1,
+            "correct1": 0,
+            "correct2": 0
+          }
+        }
+      },
+      "offered": {
+        "n": 49,
+        "firstRequest": 0.6327,
+        "afterSecondRequest": 0.6327,
+        "overLoading": 0.3673,
+        "counts1": {
+          "acceptable": 2,
+          "exact": 29,
+          "over": 18
+        },
+        "counts2": {
+          "acceptable": 2,
+          "exact": 29,
+          "over": 18
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 28,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 20,
+            "correct1": 4,
+            "correct2": 4
+          },
+          "open": {
+            "n": 1,
+            "correct1": 0,
+            "correct2": 0
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 49,
+        "hits": 45,
+        "rate": 0.9184
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 4,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.9184,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 45,
+        "outcomes": {
+          "invalid_tool_call": 3,
+          "no_tool_call": 1,
+          "valid_tool_call": 41
+        },
+        "validRate": 0.9111
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1276,
+        "firstRequestPromptMin": 1271,
+        "firstRequestPromptMax": 1359,
+        "reasoningTokens": 11066,
+        "promptPerRowMedian": 8984,
+        "completionPerRowMedian": 423,
+        "completionPerRequestMedian": 181,
+        "directoryShareMedian": 0.8011
+      },
+      "latencyMs": {
+        "firstMedian": 1729,
+        "firstP90": 3954,
+        "secondMedian": 2324,
+        "secondP90": 3609
+      },
+      "costUsd": "0.0256",
+      "costPerRowMean": 0.0005
+    },
+    {
+      "step": "open-weight-probe",
+      "config": "baseline-7",
+      "role": "main",
+      "model": "xiaomi/mimo-v2.6-flash",
+      "rows": 49,
+      "complete": 49,
+      "errors": 0,
+      "uniqueRows": 49,
+      "noRequestRows": 0,
+      "raw": {
+        "n": 49,
+        "firstRequest": 0.6531,
+        "afterSecondRequest": 0.6531,
+        "overLoading": 0.2653,
+        "counts1": {
+          "acceptable": 4,
+          "exact": 28,
+          "missing": 2,
+          "over": 13,
+          "wrong": 2
+        },
+        "counts2": {
+          "acceptable": 4,
+          "exact": 28,
+          "missing": 2,
+          "over": 13,
+          "wrong": 2
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 32,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 16,
+            "correct1": 4,
+            "correct2": 4
+          },
+          "open": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "offered": {
+        "n": 49,
+        "firstRequest": 0.6939,
+        "afterSecondRequest": 0.6939,
+        "overLoading": 0.3061,
+        "counts1": {
+          "acceptable": 4,
+          "exact": 30,
+          "over": 15
+        },
+        "counts2": {
+          "acceptable": 4,
+          "exact": 30,
+          "over": 15
+        },
+        "bySplit": {
+          "need-source": {
+            "n": 28,
+            "correct1": 27,
+            "correct2": 27
+          },
+          "no-source": {
+            "n": 20,
+            "correct1": 6,
+            "correct2": 6
+          },
+          "open": {
+            "n": 1,
+            "correct1": 1,
+            "correct2": 1
+          }
+        }
+      },
+      "filterRecall": {
+        "n": 49,
+        "hits": 45,
+        "rate": 0.9184
+      },
+      "searchRecall": {
+        "at5": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        },
+        "at10": {
+          "n": 0,
+          "hits": 0,
+          "rate": null
+        }
+      },
+      "notice": {
+        "n": 4,
+        "hits": 0,
+        "rate": 0
+      },
+      "searches": null,
+      "picks": {
+        "correctWithSyntheticCopy": 0,
+        "firstPickRegistry": 0,
+        "firstPickCkanPack": 0
+      },
+      "firstCallIsLoad": 0.8776,
+      "invalidAliasCalls": 0,
+      "consistency": {
+        "questionsAllRepeatsSame": null,
+        "n": 0
+      },
+      "secondRequest": {
+        "made": 43,
+        "outcomes": {
+          "valid_tool_call": 43
+        },
+        "validRate": 1
+      },
+      "tokens": {
+        "firstRequestPromptMedian": 1098,
+        "firstRequestPromptMin": 1090,
+        "firstRequestPromptMax": 1114,
+        "reasoningTokens": 6227,
+        "promptPerRowMedian": 8228,
+        "completionPerRowMedian": 206,
+        "completionPerRequestMedian": 91.5,
+        "directoryShareMedian": 0.8066
+      },
+      "latencyMs": {
+        "firstMedian": 2582,
+        "firstP90": 12143,
+        "secondMedian": 5284,
+        "secondP90": 16528
+      },
+      "costUsd": "0.0496",
+      "costPerRowMean": 0.001
+    }
+  ]
+}

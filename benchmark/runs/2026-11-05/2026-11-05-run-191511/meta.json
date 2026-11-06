@@ -1,0 +1,1347 @@
+{
+  "runId": "2026-11-05-run-191511",
+  "mode": "evaluations",
+  "plan": {
+    "path": "benchmark/runner/plans/s1.json",
+    "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+    "id": "s1",
+    "option": "A"
+  },
+  "openWeight": "z-ai/glm-5.3-flash",
+  "startedAt": "2026-11-05T19:15:19.109Z",
+  "today": "2026-11-05",
+  "argv": [
+    "--plan",
+    "benchmark/runner/plans/s1.json",
+    "--open-weight",
+    "z-ai/glm-5.3-flash",
+    "--calibration",
+    "benchmark/_local/g3/calibration.json",
+    "--cap",
+    "92"
+  ],
+  "inputsHash": {
+    "recipe": "every regular file under benchmark/runner/ and benchmark/scoring/, and benchmark/inventories/*.json and benchmark/questions/*.json, sorted by repository path (byte order), each as sha256sum's line '<sha256>  <path>\\n'; the hash is the SHA-256 of the lines concatenated",
+    "hash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+    "files": 39
+  },
+  "configurations": {
+    "rule-50": {
+      "rule": "bm25 1 over the inventory, the question as the query, no model",
+      "requestsPerRow": 0,
+      "routingConfiguration": {
+        "rule": {
+          "id": "none",
+          "version": "none"
+        },
+        "cap": "none",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-50",
+          "version": "2026-11-03.1",
+          "hash": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee"
+        }
+      },
+      "routingConfigurationHash": "6fed2f8ef197cb8446da405a304e171f4ab090f249ab59aed39d18ffd56fc37b",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "rule-200": {
+      "rule": "bm25 1 over the inventory, the question as the query, no model",
+      "requestsPerRow": 0,
+      "routingConfiguration": {
+        "rule": {
+          "id": "none",
+          "version": "none"
+        },
+        "cap": "none",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-200",
+          "version": "2026-11-03.1",
+          "hash": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+        }
+      },
+      "routingConfigurationHash": "a7c730e2030f279924e1315009efbebb9aabb2cbc9887c0473cae371e903cfec",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "rule-1000": {
+      "rule": "bm25 1 over the inventory, the question as the query, no model",
+      "requestsPerRow": 0,
+      "routingConfiguration": {
+        "rule": {
+          "id": "none",
+          "version": "none"
+        },
+        "cap": "none",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-1000",
+          "version": "2026-11-03.1",
+          "hash": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c"
+        }
+      },
+      "routingConfigurationHash": "42da58e15e76d00d7109b9acad999d6c3909ef743c905cc6685d5816f54f6746",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "baseline-7": {
+      "rule": "in-loop directory, production configuration",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "production-configuration",
+          "version": "1"
+        },
+        "cap": "none",
+        "search": "none",
+        "inventory": {
+          "id": "civic-7",
+          "version": "2026-11-02.1",
+          "hash": "1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882"
+        }
+      },
+      "routingConfigurationHash": "21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-50": {
+      "rule": "flat directory, every entry configured",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "flat",
+          "version": "1"
+        },
+        "cap": "none",
+        "search": "none",
+        "inventory": {
+          "id": "civic-50",
+          "version": "2026-11-03.1",
+          "hash": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee"
+        }
+      },
+      "routingConfigurationHash": "45ceed5056d7e6eb18539024b99cdc0fe77dfd7db73709b675dda83c899f8abe",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-200": {
+      "rule": "flat directory, every entry configured",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "flat",
+          "version": "1"
+        },
+        "cap": "none",
+        "search": "none",
+        "inventory": {
+          "id": "civic-200",
+          "version": "2026-11-03.1",
+          "hash": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+        }
+      },
+      "routingConfigurationHash": "1d8433d1ae40341d5990e4c54bc03427d116e800c9cea64a6dc2bbaa9f0b58f7",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-50": {
+      "rule": "place filter (place-filter 1), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-50",
+          "version": "2026-11-03.1",
+          "hash": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee"
+        }
+      },
+      "routingConfigurationHash": "640e589f4bea46c37df8928e7d35f8409b0b5540526c48ddee2b00d7f93e1608",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-200": {
+      "rule": "place filter (place-filter 1), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-200",
+          "version": "2026-11-03.1",
+          "hash": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+        }
+      },
+      "routingConfigurationHash": "ff2cf0aa216d25d220f6c48d83f6d6ecac7b9dce2ddcd2920eea40cf1217e635",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist-1000": {
+      "rule": "place filter (place-filter 1), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-1000",
+          "version": "2026-11-03.1",
+          "hash": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c"
+        }
+      },
+      "routingConfigurationHash": "60cc6b3819c19a493fcc810ef991fc0f989095ede0f16d1375b483a946404376",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-50": {
+      "rule": "place filter (place-filter 1), cap 25, find_source (bm25 1)",
+      "requestsPerRow": 4,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-50",
+          "version": "2026-11-03.1",
+          "hash": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee"
+        }
+      },
+      "routingConfigurationHash": "ba91fc0817390b35d58172ae139f728e244823ba3cdcccedd1d4db42963fbcbf",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-200": {
+      "rule": "place filter (place-filter 1), cap 25, find_source (bm25 1)",
+      "requestsPerRow": 4,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-200",
+          "version": "2026-11-03.1",
+          "hash": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+        }
+      },
+      "routingConfigurationHash": "84358bba5f0e29e41bbd06f32bd0bcfc92096eda422d9993ba83ddb054d7e0c3",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "shortlist+search-1000": {
+      "rule": "place filter (place-filter 1), cap 25, find_source (bm25 1)",
+      "requestsPerRow": 4,
+      "routingConfiguration": {
+        "rule": {
+          "id": "place-filter",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": {
+          "method": "bm25",
+          "version": "1"
+        },
+        "inventory": {
+          "id": "civic-1000",
+          "version": "2026-11-03.1",
+          "hash": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c"
+        }
+      },
+      "routingConfigurationHash": "25434e23206312fd996e78acd8fa5e7710b3e76f3c49858dc87eabfb2fe38469",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-50": {
+      "rule": "builder selection (Haiku 5.5 at low, once per question), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "builder",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-50",
+          "version": "2026-11-03.1",
+          "hash": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee"
+        }
+      },
+      "routingConfigurationHash": "f3adb773f1161daea675f9c7a917c03c8ffcf1748f0fc7fd7f7ca9ef1f716233",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-200": {
+      "rule": "builder selection (Haiku 5.5 at low, once per question), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "builder",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-200",
+          "version": "2026-11-03.1",
+          "hash": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02"
+        }
+      },
+      "routingConfigurationHash": "33396b9aefdf0d59aa9e7c729a56c628282acd774a31225be5bad5b68db48d17",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "builder-1000": {
+      "rule": "builder selection (Haiku 5.5 at low, once per question), cap 25, no search",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "builder",
+          "version": "1"
+        },
+        "cap": "25",
+        "search": "none",
+        "inventory": {
+          "id": "civic-1000",
+          "version": "2026-11-03.1",
+          "hash": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c"
+        }
+      },
+      "routingConfigurationHash": "9a54a537fd1f1003399935a4b204f8e5ae7a74dcdbfa8b973793113c2ac0af00",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    },
+    "flat-1000": {
+      "rule": "flat directory, every entry configured",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "flat",
+          "version": "1"
+        },
+        "cap": "none",
+        "search": "none",
+        "inventory": {
+          "id": "civic-1000",
+          "version": "2026-11-03.1",
+          "hash": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c"
+        }
+      },
+      "routingConfigurationHash": "26975d048b3757d428da8503cef6173e6eed18f0753635d4fb122504303c7700",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    }
+  },
+  "steps": [
+    {
+      "id": "rule-50",
+      "config": "rule-50",
+      "rows": 149
+    },
+    {
+      "id": "rule-200",
+      "config": "rule-200",
+      "rows": 149
+    },
+    {
+      "id": "rule-1000",
+      "config": "rule-1000",
+      "rows": 149
+    },
+    {
+      "id": "baseline-7",
+      "config": "baseline-7",
+      "rows": 894
+    },
+    {
+      "id": "flat-50",
+      "config": "flat-50",
+      "rows": 894
+    },
+    {
+      "id": "flat-200",
+      "config": "flat-200",
+      "rows": 894
+    },
+    {
+      "id": "shortlist-50",
+      "config": "shortlist-50",
+      "rows": 894
+    },
+    {
+      "id": "shortlist-200",
+      "config": "shortlist-200",
+      "rows": 894
+    },
+    {
+      "id": "shortlist-1000",
+      "config": "shortlist-1000",
+      "rows": 894
+    },
+    {
+      "id": "shortlist+search-50",
+      "config": "shortlist+search-50",
+      "rows": 894
+    },
+    {
+      "id": "shortlist+search-200",
+      "config": "shortlist+search-200",
+      "rows": 894
+    },
+    {
+      "id": "shortlist+search-1000",
+      "config": "shortlist+search-1000",
+      "rows": 894
+    },
+    {
+      "id": "builder-50-reads",
+      "config": "builder-50",
+      "rows": 149
+    },
+    {
+      "id": "builder-50",
+      "config": "builder-50",
+      "rows": 894
+    },
+    {
+      "id": "builder-200-reads",
+      "config": "builder-200",
+      "rows": 149
+    },
+    {
+      "id": "builder-200",
+      "config": "builder-200",
+      "rows": 894
+    },
+    {
+      "id": "builder-1000-reads",
+      "config": "builder-1000",
+      "rows": 149
+    },
+    {
+      "id": "builder-1000",
+      "config": "builder-1000",
+      "rows": 894
+    },
+    {
+      "id": "flat-1000",
+      "config": "flat-1000",
+      "rows": 50
+    }
+  ],
+  "models": [
+    {
+      "spec": "anthropic/claude-haiku-5.5",
+      "slug": "anthropic/claude-haiku-5.5",
+      "control": true,
+      "catalogId": "anthropic/claude-haiku-5.5",
+      "settings": {
+        "reasoningEffort": "low"
+      },
+      "routing": null,
+      "requestParameters": {
+        "max_completion_tokens": 4000,
+        "reasoning_effort": "low"
+      },
+      "charsPerToken": 2.31,
+      "contextLength": 1000000,
+      "reservationPricings": [
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "web_search": "0.01",
+          "input_cache_read": "0.01",
+          "input_cache_write": "0.125",
+          "input_cache_write_1h": "0.2",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.5",
+              "completion": "2.5",
+              "input_cache_read": "0.05",
+              "input_cache_write": "0.625",
+              "input_cache_write_1h": "1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.11",
+          "completion": "0.55",
+          "web_search": "0.01",
+          "input_cache_read": "0.011",
+          "input_cache_write": "0.1375",
+          "input_cache_write_1h": "0.22",
+          "overrides": [
+            {
+              "min_prompt_tokens": 100000,
+              "prompt": "0.55",
+              "completion": "2.75",
+              "input_cache_read": "0.055",
+              "input_cache_write": "0.6875",
+              "input_cache_write_1h": "1.1"
+            }
+          ],
+          "discount": "0"
+        }
+      ]
+    },
+    {
+      "spec": "z-ai/glm-5.3-flash",
+      "slug": "z-ai/glm-5.3-flash",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "low",
+        "tokenLimitParameter": "max_tokens"
+      },
+      "routing": {
+        "max_price": {
+          "prompt": 0.15,
+          "completion": 0.6
+        },
+        "require_parameters": true
+      },
+      "requestParameters": {
+        "max_tokens": 4000,
+        "reasoning_effort": "low",
+        "provider": {
+          "max_price": {
+            "prompt": 0.15,
+            "completion": 0.6
+          },
+          "require_parameters": true
+        }
+      },
+      "charsPerToken": 3.6087,
+      "contextLength": 1048576,
+      "reservationPricings": [
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0285",
+          "completion": "0.0923",
+          "input_cache_read": "0.0285",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.03",
+          "completion": "0.22",
+          "input_cache_read": "0.02",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0365",
+          "completion": "0.184",
+          "input_cache_read": "0.0355",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.054",
+          "completion": "0.2",
+          "input_cache_read": "0.053",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.062",
+          "completion": "0.248",
+          "input_cache_read": "0.027",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.065",
+          "completion": "0.18",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.075",
+          "completion": "0.25",
+          "input_cache_read": "0.015",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.075",
+          "completion": "0.25",
+          "input_cache_read": "0.015",
+          "discount": "0.5"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.08",
+          "completion": "0.5",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.084",
+          "completion": "0.28",
+          "input_cache_read": "0.0168",
+          "discount": "0.44"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0885",
+          "completion": "0.295",
+          "input_cache_read": "0.0177",
+          "discount": "0.41"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.0225",
+          "discount": "0.25"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.3",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.38",
+          "input_cache_read": "0.02",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.45",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.24",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.45",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "prompt": "0.15",
+          "completion": "0.6"
+        }
+      ]
+    }
+  ],
+  "repeats": null,
+  "questionIds": null,
+  "expectedRows": 11672,
+  "cap": 92,
+  "concurrency": 6,
+  "inputs": [
+    {
+      "role": "plan",
+      "path": "benchmark/runner/plans/s1.json",
+      "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+      "id": "s1",
+      "option": "A"
+    },
+    {
+      "role": "questions",
+      "path": "benchmark/questions/50.json",
+      "sha256": "3ef367790523d2d61e34cb8a480190298b55e07aef822e3d7ff8e48222a59782",
+      "questions": 149
+    },
+    {
+      "role": "questions",
+      "path": "benchmark/questions/200.json",
+      "sha256": "c9b84ff45f4b4ccbe0f0db10fd5c7de69e24ae663135fa385f5ac7620388ab94",
+      "questions": 149
+    },
+    {
+      "role": "questions",
+      "path": "benchmark/questions/1000.json",
+      "sha256": "e327b845447cb5f73bb0612abe9acb001f539cde0ec879ffdce9fd20f65fa5cd",
+      "questions": 149
+    },
+    {
+      "role": "questions",
+      "path": "benchmark/questions/7.json",
+      "sha256": "f94b7c259451d776787a61747d4ef8c743d639da79a19b9d8def677d7474ef04",
+      "questions": 149
+    },
+    {
+      "role": "inventory",
+      "path": "benchmark/inventories/50.json",
+      "sha256": "8d6ab025979e2488f77f01c6847bd6553018ad17bbaf0aeb32e76fd9a1660a41",
+      "canonicalSha256": "d00be22b280931bb23fc9ce8b47a01be52f2da1e63f104ffaae2a2a8b9cc02ee",
+      "id": "civic-50",
+      "version": "2026-11-03.1",
+      "entries": 50
+    },
+    {
+      "role": "inventory",
+      "path": "benchmark/inventories/200.json",
+      "sha256": "489c0655925cd5f1f325e7d75e7373cf9f086a6d619a1590ddb2cdbb914aba1d",
+      "canonicalSha256": "ba3eaac6d940d014efab3e5ad5171e878f3ddd5dd5152f3fd1a516ae302c7d02",
+      "id": "civic-200",
+      "version": "2026-11-03.1",
+      "entries": 200
+    },
+    {
+      "role": "inventory",
+      "path": "benchmark/inventories/1000.json",
+      "sha256": "b514fcbe9f039d85a2b069de7bd8e899cad36a5aca7bfe632249161210e7f146",
+      "canonicalSha256": "16e7428ac8541d9396546c773e3cae0f8fc364caa0319f2a6089a7d2f75fa62c",
+      "id": "civic-1000",
+      "version": "2026-11-03.1",
+      "entries": 1000
+    },
+    {
+      "role": "inventory",
+      "path": "benchmark/inventories/7.json",
+      "sha256": "95d1ff746b26a19784ac6ff90eeab22679e42518e3913f73064706832c9ac2ef",
+      "canonicalSha256": "1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882",
+      "id": "civic-7",
+      "version": "2026-11-02.1",
+      "entries": 7
+    },
+    {
+      "role": "catalog excerpt",
+      "path": "benchmark/runner/catalog.mjs",
+      "sha256": "97c105b455b6c01be2d269d29a9755f0549064ee8ae3fcd5f72a64109b5e0faa",
+      "pins": "npstorey/civic-ai-tools-website src/lib/model-catalog.ts sha256 a2a1576be84df3b0767f9566db05873790ae1c6106bf23a4cb5c4af7be3b341f"
+    },
+    {
+      "role": "app texts",
+      "path": "benchmark/runner/app-texts.mjs",
+      "sha256": "ffa8abf823e98d3976dbf2ad67fdc67abde3f95b6ad013b284ff302f32ae5f71",
+      "pins": "npstorey/civic-ai-tools-website src/lib/mcp/routing-mode.ts sha256 db796ba0805f074c9f0887722c2a8556784c8762130264375d2fbd06fdab19a1"
+    },
+    {
+      "role": "benchmark texts",
+      "path": "benchmark/runner/texts.mjs",
+      "sha256": "315c9c9a9d503ba154c6334c0a3f4b04e3ccd9bd104f085b90b4dd5467e5e765"
+    },
+    {
+      "role": "socrata guidance",
+      "path": "packages/civic-typed-router/src/__fixtures__/socrata-guidance.json",
+      "sha256": "599aa75316cfdad80697b04eee52c1459fb5c4112327ce81b657419d288e5c03"
+    },
+    {
+      "role": "calibration",
+      "path": "benchmark/_local/g3/calibration.json",
+      "sha256": "e5685cc10340af0734110a23c92fac1d7a97e53d2f3d1f60b9157281d63073eb",
+      "models": "anthropic/claude-haiku-5.5 2.31, z-ai/glm-5.3-flash 3.6087"
+    }
+  ],
+  "router": "@typedstandards/civic-typed-router@0.6.0",
+  "estimate": {
+    "charsPerToken": "calibrated, per model",
+    "calibration": {
+      "path": "benchmark/_local/g3/calibration.json",
+      "sha256": "e5685cc10340af0734110a23c92fac1d7a97e53d2f3d1f60b9157281d63073eb"
+    },
+    "tierMargin": 0.25,
+    "plan": {
+      "calls": 27367,
+      "floorUsd": "13.41338102",
+      "ceilingUsd": "139.6077313",
+      "hardUsd": "1694.83225711"
+    },
+    "calibratedBound": {
+      "optionAUsd": "91.36512004",
+      "optionBUsd": "69.59941878",
+      "applies": "A",
+      "capUsd": "92"
+    }
+  },
+  "pricingSource": "https://openrouter.ai/api/v1/models read 2026-11-05T19:15:12.577Z",
+  "modelListSha256": "e554402bc8eac944e189b181c323b156f9b29ec8a65a4be5b8194806f7439894",
+  "endpointSources": [
+    {
+      "model": "anthropic/claude-haiku-5.5",
+      "sha256": "eba53b336404deb19c2dcfd940b0a3b460026815c23a211082c656cd2581ef15"
+    },
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "sha256": "06939af338586642a80d11050133dba5c0a77f431e6e97c95486bc4ddc708de9"
+    }
+  ],
+  "pricing": {
+    "anthropic/claude-haiku-5.5": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.1",
+      "completion": "0.5",
+      "web_search": "0.01",
+      "input_cache_read": "0.01",
+      "input_cache_write": "0.125",
+      "input_cache_write_1h": "0.2",
+      "overrides": [
+        {
+          "min_prompt_tokens": 100000,
+          "prompt": "0.5",
+          "completion": "2.5",
+          "input_cache_read": "0.05",
+          "input_cache_write": "0.625",
+          "input_cache_write_1h": "1"
+        }
+      ]
+    },
+    "z-ai/glm-5.3-flash": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.15",
+      "completion": "0.5",
+      "input_cache_read": "0.03"
+    }
+  },
+  "request": {
+    "tool_choice": "auto",
+    "temperature": "not sent (the app sends none)",
+    "maxTokens": 4000,
+    "baseURL": "https://openrouter.ai/api/v1",
+    "client": "node fetch"
+  },
+  "node": "v24.22.1",
+  "resumedRows": 0,
+  "priorSpendUsd": "0",
+  "endedAt": "2026-11-05T21:12:56.626Z",
+  "spentUsd": "34.33734533",
+  "stopReason": null,
+  "completeRows": 11672,
+  "errorRows": 0,
+  "uniqueRows": 11672,
+  "completeBaselines": 0,
+  "rowsNotStarted": {
+    "count": 0,
+    "byStep": {},
+    "keys": []
+  }
+}

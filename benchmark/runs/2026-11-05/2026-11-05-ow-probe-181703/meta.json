@@ -1,0 +1,830 @@
+{
+  "runId": "2026-11-05-ow-probe-181703",
+  "mode": "open-weight-probe",
+  "plan": {
+    "path": "benchmark/runner/plans/s1.json",
+    "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+    "id": "s1",
+    "option": "A"
+  },
+  "openWeight": null,
+  "startedAt": "2026-11-05T18:17:04.045Z",
+  "today": "2026-11-05",
+  "argv": [
+    "--plan",
+    "benchmark/runner/plans/s1.json",
+    "--open-weight-probe",
+    "--cap",
+    "2"
+  ],
+  "inputsHash": {
+    "recipe": "every regular file under benchmark/runner/ and benchmark/scoring/, and benchmark/inventories/*.json and benchmark/questions/*.json, sorted by repository path (byte order), each as sha256sum's line '<sha256>  <path>\\n'; the hash is the SHA-256 of the lines concatenated",
+    "hash": "3d4b5271880bc89f0d1f11c6693fa9e56027e6a3f2b71c88a6d83e95d4400e34",
+    "files": 39
+  },
+  "configurations": {
+    "baseline-7": {
+      "rule": "in-loop directory, production configuration",
+      "requestsPerRow": 2,
+      "routingConfiguration": {
+        "rule": {
+          "id": "production-configuration",
+          "version": "1"
+        },
+        "cap": "none",
+        "search": "none",
+        "inventory": {
+          "id": "civic-7",
+          "version": "2026-11-02.1",
+          "hash": "1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882"
+        }
+      },
+      "routingConfigurationHash": "21119bea6cf14fb9607a0514ff73f7b9a6f2af0a35ec794b279e3d376da510c4",
+      "firstRequestDefinition": {
+        "domain": "civic",
+        "sources": [],
+        "components": [
+          {
+            "id": "@typedstandards/civic-typed-router",
+            "version": "0.6.0"
+          }
+        ],
+        "chosenBy": "model",
+        "hash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+      },
+      "firstRequestDefinitionHash": "2bd9c6583545b4e1c29f5d35a15b38558e6c77c49e6337098ba1e09bd3087f19"
+    }
+  },
+  "steps": [
+    {
+      "id": "open-weight-probe",
+      "config": "baseline-7",
+      "rows": 147
+    }
+  ],
+  "models": [
+    {
+      "spec": "z-ai/glm-5.3-flash",
+      "slug": "z-ai/glm-5.3-flash",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "low",
+        "tokenLimitParameter": "max_tokens"
+      },
+      "routing": {
+        "max_price": {
+          "prompt": 0.15,
+          "completion": 0.6
+        },
+        "require_parameters": true
+      },
+      "requestParameters": {
+        "max_tokens": 4000,
+        "reasoning_effort": "low",
+        "provider": {
+          "max_price": {
+            "prompt": 0.15,
+            "completion": 0.6
+          },
+          "require_parameters": true
+        }
+      },
+      "charsPerToken": 2,
+      "contextLength": 1048576,
+      "reservationPricings": [
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0285",
+          "completion": "0.0923",
+          "input_cache_read": "0.0285",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.03",
+          "completion": "0.22",
+          "input_cache_read": "0.02",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0365",
+          "completion": "0.184",
+          "input_cache_read": "0.0355",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.054",
+          "completion": "0.2",
+          "input_cache_read": "0.053",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.062",
+          "completion": "0.248",
+          "input_cache_read": "0.027",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.065",
+          "completion": "0.18",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.075",
+          "completion": "0.25",
+          "input_cache_read": "0.015",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.075",
+          "completion": "0.25",
+          "input_cache_read": "0.015",
+          "discount": "0.5"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.08",
+          "completion": "0.5",
+          "input_cache_read": "0.012",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.084",
+          "completion": "0.28",
+          "input_cache_read": "0.0168",
+          "discount": "0.44"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0885",
+          "completion": "0.295",
+          "input_cache_read": "0.0177",
+          "discount": "0.41"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.108",
+          "completion": "0.35",
+          "input_cache_read": "0.032",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.0225",
+          "discount": "0.25"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1125",
+          "completion": "0.375",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.3",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.38",
+          "input_cache_read": "0.02",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.45",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.24",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.45",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.5",
+          "input_cache_read": "0.03",
+          "discount": "0"
+        },
+        {
+          "prompt": "0.15",
+          "completion": "0.6"
+        }
+      ]
+    },
+    {
+      "spec": "deepseek/deepseek-v4-flash-0731",
+      "slug": "deepseek/deepseek-v4-flash-0731",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "reasoningEffort": "low",
+        "tokenLimitParameter": "max_tokens"
+      },
+      "routing": {
+        "max_price": {
+          "prompt": 0.15,
+          "completion": 0.6
+        },
+        "require_parameters": true
+      },
+      "requestParameters": {
+        "max_tokens": 4000,
+        "reasoning_effort": "low",
+        "provider": {
+          "max_price": {
+            "prompt": 0.15,
+            "completion": 0.6
+          },
+          "require_parameters": true
+        }
+      },
+      "charsPerToken": 2,
+      "contextLength": 1048576,
+      "reservationPricings": [
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.0434",
+          "completion": "0.3",
+          "input_cache_read": "0.035",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.04444",
+          "completion": "0.13332",
+          "input_cache_read": "0.001414",
+          "discount": "0.899"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.06",
+          "completion": "0.18",
+          "input_cache_read": "0.015",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.07",
+          "completion": "0.14",
+          "input_cache_read": "0.014",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.09",
+          "completion": "0.23",
+          "input_cache_read": "0.029",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.28",
+          "input_cache_read": "0.04",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.119",
+          "completion": "0.238",
+          "input_cache_read": "0.0238",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.12",
+          "completion": "0.23",
+          "input_cache_read": "0.115",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.26",
+          "input_cache_read": "0.028",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.27",
+          "input_cache_read": "0.05",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.13",
+          "completion": "0.495",
+          "input_cache_read": "0.027",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.132",
+          "completion": "0.396",
+          "input_cache_read": "0.0042",
+          "discount": "0.7"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.01",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.07",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.05",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.142",
+          "completion": "0.4",
+          "input_cache_read": "0.036",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.3",
+          "input_cache_read": "0.042",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.15",
+          "completion": "0.3",
+          "input_cache_read": "0.042",
+          "discount": "0"
+        },
+        {
+          "prompt": "0.15",
+          "completion": "0.6"
+        }
+      ]
+    },
+    {
+      "spec": "xiaomi/mimo-v2.6-flash",
+      "slug": "xiaomi/mimo-v2.6-flash",
+      "control": false,
+      "catalogId": null,
+      "settings": {
+        "tokenLimitParameter": "max_tokens"
+      },
+      "routing": {
+        "max_price": {
+          "prompt": 0.15,
+          "completion": 0.6
+        },
+        "require_parameters": true
+      },
+      "requestParameters": {
+        "max_tokens": 4000,
+        "provider": {
+          "max_price": {
+            "prompt": 0.15,
+            "completion": 0.6
+          },
+          "require_parameters": true
+        }
+      },
+      "charsPerToken": 2,
+      "contextLength": 1050000,
+      "reservationPricings": [
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.1",
+          "completion": "0.28",
+          "input_cache_read": "0.05",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.112",
+          "completion": "0.224",
+          "input_cache_read": "0.0024",
+          "discount": "0.2"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.003",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.003",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.0028",
+          "discount": "0"
+        },
+        {
+          "unit": "USD per million tokens; web_search and request USD per call, as listed",
+          "prompt": "0.14",
+          "completion": "0.28",
+          "input_cache_read": "0.0028",
+          "discount": "0"
+        },
+        {
+          "prompt": "0.15",
+          "completion": "0.6"
+        }
+      ]
+    }
+  ],
+  "repeats": 1,
+  "questionIds": [
+    "q01",
+    "q02",
+    "q03",
+    "q04",
+    "q05",
+    "q06",
+    "q07",
+    "q08",
+    "q09",
+    "q10",
+    "q11",
+    "q12",
+    "q13",
+    "q14",
+    "q15",
+    "q16",
+    "q17",
+    "q18",
+    "q19",
+    "q20",
+    "q21",
+    "q22",
+    "q23",
+    "q24",
+    "q25",
+    "q26",
+    "q27",
+    "q28",
+    "q29",
+    "q30",
+    "q31",
+    "q32",
+    "q33",
+    "q34",
+    "q35",
+    "q36",
+    "q37",
+    "q38",
+    "q39",
+    "q40",
+    "q41",
+    "q42",
+    "q43",
+    "q44",
+    "q45",
+    "q46",
+    "q47",
+    "q48",
+    "q49"
+  ],
+  "expectedRows": 147,
+  "cap": 2,
+  "concurrency": 6,
+  "inputs": [
+    {
+      "role": "plan",
+      "path": "benchmark/runner/plans/s1.json",
+      "sha256": "69deff975299fbd4df19b16612e4ea1ce97f2a114c67d3f7f3709b827ac7850a",
+      "id": "s1",
+      "option": "A"
+    },
+    {
+      "role": "questions",
+      "path": "benchmark/questions/7.json",
+      "sha256": "f94b7c259451d776787a61747d4ef8c743d639da79a19b9d8def677d7474ef04",
+      "questions": 149
+    },
+    {
+      "role": "inventory",
+      "path": "benchmark/inventories/7.json",
+      "sha256": "95d1ff746b26a19784ac6ff90eeab22679e42518e3913f73064706832c9ac2ef",
+      "canonicalSha256": "1a73fdd7ad383582fcc88051dabea88f25f96cdbe579054e9b2d0cebfb467882",
+      "id": "civic-7",
+      "version": "2026-11-02.1",
+      "entries": 7
+    },
+    {
+      "role": "catalog excerpt",
+      "path": "benchmark/runner/catalog.mjs",
+      "sha256": "97c105b455b6c01be2d269d29a9755f0549064ee8ae3fcd5f72a64109b5e0faa",
+      "pins": "npstorey/civic-ai-tools-website src/lib/model-catalog.ts sha256 a2a1576be84df3b0767f9566db05873790ae1c6106bf23a4cb5c4af7be3b341f"
+    },
+    {
+      "role": "app texts",
+      "path": "benchmark/runner/app-texts.mjs",
+      "sha256": "ffa8abf823e98d3976dbf2ad67fdc67abde3f95b6ad013b284ff302f32ae5f71",
+      "pins": "npstorey/civic-ai-tools-website src/lib/mcp/routing-mode.ts sha256 db796ba0805f074c9f0887722c2a8556784c8762130264375d2fbd06fdab19a1"
+    },
+    {
+      "role": "benchmark texts",
+      "path": "benchmark/runner/texts.mjs",
+      "sha256": "315c9c9a9d503ba154c6334c0a3f4b04e3ccd9bd104f085b90b4dd5467e5e765"
+    },
+    {
+      "role": "socrata guidance",
+      "path": "packages/civic-typed-router/src/__fixtures__/socrata-guidance.json",
+      "sha256": "599aa75316cfdad80697b04eee52c1459fb5c4112327ce81b657419d288e5c03"
+    }
+  ],
+  "router": "@typedstandards/civic-typed-router@0.6.0",
+  "estimate": {
+    "charsPerToken": 2,
+    "calibration": null,
+    "tierMargin": 0.25,
+    "plan": {
+      "calls": 294,
+      "floorUsd": "0.09177015",
+      "ceilingUsd": "1.26556365",
+      "hardUsd": "4.29222315"
+    },
+    "calibratedBound": null
+  },
+  "pricingSource": "https://openrouter.ai/api/v1/models read 2026-11-05T18:17:03.831Z",
+  "modelListSha256": "74e3da8bc3bfc134457f12a35a646204be520ccdac09d0913a7db1838db44b99",
+  "endpointSources": [
+    {
+      "model": "z-ai/glm-5.3-flash",
+      "sha256": "8133b85a4f47c99fdb73beb9b8acb3b6e1208529f0fc7379e78832d329d4e632"
+    },
+    {
+      "model": "deepseek/deepseek-v4-flash-0731",
+      "sha256": "bd54e6003a9e88750e3a5887648722197849be815452e5be13c469062f4c8078"
+    },
+    {
+      "model": "xiaomi/mimo-v2.6-flash",
+      "sha256": "90e200d694c2c885fd6b4ed4739986645b1eb38549f32ca918495dec13a5d0c9"
+    }
+  ],
+  "pricing": {
+    "z-ai/glm-5.3-flash": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.15",
+      "completion": "0.5",
+      "input_cache_read": "0.03"
+    },
+    "deepseek/deepseek-v4-flash-0731": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.0434",
+      "completion": "0.3",
+      "input_cache_read": "0.035"
+    },
+    "xiaomi/mimo-v2.6-flash": {
+      "unit": "USD per million tokens; web_search and request USD per call, as listed",
+      "prompt": "0.14",
+      "completion": "0.28",
+      "input_cache_read": "0.0028"
+    }
+  },
+  "request": {
+    "tool_choice": "auto",
+    "temperature": "not sent (the app sends none)",
+    "maxTokens": 4000,
+    "baseURL": "https://openrouter.ai/api/v1",
+    "client": "node fetch"
+  },
+  "node": "v24.22.1",
+  "resumedRows": 0,
+  "priorSpendUsd": "0",
+  "endedAt": "2026-11-05T18:19:54.912Z",
+  "spentUsd": "0.12270758",
+  "stopReason": null,
+  "completeRows": 147,
+  "errorRows": 0,
+  "uniqueRows": 147,
+  "completeBaselines": 0,
+  "rowsNotStarted": {
+    "count": 0,
+    "byStep": {},
+    "keys": []
+  },
+  "openWeightProbe": {
+    "rule": "the best first-request accuracy over the offered gold; a tie goes to the model whose probe rows cost less in all; a further tie to the earlier model in this list",
+    "perModel": [
+      {
+        "spec": "z-ai/glm-5.3-flash",
+        "rows": 49,
+        "answered": 49,
+        "errors": 0,
+        "correctOffered": 40,
+        "accuracyOffered": "0.81632653",
+        "correctRaw": 36,
+        "costUsd": "0.04745401"
+      },
+      {
+        "spec": "deepseek/deepseek-v4-flash-0731",
+        "rows": 49,
+        "answered": 49,
+        "errors": 0,
+        "correctOffered": 31,
+        "accuracyOffered": "0.63265306",
+        "correctRaw": 31,
+        "costUsd": "0.02564581"
+      },
+      {
+        "spec": "xiaomi/mimo-v2.6-flash",
+        "rows": 49,
+        "answered": 49,
+        "errors": 0,
+        "correctOffered": 34,
+        "accuracyOffered": "0.69387755",
+        "correctRaw": 32,
+        "costUsd": "0.04960776"
+      }
+    ],
+    "winner": "z-ai/glm-5.3-flash",
+    "complete": true
+  }
+}
