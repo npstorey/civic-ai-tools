@@ -261,6 +261,9 @@ export interface DatHerePolicyInput {
   /** The lowercase hex SHA-256 of the run's harness definition, as the router
    *  computed it (composition block; ADR-0033 amendment 2). */
   definitionHash?: string;
+  /** The source inventory the run was routed against and how many of its
+   *  entries the model was shown (composition block; ADR-0033 amendment 3). */
+  considered?: ConsideredInput;
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
 }
@@ -345,7 +348,30 @@ export interface RoutingInput {
   version: string;
 }
 
-/** The composition block's inputs (ADR-0033 §E, and amendment 2). */
+/** The inventory a run was routed against, by reference (ADR-0033
+ *  amendment 3): its `id`, its `version` in build-metadata form
+ *  `<YYYY-MM-DD>.<n>+<hash12>` (the inventory's own version, then the first
+ *  twelve hex characters of `hash`), and `hash`, the lowercase hex SHA-256
+ *  of the router's canonical JSON of the parsed inventory file. */
+export interface ConsideredInventoryInput {
+  id: string;
+  version: string;
+  hash: string;
+}
+
+/** What the model was shown, against the inventory (ADR-0033 amendment 3;
+ *  the sources-at-scale design's D5 = D): the inventory, its entry count
+ *  `total`, the count `listed` of entries the model was shown, and the
+ *  `rule` (an open string) and `ruleVersion` that chose them. */
+export interface ConsideredInput {
+  inventory: ConsideredInventoryInput;
+  total: number;
+  listed: number;
+  rule: string;
+  ruleVersion: string;
+}
+
+/** The composition block's inputs (ADR-0033 §E, and amendments 2 and 3). */
 export interface CompositionInput {
   assertedDate?: string;
   sourcesOffered?: readonly SourceOfferedInput[];
@@ -353,6 +379,7 @@ export interface CompositionInput {
   flowsStatement?: FlowsStatementInput;
   routing?: RoutingInput;
   definitionHash?: string;
+  considered?: ConsideredInput;
 }
 
 const ASSERTED_DATE_FORM = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -381,6 +408,24 @@ const FLOWS_STATEMENT_KEYS = ['url', 'hash', 'date'] as const;
 
 /** The routing object's keys, in the record's order. */
 const ROUTING_KEYS = ['method', 'version'] as const;
+
+/** The considered object's keys, and its inventory's, in the record's order
+ *  (ADR-0033 amendment 3). */
+const CONSIDERED_KEYS = ['inventory', 'total', 'listed', 'rule', 'ruleVersion'] as const;
+const CONSIDERED_INVENTORY_KEYS = ['id', 'version', 'hash'] as const;
+
+/** An inventory version in build-metadata form: `<YYYY-MM-DD>.<n>+<hash12>`. */
+const INVENTORY_VERSION_FORM = /^(\d{4}-\d{2}-\d{2})\.(0|[1-9]\d*)\+([0-9a-f]{12})$/;
+
+/** A plain object (not `null`, not an array). */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** A count: a non-negative integer that JSON states exactly. */
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
 
 /** Any whitespace or control character: a URL parser strips or drops these,
  *  so a string carrying one is not the address it parses to. */
@@ -530,7 +575,67 @@ export function buildCompositionExtension(
     block.definitionHash = definitionHash;
   }
 
+  // ADR-0033 amendment 3: considered after definitionHash, only when passed,
+  // so a block built without it keeps its bytes.
+  if (input.considered !== undefined) {
+    block.considered = consideredOf(input.considered);
+  }
+
   return Object.keys(block).length > 0 ? block : undefined;
+}
+
+/** Check one `considered` input and return it in the record's key order, or
+ *  refuse it with `RecordFieldError('considered', …)` (ADR-0033 amendment 3). */
+function consideredOf(input: unknown): Record<string, unknown> {
+  const fail: (message: string) => never = (message) => {
+    throw new RecordFieldError('considered', message);
+  };
+  if (!isPlainObject(input)) {
+    return fail('must be an object { inventory, total, listed, rule, ruleVersion }');
+  }
+  const extra = Object.keys(input).filter((k) => !(CONSIDERED_KEYS as readonly string[]).includes(k));
+  if (extra.length > 0) {
+    fail(`carries inventory, total, listed, rule and ruleVersion only; got ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  const { inventory, total, listed, rule, ruleVersion } = input;
+  if (!isPlainObject(inventory)) {
+    fail('inventory must be an object { id, version, hash }');
+  }
+  const inventoryObject = inventory as Record<string, unknown>;
+  const extraInventory = Object.keys(inventoryObject).filter((k) => !(CONSIDERED_INVENTORY_KEYS as readonly string[]).includes(k));
+  if (extraInventory.length > 0) {
+    fail(`inventory carries id, version and hash only; got ${extraInventory.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  const { id, version, hash } = inventoryObject;
+  if (!nonEmptyString(id)) {
+    fail(`inventory.id must be a non-empty string; got ${JSON.stringify(id)}`);
+  }
+  if (!(typeof hash === 'string' && SHA256_HEX_FORM.test(hash))) {
+    fail(`inventory.hash must be a lowercase hex SHA-256; got ${JSON.stringify(hash)}`);
+  }
+  const versionMatch = typeof version === 'string' ? INVENTORY_VERSION_FORM.exec(version) : null;
+  if (!versionMatch || !isCalendarDate(versionMatch[1]!)) {
+    fail(`inventory.version must be <YYYY-MM-DD>.<n>+<hash12>, a calendar date, a counter and twelve lowercase hex characters; got ${JSON.stringify(version)}`);
+  }
+  if (versionMatch![3] !== (hash as string).slice(0, 12)) {
+    fail(`inventory.version's build metadata ${JSON.stringify(versionMatch![3])} is not the first twelve characters of inventory.hash`);
+  }
+  if (!isCount(total)) {
+    fail(`total must be a non-negative integer, the inventory's entry count; got ${JSON.stringify(total)}`);
+  }
+  if (!isCount(listed)) {
+    fail(`listed must be a non-negative integer, the count the model was shown; got ${JSON.stringify(listed)}`);
+  }
+  if ((listed as number) > (total as number)) {
+    fail(`listed (${listed}) is more than total (${total})`);
+  }
+  if (!nonEmptyString(rule)) {
+    fail(`rule must be a non-empty string; got ${JSON.stringify(rule)}`);
+  }
+  if (!nonEmptyString(ruleVersion)) {
+    fail(`ruleVersion must be a non-empty string; got ${JSON.stringify(ruleVersion)}`);
+  }
+  return { inventory: { id, version, hash }, total, listed, rule, ruleVersion };
 }
 
 /** The derived envelope-field values, ready to spread into produce-core's
@@ -578,6 +683,7 @@ export function deriveDatHereEnvelopeFields(
     flowsStatement: input.flowsStatement,
     routing: input.routing,
     definitionHash: input.definitionHash,
+    considered: input.considered,
   });
   if (composition !== undefined) {
     extensions[COMPOSITION_EXTENSION_KEY] = composition;

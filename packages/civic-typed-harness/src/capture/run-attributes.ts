@@ -2,9 +2,10 @@
 // recorded on the trace's ROOT span at run time (ADR-0033 §D, §E): the date
 // the prompt asserted, the servers the run had, the tools it offered, the
 // sources it was offered, the components that composed its prompt, the
-// flows statement in force (by reference: address, hash and date), and, for
-// an in-loop run, how its sources were chosen and the hash of its harness
-// definition (ADR-0033 amendment 2).
+// flows statement in force (by reference: address, hash and date), for an
+// in-loop run, how its sources were chosen and the hash of its harness
+// definition (ADR-0033 amendment 2), and the inventory the run was routed
+// against with how many of its entries the model was shown (amendment 3).
 //
 // WHY THE TRACE (civic-ai-tools-website#495). A record is packaged after the
 // run, sometimes much later; a fact read at packaging is packaging-time state.
@@ -14,11 +15,13 @@
 // SHAPE, NOT POLICY. This module checks that each attribute parses as the
 // shape ADR-0033 names (JSON text of an array of objects whose named fields
 // are strings; for `analysis.flows_statement`, of one object of exactly three
-// strings; for `analysis.routing`, of one object of exactly two) and returns
-// it under the derivation's input names. The values — the date form, the
-// reason set, the hash forms, the origin set, the address form, the routing
-// method set — are policy, checked by the format group's derivation, which
-// refuses a bad one by name.
+// strings; for `analysis.routing`, of one object of exactly two; for
+// `analysis.considered`, of one object of exactly five keys, whose
+// `inventory` is one object of exactly three strings) and returns it under
+// the derivation's input names. The values — the date form, the reason set,
+// the hash forms, the origin set, the address form, the routing method set,
+// the inventory version's form and the counts — are policy, checked by the
+// format group's derivation, which refuses a bad one by name.
 //
 // An ABSENT attribute is an absent field. A PRESENT attribute that does not
 // parse is refused with `RunAttributeError`, never read as absent: absence
@@ -42,6 +45,13 @@ export interface ExtractedRunAttributes {
   flowsStatement?: { url: string; hash: string; date: string };
   routing?: { method: string; version: string };
   definitionHash?: string;
+  considered?: {
+    inventory: { id: string; version: string; hash: string };
+    total: number;
+    listed: number;
+    rule: string;
+    ruleVersion: string;
+  };
 }
 
 /** A root-span attribute that is present but not the shape ADR-0033 names. */
@@ -143,6 +153,70 @@ function exactStringObject(
   return entry as Record<string, string>;
 }
 
+/** Parse `analysis.considered` (ADR-0033 amendment 3): JSON text of ONE
+ *  object whose keys are exactly `inventory`, `total`, `listed`, `rule` and
+ *  `ruleVersion`, with `inventory` one object of exactly the strings `id`,
+ *  `version` and `hash`, `total` and `listed` JSON numbers, and `rule` and
+ *  `ruleVersion` strings. Shape only: the counts' integer rule, the hash and
+ *  version forms and the non-empty rule are the derivation's. */
+function consideredObject(
+  attribute: string,
+  text: string,
+): NonNullable<ExtractedRunAttributes['considered']> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new RunAttributeError(attribute, 'is not JSON text');
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new RunAttributeError(attribute, 'is not a JSON object');
+  }
+  const entry = parsed as Record<string, unknown>;
+  const fields = ['inventory', 'total', 'listed', 'rule', 'ruleVersion'];
+  for (const field of fields) {
+    if (!Object.hasOwn(entry, field)) {
+      throw new RunAttributeError(attribute, `has no ${field}`);
+    }
+  }
+  const extra = Object.keys(entry).filter((k) => !fields.includes(k));
+  if (extra.length > 0) {
+    throw new RunAttributeError(attribute, `has a field outside ${fields.join(', ')}: ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  const inventory = entry.inventory;
+  if (inventory === null || typeof inventory !== 'object' || Array.isArray(inventory)) {
+    throw new RunAttributeError(attribute, 'inventory is not a JSON object');
+  }
+  const inventoryFields = ['id', 'version', 'hash'];
+  for (const field of inventoryFields) {
+    if (typeof (inventory as Record<string, unknown>)[field] !== 'string') {
+      throw new RunAttributeError(attribute, `inventory has no string ${field}`);
+    }
+  }
+  const extraInventory = Object.keys(inventory).filter((k) => !inventoryFields.includes(k));
+  if (extraInventory.length > 0) {
+    throw new RunAttributeError(attribute, `inventory has a field outside ${inventoryFields.join(', ')}: ${extraInventory.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  for (const field of ['total', 'listed']) {
+    if (typeof entry[field] !== 'number') {
+      throw new RunAttributeError(attribute, `${field} is not a JSON number`);
+    }
+  }
+  for (const field of ['rule', 'ruleVersion']) {
+    if (typeof entry[field] !== 'string') {
+      throw new RunAttributeError(attribute, `has no string ${field}`);
+    }
+  }
+  const { id, version, hash } = inventory as Record<string, string>;
+  return {
+    inventory: { id, version, hash },
+    total: entry.total as number,
+    listed: entry.listed as number,
+    rule: entry.rule as string,
+    ruleVersion: entry.ruleVersion as string,
+  };
+}
+
 /**
  * Read the run attributes from a trace's root span. Returns `{}` for a trace
  * with no root span — including a BlobRef trace's inspection view
@@ -192,6 +266,9 @@ export function extractRunAttributes(
 
   const definitionHash = stringAttr(root, 'analysis.definition_hash');
   if (definitionHash !== undefined) out.definitionHash = definitionHash;
+
+  const considered = stringAttr(root, 'analysis.considered');
+  if (considered !== undefined) out.considered = consideredObject('analysis.considered', considered);
 
   return out;
 }
