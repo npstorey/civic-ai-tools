@@ -323,9 +323,9 @@ frozen snapshots for cross-reference accuracy.</p>
 <h2 id="status-of-this-document">2. Status of This Document</h2>
 <p><strong>Status:</strong> v0.1 Working Draft — open for external
 review (review window to be scheduled) <strong>Spec name:</strong> Typed
-Standards Specification <strong>Version:</strong> v0.1.14 (patch
+Standards Specification <strong>Version:</strong> v0.1.15 (patch
 revision of the v0.1 Working Draft; tag:
-<code>v0.1.14-typed-standards-spec</code>) <strong>License:</strong> CC
+<code>v0.1.15-typed-standards-spec</code>) <strong>License:</strong> CC
 BY 4.0 (see §3; canonical citation form in Appendix A)
 <strong>Maintainer:</strong> Nathan Storey (current; see
 reviewer-orientation document for stewardship and contact details)
@@ -341,7 +341,7 @@ conversations with reviewer organizations have set expectations. Until
 then, the specification lives at HEAD of <code>main</code>. Reviewers
 and integrators embedding a version identifier cite against the
 <strong>current patch-revision tag</strong>
-(<code>v0.1.14-typed-standards-spec</code>), which names the precise
+(<code>v0.1.15-typed-standards-spec</code>), which names the precise
 revision of this document; the consolidation-milestone tag
 (<code>v0.2-typed-standards-rfc</code>) remains for citing the
 consolidation milestone itself, not the current text. The document’s own
@@ -6627,6 +6627,24 @@ with the reference implementation’s main branch resolving verify-core
 <code>@typedstandards/verify-core</code> 0.15.1, planned in <a
 href="https://github.com/npstorey/civic-ai-tools/issues/294">civic-ai-tools#294</a>,
 is to pin revision 2.</li>
+<li><strong>Status updated 2026-11-07 (v0.1.15):</strong> the subtype’s
+guidance bundle is at revision 3, at this revision’s tag (SHA-256
+<code>db8175703601a5de9d785a2cda93db194eb05cdeeb222dcfd509ea8ab249f016</code>;
+<a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>,
+amendment of 2026-11-07). It adds entries for the composition key
+<code>considered</code> and the graph terms <code>civic:packId</code>
+and <code>civic:loadAsked</code> with their span attributes (<a
+href="../adr/0033-composed-harness-record-fields.md">ADR-0033</a>,
+amendment 3), which <code>@typedstandards/civic-typed-harness</code>
+0.12.0, planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/309">civic-ai-tools#309</a>,
+is to emit. The v0.1.14 line’s last sentence no longer holds:
+<code>@typedstandards/verify-core</code> 0.15.1 is published and its row
+pins revision 2; <code>@typedstandards/verify-core</code> 0.15.2,
+planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/309">civic-ai-tools#309</a>,
+is to pin revision 3.</li>
 </ul>
 <h3 id="appendix-f.-open-questions-pointer">Appendix F. Open questions
 pointer</h3>
@@ -6666,6 +6684,39 @@ verification is demonstrated for the self-contained bundle per
 </ul>
 <h3 id="appendix-g.-revision-history">Appendix G. Revision history</h3>
 <ul>
+<li><strong>2026-11-07</strong> — Guidance bundle revision patch
+revision (v0.1.15; decision records <a
+href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
+and its amendment of 2026-11-07, and <a
+href="../adr/0033-composed-harness-record-fields.md">ADR-0033</a>
+amendment 3; anchor <a
+href="https://github.com/npstorey/civic-ai-tools/issues/309">civic-ai-tools#309</a>).
+The <code>ai-assisted-analysis/civicaitools-v1</code> guidance bundle
+moves to revision 3, at this revision’s tag, SHA-256
+<code>db8175703601a5de9d785a2cda93db194eb05cdeeb222dcfd509ea8ab249f016</code>.
+It adds four entries, each with an absence rule:
+<code>composition.considered</code> (the source inventory a run was
+routed against, by id, version and hash, and how many of its sources the
+model was shown), <code>trace.loadSpan.loadAsked</code> and
+<code>civic.loadAsked</code> (whether the site that ran the question
+asked whether to use a load’s source), and <code>civic.packId</code>
+(the pack whose fixed arguments shaped a call). It revises the
+components and chooser sentences for a pack credited beside its base,
+and the load-outcome sentence and the <code>consent.who</code>
+never-carried rule, which no longer say a record cannot state whether a
+question was put; it corrects one statement and one citation. The words
+went through a research check, ruled by the owner on 2026-11-07. No
+field is removed or retyped, and the subtype name does not change
+(ADR-0038 §2, as its amendment reads it). This document’s normative text
+is unchanged: §8.6’s subtype row names the bundle by its path, which
+does not move. Appendix E gains a status line. The reference verifier’s
+row is to pin revision 3 in <code>@typedstandards/verify-core</code>
+0.15.2, planned in <a
+href="https://github.com/npstorey/civic-ai-tools/issues/309">civic-ai-tools#309</a>.
+Already-signed packages are byte-identical. Schema version unchanged
+(<code>0.1.0</code> per <a
+href="open-questions.md#q27--schema-version-bump-trigger-for-the-oes-spec">Q27</a>).
+The rendered HTML sidecar is regenerated from this revision.</li>
 <li><strong>2026-11-02</strong> — Guidance bundle revision patch
 revision (v0.1.14; decision record <a
 href="../adr/0038-civicaitools-v1-producer-profile-subtype.md">ADR-0038</a>
