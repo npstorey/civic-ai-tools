@@ -2,6 +2,42 @@
 
 Factual record of what changed per published version.
 
+## Unreleased
+
+The seven sources as data: the hub's `inventory/civic-inventory.json`
+(`civic-inventory/2`, version `2026-11-06.1`) is their source of truth, and
+the manifest can be built from it. `CIVIC_MANIFEST` does not change: it stays
+code, held equal to the file by a test. Every golden prompt and tools array,
+the in-loop fixture and every harness definition holds, over `CIVIC_MANIFEST`
+and over the manifest loaded from the file.
+
+- **`manifestFromInventory(inventory, kinds)`**, pure: a manifest from a
+  parsed inventory document, by entry kind, with each entry's tools held to
+  its `toolsRef` (names and `toolsSha256`). Refuses an entry it cannot build
+  with `InventoryLoadError`, naming the entry's alias and the field. With its
+  document types (`InventoryDocument`, `InventoryServerEntry`,
+  `InventoryPackEntry`) and kind types (`EntryKind`, `EntryKinds`).
+- **`toolsSha256(tools)`**: the tools' hash, the SHA-256 of
+  `JSON.stringify` of the bare-view schemas (the benchmark's definition).
+- **`CIVIC_KINDS`** and **`civicKinds(options)`**: the civic kinds,
+  `socrata`, `mcp-remote` and `npm-package`.
+- **`CIVIC_INVENTORY`**: `{ id: 'civic', version: '2026-11-06.1', hash }`,
+  the file `CIVIC_MANIFEST` mirrors.
+- **Packs.** `ManifestEntry` gains an optional `base`: on a pack, the
+  `sourceId` of the server whose tools it calls with fixed arguments. The
+  `socrata` kind builds a pack's `get_data` and `fetch` with its portal (and
+  dataset) fixed, and `search` only for a portal-only pack over the portal
+  the server is configured for. No entry of `CIVIC_MANIFEST` is a pack.
+- **Dispatch names a pack's base.** `DispatchTarget` and a resolved
+  `CalledNameResolution` gain an optional `base`, set on a pack's tools
+  only: the server a call goes to, beside the pack's `sourceId`. A server
+  entry's target is unchanged, key for key.
+- **A startup check for packs.** `findToolNameProblems` (and so
+  `checkToolNames` and `createCivicRouter`) reports a pack whose `base`
+  names no entry of the manifest or names another pack, as a new
+  `ToolNameProblem` kind, `pack-base`, naming the pack's alias. No
+  manifest without a `base` gains a problem.
+
 ## 0.6.0 — 2026-10-20
 
 Three more sources an instance runs itself from pinned packages, each

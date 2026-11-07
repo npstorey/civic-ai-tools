@@ -90,6 +90,17 @@ export type ToolNameProblem =
       readonly message: string;
     }
   | {
+      /** A pack (an entry with a `base`) whose base names no entry of the
+       *  manifest, or names another pack: a call of the pack's tools would
+       *  have no server to go to. Since the inventory loader. */
+      readonly kind: 'pack-base';
+      readonly sourceId: string;
+      readonly alias: string;
+      readonly base: string;
+      readonly reason: 'no-entry' | 'is-pack';
+      readonly message: string;
+    }
+  | {
       readonly kind: 'name-collision';
       readonly exposedName: string;
       readonly tools: readonly { readonly sourceId: string; readonly upstreamName: string }[];
@@ -108,7 +119,8 @@ function aliasDefect(alias: string): string | null {
 /** Every reason the manifest cannot be given an aliased view, in manifest
  *  order: an ill-formed alias, an alias or a source id two entries share, an
  *  alias or an upstream tool name that is the first-step tool's reserved
- *  name, and two tools whose exposed names are the same after normalizing. */
+ *  name, a pack whose base names no entry or names a pack, and two tools
+ *  whose exposed names are the same after normalizing. */
 export function findToolNameProblems(manifest: Manifest<unknown>): ToolNameProblem[] {
   const problems: ToolNameProblem[] = [];
 
@@ -175,6 +187,27 @@ export function findToolNameProblems(manifest: Manifest<unknown>): ToolNameProbl
     }
   }
 
+  // A pack's calls go to its base's server: the base must be a server entry
+  // of this manifest.
+  for (const entry of manifest) {
+    if (entry.base === undefined) continue;
+    const base = manifest.find((other) => other.sourceId === entry.base);
+    if (base === undefined || base.base !== undefined) {
+      const reason = base === undefined ? 'no-entry' : 'is-pack';
+      problems.push({
+        kind: 'pack-base',
+        sourceId: entry.sourceId,
+        alias: entry.alias,
+        base: entry.base,
+        reason,
+        message:
+          reason === 'no-entry'
+            ? `Pack "${entry.alias}" (source "${entry.sourceId}") names base "${entry.base}", which no entry of the manifest is. A pack's calls go to its base's server.`
+            : `Pack "${entry.alias}" (source "${entry.sourceId}") names base "${entry.base}", which is itself a pack. A pack's base is a server entry.`,
+      });
+    }
+  }
+
   const byExposed = new Map<string, { sourceId: string; upstreamName: string }[]>();
   for (const entry of manifest) {
     for (const tool of entry.tools) {
@@ -226,6 +259,10 @@ export interface DispatchTarget {
   readonly upstreamName: string;
   /** Whether the exposed name differs from `<alias>__<upstreamName>`. */
   readonly normalized: boolean;
+  /** On a pack's tool, the base's `sourceId`: the server the call goes to,
+   *  while `sourceId` is the pack's, the key the call is recorded under.
+   *  Absent on a server entry's tool. */
+  readonly base?: string;
 }
 
 /** Exposed name to target, for every function tool in a manifest, in
@@ -247,6 +284,7 @@ export function dispatchMap(manifest: Manifest<unknown>): DispatchMap {
         alias: entry.alias,
         upstreamName,
         normalized: exposedName !== `${entry.alias}${ALIAS_SEPARATOR}${upstreamName}`,
+        ...(entry.base !== undefined ? { base: entry.base } : {}),
       });
     }
   }
@@ -275,6 +313,8 @@ export type CalledNameResolution =
       readonly sourceId: string;
       readonly alias: string;
       readonly upstreamName: string;
+      /** On a pack's tool, the base's `sourceId` (`DispatchTarget.base`). */
+      readonly base?: string;
     }
   | {
       readonly ok: false;
@@ -339,7 +379,13 @@ export function resolveCalledName(map: DispatchMap, offered: readonly string[] |
 }
 
 function pick(t: DispatchTarget) {
-  return { exposedName: t.exposedName, sourceId: t.sourceId, alias: t.alias, upstreamName: t.upstreamName };
+  return {
+    exposedName: t.exposedName,
+    sourceId: t.sourceId,
+    alias: t.alias,
+    upstreamName: t.upstreamName,
+    ...(t.base !== undefined ? { base: t.base } : {}),
+  };
 }
 
 // --- Views ------------------------------------------------------------------------

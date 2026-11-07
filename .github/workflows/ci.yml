@@ -127,6 +127,18 @@ jobs:
       - name: Gate-table check (AGENTS.md ↔ ci.yml)
         run: npm run check:gate-table
 
+      # The civic inventory (inventory/civic-inventory.json, civic-inventory/2;
+      # hub #309): it validates against its schema, holds only strings, arrays
+      # and objects, its .sha256 is the router's canonicalJson SHA-256 of the
+      # parsed file, its version has a CHANGELOG line, and it loads with the
+      # built router's manifestFromInventory. Hermetic (four file reads and one
+      # local import).
+      - name: Inventory checker self-test
+        run: npm run check:inventory:self-test
+
+      - name: Inventory check
+        run: npm run check:inventory
+
       # The routing benchmark (benchmark/, S1): the dry run with its inputs'
       # hashes and cost bounds, the same dry run under a no-network preload,
       # the scorer against the committed copy of R5's run, the inventory

@@ -240,6 +240,14 @@ export interface ManifestEntry<Context = unknown> {
   /** The source's publisher, named as its own page names it. Carried, never
    *  read by the router. */
   readonly publisher?: string;
+  /** A pack's base: the `sourceId` of the server entry whose tools the pack
+   *  calls with fixed arguments (sources-at-scale design §4.1). Absent on a
+   *  server entry. A call of one of the pack's tools goes to the base's
+   *  server, and is recorded under the pack's `sourceId`: the dispatch map
+   *  carries it (`DispatchTarget.base`), and the startup checks refuse a
+   *  pack whose base names no entry or names a pack (since the inventory
+   *  loader, `manifestFromInventory`). */
+  readonly base?: string;
 }
 
 /** An ordered list of sources. The order is the order the prompt and the

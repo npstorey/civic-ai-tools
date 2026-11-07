@@ -1,0 +1,705 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "civic-inventory/2",
+  "title": "The civic inventory (sources-at-scale design §3.2; hub #309, G0-3 A)",
+  "description": "Every value is a string, an array or an object: the router's canonicalJson, which hashes an inventory, refuses numbers, booleans and null. A field with nothing to say is left out. inventory/README.md states what this adds to and drops from civic-inventory/1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "entries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "civic-inventory/2"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$"
+    },
+    "note": {
+      "type": "string"
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/serverEntry"
+          },
+          {
+            "$ref": "#/definitions/packEntry"
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "alias": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,31}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addressVariable",
+        "requirement"
+      ],
+      "properties": {
+        "addressVariable": {
+          "$ref": "#/definitions/text"
+        },
+        "keyVariable": {
+          "$ref": "#/definitions/text"
+        },
+        "requirement": {
+          "enum": [
+            "required",
+            "optional"
+          ]
+        },
+        "defaultAddress": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "place": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country",
+        "level",
+        "names"
+      ],
+      "properties": {
+        "country": {
+          "type": "string",
+          "pattern": "^(?:[A-Z]{2}|multiple|unstated)$"
+        },
+        "level": {
+          "enum": [
+            "federal",
+            "state",
+            "local",
+            "international",
+            "multiple",
+            "unstated"
+          ]
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/text"
+          },
+          "uniqueItems": true
+        },
+        "portalDomain": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "311-service-requests",
+          "permits-licensing",
+          "inspections",
+          "public-safety",
+          "housing",
+          "transportation",
+          "spending-contracts",
+          "budget-finance",
+          "payroll-workforce",
+          "legislation",
+          "law-rules",
+          "public-notices",
+          "demographics",
+          "economy-labor",
+          "health",
+          "education",
+          "environment",
+          "elections",
+          "property-land",
+          "government-operations"
+        ]
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readOn"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/text"
+        },
+        "version": {
+          "$ref": "#/definitions/text"
+        },
+        "readOn": {
+          "$ref": "#/definitions/date"
+        }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "none",
+            "instance-key",
+            "reader-sign-in"
+          ]
+        },
+        "keyIn": {
+          "$ref": "#/definitions/text"
+        },
+        "keyVariable": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addedOn",
+        "from",
+        "by",
+        "sourceUrl"
+      ],
+      "properties": {
+        "addedOn": {
+          "$ref": "#/definitions/date"
+        },
+        "from": {
+          "enum": [
+            "registry",
+            "portal-catalog",
+            "hand"
+          ]
+        },
+        "by": {
+          "$ref": "#/definitions/text"
+        },
+        "sourceUrl": {
+          "$ref": "#/definitions/text"
+        },
+        "file": {
+          "$ref": "#/definitions/text"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "fileSha256": {
+          "$ref": "#/definitions/sha256"
+        }
+      }
+    },
+    "https": {
+      "type": "string",
+      "pattern": "^https://\\S+$"
+    },
+    "loggingPosture": {
+      "description": "Who holds logs of what a variant is sent, and what its statement says it keeps (ADR-0036 §A): stated by the manifest only where a statement was read, with its address and the date it was read; by role where the instance decides the holder.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "statedBy",
+            "holder",
+            "keeps",
+            "statementUrl",
+            "readOn"
+          ],
+          "properties": {
+            "statedBy": {
+              "const": "manifest"
+            },
+            "holder": {
+              "$ref": "#/definitions/text"
+            },
+            "keeps": {
+              "enum": [
+                "none",
+                "metadata",
+                "content",
+                "not-stated"
+              ]
+            },
+            "retention": {
+              "$ref": "#/definitions/text"
+            },
+            "statementUrl": {
+              "$ref": "#/definitions/https"
+            },
+            "readOn": {
+              "$ref": "#/definitions/date"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "statedBy",
+            "role"
+          ],
+          "properties": {
+            "statedBy": {
+              "const": "instance"
+            },
+            "role": {
+              "$ref": "#/definitions/text"
+            }
+          }
+        }
+      ]
+    },
+    "hostingVariant": {
+      "description": "One way a source is run or reached (ADR-0036 §A; the router's HostingVariant). No arm carries an address. `container` is a name in the type only: no entry of version 1 carries one.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "kind",
+            "package",
+            "version",
+            "commit",
+            "outbound",
+            "runsAt",
+            "logging"
+          ],
+          "properties": {
+            "variant": {
+              "$ref": "#/definitions/text"
+            },
+            "kind": {
+              "const": "npm-package"
+            },
+            "package": {
+              "$ref": "#/definitions/text"
+            },
+            "version": {
+              "$ref": "#/definitions/text"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "outbound": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/text"
+              },
+              "uniqueItems": true
+            },
+            "runsAt": {
+              "enum": [
+                "instance-sandbox",
+                "publisher",
+                "government",
+                "other"
+              ]
+            },
+            "keyIn": {
+              "enum": [
+                "header",
+                "query"
+              ]
+            },
+            "logging": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/loggingPosture"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "kind",
+            "runsAt",
+            "logging"
+          ],
+          "properties": {
+            "variant": {
+              "$ref": "#/definitions/text"
+            },
+            "kind": {
+              "const": "remote"
+            },
+            "runsAt": {
+              "enum": [
+                "instance-sandbox",
+                "publisher",
+                "government",
+                "other"
+              ]
+            },
+            "keyIn": {
+              "enum": [
+                "header",
+                "query"
+              ]
+            },
+            "logging": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/loggingPosture"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "kind",
+            "runsAt",
+            "logging"
+          ],
+          "properties": {
+            "variant": {
+              "$ref": "#/definitions/text"
+            },
+            "kind": {
+              "const": "container"
+            },
+            "runsAt": {
+              "enum": [
+                "instance-sandbox",
+                "publisher",
+                "government",
+                "other"
+              ]
+            },
+            "keyIn": {
+              "enum": [
+                "header",
+                "query"
+              ]
+            },
+            "logging": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/loggingPosture"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hostings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/hostingVariant"
+      }
+    },
+    "prompt": {
+      "description": "The prompt frame's strings for the source: what the closing instruction asks the model to cite, and how the one-portal lock section names it. A preamble entry, a function of the view, stays code (the kind's).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "citation": {
+          "$ref": "#/definitions/text"
+        },
+        "lockMention": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "toolsRef": {
+      "description": "The entry's tools by reference: their names in routing order and the tools' hash (SHA-256 of JSON.stringify of the bare-view schemas, S1's definition; the router's toolsSha256). The schemas are the kind's code mirror; `fixture` names the pinned tools/list capture a hosted source's mirror is held to. No package version: the hash moves only when a schema does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolNames",
+        "sha256"
+      ],
+      "properties": {
+        "toolNames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/text"
+          },
+          "uniqueItems": true
+        },
+        "sha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "fixture": {
+          "$ref": "#/definitions/text"
+        }
+      }
+    },
+    "guidanceRef": {
+      "description": "Where the source's guidance comes from: `prompt`, the server serves it by name (`fetch`); `embedded`, this package's text; `inline`, a pack's own text, carried here with its SHA-256; `none`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "prompt",
+            "embedded",
+            "inline",
+            "none"
+          ]
+        },
+        "fetch": {
+          "$ref": "#/definitions/text"
+        },
+        "text": {
+          "$ref": "#/definitions/text"
+        },
+        "blockSha256": {
+          "$ref": "#/definitions/sha256"
+        }
+      },
+      "dependencies": {
+        "text": {
+          "properties": {
+            "kind": {
+              "const": "inline"
+            }
+          },
+          "required": [
+            "blockSha256"
+          ]
+        }
+      }
+    },
+    "serverEntry": {
+      "description": "A source the instance configures or runs: the router's manifest entry as data (design §3.2), with its kind's code (tool schemas, guidance, preamble entry, portal lock) left to the router.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "alias",
+        "sourceId",
+        "displayName",
+        "description",
+        "freshness",
+        "configuration",
+        "hostings",
+        "consentDefault",
+        "serverType",
+        "place",
+        "categories",
+        "provenance",
+        "toolsRef",
+        "guidanceRef"
+      ],
+      "properties": {
+        "kind": {
+          "const": "server"
+        },
+        "id": {
+          "$ref": "#/definitions/text"
+        },
+        "alias": {
+          "$ref": "#/definitions/alias"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/text"
+        },
+        "displayName": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "freshness": {
+          "$ref": "#/definitions/text"
+        },
+        "freshnessSource": {
+          "$ref": "#/definitions/text"
+        },
+        "configuration": {
+          "$ref": "#/definitions/configuration"
+        },
+        "hostings": {
+          "$ref": "#/definitions/hostings"
+        },
+        "consentDefault": {
+          "enum": [
+            "on",
+            "ask-first"
+          ]
+        },
+        "publisher": {
+          "$ref": "#/definitions/text"
+        },
+        "prompt": {
+          "$ref": "#/definitions/prompt"
+        },
+        "serverType": {
+          "enum": [
+            "socrata",
+            "ckan",
+            "arcgis",
+            "mcp-remote",
+            "npm-package",
+            "custom"
+          ]
+        },
+        "place": {
+          "$ref": "#/definitions/place"
+        },
+        "categories": {
+          "$ref": "#/definitions/categories"
+        },
+        "registry": {
+          "$ref": "#/definitions/registry"
+        },
+        "authentication": {
+          "$ref": "#/definitions/authentication"
+        },
+        "licence": {
+          "$ref": "#/definitions/text"
+        },
+        "provenance": {
+          "$ref": "#/definitions/provenance"
+        },
+        "toolsRef": {
+          "$ref": "#/definitions/toolsRef"
+        },
+        "guidanceRef": {
+          "$ref": "#/definitions/guidanceRef"
+        }
+      }
+    },
+    "packEntry": {
+      "description": "A pack (design §3.2, §4.1): a base server's tools called with fixed arguments (`filter`), and text. Its configuration, hosting variants and consent default are its base's; `toolsRef`, when present, holds the tools the loader builds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "alias",
+        "sourceId",
+        "displayName",
+        "base",
+        "filter",
+        "author",
+        "version",
+        "place",
+        "categories",
+        "description",
+        "freshness",
+        "provenance"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pack"
+        },
+        "id": {
+          "$ref": "#/definitions/text"
+        },
+        "alias": {
+          "$ref": "#/definitions/alias"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/text"
+        },
+        "displayName": {
+          "$ref": "#/definitions/text"
+        },
+        "base": {
+          "$ref": "#/definitions/text"
+        },
+        "filter": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "guidance": {
+          "$ref": "#/definitions/guidanceRef"
+        },
+        "author": {
+          "$ref": "#/definitions/text"
+        },
+        "publisher": {
+          "$ref": "#/definitions/text"
+        },
+        "version": {
+          "$ref": "#/definitions/text"
+        },
+        "hash": {
+          "$ref": "#/definitions/sha256"
+        },
+        "licence": {
+          "$ref": "#/definitions/text"
+        },
+        "place": {
+          "$ref": "#/definitions/place"
+        },
+        "categories": {
+          "$ref": "#/definitions/categories"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "freshness": {
+          "$ref": "#/definitions/text"
+        },
+        "freshnessSource": {
+          "$ref": "#/definitions/text"
+        },
+        "provenance": {
+          "$ref": "#/definitions/provenance"
+        },
+        "toolsRef": {
+          "$ref": "#/definitions/toolsRef"
+        },
+        "prompt": {
+          "$ref": "#/definitions/prompt"
+        }
+      }
+    }
+  }
+}

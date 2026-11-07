@@ -55,6 +55,21 @@ export {
 } from './directory.ts';
 export { canonicalJson, CanonicalJsonError } from './canonical-json.ts';
 export { sha256, sha256Hex } from './sha256.ts';
+export {
+  InventoryLoadError,
+  manifestFromInventory,
+  toolsSha256,
+  type EntryCode,
+  type EntryKind,
+  type EntryKinds,
+  type InventoryDataField,
+  type InventoryDocument,
+  type InventoryEntry,
+  type InventoryPackEntry,
+  type InventoryServerEntry,
+  type InventoryToolsRef,
+  type PackCode,
+} from './inventory.ts';
 export { CHOSEN_BY, HarnessDefinitionError, harnessDefinitionOf, type HarnessDefinitionParts } from './definition.ts';
 export {
   assertUniqueToolNames,

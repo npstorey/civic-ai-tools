@@ -144,7 +144,7 @@ test("P3-build: the per-configuration hashes are the router's, for every configu
   const { createSession } = await load('runner/session.mjs');
   const { canonicalJson } = await import('@typedstandards/civic-typed-router');
   const plan = JSON.parse(read('runner/plans/s1.json'));
-  const pkg = JSON.parse(readFileSync(new URL('../../packages/civic-typed-router/package.json', import.meta.url), 'utf8'));
+  const pkg = { name: '@typedstandards/civic-typed-router', version: '0.6.0' }; // The preregistration's per-configuration hashes were computed at router 0.6.0.
   const table = section(prereg, 'Per-configuration hashes (P3)');
   const configs = [...new Set(plan.steps.map((s) => s.config))];
   assert.equal(configs.length, 16);
