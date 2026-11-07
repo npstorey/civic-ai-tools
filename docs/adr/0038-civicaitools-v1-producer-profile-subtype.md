@@ -243,3 +243,34 @@ Found by sprint R11's cold read ([civic-ai-tools#294 comment 6588502038](https:/
 - **"Eight entries"** (the amendment's "What revision 2 changes"). Seven field entries change: `composition.routing`, `composition.sourcesOffered`, `environment.toolDefinitions`, `skillMetadata.skillText`, `skillMetadata.systemPromptHash`, `trace.loadSpan.loadOutcome` and `trace.loadSpan.operationType`. With the never-carried rule `consent.perSourceStates` and the header's `revision`, `date` and `url`, these are every member that differs between revision 1 (tag `v0.1.13-typed-standards-spec`) and revision 2 (tag `v0.1.14-typed-standards-spec`). The amendment's items 1 to 8 name the seven: items 2 and 3 are one entry, items 5 and 6 are one entry, and item 7 names two.
 - **"five span hashes, two distinct"** (item 5). The hash-only record `data-cityofnewyork-us-analysis-2026-10-31-4a76c0` states four `gen_ai.system_prompt_hash` values, one on each of its four `llm_inference` spans, two of them distinct; its `skillMetadata.systemPromptHash` equals the last. The trace's fifth hash is the `executed_notebook` span's `analysis.prompt_hash`, which is a different hash.
 - **"the one path with no pause"** (the `declined` bullet of "What revision 1 stated that a record does not hold"). A second path calls `createInLoopRouting` with no pause: the replay of an in-loop record, website `src/lib/model-loop/replay-loop.ts:607` at `4777b79`. It builds its directory with the consent gate not enforced (`:603`, `directorySet(configured, { enforced: false, states: {} })`), so every entry is `on` (`src/lib/mcp/routing-mode.ts:97-99`) and the `if (!pause)` branch at `:301` is not reached. The conclusion stands: today the no-pause case of `declined` reaches no published record.
+
+## Amendment — 2026-11-07: revision 3 of the bundle (rulings D5 = D, G0-2 = A, G0-8 = A)
+
+Ruled by the owner on 2026-11-02 on the sources-at-scale design (planning-side), D5 = D (`considered` is a new field of the `civicaitools-v1` record, with an absence rule, in a bundle revision), and on 2026-11-06 at gate G0 of sprint S2, anchor [civic-ai-tools#309](https://github.com/npstorey/civic-ai-tools/issues/309): G0-2 = A (bundle revision 3, with specification v0.1.15 moving its version lines only) and G0-8 = A (`tool.load_asked` and `civic:loadAsked` in the same revision). Written by sprint S2-A's phase P1 and landing in its PR. The words of revision 3's three new reader sentences and two revised ones go through a research check before the phase's gate (#309, criterion A1.7), as revision 2's did; the words below are the drafted ones until that ruling. §4 and §5 are not edited.
+
+### What revision 3 adds
+
+Four entries, each with the seven members and an absence rule, for the field and terms of [ADR-0033](0033-composed-harness-record-fields.md) amendment 3:
+
+1. **`composition.considered`** (class `shows`): the inventory the run was routed against, by `id`, `version` (`<YYYY-MM-DD>.<n>+<hash12>`) and `hash`, with `total`, `listed`, `rule` and `ruleVersion`. The entry names no inventory version and no hash: a reader resolves a cited inventory at the hub tag `civic-inventory/<YYYY-MM-DD>.<n>` and checks the hash its `.sha256` file states, so a new inventory version is not a bundle revision. Its sentence states how many of the inventory's sources the model was shown and by what rule, beside the chooser sentence.
+2. **`trace.loadSpan.loadAsked`** (class `may-show`): the span attribute `tool.load_asked`, whether a question was put to the reader for a load. Its sentence lets a host say the reader was asked only when the value is `true`.
+3. **`civic.packId`** (class `may-show`): the graph term for the pack that shaped a call, read from `mcp.pack_id`. Its sentence names the pack, its author and its base.
+4. **`civic.loadAsked`** (class `may-show`): the graph's statement of `tool.load_asked`, on the load activity.
+
+### What revision 3 revises
+
+- **`composition.components`**, its values and sentence: a pack is one entry of its own with `version` `<version>+<hash12>`, its base's entry present beside it, and the sentence names it "{the host's name for the pack} (by {author}) over {the host's name for its base}".
+- **`composition.routing`**, its sentence: a loaded pack is named the same way in the "Loaded" group, and the chooser sentence's opening is followed by `composition.considered`'s sentence when the record carries it.
+- Two corrections that are not reader sentences: `civic.loadOutcome`'s values no longer say it is always the activity's last key (`civic:loadAsked` follows it), and `environment.toolDefinitions`' absence rule cites the harness's branch at its new lines (`format/dathere.ts:662-676`).
+
+The 34 entries of revision 2 keep their ids, paths and classes, and the 7 never-carried entries are unchanged. `trace.loadSpan.loadOutcome`'s values and sentence are unchanged: its reasons state no question either way.
+
+### The version rule's reading
+
+§2 lists "an added entry with an absence rule, a new reader sentence or a corrected citation" among the changes that stay `v1`. Each of revision 3's four entries is added with an absence rule, and each reads as not recorded on every record before harness 0.12.0; the two revised sentences add a clause a record without the new fields never triggers; the two corrections are a corrected statement and a corrected citation. No declared field changes meaning or is removed, and no v1 reader statement becomes false of a record already published. Revision 3 therefore stays `ai-assisted-analysis/civicaitools-v1`.
+
+### The URL and the digest
+
+- **URL:** `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`.
+- **SHA-256 of `bundle.json`, revision 3 (2026-11-07), as drafted:** `d403ae5e97a7713f2af5d1dd8fb435aec2a18ce094c53883c4874e7a4e390e59`.
+- Revision 2's URL and digest (the amendment of 2026-11-02) still name revision 2's bytes, at their own tag. The verifier's table row is re-pinned to revision 3 in `@typedstandards/verify-core` 0.15.2, planned (§2); until then the row names revision 2.

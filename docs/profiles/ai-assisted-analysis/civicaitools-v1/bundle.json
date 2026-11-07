@@ -2,10 +2,10 @@
   "subtype": "ai-assisted-analysis/civicaitools-v1",
   "profileType": "ai-assisted-analysis",
   "displayName": "Civic AI Tools profile, v1",
-  "revision": 2,
-  "date": "2026-11-02",
+  "revision": 3,
+  "date": "2026-11-07",
   "decisionRecord": "https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0038-civicaitools-v1-producer-profile-subtype.md",
-  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.14-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
+  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
   "versionRule": "The subtype name carries the major: v2 when a declared field changes meaning, is removed, or a v1 reader statement would be false of the record. This file's SHA-256 carries the revisions: an added entry with an absence rule, a new reader sentence or a corrected citation stays v1 and moves the digest and the verifier table row's pin (ADR-0038 section 2).",
   "producer": "The reference host of this project, civicaitools.org, through the composed harness (ADR-0033, ADR-0037). Every new record of this producer, full-text or hash-only, declares this subtype.",
   "contentProfiles": {
@@ -46,10 +46,10 @@
     {
       "id": "composition.components",
       "path": "extensions[\"org.civicaitools.composition\"].components[]",
-      "values": "One entry per offered source in manifest order, then one for the composing package: { id, version?, guidanceHash?, guidanceOrigin? }; guidanceHash is lowercase hex SHA-256 of the guidance text as composed; guidanceOrigin is present exactly when guidanceHash is, one of endpoint, inline, fallback.",
+      "values": "One entry per offered source in manifest order, then one for the composing package: { id, version?, guidanceHash?, guidanceOrigin? }; guidanceHash is lowercase hex SHA-256 of the guidance text as composed; guidanceOrigin is present exactly when guidanceHash is, one of endpoint, inline, fallback. A pack (an inventory entry whose calls go to a base server with fixed arguments) is one entry of its own, in manifest order like any offered source: id the pack's id, version <version>+<hash12>, the pack's own version and the first twelve hex characters of the SHA-256 of its text (ADR-0033 amendment 3). Its base's entry is present whenever the pack's is, because the base's server answers the pack's calls.",
       "absent": "Key omitted when the root span carried no analysis.components. A missing version or guidanceHash is unknown or no guidance, respectively; neither is stated as a placeholder.",
       "carriedBy": "in-loop-golden.json (socrata 0.9.2 with endpoint guidance; the router 0.5.0); the three website fixture records.",
-      "sentence": "Composed from: {id} {version} (guidance {guidanceOrigin}, hash {guidanceHash short}); ... . Until a record carries skillMetadata.skillText (website #694), these entries are the record's only statement of the prompt's pieces, by hash and origin, not by text.",
+      "sentence": "Composed from: {id} {version} (guidance {guidanceOrigin}, hash {guidanceHash short}); ... ; a pack's entry is named '{the host's name for the pack} (by {author}) over {the host's name for its base}', then its version. The host knows an entry as a pack's from the inventory composition.considered names, or from a call's civic.packId, and resolves the pack's name and author there; the record never spells either. Until a record carries skillMetadata.skillText (website #694), these entries are the record's only statement of the prompt's pieces, by hash and origin, not by text.",
       "class": "may-show"
     },
     {
@@ -67,7 +67,7 @@
       "values": "{ method, version }, keys in that order. method one of all-sources, picker, in-loop (ADR-0033 amendment 2); version is the router's version. This producer writes the key on an in-loop run only, with method in-loop; an all-sources run writes no routing key (website src/lib/evidence/trace.ts, IN_LOOP_RUN_RECORD_ATTRIBUTE, and src/lib/mcp/routing-mode.ts at 567a7c2), and nothing emits picker.",
       "absent": "Key omitted when the root span carried no analysis.routing: every all-sources run of this producer, and every record published before in-loop routing reached production (2026-10-27). Absent reads as not recorded, never as all-sources.",
       "carriedBy": "in-loop-golden.json (in-loop, router 0.5.0). No public record of the reference host carried it at 2026-10-30 12:35Z (R10-WEB's census: 61 public records, 13 with the composition block, 0 with routing).",
-      "sentence": "Shown wherever reached sources are shown, read from routing.method, the load spans and sourcesOffered. in-loop: 'The model chose which sources to load, from those this question could use.', then three groups by the host's names for the sources: 'Loaded: {loaded}'; 'Requested, not loaded: {source} — {its last load's reason}', one line each; 'Not requested: {the sources whose reason is configured, selected or not-consented, with no load}'; an empty group says 'none'. Beside it the host MAY say 'from a source list given by {router component id} {version}'. absent: 'What chose these sources is not recorded.' all-sources, only if a record of this producer ever states that method: 'Every source this question could use was given to the model from the start.'",
+      "sentence": "Shown wherever reached sources are shown, read from routing.method, the load spans, sourcesOffered and, when present, considered. in-loop: 'The model chose which sources to load, from those this question could use.', followed, when the record carries composition.considered, by that entry's sentence, then three groups by the host's names for the sources: 'Loaded: {loaded}', a loaded pack named '{the host's name for the pack} (by {author}) over {the host's name for its base}'; 'Requested, not loaded: {source} — {its last load's reason}', one line each; 'Not requested: {the sources whose reason is configured, selected or not-consented, with no load}'; an empty group says 'none'. Beside it the host MAY say 'from a source list given by {router component id} {version}'. absent: 'What chose these sources is not recorded.' all-sources, only if a record of this producer ever states that method: 'Every source this question could use was given to the model from the start.'",
       "class": "shows"
     },
     {
@@ -80,10 +80,19 @@
       "class": "may-show"
     },
     {
+      "id": "composition.considered",
+      "path": "extensions[\"org.civicaitools.composition\"].considered",
+      "values": "{ inventory: { id, version, hash }, total, listed, rule, ruleVersion }, keys in that order (ADR-0033 amendment 3). inventory names the source inventory the run was routed against, by reference: id is the inventory's id (civic for the hub's inventory/civic-inventory.json); version is the inventory's own version in build-metadata form <YYYY-MM-DD>.<n>+<hash12>, the twelve characters after the + being the first twelve of hash; hash is the lowercase hex SHA-256 of the router's canonical JSON of the parsed inventory file, not of its bytes, the value the file's .sha256 sibling states. A reader resolves a cited inventory at the hub tag civic-inventory/<YYYY-MM-DD>.<n>, the version before the +, and checks the hash there; this bundle names no inventory version or hash, so a new inventory version is not a bundle revision. total is the number of entries in that inventory and listed the number of them the model was shown, integers, listed at most total. rule names how the shown entries were chosen, an open string to which a later producer may add a value; directory-set is the sources configured on the instance, less any the reader turned off (website src/lib/mcp/routing-mode.ts:92-106 at 473f3a7). ruleVersion is the rule's version, a non-empty string; directory-set's is 1.",
+      "absent": "Key omitted when the run's root span carried no analysis.considered: every record before harness 0.12.0, and every record whose producer did not state the inventory it routed against. Absent reads as not recorded: never as every source shown, and never as the hub's current inventory.",
+      "carriedBy": "packages/civic-typed-harness/src/__fixtures__/considered-golden.json (a test inventory: 3 of 8 entries listed, rule directory-set, version 1).",
+      "sentence": "Shown beside the chooser sentence (see composition.routing): 'The model was shown {listed} of the {total} sources in inventory {id} (version {version}): {rule as the host's words}.' For directory-set, version 1, the words are 'the sources set up where this question ran, less any turned off for it'. A rule the host has no words for is named as written, with its ruleVersion; a host never reads an unknown rule as a known one. Absent: no count is stated, and a host never derives one from sourcesOffered, whose entries are the manifest's, not the inventory's.",
+      "class": "shows"
+    },
+    {
       "id": "environment.toolDefinitions",
       "path": "extensions[\"org.civicaitools.environment\"].toolDefinitions",
       "values": "The tools array as offered to the model, in offered order, verbatim (the router's output: load_source and each loaded source's tools), or a BlobRef when large (spec section 8.7.1 requirement 3; ADR-0033 section C).",
-      "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere (this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:557-571); that absence states nothing about the tools.",
+      "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere (this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:662-676); that absence states nothing about the tools.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "Tools offered to the model: {count}, named {names}.",
       "class": "may-show"
@@ -132,6 +141,15 @@
       "carriedBy": "in-loop-golden.json (loaded).",
       "sentence": "Per load, the reason the chooser sentence gives for a source in its 'Requested, not loaded' group, read from that source's last load: declined 'Not allowed, so it was not used for this question.'; no-answer 'Not used, because the site that ran this question could not ask, or no answer arrived in time.'; unavailable 'Unavailable. The site that ran this question could not load it.' No reason states that the reader was asked or answered: the record does not hold whether a question was put. loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which the site that ran this question does not offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.",
       "class": "shows"
+    },
+    {
+      "id": "trace.loadSpan.loadAsked",
+      "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.load_asked\"]",
+      "values": "true or false, an OpenTelemetry boolean (boolValue), on a load span: true when a question was put to the reader for this load, false when none was. A repeat load of a source in the same run states the first load's value, since it reuses that load's decision and puts no new question. The value is the producer's record of its pause, not a reading of tool.load_outcome: no-answer is written both after a question that got no answer in time and when no question could be put (website src/lib/sources/decision.ts:243-258 at 473f3a7).",
+      "absent": "Absent on every load span before harness 0.12.0, and on a load span whose producer did not state it; absent reads as not recorded, never as false. The harness refuses a load span whose tool.load_asked is present and not a boolean when it builds the graph (LoadSpanError), and does not read the attribute on a span that is not a load.",
+      "carriedBy": "considered-golden.json (two load spans: false, then true).",
+      "sentence": "Whether a question was put to the reader for this load. Only when the value is true MAY a host say, beside the load's reason, 'The reader was asked about {alias}.'; only when it is false, 'The reader was not asked about {alias}.'; when it is absent, the host says nothing about a question. The reasons of trace.loadSpan.loadOutcome are unchanged and state no question either way.",
+      "class": "may-show"
     },
     {
       "id": "civic.failed",
@@ -305,12 +323,30 @@
       "class": "may-show"
     },
     {
+      "id": "civic.packId",
+      "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:packId\"]",
+      "values": "The id of the pack whose fixed arguments shaped the call: the inventory entry's id, verbatim from the span's mcp.pack_id (ADR-0033 amendment 3). A pack's calls go to its base's server, so the same activity's civic:serverId and civic:sourceId name the base's server and source, and the pack is the composition.components entry of the same id. The key follows civic:serverId.",
+      "absent": "Absent on a call no pack shaped, and on every record before harness 0.12.0; the graph never names a pack the span did not.",
+      "carriedBy": "considered-golden.json (one call).",
+      "sentence": "'{the host's name for the pack} (by {author}) over {the host's name for the base}', beside the call. The host resolves the pack's name and author from the inventory entry of that id, as it names a source from its manifest by sourceId; the record never spells either.",
+      "class": "may-show"
+    },
+    {
       "id": "civic.loadOutcome",
       "path": "provenance[\"@graph\"][] (prov:Activity, the tool call of a load span, associated with the platform agent)[\"civic:loadOutcome\"]",
-      "values": "One of loaded, declined, no-answer, unavailable, not-offered, verbatim from the span's tool.load_outcome; the activity's last key, on no other node (ADR-0033 amendment 2).",
+      "values": "One of loaded, declined, no-answer, unavailable, not-offered, verbatim from the span's tool.load_outcome; the activity's last key but civic:loadAsked, which follows it when the span stated one (ADR-0033 amendments 2 and 3), on no other node.",
       "absent": "Absent on every activity that is not a load; a graph never states a load without it.",
       "carriedBy": "in-loop-golden.json (loaded).",
       "sentence": "The graph's statement of trace.loadSpan.loadOutcome; a host reading the graph rather than the trace derives the same per-load verb from it.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.loadAsked",
+      "path": "provenance[\"@graph\"][] (prov:Activity, the tool call of a load span, associated with the platform agent)[\"civic:loadAsked\"]",
+      "values": "true or false, verbatim from the span's tool.load_asked; after civic:loadOutcome, the activity's last key, on no other node (ADR-0033 amendment 3).",
+      "absent": "Absent on every activity that is not a load, and on a load whose span carried no tool.load_asked (every record before harness 0.12.0); absent reads as not recorded, never as false.",
+      "carriedBy": "considered-golden.json (false, then true).",
+      "sentence": "The graph's statement of trace.loadSpan.loadAsked; a host reading the graph rather than the trace derives the same words from it, under the same condition.",
       "class": "may-show"
     },
     {
