@@ -110,6 +110,16 @@ export interface ProvenanceTerms {
   readonly serverId: string;
   /** How a `load_source` call ended (ADR-0033 amendment 2). */
   readonly loadOutcome: string;
+  /** The pack whose fixed arguments shaped a call (ADR-0033 amendment 3).
+   *  Optional, as is `loadAsked`, so a term table written before 0.12.0
+   *  still type-checks: given no name for a term, the builder emits no key
+   *  for it. The civic layer passes both. */
+  readonly packId?: string;
+  /** Whether the producer put a question to the person running the
+   *  question about a `load_source` call's source, on that load or on the
+   *  earlier load of the same source whose decision it reuses (ADR-0033
+   *  amendment 3). */
+  readonly loadAsked?: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -149,7 +159,8 @@ export interface ProvenanceBuildConfig {
   terms: ProvenanceTerms;
   /** The values a load span's `tool.load_outcome` may carry (ADR-0033
    *  amendment 2); any other value, or none, is refused with
-   *  `LoadSpanError`. */
+   *  `LoadSpanError`. A load span's `tool.load_asked`, when present, is a
+   *  boolean or is refused the same way (ADR-0033 amendment 3). */
   loadOutcomes: readonly string[];
 }
 
@@ -328,6 +339,13 @@ export function buildProvenanceGraphWith(
       if (outcome === undefined || !config.loadOutcomes.includes(outcome)) {
         throw new LoadSpanError(span.spanId, outcome, config.loadOutcomes);
       }
+      // ADR-0033 amendment 3: present, `tool.load_asked` is a boolean. A
+      // string "false" read as a boolean would state a question that was
+      // not put, and read as absent would drop a fact the producer stated.
+      const asked = span.attributes.find((a) => a.key === 'tool.load_asked');
+      if (asked !== undefined && typeof asked.value?.boolValue !== 'boolean') {
+        throw new LoadSpanError(span.spanId, outcome, config.loadOutcomes, { loadAsked: asked.value });
+      }
       continue;
     }
     sourcesInTrace.add(sourceOfSpan(span.attributes));
@@ -447,12 +465,20 @@ export function buildProvenanceGraphWith(
     const upstreamToolName = getAttr(span.attributes, 'tool.upstream_name');
     const sourceAlias = getAttr(span.attributes, 'mcp.alias');
     const serverId = getAttr(span.attributes, 'mcp.server.id');
+    // The pack whose fixed arguments shaped the call (ADR-0033 amendment 3).
+    // Absent when the span carried none — never derived from the alias.
+    const packId = getAttr(span.attributes, 'mcp.pack_id');
     const toolSourceDatasetKeyed = config.isDatasetKeyed(toolSource);
     // A load span: no source answered it, so its activity is the platform
     // agent's, states no source and no data response, and states its outcome
     // (checked above).
     const loadOutcome = isLoadSpan(span.attributes)
       ? getAttr(span.attributes, 'tool.load_outcome')
+      : undefined;
+    // Whether a question was put for the load (ADR-0033 amendment 3), read on
+    // a load span only and checked above.
+    const loadAsked = loadOutcome !== undefined
+      ? getBoolAttr(span.attributes, 'tool.load_asked')
       : undefined;
 
     // Query entity (tool arguments). Find the most recent inference span
@@ -595,9 +621,16 @@ export function buildProvenanceGraphWith(
         ...(upstreamToolName ? { [terms.upstreamToolName]: upstreamToolName } : {}),
         ...(sourceAlias ? { [terms.sourceAlias]: sourceAlias } : {}),
         ...(serverId ? { [terms.serverId]: serverId } : {}),
-        // A load span's outcome, last (ADR-0033 amendment 2); no other span
+        // The pack, after the server it went to (ADR-0033 amendment 3), only
+        // when the span carried it, so a span without it keeps its key list.
+        ...(packId && terms.packId !== undefined ? { [terms.packId]: packId } : {}),
+        // A load span's outcome (ADR-0033 amendment 2); no other span
         // carries the key, so no earlier key list moves.
         ...(loadOutcome !== undefined ? { [terms.loadOutcome]: loadOutcome } : {}),
+        // Whether a question was put for the load, last (ADR-0033 amendment
+        // 3): `false` is stated, because the producer stated it; absent is
+        // not recorded.
+        ...(loadAsked !== undefined && terms.loadAsked !== undefined ? { [terms.loadAsked]: loadAsked } : {}),
       }),
     );
   }

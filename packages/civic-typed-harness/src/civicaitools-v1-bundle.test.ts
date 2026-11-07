@@ -1,18 +1,22 @@
-// The civicaitools-v1 guidance bundle (hub ADR-0038 and its amendment of
-// 2026-11-02): the hub file `docs/profiles/ai-assisted-analysis/civicaitools-v1/
-// bundle.json`, read from this repository, against the revision it states.
+// The civicaitools-v1 guidance bundle (hub ADR-0038 and its amendments): the
+// hub file `docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`,
+// read from this repository, against the revision it states.
 //
-// WHAT IT PINS (civic-ai-tools#293; sprint anchor civic-ai-tools#294, P1).
-//   - The header: revision 2, the day its bytes were written, and its URL at
+// WHAT IT PINS (civic-ai-tools#293; sprint anchors civic-ai-tools#294, P1, and
+// civic-ai-tools#309, S2-A P1).
+//   - The header: revision 3, the day its bytes were written, and its URL at
 //     the spec tag the merge kit sets.
 //   - The words a host derives where reached sources are shown: the chooser
-//     sentence and the per-load reasons, which state no question put to the
-//     reader, because the record does not hold whether one was put (website
-//     `src/lib/mcp/routing-mode.ts:301`, a declined load with no pause; and
-//     `src/lib/sources/decision.ts:243-248`, `notHeld`, at 4777b79). They name
-//     no consent setting and no "this site": the record holds an outcome for
-//     one run, not a stored setting, and a second host is not the site that
-//     ran the question (rulings W1 and W3, civic-ai-tools#294, 2026-11-02).
+//     sentence and the per-load reasons, which state no question put or
+//     answered (website `src/lib/mcp/routing-mode.ts:301`, a declined load with
+//     no pause; and `src/lib/sources/decision.ts:243-248`, `notHeld`, at
+//     4777b79): a record states whether a question was put only in
+//     `trace.loadSpan.loadAsked`, when it carries that attribute. They name no
+//     consent setting and no "this site": the record holds an outcome for one
+//     run, not a stored setting, and a second host is not the site that ran
+//     the question (rulings W1 and W3, civic-ai-tools#294, 2026-11-02). The
+//     one "this site" is revision 3's ruled words for a rule the showing host
+//     has no words for, which is about that host's own vocabulary.
 //   - The never-carried rule for the per-source consent states: no field
 //     carries them, and no host derives one from a record's notebook text
 //     (ruling W2).
@@ -22,8 +26,18 @@
 //   - The system prompt entries: the final request's prompt is carried; the
 //     earlier ones by trace hash only; the hash alone when the text was not
 //     stored (ruling W4 for systemPromptHash).
-//   - The field set: the 34 field ids and the 7 never-carried ids, so no
-//     revision adds or removes a field.
+//   - Revision 3's four added entries (`composition.considered`,
+//     `trace.loadSpan.loadAsked`, `civic.packId`, `civic.loadAsked`; ADR-0033
+//     amendment 3) and its revised members (`composition.components`' values
+//     and sentence, `composition.routing`'s and `trace.loadSpan.loadOutcome`'s
+//     sentences, and the never-carried rule for `consent.who`): the pack beside
+//     its base, the shown count, and whether a question was put, stated only
+//     from `tool.load_asked`. The words are the research check's, as the owner
+//     ruled them (civic-ai-tools#309 comment 6706653107: R1, Q1, Q2 and A3 = A).
+//   - The field set: the 38 field ids and the 7 never-carried ids. A revision
+//     that adds or removes a field moves this list: revision 3 added four,
+//     each with an absence rule (ADR-0038 section 2); the assertion fails on
+//     one fewer and on one more.
 //   - The digest: `bundle.md`'s SHA-256 row and the ADR-0038 text name the
 //     file's own SHA-256, and `bundle.md`'s URL row names the file's URL.
 //
@@ -59,12 +73,12 @@ const ADR_0038_PATH = join(REPO_ROOT, 'docs', 'adr', '0038-civicaitools-v1-produ
 
 // --- The revision -------------------------------------------------------------------------
 
-const REVISION = 2;
+const REVISION = 3;
 /** ADR-0038 §5: the day the revision's bytes were written. */
-const REVISION_DATE = '2026-11-02';
+const REVISION_DATE = '2026-11-07';
 /** The raw address at the tag the merge kit sets on this revision's merge commit. */
 const REVISION_URL =
-  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.14-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
+  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
 
 // --- The words ----------------------------------------------------------------------------
 
@@ -79,10 +93,16 @@ const REASON_DECLINED = 'Not allowed, so it was not used for this question.';
 const REASON_NO_ANSWER = 'Not used, because the site that ran this question could not ask, or no answer arrived in time.';
 const REASON_UNAVAILABLE = 'Unavailable. The site that ran this question could not load it.';
 
+/** The pack-and-author clause (D4 = A), in the chooser sentence, the components sentence and civic.packId's. */
+const PACK_CLAUSE = "'{the host's name for the pack}, a pack by {author}, using {the host's name for its base}'";
+
 const ROUTING_SENTENCE =
-  "Shown wherever reached sources are shown, read from routing.method, the load spans and sourcesOffered. " +
-  "in-loop: 'The model chose which sources to load, from those this question could use.', then three groups by the " +
-  "host's names for the sources: 'Loaded: {loaded}'; 'Requested, not loaded: {source} — {its last load's reason}', " +
+  "Shown wherever reached sources are shown, read from routing.method, the load spans, sourcesOffered and, when " +
+  "present, considered. in-loop: 'The model chose which sources to load, from those this question could use.', " +
+  "followed, when the record carries composition.considered, by that entry's sentences, then three groups by the " +
+  "host's names for the sources: 'Loaded: {loaded}', a loaded source the host resolves as a pack, as civic.packId " +
+  `says, named ${PACK_CLAUSE}; ` +
+  "'Requested, not loaded: {source} — {its last load's reason}', " +
   "one line each; 'Not requested: {the sources whose reason is configured, selected or not-consented, with no load}'; " +
   "an empty group says 'none'. Beside it the host " +
   "MAY say 'from a source list given by {router component id} {version}'. " +
@@ -92,7 +112,8 @@ const LOAD_OUTCOME_SENTENCE =
   "Per load, the reason the chooser sentence gives for a source in its 'Requested, not loaded' group, read from " +
   `that source's last load: declined '${REASON_DECLINED}'; no-answer '${REASON_NO_ANSWER}'; ` +
   `unavailable '${REASON_UNAVAILABLE}' ` +
-  'No reason states that the reader was asked or answered: the record does not hold whether a question was put. ' +
+  'No reason states whether a question was put or answered: a record states whether one was put only in ' +
+  "trace.loadSpan.loadAsked, when it carries that attribute, and that entry's words are the only words for it. " +
   "loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which the site that ran " +
   "this question does not offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.";
 
@@ -110,7 +131,7 @@ const TOOL_DEFINITIONS_ABSENT =
   'Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 ' +
   'carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere ' +
   "(this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, " +
-  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:557-571); that ' +
+  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:662-676); that ' +
   'absence states nothing about the tools.';
 
 /** Website `SYSTEM_PROMPT_TEXT` (`src/lib/sources/copy.ts:587-615` at 4777b79). */
@@ -143,18 +164,58 @@ const PER_SOURCE_STATES_RULE =
   'a consent state from that text or from any other part of a record, and a host never reconstructs the consent ' +
   'panel from a record.';
 
+/** Revision 3's words, as the research check gave them and the owner ruled (civic-ai-tools#309 comment 6706653107). */
+const UNKNOWN_RULE_WORDS = "which this site has no words for";
+const CONSIDERED_SENTENCE =
+  "Shown beside the chooser sentence (see composition.routing), as two sentences: 'The model was shown {listed} of " +
+  "the {total} sources in the source inventory {the host's name for the inventory, or its id as written} (version " +
+  "{version}).', then the rule's words. For directory-set, version 1: 'Those were the sources set up on the site " +
+  "that ran this question, less any turned off for it.' A rule, or a ruleVersion, the host has no words for is " +
+  "named as written: 'They were chosen by a rule recorded as {rule}, version {ruleVersion}, " + UNKNOWN_RULE_WORDS +
+  ".'; a host never reads an unknown rule as a known one. Absent: no count is stated, and a host never derives one " +
+  "from sourcesOffered, whose entries are the manifest's, not the inventory's.";
+const CONSIDERED_ABSENT =
+  "Key omitted when the run's root span carried no analysis.considered: every record before harness 0.12.0, and " +
+  'every record whose producer did not state the inventory it routed against. Absent reads as not recorded: never ' +
+  "as every source shown, and never as the hub's current inventory.";
+const PACK_ID_SENTENCE =
+  "'{the host's name for the pack}, a pack by {author}, using {the host's name for the base}', beside the call. The " +
+  "host resolves the pack's name and author only from the inventory composition.considered names, at its tag with " +
+  'its hash checked, by the entry of that id; when the record carries no considered, or that inventory cannot be ' +
+  "resolved or holds no entry of that id, the host says 'a pack recorded as {packId}, using {the host's name for the " +
+  "base}' and names no author. The record never spells the pack's name or author.";
+const LOAD_ASKED_SENTENCE =
+  "Whether the site that ran the question asked the person running it whether to use this load's source, in this " +
+  "run. Only when the value is true MAY a host say, on the source's line in the chooser sentence, 'The site that ran " +
+  "this question asked whether to use {source}.'; only when it is false, 'The site that ran this question did not " +
+  "ask whether to use {source}.'; when it is absent, the host says nothing about a question. {source} is the host's " +
+  "name for the source, or the alias as written when no source has it. The value is read from the same load as the " +
+  "source's reason, its last load. The reasons of trace.loadSpan.loadOutcome are unchanged and state no question " +
+  'either way.';
+/** Q2 = A: the pack's `+hash12` is the hash its inventory entry states, which the inventory schema defines. */
+const PACK_HASH12_WORDS =
+  "the first twelve hex characters of the hash its inventory entry states (hash), whose coverage is the inventory " +
+  "schema's definition, not this bundle's";
+const CONSENT_WHO_RULE =
+  'Never enters a record of this subtype and no host states it from one. The consent itself is kept in the app\'s ' +
+  'own store (the MCP-sources design, sections 1.6 and 4.4; ADR-0036). A record states only that a load was asked ' +
+  'for, how it ended, and, where it carries trace.loadSpan.loadAsked, whether a question was put; never who ' +
+  'answered it.';
+
 // --- The field set ------------------------------------------------------------------------
 
 const FIELD_IDS = [
   'composition.assertedDate', 'composition.sourcesOffered', 'composition.components', 'composition.flowsStatement',
-  'composition.routing', 'composition.definitionHash', 'environment.toolDefinitions', 'notebook.execution',
-  'notebook.summary', 'notebook.provenance', 'trace.loadSpan.operationType', 'trace.loadSpan.loadOutcome',
-  'civic.failed', 'civic.failureKind', 'civic.contentHash', 'civic.serverUrl', 'civic.sourceId', 'civic.url',
-  'civic.promptTokens', 'civic.completionTokens', 'civic.toolName', 'civic.operationType', 'civic.datasetId',
-  'civic.portalDomain', 'civic.datasetUrl', 'civic.croissantMetadataUrl', 'civic.responseRows', 'civic.durationMs',
-  'civic.upstreamToolName', 'civic.sourceAlias', 'civic.serverId', 'civic.loadOutcome', 'skillMetadata.skillText',
-  'skillMetadata.systemPromptHash',
+  'composition.routing', 'composition.definitionHash', 'composition.considered', 'environment.toolDefinitions',
+  'notebook.execution', 'notebook.summary', 'notebook.provenance', 'trace.loadSpan.operationType',
+  'trace.loadSpan.loadOutcome', 'trace.loadSpan.loadAsked', 'civic.failed', 'civic.failureKind', 'civic.contentHash',
+  'civic.serverUrl', 'civic.sourceId', 'civic.url', 'civic.promptTokens', 'civic.completionTokens', 'civic.toolName',
+  'civic.operationType', 'civic.datasetId', 'civic.portalDomain', 'civic.datasetUrl', 'civic.croissantMetadataUrl',
+  'civic.responseRows', 'civic.durationMs', 'civic.upstreamToolName', 'civic.sourceAlias', 'civic.serverId',
+  'civic.packId', 'civic.loadOutcome', 'civic.loadAsked', 'skillMetadata.skillText', 'skillMetadata.systemPromptHash',
 ];
+/** The four entries revision 3 added (ADR-0033 amendment 3). */
+const REVISION_3_ADDED = ['composition.considered', 'trace.loadSpan.loadAsked', 'civic.packId', 'civic.loadAsked'];
 const NEVER_CARRIED_IDS = [
   'consent.who', 'consent.when', 'consent.account', 'consent.perSourceStates', 'consent.flowsVersionRow',
   'consent.sessionCookie', 'flowsStatement.text',
@@ -205,7 +266,7 @@ function bundleMdRow(label: string): string {
 
 // --- Criterion 1: the header --------------------------------------------------------------
 
-test('civicaitools-v1 bundle: the header states revision 2, the day its bytes were written, and its URL at the v0.1.14 spec tag', () => {
+test('civicaitools-v1 bundle: the header states revision 3, the day its bytes were written, and its URL at the v0.1.15 spec tag', () => {
   const bundle = readBundle();
   assert.equal(bundle.revision, REVISION);
   assert.equal(bundle.date, REVISION_DATE);
@@ -242,10 +303,73 @@ test('civicaitools-v1 bundle: no sentence of any class states a reader\'s answer
   assert.ok(bundle.fields.some((f) => f.class === 'shows'));
   const stating = bundle.fields.flatMap((entry) =>
     ['you said no', "the reader's answer", 'ask first', 'this site']
-      .filter((phrase) => entry.sentence.toLowerCase().includes(phrase))
+      // The one ruled "this site" names the showing host's own vocabulary, not the site that ran the question.
+      .filter((phrase) => entry.sentence.replace(UNKNOWN_RULE_WORDS, '').toLowerCase().includes(phrase))
       .map((phrase) => `${entry.id} (${entry.class}): "${phrase}"`),
   );
   assert.deepEqual(stating, []);
+  assert.equal(field('composition.considered').sentence.split(UNKNOWN_RULE_WORDS).length, 2, 'the ruled phrase, once');
+});
+
+// --- Revision 3: the inventory, the pack's credit, whether a question was put ------------
+
+test('civicaitools-v1 bundle: composition.considered names the inventory by id, the version form and the hash\'s resolution, and pins no inventory', () => {
+  const entry = field('composition.considered');
+  assert.equal(entry.class, 'shows');
+  assert.equal(entry.path, 'extensions["org.civicaitools.composition"].considered');
+  assert.ok(entry.values.startsWith('{ inventory: { id, version, hash }, total, listed, rule, ruleVersion }, keys in that order'));
+  assert.ok(entry.values.includes('<YYYY-MM-DD>.<n>+<hash12>'), 'the build-metadata form');
+  assert.ok(entry.values.includes('civic-inventory/<YYYY-MM-DD>.<n>'), 'the tag a reader resolves');
+  assert.ok(entry.values.includes(".sha256 sibling"), 'the hash file');
+  assert.ok(entry.values.includes("canonical JSON of the parsed inventory file, not of its bytes"));
+  assert.ok(entry.values.includes('this bundle names no inventory version or hash'));
+  // No inventory version's hash in any member: a new inventory version is not a bundle revision.
+  assert.doesNotMatch(JSON.stringify(entry), /[0-9a-f]{64}/);
+  assert.doesNotMatch(JSON.stringify(entry), /\d{4}-\d{2}-\d{2}\.\d+\+/);
+  assert.equal(entry.absent, CONSIDERED_ABSENT);
+  assert.equal(entry.sentence, CONSIDERED_SENTENCE);
+});
+
+test('civicaitools-v1 bundle: the pack is credited beside its base, in components, in the chooser sentence and in civic.packId', () => {
+  const components = field('composition.components');
+  assert.ok(components.values.includes('A pack (an inventory entry whose calls go to a base server with fixed arguments) is one entry of its own'));
+  assert.ok(components.values.includes('version <version>+<hash12>'));
+  assert.ok(components.values.includes(PACK_HASH12_WORDS), 'Q2 = A: the hash its inventory entry states');
+  assert.ok(!components.values.includes('SHA-256 of its text'));
+  assert.ok(components.values.includes("Its base's entry is present whenever the pack's is"));
+  assert.ok(components.sentence.includes(`a pack's entry is named ${PACK_CLAUSE}, then its version`));
+  assert.ok(field('composition.routing').sentence.includes(`named ${PACK_CLAUSE}`));
+  const packId = field('civic.packId');
+  assert.equal(packId.sentence, PACK_ID_SENTENCE);
+  assert.ok(packId.values.includes("verbatim from the span's mcp.pack_id"));
+  assert.ok(packId.values.includes('The key follows civic:serverId.'));
+  // A3 = A: the name and author come only from the cited inventory; otherwise the id, and no author.
+  assert.ok(packId.sentence.includes('only from the inventory composition.considered names, at its tag with its hash checked'));
+  assert.ok(components.sentence.includes('resolves the pack\'s name and author only from that inventory'));
+});
+
+test('civicaitools-v1 bundle: whether a question was put is stated only from tool.load_asked, and the outcome reasons still state none', () => {
+  const span = field('trace.loadSpan.loadAsked');
+  assert.equal(span.sentence, LOAD_ASKED_SENTENCE);
+  assert.ok(span.path.endsWith('attributes[key="tool.load_asked"]'));
+  assert.ok(span.values.includes("A repeat load of a source in the same run states the first load's value"));
+  assert.ok(span.absent.includes('absent reads as not recorded, never as false'));
+  const graph = field('civic.loadAsked');
+  assert.ok(graph.values.includes("after civic:loadOutcome, the activity's last key"));
+  assert.ok(field('civic.loadOutcome').values.includes("the activity's last key but civic:loadAsked"));
+  assert.ok(span.values.includes('A producer that cannot tell whether a question was put omits the attribute.'));
+  // The reasons are unchanged: none of them says a question was put, and the outcome's entry points at this one.
+  assert.equal(field('trace.loadSpan.loadOutcome').sentence, LOAD_OUTCOME_SENTENCE);
+  const consentWho = readBundle().neverCarried.find((n) => n.id === 'consent.who');
+  assert.equal(consentWho?.rule, CONSENT_WHO_RULE);
+});
+
+test('civicaitools-v1 bundle: each entry revision 3 added carries the seven members and an absence rule', () => {
+  for (const id of REVISION_3_ADDED) {
+    const entry = field(id);
+    assert.deepEqual(Object.keys(entry), ['id', 'path', 'values', 'absent', 'carriedBy', 'sentence', 'class'], id);
+    assert.ok(entry.absent.length > 0 && entry.carriedBy.includes('considered-golden.json'), id);
+  }
 });
 
 // --- Criterion 3: the environment block on a record that is not datHere ------------------
@@ -367,13 +491,29 @@ test('civicaitools-v1 bundle: no field carries the consent states, and no host d
 
 // --- Criterion 7: the field set and the digest -------------------------------------------
 
-test('civicaitools-v1 bundle: the 34 field ids and the 7 never-carried ids are unchanged', () => {
-  const bundle = readBundle();
+/** The field-set assertion, over any bundle: the ids in order, the never-carried ids, seven members each. */
+function assertFieldSet(bundle: Bundle): void {
   assert.deepEqual(bundle.fields.map((f) => f.id), FIELD_IDS);
   assert.deepEqual(bundle.neverCarried.map((n) => n.id), NEVER_CARRIED_IDS);
   for (const entry of bundle.fields) {
     assert.deepEqual(Object.keys(entry), ['id', 'path', 'values', 'absent', 'carriedBy', 'sentence', 'class'], entry.id);
   }
+}
+
+test('civicaitools-v1 bundle: the 38 field ids and the 7 never-carried ids', () => {
+  assert.equal(FIELD_IDS.length, 38);
+  assert.equal(NEVER_CARRIED_IDS.length, 7);
+  assertFieldSet(readBundle());
+});
+
+test('civicaitools-v1 bundle: the field-set assertion fails on 37 fields and on 39 (decoy)', () => {
+  const bundle = readBundle();
+  const fewer = { ...bundle, fields: bundle.fields.filter((f) => f.id !== 'civic.packId') };
+  const more = { ...bundle, fields: [...bundle.fields, { ...bundle.fields[0]!, id: 'composition.extra' }] };
+  assert.equal(fewer.fields.length, 37);
+  assert.equal(more.fields.length, 39);
+  assert.throws(() => assertFieldSet(fewer), assert.AssertionError);
+  assert.throws(() => assertFieldSet(more), assert.AssertionError);
 });
 
 test('civicaitools-v1 bundle: bundle.md and ADR-0038 name the file\'s own SHA-256 and URL', () => {

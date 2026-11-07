@@ -1651,7 +1651,9 @@ test('byte stability: the golden graph carries two data-response descriptions on
  *  key: a skill fetch (server URL override), an inference reporting both
  *  token counts, a dataset-keyed call that answered with rows and an elapsed,
  *  a call the source REFUSED that also reports its elapsed, a load call
- *  stating its outcome (ADR-0033 amendment 2), and a synthesis. */
+ *  stating its outcome (ADR-0033 amendment 2) and whether a question was put
+ *  (amendment 3), and a synthesis. The answered call is a pack's, so it
+ *  states the pack's id beside the base's server id (amendment 3). */
 function everyCivicTermTrace(): Record<string, unknown> {
   const inference: SpanStub = {
     name: 'llm_inference',
@@ -1682,6 +1684,7 @@ function everyCivicTermTrace(): Record<string, unknown> {
       'tool.upstream_name': 'get_data',
       'mcp.alias': 'socrata',
       'mcp.server.id': 'io.github.example/socrata-mcp-server',
+      'mcp.pack_id': 'example-pack@https://example.org/pack',
     }),
   };
   const rejected: SpanStub = {
@@ -1708,12 +1711,15 @@ function everyCivicTermTrace(): Record<string, unknown> {
     spanId: 'span-load-all-terms',
     startTimeUnixNano: '1550000000',
     endTimeUnixNano: '1560000000',
-    attributes: attrs({
-      'tool.name': 'load_source',
-      'tool.operation_type': 'load_source',
-      'tool.arguments': '{"alias":"socrata"}',
-      'tool.load_outcome': 'loaded',
-    }),
+    attributes: [
+      ...attrs({
+        'tool.name': 'load_source',
+        'tool.operation_type': 'load_source',
+        'tool.arguments': '{"alias":"socrata"}',
+        'tool.load_outcome': 'loaded',
+      }),
+      { key: 'tool.load_asked', value: { boolValue: false } },
+    ],
   };
   const synthesis: SpanStub = {
     name: 'synthesis',
@@ -1775,7 +1781,9 @@ test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', (
     'civic:upstreamToolName',
     'civic:sourceAlias',
     'civic:serverId',
+    'civic:packId',
     'civic:loadOutcome',
+    'civic:loadAsked',
   ]) {
     assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
   }

@@ -13,6 +13,32 @@ to the Typed Standards specification unless noted otherwise.
   in time or could not be asked; neither states that a question was put
   (sprint R11, the guidance bundle's revision 2). Comment only: the five
   values, the code and every golden fixture are unchanged.
+- **`considered`**, a composition key after `definitionHash`
+  ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
+  amendment 3): `{ inventory: { id, version, hash }, total, listed, rule,
+  ruleVersion }`, the source inventory the run was routed against by
+  reference (`version` in the form `<YYYY-MM-DD>.<n>+<hash12>`) and how many
+  of its entries the model was shown. Input `considered` (`ConsideredInput`),
+  or the root-span attribute `analysis.considered`, JSON text of one object.
+  A value outside the record's form is refused with
+  `RecordFieldError('considered', …)`; an attribute that is not the object's
+  shape with `RunAttributeError`.
+- **`civic:packId`** (`CIVIC_TERM_PACK_ID`), read from the span attribute
+  `mcp.pack_id`: the pack whose fixed arguments shaped a call, stated on the
+  call's activity after `civic:serverId`, which names the base's server.
+- **`civic:loadAsked`** (`CIVIC_TERM_LOAD_ASKED`), read from the load span's
+  boolean `tool.load_asked`: `true` when the producer put a question to the
+  person running the question about the load's source, on this load or on
+  the earlier load of the same source whose decision this one reuses;
+  `false` when it put none. A producer that cannot tell whether a question
+  was put omits the attribute. Stated after `civic:loadOutcome`. A load
+  span whose `tool.load_asked` is not a boolean is refused with
+  `LoadSpanError`, whose new `attribute` member names `tool.load_asked`
+  (`tool.load_outcome` for the existing refusal). `ProvenanceTerms` gains
+  the two terms as optional members.
+- **`considered-golden.json`**, a new golden: an in-loop record carrying all
+  three, with a pack credited beside its base. Every record built without
+  them keeps its bytes: no existing golden fixture moves.
 
 ## 0.11.0 — 2026-10-30
 

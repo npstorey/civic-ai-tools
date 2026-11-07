@@ -36,7 +36,9 @@ import {
   CIVIC_TERM_DURATION_MS,
   CIVIC_TERM_FAILED,
   CIVIC_TERM_FAILURE_KIND,
+  CIVIC_TERM_LOAD_ASKED,
   CIVIC_TERM_LOAD_OUTCOME,
+  CIVIC_TERM_PACK_ID,
   CIVIC_TERM_OPERATION_TYPE,
   CIVIC_TERM_PORTAL_DOMAIN,
   CIVIC_TERM_PROMPT_TOKENS,
@@ -137,7 +139,9 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
   upstreamToolName: CIVIC_TERM_UPSTREAM_TOOL_NAME,
   sourceAlias: CIVIC_TERM_SOURCE_ALIAS,
   serverId: CIVIC_TERM_SERVER_ID,
+  packId: CIVIC_TERM_PACK_ID,
   loadOutcome: CIVIC_TERM_LOAD_OUTCOME,
+  loadAsked: CIVIC_TERM_LOAD_ASKED,
 };
 
 /**
@@ -159,7 +163,8 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
  * outcomes are the format group's `LOAD_OUTCOMES` (ADR-0033 amendment 2).
  *
  * @throws LoadSpanError for a load span whose `tool.load_outcome` is absent
- *   or outside `LOAD_OUTCOMES`.
+ *   or outside `LOAD_OUTCOMES`, or whose `tool.load_asked` is present and not
+ *   a boolean (ADR-0033 amendment 3).
  */
 export function buildProvenanceGraph(
   trace: Record<string, unknown>,

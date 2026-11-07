@@ -207,6 +207,17 @@ export const CIVIC_TERM_SOURCE_ALIAS = 'civic:sourceAlias';
 export const CIVIC_TERM_SERVER_ID = 'civic:serverId';
 
 /**
+ * `civic:packId` — the id of the pack whose fixed arguments shaped a call
+ * (ADR-0033 amendment 3): the inventory entry's `id`, verbatim from the
+ * span's `mcp.pack_id`. A pack's calls go to its base's server, so the same
+ * activity's `civic:serverId` names the base's server; the pack itself is
+ * the component of the same id in the record's `org.civicaitools.composition`
+ * `components[]`. Emitted only when the span carried `mcp.pack_id`, after
+ * {@link CIVIC_TERM_SERVER_ID}.
+ */
+export const CIVIC_TERM_PACK_ID = 'civic:packId';
+
+/**
  * `civic:loadOutcome` — how a `load_source` call ended (ADR-0033 amendment
  * 2): one of {@link LOAD_OUTCOMES}, verbatim from the span's
  * `tool.load_outcome`. Stated on the tool-call activity of a load span, which
@@ -232,6 +243,24 @@ export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable' | 
  *  `not-offered`. A load span carrying any other value, or none, is refused
  *  when the graph is built. */
 export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-answer', 'unavailable', 'not-offered'];
+
+/**
+ * `civic:loadAsked` — whether the producer put a question to the person
+ * running the question about a `load_source` call's source (ADR-0033
+ * amendment 3), verbatim from the span's `tool.load_asked`. Two values, the
+ * JSON booleans: `true`, the producer put a question to the person running
+ * the question about the load's source, on this load or on the earlier load
+ * of the same source whose decision this one reuses; `false`, it put none. A
+ * repeat load of a source in the same run states the first load's value,
+ * since it reuses that load's decision and puts no new question. A producer
+ * that cannot tell whether a question was put omits the attribute. Stated
+ * on the tool-call activity of a load span, after
+ * {@link CIVIC_TERM_LOAD_OUTCOME}, and on no other node; absent when the span
+ * carried no `tool.load_asked`, which reads as not recorded, never as
+ * `false`. A load span whose `tool.load_asked` is not a boolean is refused
+ * when the graph is built.
+ */
+export const CIVIC_TERM_LOAD_ASKED = 'civic:loadAsked';
 
 /**
  * One era of the civic vocabulary: the two literals plus the emitters bound
