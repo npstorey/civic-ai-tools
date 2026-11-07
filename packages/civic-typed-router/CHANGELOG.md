@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.7.0 — 2026-11-07
 
 The seven sources as data: the hub's `inventory/civic-inventory.json`
 (`civic-inventory/2`, version `2026-11-06.1`) is their source of truth, and
