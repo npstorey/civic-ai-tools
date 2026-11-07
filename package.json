@@ -28,6 +28,8 @@
     "check:verifier-subtype-set:self-test": "node --test scripts/check-verifier-subtype-set.test.mjs",
     "check:template-env": "node scripts/check-template-env.mjs",
     "check:template-env:self-test": "node --test scripts/check-template-env.test.mjs",
+    "check:inventory": "node scripts/check-inventory.mjs",
+    "check:inventory:self-test": "node --test scripts/check-inventory.test.mjs",
     "check:benchmark": "node --test \"benchmark/test/*.test.mjs\""
   },
   "devDependencies": {
