@@ -65,8 +65,8 @@ import {
 } from './rules.mjs';
 import { CATALOGS, readCatalog, readR5Extract, readRegistryExtract, WEBSITE_SOURCE } from './sources.mjs';
 
-const ROUTER_PACKAGE = JSON.parse(readFileSync(new URL('../../packages/civic-typed-router/package.json', import.meta.url), 'utf8'));
-const ROUTER = `${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version}`;
+// The router version the seven were copied at (S2-A P0, A0.4): a constant, so a router release does not rebuild 7.json.
+const ROUTER = '@typedstandards/civic-typed-router@0.6.0';
 
 /** The inventory's identity. The version is a date and a counter (§3.3). */
 export const INVENTORY_7 = { id: 'civic-7', version: '2026-11-02.1' };
