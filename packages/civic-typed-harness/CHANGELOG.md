@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.12.0 — 2026-11-07
 
 - **`LoadOutcome`'s comment** (`format/vocabulary.ts`) states `declined` and
   `no-answer` as
