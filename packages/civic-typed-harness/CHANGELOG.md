@@ -27,8 +27,11 @@ to the Typed Standards specification unless noted otherwise.
   `mcp.pack_id`: the pack whose fixed arguments shaped a call, stated on the
   call's activity after `civic:serverId`, which names the base's server.
 - **`civic:loadAsked`** (`CIVIC_TERM_LOAD_ASKED`), read from the load span's
-  boolean `tool.load_asked`: whether a question was put to the reader for
-  the load, stated (`true` or `false`) after `civic:loadOutcome`. A load
+  boolean `tool.load_asked`: `true` when the producer put a question to the
+  person running the question about the load's source, on this load or on
+  the earlier load of the same source whose decision this one reuses;
+  `false` when it put none. A producer that cannot tell whether a question
+  was put omits the attribute. Stated after `civic:loadOutcome`. A load
   span whose `tool.load_asked` is not a boolean is refused with
   `LoadSpanError`, whose new `attribute` member names `tool.load_asked`
   (`tool.load_outcome` for the existing refusal). `ProvenanceTerms` gains

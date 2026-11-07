@@ -1,8 +1,11 @@
 // The load span (CAPTURE group; ADR-0033 amendment 2). A `load_source` call is
 // recorded as a tool span like any other (`mcp_tool_call`), with
 // `tool.operation_type` `load_source`, one outcome attribute,
-// `tool.load_outcome`, and, from harness 0.12.0, `tool.load_asked`, whether a
-// question was put to the reader (ADR-0033 amendment 3). The instance's own loop handles the call and no source
+// `tool.load_outcome`, and, from harness 0.12.0, `tool.load_asked`: whether
+// the producer put a question to the person running the question about the
+// load's source, on this load or on the earlier load of the same source whose
+// decision this one reuses; a producer that cannot tell omits it (ADR-0033
+// amendment 3). The instance's own loop handles the call and no source
 // answers it, so the two builders that read tool spans treat it apart: the
 // provenance graph mints no source agent and no data-response entity for it,
 // and the dataSources population skips it in place.

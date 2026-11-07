@@ -1,7 +1,8 @@
 // The considered golden (ADR-0033 amendment 3): one packaged record of an
 // in-loop run that states the inventory it was routed against, credits a
-// pack beside its base, and states for each load whether a question was put
-// to the reader. Held byte for byte.
+// pack beside its base, and states for each load whether the producer put a
+// question to the person running the question about the load's source. Held
+// byte for byte.
 //
 // WHAT IT PINS.
 //   - The composition block's new key, `considered { inventory: { id,
@@ -94,7 +95,8 @@ const ROUTER_VERSION = '0.7.0';
 
 /** The base server's component id, which the pack's call states as `mcp.server.id`. */
 const BASE_ID = 'socrata';
-/** A test pack over the base: its id, alias and version (`<version>+<hash12>` over its text). */
+/** A test pack over the base: its id, alias and version, `<version>+<hash12>`, the twelve being the first
+ *  twelve of the hash its inventory entry states (here a test value, the hash of a test string). */
 const PACK_ID = 'test-pack@example';
 const PACK_ALIAS = 'notices';
 const PACK_VERSION = `1.0.0+${hash('test pack text').slice(0, 12)}`;

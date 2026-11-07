@@ -115,8 +115,10 @@ export interface ProvenanceTerms {
    *  still type-checks: given no name for a term, the builder emits no key
    *  for it. The civic layer passes both. */
   readonly packId?: string;
-  /** Whether a question was put to the reader for a `load_source` call
-   *  (ADR-0033 amendment 3). */
+  /** Whether the producer put a question to the person running the
+   *  question about a `load_source` call's source, on that load or on the
+   *  earlier load of the same source whose decision it reuses (ADR-0033
+   *  amendment 3). */
   readonly loadAsked?: string;
 }
 

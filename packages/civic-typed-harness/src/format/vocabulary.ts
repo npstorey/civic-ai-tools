@@ -245,16 +245,20 @@ export type LoadOutcome = 'loaded' | 'declined' | 'no-answer' | 'unavailable' | 
 export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-answer', 'unavailable', 'not-offered'];
 
 /**
- * `civic:loadAsked` — whether a question was put to the reader for a
- * `load_source` call (ADR-0033 amendment 3), verbatim from the span's
- * `tool.load_asked`. Two values, the JSON booleans: `true`, a question was
- * put to the reader for this load; `false`, none was. A repeat load of a
- * source in the same run states the first load's value, since it reuses
- * that load's decision and puts no new question. Stated on the tool-call
- * activity of a load span, after {@link CIVIC_TERM_LOAD_OUTCOME}, and on no
- * other node; absent when the span carried no `tool.load_asked`, which reads
- * as not recorded, never as `false`. A load span whose `tool.load_asked` is
- * not a boolean is refused when the graph is built.
+ * `civic:loadAsked` — whether the producer put a question to the person
+ * running the question about a `load_source` call's source (ADR-0033
+ * amendment 3), verbatim from the span's `tool.load_asked`. Two values, the
+ * JSON booleans: `true`, the producer put a question to the person running
+ * the question about the load's source, on this load or on the earlier load
+ * of the same source whose decision this one reuses; `false`, it put none. A
+ * repeat load of a source in the same run states the first load's value,
+ * since it reuses that load's decision and puts no new question. A producer
+ * that cannot tell whether a question was put omits the attribute. Stated
+ * on the tool-call activity of a load span, after
+ * {@link CIVIC_TERM_LOAD_OUTCOME}, and on no other node; absent when the span
+ * carried no `tool.load_asked`, which reads as not recorded, never as
+ * `false`. A load span whose `tool.load_asked` is not a boolean is refused
+ * when the graph is built.
  */
 export const CIVIC_TERM_LOAD_ASKED = 'civic:loadAsked';
 

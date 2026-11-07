@@ -244,33 +244,54 @@ Found by sprint R11's cold read ([civic-ai-tools#294 comment 6588502038](https:/
 - **"five span hashes, two distinct"** (item 5). The hash-only record `data-cityofnewyork-us-analysis-2026-10-31-4a76c0` states four `gen_ai.system_prompt_hash` values, one on each of its four `llm_inference` spans, two of them distinct; its `skillMetadata.systemPromptHash` equals the last. The trace's fifth hash is the `executed_notebook` span's `analysis.prompt_hash`, which is a different hash.
 - **"the one path with no pause"** (the `declined` bullet of "What revision 1 stated that a record does not hold"). A second path calls `createInLoopRouting` with no pause: the replay of an in-loop record, website `src/lib/model-loop/replay-loop.ts:607` at `4777b79`. It builds its directory with the consent gate not enforced (`:603`, `directorySet(configured, { enforced: false, states: {} })`), so every entry is `on` (`src/lib/mcp/routing-mode.ts:97-99`) and the `if (!pause)` branch at `:301` is not reached. The conclusion stands: today the no-pause case of `declined` reaches no published record.
 
-## Amendment — 2026-11-07: revision 3 of the bundle (rulings D5 = D, G0-2 = A, G0-8 = A)
+## Amendment — 2026-11-07: revision 3 of the bundle (rulings D5 = D, G0-2 = A, G0-8 = A; the words ruled R1 = A, Q1 = A, Q2 = A, A3 = A)
 
-Ruled by the owner on 2026-11-02 on the sources-at-scale design (planning-side), D5 = D (`considered` is a new field of the `civicaitools-v1` record, with an absence rule, in a bundle revision), and on 2026-11-06 at gate G0 of sprint S2, anchor [civic-ai-tools#309](https://github.com/npstorey/civic-ai-tools/issues/309): G0-2 = A (bundle revision 3, with specification v0.1.15 moving its version lines only) and G0-8 = A (`tool.load_asked` and `civic:loadAsked` in the same revision). Written by sprint S2-A's phase P1 and landing in its PR. The words of revision 3's three new reader sentences and two revised ones go through a research check before the phase's gate (#309, criterion A1.7), as revision 2's did; the words below are the drafted ones until that ruling. §4 and §5 are not edited.
+Ruled by the owner on 2026-11-02 on the sources-at-scale design (planning-side), D5 = D (`considered` is a new field of the `civicaitools-v1` record, with an absence rule, in a bundle revision), and on 2026-11-06 at gate G0 of sprint S2, anchor [civic-ai-tools#309](https://github.com/npstorey/civic-ai-tools/issues/309): G0-2 = A (bundle revision 3, with specification v0.1.15 moving its version lines only) and G0-8 = A (`tool.load_asked` and `civic:loadAsked` in the same revision). Written by sprint S2-A's phase P1 and landing in its PR. §4 and §5 are not edited.
+
+**The words went through a research check** before the phase's gate (#309, criterion A1.7), as revision 2's did: an independent read of the drafted words against the reference host's code and the project's research on consent and data-flow wording, reported in planning `temp/s2/research-check-p1.md` (SHA-256 `0e1f854b7dd48633be218abdda54cceefb808f627c64e22992c1c0b7fcd8344b`). The owner ruled it on 2026-11-07 ([#309 comment 6706653107](https://github.com/npstorey/civic-ai-tools/issues/309#issuecomment-6706653107)):
+- **R1 = A:** the check's eight REVISE verdicts' words and its one KEEP, as the report gives them.
+- **Q1 = A:** the site that ran the question is the subject of the `loadAsked` sentences ("The site that ran this question asked whether to use {source}." and "… did not ask whether to use {source}."); in the host-facing prose of those entries, "the reader" becomes "the person running the question".
+- **Q2 = A:** a pack's `+hash12` is the first twelve hex characters of the hash its inventory entry states (`hash`); the inventory schema defines what that hash covers, not this bundle.
+- **A3 = A:** a host finds a pack's name and author only in the inventory `composition.considered` cites, at its tag with its hash checked; otherwise it shows the id as written and names no author.
 
 ### What revision 3 adds
 
 Four entries, each with the seven members and an absence rule, for the field and terms of [ADR-0033](0033-composed-harness-record-fields.md) amendment 3:
 
-1. **`composition.considered`** (class `shows`): the inventory the run was routed against, by `id`, `version` (`<YYYY-MM-DD>.<n>+<hash12>`) and `hash`, with `total`, `listed`, `rule` and `ruleVersion`. The entry names no inventory version and no hash: a reader resolves a cited inventory at the hub tag `civic-inventory/<YYYY-MM-DD>.<n>` and checks the hash its `.sha256` file states, so a new inventory version is not a bundle revision. Its sentence states how many of the inventory's sources the model was shown and by what rule, beside the chooser sentence.
-2. **`trace.loadSpan.loadAsked`** (class `may-show`): the span attribute `tool.load_asked`, whether a question was put to the reader for a load. Its sentence lets a host say the reader was asked only when the value is `true`.
-3. **`civic.packId`** (class `may-show`): the graph term for the pack that shaped a call, read from `mcp.pack_id`. Its sentence names the pack, its author and its base.
-4. **`civic.loadAsked`** (class `may-show`): the graph's statement of `tool.load_asked`, on the load activity.
+1. **`composition.considered`** (class `shows`): the inventory the run was routed against, by `id`, `version` (`<YYYY-MM-DD>.<n>+<hash12>`) and `hash`, with `total`, `listed`, `rule` and `ruleVersion`. The entry names no inventory version and no hash: a reader resolves a cited inventory at the hub tag `civic-inventory/<YYYY-MM-DD>.<n>` and checks the hash its `.sha256` file states, so a new inventory version is not a bundle revision. Its sentence is two sentences beside the chooser sentence: how many of the source inventory's sources the model was shown, then the rule's words; a rule or rule version the host has no words for is named as written.
+2. **`trace.loadSpan.loadAsked`** (class `may-show`): the span attribute `tool.load_asked`, whether the site that ran the question asked the person running it whether to use the load's source, in this run. A producer that cannot tell omits it. A host says the site asked only when the value is `true`, and that it did not ask only when it is `false`.
+3. **`civic.packId`** (class `may-show`): the graph term for the pack that shaped a call, read from `mcp.pack_id`. Its sentence names the pack, "a pack by {author}, using" its base, with the name and author resolved as A3 rules.
+4. **`civic.loadAsked`** (class `may-show`): the graph's statement of `tool.load_asked`, on the load activity. The research check kept its drafted sentence.
 
 ### What revision 3 revises
 
-- **`composition.components`**, its values and sentence: a pack is one entry of its own with `version` `<version>+<hash12>`, its base's entry present beside it, and the sentence names it "{the host's name for the pack} (by {author}) over {the host's name for its base}".
-- **`composition.routing`**, its sentence: a loaded pack is named the same way in the "Loaded" group, and the chooser sentence's opening is followed by `composition.considered`'s sentence when the record carries it.
+- **`composition.components`**, its values and sentence: a pack is one entry of its own with `version` `<version>+<hash12>`, the twelve being the first twelve of the hash its inventory entry states (Q2), its base's entry present beside it; the sentence names it "{the host's name for the pack}, a pack by {author}, using {the host's name for its base}", with the name and author resolved as A3 rules.
+- **`composition.routing`**, its sentence: the opening is followed by `composition.considered`'s sentences when the record carries it, and a loaded source the host resolves as a pack is named as in `composition.components`.
+- **`trace.loadSpan.loadOutcome`**, its sentence, one clause: "No reason states whether a question was put or answered: a record states whether one was put only in trace.loadSpan.loadAsked, when it carries that attribute, and that entry's words are the only words for it." Revision 2's clause, "the record does not hold whether a question was put", is false of a record that carries `tool.load_asked`. The three reasons are unchanged.
+- **The never-carried rule for `consent.who`:** a record states only that a load was asked for, how it ended, and, where it carries `trace.loadSpan.loadAsked`, whether a question was put; never who answered it. Its `fact` and id are unchanged.
 - Two corrections that are not reader sentences: `civic.loadOutcome`'s values no longer say it is always the activity's last key (`civic:loadAsked` follows it), and `environment.toolDefinitions`' absence rule cites the harness's branch at its new lines (`format/dathere.ts:662-676`).
 
-The 34 entries of revision 2 keep their ids, paths and classes, and the 7 never-carried entries are unchanged. `trace.loadSpan.loadOutcome`'s values and sentence are unchanged: its reasons state no question either way.
+The 34 entries of revision 2 keep their ids, paths and classes, and the 7 never-carried entries keep their ids and facts.
+
+**Revision 2's amendment, as history.** The amendment of 2026-11-02 says "The record does not hold whether a question was put to the reader, so revision 2 states no reason that says one was." It is not edited: it was true of every record revision 2 described. A record carrying `tool.load_asked` does state whether a question was put; from revision 3 the bundle says so, and the reasons still state none.
 
 ### The version rule's reading
 
-§2 lists "an added entry with an absence rule, a new reader sentence or a corrected citation" among the changes that stay `v1`. Each of revision 3's four entries is added with an absence rule, and each reads as not recorded on every record before harness 0.12.0; the two revised sentences add a clause a record without the new fields never triggers; the two corrections are a corrected statement and a corrected citation. No declared field changes meaning or is removed, and no v1 reader statement becomes false of a record already published. Revision 3 therefore stays `ai-assisted-analysis/civicaitools-v1`.
+§2 lists "an added entry with an absence rule, a new reader sentence or a corrected citation" among the changes that stay `v1`, and names `civicaitools-v2` "when a declared field changes meaning, is removed, or a v1 reader statement (§4) would be false of the record". Each change, read against it:
+
+- **The four added entries** are each an added entry with an absence rule, and each reads as not recorded on every record before harness 0.12.0: `v1`.
+- **`composition.components`' values and sentence and `composition.routing`'s sentence** add words for a pack entry and for `considered`, which no earlier record carries; `components[]`'s form already admitted such an entry, and no existing record's reading changes: `v1`.
+- **`trace.loadSpan.loadOutcome`'s sentence and the `consent.who` rule** are corrected with the revision that adds the attribute they would otherwise contradict. Each of revision 2's words is true of every record before harness 0.12.0, and no declared field changes meaning; as the amendment of 2026-11-02 reads §2, a statement corrected by a revision is not a change in the records' meaning: `v1`.
+- **The two corrections** are a corrected statement and a corrected citation: `v1`.
+
+Revision 3 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record is re-labelled.
 
 ### The URL and the digest
 
 - **URL:** `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`.
-- **SHA-256 of `bundle.json`, revision 3 (2026-11-07), as drafted:** `d403ae5e97a7713f2af5d1dd8fb435aec2a18ce094c53883c4874e7a4e390e59`.
+- **SHA-256 of `bundle.json`, revision 3 (2026-11-07):** `db8175703601a5de9d785a2cda93db194eb05cdeeb222dcfd509ea8ab249f016`.
 - Revision 2's URL and digest (the amendment of 2026-11-02) still name revision 2's bytes, at their own tag. The verifier's table row is re-pinned to revision 3 in `@typedstandards/verify-core` 0.15.2, planned (§2); until then the row names revision 2.
+
+### What does not change
+
+No record byte moves for a record built without `considered`, `mcp.pack_id` or `tool.load_asked`. The classes of revision 2's entries, the version rule's text in the bundle, and §9.2 checks #16 and #17 are unchanged. Every published record keeps its bytes and its verdicts.
