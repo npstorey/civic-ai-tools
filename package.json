@@ -33,6 +33,6 @@
     "check:benchmark": "node --test \"benchmark/test/*.test.mjs\""
   },
   "devDependencies": {
-    "ajv": "6.15.0"
+    "ajv": "8.20.0"
   }
 }
