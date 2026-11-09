@@ -2,7 +2,9 @@
 // `serverType`, and the identity of the inventory `CIVIC_MANIFEST` mirrors.
 //
 // The hub's `inventory/civic-inventory.json` (`civic-inventory/2`) is the
-// source of truth for the seven sources' data (G0-5 A on hub #309).
+// source of truth for the seven sources' data (G0-5 A on hub #309): six
+// servers and, since version 2 (router 0.8.0), City Record as a pack over the
+// Socrata server.
 // `CIVIC_MANIFEST` stays code and is held equal to the file by
 // `src/inventory.test.ts`; `CIVIC_INVENTORY` names the file it equals. This
 // module reads no file: a consumer reads the inventory and passes the parsed
@@ -15,10 +17,10 @@
 // portal lock. The prompt's strings (`citation`, `lockMention`) are the
 // file's. Three kinds:
 //
-//   - `socrata`: the Socrata server, and packs over it;
+//   - `socrata`: the Socrata server, and packs over it (City Record);
 //   - `mcp-remote`: Google Data Commons and Boston OpenContext;
-//   - `npm-package`: the four sources an instance runs from a pinned
-//     package, with no guidance (none of the four servers sends any).
+//   - `npm-package`: the three sources an instance runs from a pinned
+//     package, with no guidance (none of the three servers sends any).
 //
 // Each kind holds code for the sources it knows, by `sourceId`, and refuses
 // any other: a new server is code until its tools and guidance are data.
@@ -32,7 +34,6 @@ import type { CivicGuidanceContext, CivicManifestEntry, CivicPromptParts } from 
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
 import { NYC_CHECKBOOK_ENTRY } from './nyc-checkbook.ts';
-import { NYC_RECORD_ENTRY } from './nyc-record.ts';
 import { NYS_LEGISLATION_ENTRY } from './nys-legislation.ts';
 import { lockedFetch, lockedGetData, lockedSearch } from './portal-lock.ts';
 import { SOCRATA_ENTRY, SOCRATA_TOOL_NAMES, socrataTools } from './socrata.ts';
@@ -43,8 +44,8 @@ import { SOCRATA_ENTRY, SOCRATA_TOOL_NAMES, socrataTools } from './socrata.ts';
  *  it). Released raw at the hub tag `civic-inventory/<version>`. */
 export const CIVIC_INVENTORY = Object.freeze({
   id: 'civic',
-  version: '2026-11-06.1',
-  hash: '9c34ac2fab3775d4af2ee540b1c617ae255acb7bd2ef8ee191ddbb129834fb9b',
+  version: '2026-11-09.1',
+  hash: 'ed7302810ed46a452381083e50fefe99ce284bcbbfdcf926d4c192c069453442',
 });
 
 /** What the civic inventory's entries carry for the prompt frame: strings
@@ -184,7 +185,11 @@ export interface CivicKindsOptions {
   readonly socrataPortal?: string;
 }
 
-function socrataPack(options: CivicKindsOptions) {
+/** The Socrata kind's pack builder, for an instance that knows `options` of
+ *  its servers: a pack's tool names and code over its base's manifest entry.
+ *  The loader calls it through `civicKinds(options)`; `./nyc-record.ts`
+ *  builds City Record's mirror with it. */
+export function socrataPack(options: CivicKindsOptions) {
   return (entry: InventoryPackEntry, base: CivicManifestEntry): PackCode<CivicManifestEntry> => {
     const filter = entry.filter;
     if (filter === null || typeof filter !== 'object' || Array.isArray(filter)) throw new InventoryLoadError(entry.alias, 'filter', 'is not an object');
@@ -259,7 +264,6 @@ const REMOTE_SOURCES: Readonly<Record<string, CivicManifestEntry>> = Object.free
 const PACKAGE_SOURCES: Readonly<Record<string, CivicManifestEntry>> = Object.freeze({
   'nyc-charter': NYC_CHARTER_ENTRY,
   'nyc-checkbook': NYC_CHECKBOOK_ENTRY,
-  'nyc-record': NYC_RECORD_ENTRY,
   'nys-legislation': NYS_LEGISLATION_ENTRY,
 });
 

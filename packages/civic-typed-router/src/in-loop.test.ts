@@ -28,19 +28,20 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__');
 
 // --- Inputs ------------------------------------------------------------------------------
 
-/** The pinned fixture's configuration: 0.5.0's every source, the three
- *  hosted sources of 0.6.0 unset (the fixture is held byte for byte). */
+/** The pinned fixture's configuration: 0.5.0's every source, the hosted
+ *  sources of 0.6.0 unset (the fixture is held byte for byte). City Record,
+ *  a pack over the Socrata server since 0.8.0, is offered with it: the
+ *  fixture was re-captured then, its directory gaining City Record's line. */
 const FIXTURE_ENV = {
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
 };
-/** Every source on: the fixture's configuration and the three switches of
- *  0.6.0. */
+/** Every source on: the fixture's configuration and the two switches of
+ *  0.6.0 that remain (City Record is offered with Socrata). */
 const EVERY_SOURCE_ENV = {
   ...FIXTURE_ENV,
   NYC_CHECKBOOK_HOSTING: 'sandbox',
-  NYC_RECORD_HOSTING: 'sandbox',
   NYS_LEGISLATION_HOSTING: 'sandbox',
 };
 const EVERY_SOURCE = readMcpEnv(EVERY_SOURCE_ENV);

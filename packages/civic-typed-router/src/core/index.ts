@@ -58,6 +58,7 @@ export { sha256, sha256Hex } from './sha256.ts';
 export {
   InventoryLoadError,
   manifestFromInventory,
+  packHash,
   toolsSha256,
   type EntryCode,
   type EntryKind,

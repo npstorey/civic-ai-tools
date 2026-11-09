@@ -1,6 +1,9 @@
-// The three hosted sources of 0.6.0 (R8 H3): NYC Checkbook, NYC City Record
-// and NYS Open Legislation, each a publisher's MCP server the instance runs
-// from a pinned package, after NYC Charter, Laws and Rules.
+// The hosted sources of 0.6.0 (R8 H3), each a publisher's MCP server the
+// instance runs from a pinned package, after NYC Charter, Laws and Rules: NYC
+// Checkbook and NYS Open Legislation. The third of 0.6.0, NYC City Record, is
+// a pack over the Socrata server since 0.8.0 (hub #309, S2-B): its entry is
+// held to the inventory by `src/inventory.test.ts`, and here it is the entry
+// between the two, offered with Socrata in every configuration.
 //
 //   - each entry: its schemas are its committed capture's, its routing list
 //     the server's order, its `id` the package name and repository address;
@@ -11,7 +14,7 @@
 //     ambiguous when two of them are offered;
 //   - the switches: each on only at exactly `sandbox` after trimming, its key
 //     in the configuration and its source configured only then; with the
-//     three unset every offered output is the four-entry manifest's;
+//     two unset every offered output is the manifest's without them;
 //   - the variants and the postures: the sandbox platform stated by the
 //     instance, then the upstream holder stated by the manifest, with its
 //     statement's address and the date it was read; `keyIn` on NYS Open
@@ -95,24 +98,6 @@ const SERVERS: Server[] = [
     statementUrl: 'https://comptroller.nyc.gov/privacy-policy/',
   },
   {
-    sourceId: 'nyc-record',
-    alias: 'nyc_record',
-    name: 'nyc-record',
-    package: '@betanyc/nyc-record-mcp',
-    version: '1.1.0',
-    gitHead: '6c52a5353381592713678caa109870d1e912c858',
-    repository: 'https://github.com/BetaNYC/nyc-record-mcp',
-    switchVariable: 'NYC_RECORD_HOSTING',
-    key: 'nycRecordHosting',
-    outbound: ['data.cityofnewyork.us'],
-    toolCount: 7,
-    consentDefault: 'on',
-    serverInfo: { name: 'nyc-record-mcp', version: '1.1.0' },
-    environment: {},
-    holder: 'City of New York',
-    statementUrl: 'https://www.nyc.gov/home/privacy-policy.page',
-  },
-  {
     sourceId: 'nys-legislation',
     alias: 'nys_legislation',
     name: 'nys-legislation',
@@ -176,15 +161,19 @@ const BOSTON = 'https://boston-mcp.example.org/mcp';
 /** 0.5.0's configuration keys, in order. */
 const BASE_KEYS = ['socrataUrl', 'dataCommonsUrl', 'dataCommonsApiKey', 'bostonOpencontextUrl'];
 
-/** Every source on: both optional addresses and all four switches. */
+/** Every source on: both optional addresses and all three switches (City
+ *  Record, a pack, is offered with Socrata). */
 const EVERY_SOURCE_ENV = {
   SOCRATA_MCP_URL: SOCRATA,
   BOSTON_OPENCONTEXT_MCP_URL: BOSTON,
   NYC_CHARTER_HOSTING: 'sandbox',
   NYC_CHECKBOOK_HOSTING: 'sandbox',
-  NYC_RECORD_HOSTING: 'sandbox',
   NYS_LEGISLATION_HOSTING: 'sandbox',
 };
+
+/** The City Record pack's source id: the entry between the two hosted
+ *  sources of 0.6.0. */
+const PACK = 'nyc-record';
 
 // --- Criterion 1: the entries -------------------------------------------------------------
 
@@ -197,7 +186,8 @@ test('hosted entries: the manifest holds seven entries, the three of 0.6.0 after
     CIVIC_MANIFEST.slice(4).map((entry) => [entry.alias, entry.displayName, entry.configuration.requirement]),
     [
       ['nyc_checkbook', 'NYC Checkbook MCP Server', 'optional'],
-      ['nyc_record', 'NYC City Record MCP Server', 'optional'],
+      // A pack over the Socrata server since 0.8.0, required as its base is.
+      ['nyc_record', 'NYC City Record MCP Server', 'required'],
       ['nys_legislation', 'NYS Open Legislation MCP Server', 'optional'],
     ],
   );
@@ -336,18 +326,20 @@ test('switches: each reads on only for "sandbox" after trimming, its key after 0
   }
 });
 
-test('switches: all four on read in manifest order after 0.5.0\'s keys; all three of 0.6.0 unset read 0.5.0\'s keys exactly', () => {
+test('switches: all three on read in manifest order after 0.5.0\'s keys; the two of 0.6.0 unset read 0.5.0\'s keys exactly', () => {
   const all = readMcpEnv(EVERY_SOURCE_ENV);
-  assert.deepEqual(Object.keys(all), [...BASE_KEYS, 'nycCharterHosting', 'nycCheckbookHosting', 'nycRecordHosting', 'nysLegislationHosting']);
+  assert.deepEqual(Object.keys(all), [...BASE_KEYS, 'nycCharterHosting', 'nycCheckbookHosting', 'nysLegislationHosting']);
+  // City Record, a pack, is keyed by the Socrata address, after the addresses.
   assert.deepEqual(Object.keys(configuredSources(all)), [
     'socrata',
     'data-commons',
     'boston-opencontext',
+    'nyc-record',
     'nyc-charter',
     'nyc-checkbook',
-    'nyc-record',
     'nys-legislation',
   ]);
+  assert.equal(configuredSources(all)[PACK], SOCRATA);
   for (const env of [{}, { SOCRATA_MCP_URL: SOCRATA }, { NYC_CHARTER_HOSTING: 'sandbox' }]) {
     const read = readMcpEnv(env);
     const keys = Object.keys(read);
@@ -376,15 +368,16 @@ function recording(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptI
   return { calls, input };
 }
 
-test('switches unset: every offered output is the four-entry manifest\'s, byte for byte', async () => {
-  const four = createCivicRouter(CIVIC_MANIFEST.slice(0, 4) as CivicManifest);
+test('switches unset: every offered output is the manifest\'s without the two hosted sources of 0.6.0, byte for byte', async () => {
+  const four = createCivicRouter(CIVIC_MANIFEST.filter((entry) => !SERVERS.some((server) => server.sourceId === entry.sourceId)) as CivicManifest);
+  assert.deepEqual(four.manifest.map((entry) => entry.sourceId), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', PACK]);
   const envs = [
     {},
     { SOCRATA_MCP_URL: SOCRATA },
     { SOCRATA_MCP_URL: SOCRATA, BOSTON_OPENCONTEXT_MCP_URL: BOSTON },
     { SOCRATA_MCP_URL: SOCRATA, BOSTON_OPENCONTEXT_MCP_URL: BOSTON, NYC_CHARTER_HOSTING: 'sandbox' },
     // A switch at a value that is not `sandbox` is off.
-    { SOCRATA_MCP_URL: SOCRATA, NYC_CHECKBOOK_HOSTING: 'Sandbox', NYC_RECORD_HOSTING: 'on', NYS_LEGISLATION_HOSTING: ' ' },
+    { SOCRATA_MCP_URL: SOCRATA, NYC_CHECKBOOK_HOSTING: 'Sandbox', NYS_LEGISLATION_HOSTING: ' ' },
   ];
   for (const env of envs) {
     const configured = readMcpEnv(env);
@@ -438,8 +431,10 @@ test('switches unset: every offered output is the four-entry manifest\'s, byte f
   }
 });
 
-test('switch on: a hosted source adds its preamble entry, the count word and its citation, and no block; its tools are appended in its order', async () => {
+test('switch on: a hosted source adds its preamble entry, the count word and its citation, and no block; its tools are added in its order, in manifest order', async () => {
   const base = readMcpEnv({ SOCRATA_MCP_URL: SOCRATA });
+  const pack = CIVIC_MANIFEST.find((entry) => entry.sourceId === PACK)!;
+  const at = (sourceId: string): number => CIVIC_MANIFEST.findIndex((entry) => entry.sourceId === sourceId);
   for (const server of SERVERS) {
     const entry = entryOf(server);
     const on = readMcpEnv({ SOCRATA_MCP_URL: SOCRATA, [server.switchVariable]: 'sandbox' });
@@ -448,18 +443,26 @@ test('switch on: a hosted source adds its preamble entry, the count word and its
     const unsetPrompt = await civicRouter.aliasedBuildSystemPrompt(off.input);
     const setPrompt = await civicRouter.aliasedBuildSystemPrompt(set.input);
     const exposed = entry.toolNames.map((name) => `${server.alias}__${name}`);
-    assert.match(unsetPrompt, /You have access to TWO MCP data sources/);
-    assert.match(setPrompt, /You have access to THREE MCP data sources/);
-    assert.ok(setPrompt.includes(`\n3. **${entry.displayName}** — ${entry.description} Tools: ${exposed.join(', ')}.\n`), `${server.sourceId}: its preamble entry`);
-    assert.ok(setPrompt.includes(`, or ${entry.prompt!.citation}.`), `${server.sourceId}: its citation closes the outro`);
+    // Socrata, Data Commons and the City Record pack; then the hosted source,
+    // before the pack or after it as the manifest orders them.
+    assert.match(unsetPrompt, /You have access to THREE MCP data sources/);
+    assert.match(setPrompt, /You have access to FOUR MCP data sources/);
+    const position = at(server.sourceId) < at(PACK) ? 3 : 4;
+    assert.ok(setPrompt.includes(`\n${position}. **${entry.displayName}** — ${entry.description} Tools: ${exposed.join(', ')}.\n`), `${server.sourceId}: its preamble entry`);
+    assert.ok(setPrompt.includes(entry.prompt!.citation!), `${server.sourceId}: its citation in the outro`);
     assert.deepEqual(set.calls, off.calls, `${server.sourceId}: no fetch for it`);
     assert.equal(setPrompt.split(BLOCK_SEPARATOR).length, unsetPrompt.split(BLOCK_SEPARATOR).length, `${server.sourceId}: no block`);
     const tools = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpTools, on);
-    const before = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpTools, base);
-    assert.deepEqual(tools.map((t) => t.function.name), [...before.map((t) => t.function.name), ...exposed]);
-    assert.deepEqual(tools.slice(before.length).map((t) => t.function.parameters), entry.tools.map((t) => t.function.parameters));
-    // The lock section names it among the other sources.
-    assert.match(civicRouter.aliasedPortalLockGuidance('data.cityofnewyork.us', on), new RegExp(`\\(Data Commons, and ${entry.prompt!.lockMention}\\) are separate`));
+    const before = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpTools, base).map((t) => t.function.name);
+    const split = position === 3 ? before.findIndex((name) => name.startsWith('nyc_record__')) : before.length;
+    assert.deepEqual(tools.map((t) => t.function.name), [...before.slice(0, split), ...exposed, ...before.slice(split)]);
+    assert.deepEqual(tools.slice(split, split + exposed.length).map((t) => t.function.parameters), entry.tools.map((t) => t.function.parameters));
+    // The lock section names it among the other sources, in manifest order.
+    const mentions = position === 3 ? [entry.prompt!.lockMention, pack.prompt!.lockMention] : [pack.prompt!.lockMention, entry.prompt!.lockMention];
+    assert.ok(
+      civicRouter.aliasedPortalLockGuidance('data.cityofnewyork.us', on).includes(`(Data Commons, ${mentions[0]}, and ${mentions[1]}) are separate`),
+      `${server.sourceId}: the lock section names it`,
+    );
   }
 });
 
@@ -515,12 +518,11 @@ test('record names: each variant gives a purl and a component version as NYC Cha
   });
   assert.deepEqual(derived, [
     ['pkg:npm/%40betanyc/nyc-checkbook-mcp@1.6.3', '1.6.3+f013a276e37e'],
-    ['pkg:npm/%40betanyc/nyc-record-mcp@1.1.0', '1.1.0+6c52a5353381'],
     ['pkg:npm/%40betanyc/nys-openlegislation-mcp@2.4.0', '2.4.0+cc069c46d52b'],
   ]);
 });
 
-test('postures: every stated row of the three has an https statement address read on this phase\'s date and keeps not-stated; the first row of each is the sandbox platform, stated by the instance', () => {
+test('postures: every stated row of the two has an https statement address read on this phase\'s date and keeps not-stated; the first row of each is the sandbox platform, stated by the instance', () => {
   for (const server of SERVERS) {
     const [variant] = variantsOf(entryOf(server));
     const logging = variant!.logging as readonly Record<string, unknown>[];
@@ -530,7 +532,7 @@ test('postures: every stated row of the three has an https statement address rea
     for (const row of stated) {
       assert.equal(new URL(String(row.statementUrl)).protocol, 'https:', `${server.sourceId}: https`);
       assert.equal(row.readOn, READ_ON, `${server.sourceId}: read on this phase's date`);
-      // None of the three statements names the API host it would cover.
+      // Neither statement names the API host it would cover.
       assert.equal(row.keeps, 'not-stated', `${server.sourceId}: the statement read says nothing of API requests`);
       assert.equal(Object.hasOwn(row, 'retention'), false, `${server.sourceId}: no retention, since none is stated`);
       assert.equal(typeof row.holder, 'string');
@@ -543,7 +545,7 @@ test('postures: every stated row of the three has an https statement address rea
 
 // --- Criterion 4: the directory lines ------------------------------------------------------
 
-test('directory: over all seven switched on it lists seven lines in D7\'s order', () => {
+test('directory: over all seven offered it lists seven lines in D7\'s order', () => {
   const directory = civicRouter.directoryPrompt({ configured: readMcpEnv(EVERY_SOURCE_ENV), today: '2026-01-15' });
   const lines = directory.split('\n').filter((line) => line.startsWith('- `'));
   assert.deepEqual(

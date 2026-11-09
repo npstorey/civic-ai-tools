@@ -75,3 +75,74 @@ test('decoy: a version not YYYY-MM-DD.N, a schema violation and an entry whose t
   assert.ok(tools.some((p) => p.startsWith('load: manifestFromInventory: nyc_checkbook: toolsRef.sha256: ')), tools.join('\n'));
 });
 
+
+// S2-B (hub #309): the version form tightened to the harness's (F3), and a
+// pack's hash (G0-B6).
+
+test("decoy (F3): a version whose counter has a leading zero fails by name", () => {
+  const problems = problemsWith((given) => {
+    given.inventory.version = '2026-11-06.01';
+    given.changelog = `${given.changelog}- \`2026-11-06.01\`: a decoy.\n`;
+  });
+  assert.ok(problems.includes('version: "2026-11-06.01": the counter "01" has a leading zero'), problems.join('\n'));
+  assert.ok(problems.some((p) => p.startsWith('schema: .version ')), `the schema refuses it too: ${problems.join('\n')}`);
+});
+
+test('decoy (F3): a version whose date is not a calendar date fails by name', () => {
+  const problems = problemsWith((given) => {
+    given.inventory.version = '2026-13-01.1';
+    given.changelog = `${given.changelog}- \`2026-13-01.1\`: a decoy.\n`;
+  });
+  assert.ok(problems.includes('version: "2026-13-01.1": 2026-13-01 is not a calendar date'), problems.join('\n'));
+  // The calendar, not the digits' shape: a leap day passes and a day after a month's end fails.
+  const leap = problemsWith((given) => {
+    given.inventory.version = '2028-02-29.1';
+  });
+  assert.ok(!leap.some((p) => p.includes('is not a calendar date')), leap.join('\n'));
+  const april = problemsWith((given) => {
+    given.inventory.version = '2026-04-31.1';
+  });
+  assert.ok(april.includes('version: "2026-04-31.1": 2026-04-31 is not a calendar date'), april.join('\n'));
+});
+
+/** The repository inventory's packs, by position. */
+const packIndexes = () => inputs().inventory.entries.flatMap((entry, i) => (entry.kind === 'pack' ? [i] : []));
+
+test('the repository inventory holds a pack, and its stated hash is the canonicalJson SHA-256 of the entry less hash, provenance and toolsRef', () => {
+  const { inventory } = inputs();
+  const indexes = packIndexes();
+  assert.ok(indexes.length > 0, 'a pack to check');
+  for (const i of indexes) {
+    const { hash, provenance, toolsRef, ...covered } = inventory.entries[i];
+    assert.ok(provenance !== undefined && toolsRef !== undefined, 'the members the hash leaves out are present');
+    assert.equal(hash, router.sha256Hex(router.canonicalJson(covered)));
+    assert.equal(hash, router.packHash(inventory.entries[i]));
+  }
+});
+
+test("decoy (G0-B6): a pack with no hash fails schema.json's required", () => {
+  const i = packIndexes()[0];
+  const problems = problemsWith((given) => {
+    delete given.inventory.entries[i].hash;
+  });
+  assert.ok(problems.some((p) => p === `schema: .entries[${i}] should have required property 'hash'`), problems.join('\n'));
+  assert.ok(problems.includes('hash: nyc_record: a pack states its hash, and this one has none'), problems.join('\n'));
+});
+
+test("decoy (G0-B6): a pack whose hash is not the canonical hash of the entry less hash, provenance and toolsRef fails by name", () => {
+  const i = packIndexes()[0];
+  // The filter moved by one character, the stated hash left as it was.
+  const problems = problemsWith((given) => {
+    given.inventory.entries[i].filter.dataset_id = 'dg92-zbpy';
+  });
+  assert.ok(
+    problems.some((p) => /^hash: nyc_record: states [0-9a-f]{64}; the canonicalJson SHA-256 of the entry less hash, provenance and toolsRef is [0-9a-f]{64}$/.test(p)),
+    problems.join('\n'),
+  );
+  assert.ok(problems.some((p) => p.startsWith('load: manifestFromInventory: nyc_record: hash: ')), `the loader refuses it too: ${problems.join('\n')}`);
+  // The provenance and the tools' reference are outside the hash: editing either moves no pack hash.
+  const provenance = problemsWith((given) => {
+    given.inventory.entries[i].provenance.by = `${given.inventory.entries[i].provenance.by} (edited)`;
+  });
+  assert.ok(!provenance.some((p) => p.startsWith('hash: ')), provenance.join('\n'));
+});

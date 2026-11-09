@@ -149,7 +149,7 @@ test('names (c): each refusal also happens at construction', () => {
   }
 });
 
-// --- (d) The fifty-seven names in view --------------------------------------------
+// --- (d) The fifty-two names in view ----------------------------------------------
 
 /** The upstream names a committed capture lists, in its order. */
 const capturedNames = (fixture: string): string[] =>
@@ -157,11 +157,13 @@ const capturedNames = (fixture: string): string[] =>
     (t) => t.name,
   );
 
-test('names (d): the fifty-seven names in view are unchanged by normalization', () => {
+test('names (d): the fifty-two names in view are unchanged by normalization', () => {
   // Since 0.3.0 the civic manifest holds the fifth source's five itself
   // (alias `nyc_charter`); through 0.2.0 this test added a stub for them.
-  // Since 0.6.0 it holds the three hosted sources' 10, 7 and 24, after them,
-  // named from their committed captures.
+  // Since 0.6.0 it holds the three hosted sources' after them, named from
+  // their committed captures: Checkbook's 10 and NYS Open Legislation's 24.
+  // Since 0.8.0 City Record is a pack over the Socrata server with two,
+  // `get_data` and `fetch` (0.6.0 and 0.7.0 held its server's seven).
   const map = dispatchMap(CIVIC_MANIFEST);
   const expected = [
     'socrata__get_data',
@@ -181,10 +183,11 @@ test('names (d): the fifty-seven names in view are unchanged by normalization', 
     'nyc_charter__get_title',
     'nyc_charter__get_version',
     ...capturedNames('nyc-checkbook-tools.json').map((name) => `nyc_checkbook__${name}`),
-    ...capturedNames('nyc-record-tools.json').map((name) => `nyc_record__${name}`),
+    'nyc_record__get_data',
+    'nyc_record__fetch',
     ...capturedNames('nys-legislation-tools.json').map((name) => `nys_legislation__${name}`),
   ];
-  assert.equal(expected.length, 57);
+  assert.equal(expected.length, 52);
   assert.deepEqual([...map.keys()], expected);
   assert.deepEqual([...map.values()].filter((t) => t.sourceId === 'nyc-charter').map((t) => t.upstreamName), CHARTER_TOOLS);
   for (const target of map.values()) {
@@ -216,14 +219,19 @@ test('dispatch (e): an exposed name resolves by the map, never by splitting it',
 
 test('dispatch (e): a bare name exactly one offered source has is accepted', () => {
   const router = createCivicRouter();
-  const resolved = router.resolveCalledName('get_data', readMcpEnv({}));
+  // `search`: with the hosted switches off, only Socrata offers it. (A bare
+  // `get_data` or `fetch` is refused since 0.8.0: City Record, a pack over
+  // the Socrata server, is offered with it and declares both.)
+  const resolved = router.resolveCalledName('search', readMcpEnv({}));
   assert.equal(resolved.ok, true);
   assert.deepEqual(resolved.ok && [resolved.spelling, resolved.sourceId, resolved.upstreamName, resolved.exposedName], [
     'bare',
     'socrata',
-    'get_data',
-    'socrata__get_data',
+    'search',
+    'socrata__search',
   ]);
+  const shared = router.resolveCalledName('get_data', readMcpEnv({}));
+  assert.deepEqual(!shared.ok && [shared.reason, shared.candidates], ['ambiguous', ['socrata__get_data', 'nyc_record__get_data']]);
 });
 
 test('dispatch (e): a bare name two offered sources share is refused, naming both aliased forms', () => {

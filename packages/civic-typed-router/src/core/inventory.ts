@@ -16,12 +16,14 @@
 //   - `server`: the entry's data fields, then its kind's code.
 //   - `pack`: a base server's tools with fixed arguments (design §4.1). Its
 //     own identity and routing lines; the base's configuration, hosting
-//     variants and consent default; `base` set to the base's `sourceId`; its
-//     tools and guidance from the base's kind (`EntryKind.pack`).
+//     variants and consent default; `base` set to the base's `sourceId`;
+//     `pack`, its version and its hash (`packHash`), which the loader checks;
+//     its tools and guidance from the base's kind (`EntryKind.pack`).
 //
 // Pure: it reads no file, no environment, no clock and no network. The
 // consumer reads the file and hands the parsed document in.
 
+import { canonicalJson } from './canonical-json.ts';
 import { sha256Hex } from './sha256.ts';
 import type { FunctionToolSchema, ManifestEntry } from './types.ts';
 
@@ -80,6 +82,10 @@ export interface InventoryPackEntry extends InventoryEntryCommon {
   readonly base: string;
   /** The fixed arguments, by name. */
   readonly filter: { readonly [argument: string]: string };
+  /** The pack's own version. */
+  readonly version: string;
+  /** `packHash` of the entry; required, and checked by the loader. */
+  readonly hash?: string;
   /** When present, the pack's tools as built are held to it. */
   readonly toolsRef?: InventoryToolsRef;
 }
@@ -111,7 +117,8 @@ export type InventoryDataField =
   | 'hostings'
   | 'consentDefault'
   | 'publisher'
-  | 'base';
+  | 'base'
+  | 'pack';
 
 /** The code half of an entry: everything but its data fields. For a civic
  *  entry: `tools`, `toolsFor`, `guidance`, `prompt` and `portalLock`. */
@@ -186,15 +193,67 @@ function identityOf(entry: InventoryEntry) {
 const labelOf = (entry: { readonly alias?: unknown }, i: number): string =>
   typeof entry.alias === 'string' && entry.alias !== '' ? entry.alias : `entries[${i}]`;
 
+/** The members a pack's hash does not cover: the hash itself, the
+ *  provenance note and the built tools' reference. */
+const UNHASHED_PACK_MEMBERS: readonly string[] = ['hash', 'provenance', 'toolsRef'];
+
+/**
+ * A pack's hash (G0-B6 on hub #309): the lowercase hex SHA-256 of the
+ * router's `canonicalJson` of the pack's inventory entry with `hash`,
+ * `provenance` and `toolsRef` removed. It moves when the pack's identity,
+ * filter, routing lines, text or guidance moves, and not when its provenance
+ * note is edited. Throws `CanonicalJsonError` for an entry holding a number,
+ * a boolean or null.
+ */
+export function packHash(entry: InventoryPackEntry): string {
+  const covered = Object.fromEntries(Object.entries(entry).filter(([member]) => !UNHASHED_PACK_MEMBERS.includes(member)));
+  return sha256Hex(canonicalJson(covered));
+}
+
+/** Hold a pack's stated `hash` to `packHash`. */
+function checkPackHash(alias: string, entry: InventoryPackEntry): void {
+  if (typeof entry.hash !== 'string') throw new InventoryLoadError(alias, 'hash', 'is missing; every pack states its hash (packHash)');
+  let hash: string;
+  try {
+    hash = packHash(entry);
+  } catch (error) {
+    throw new InventoryLoadError(alias, 'hash', `the entry has no canonical form (${(error as Error).message})`);
+  }
+  if (entry.hash !== hash) throw new InventoryLoadError(alias, 'hash', `is ${entry.hash}; the pack's hash (packHash) is ${hash}`);
+}
+
+/**
+ * A pack's manifest entry, from its inventory entry, its base's manifest
+ * entry and the code its base's kind built for it: its own identity and
+ * routing lines; the base's `configuration`, `hostings` and
+ * `consentDefault`; `base`, the base's `sourceId`; `pack`, its `version` and
+ * `hash` as the entry states them; then the code. The loader's own builder,
+ * and the one a mirror of a pack in code uses. Checks nothing.
+ */
+export function packManifestEntry<E extends ManifestEntry<never>>(pack: InventoryPackEntry, base: E, built: PackCode<E>): E {
+  return {
+    ...identityOf(pack),
+    configuration: base.configuration,
+    toolNames: [...built.toolNames],
+    hostings: base.hostings,
+    consentDefault: base.consentDefault,
+    ...(pack.publisher !== undefined ? { publisher: pack.publisher } : {}),
+    base: pack.base,
+    pack: { version: pack.version, hash: pack.hash as string },
+    ...built.code,
+  } as unknown as E;
+}
+
 /**
  * The manifest `inventory` describes, in its order, built with `kinds`.
  *
  * Throws `InventoryLoadError`, naming the entry's alias and the field, for an
  * entry of an unknown `kind`, a server whose `serverType` has no kind, tools
- * whose names or hash differ from its `toolsRef`, and a pack whose `base`
- * names no server entry, names a pack, or names a server whose kind takes no
- * pack. A manifest it returns still goes through the router's own startup
- * checks when a router is built over it.
+ * whose names or hash differ from its `toolsRef`, a pack with no `hash` or
+ * whose `hash` is not its `packHash`, and a pack whose `base` names no server
+ * entry, names a pack, or names a server whose kind takes no pack. A
+ * manifest it returns still goes through the router's own startup checks
+ * when a router is built over it.
  */
 export function manifestFromInventory<E extends ManifestEntry<never>>(inventory: InventoryDocument, kinds: EntryKinds<E>): E[] {
   if (!Array.isArray(inventory.entries)) throw new InventoryLoadError(String(inventory.id), 'entries', 'is not an array');
@@ -230,6 +289,7 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
     if (done) return done;
     const pack = item as InventoryPackEntry;
     const alias = labelOf(pack, i);
+    checkPackHash(alias, pack);
     const base = servers.get(pack.base);
     if (!base) {
       const isPack = inventory.entries.some((other) => other.kind === 'pack' && other.sourceId === pack.base);
@@ -237,21 +297,12 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
     }
     const kind = kindOf(base.serverType);
     if (!kind?.pack) throw new InventoryLoadError(alias, 'base', `the kind of "${pack.base}" (${base.serverType}) takes no pack`);
-    const { code, toolNames } = kind.pack(pack, base.entry);
-    const tools = (code as { tools: readonly FunctionToolSchema[] }).tools;
-    if (pack.toolsRef) checkTools(alias, tools, toolNames, pack.toolsRef);
-    else if (!sameNames(toolNames, tools.map((tool) => tool.function.name))) {
+    const code = kind.pack(pack, base.entry);
+    const tools = (code.code as { tools: readonly FunctionToolSchema[] }).tools;
+    if (pack.toolsRef) checkTools(alias, tools, code.toolNames, pack.toolsRef);
+    else if (!sameNames(code.toolNames, tools.map((tool) => tool.function.name))) {
       throw new InventoryLoadError(alias, 'toolNames', "the pack's routing list is not its schemas' set");
     }
-    return {
-      ...identityOf(pack),
-      configuration: base.entry.configuration,
-      toolNames: [...toolNames],
-      hostings: base.entry.hostings,
-      consentDefault: base.entry.consentDefault,
-      ...(pack.publisher !== undefined ? { publisher: pack.publisher } : {}),
-      base: pack.base,
-      ...code,
-    } as unknown as E;
+    return packManifestEntry(pack, base.entry, code);
   });
 }

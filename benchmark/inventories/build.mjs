@@ -44,7 +44,7 @@
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { ALIAS_PATTERN, canonicalJson, CIVIC_MANIFEST, createCivicRouter, sha256Hex } from '@typedstandards/civic-typed-router';
+import { ALIAS_PATTERN, canonicalJson, CIVIC_MANIFEST, sha256Hex } from '@typedstandards/civic-typed-router';
 import { jsonDocument } from '../runner/writer.mjs';
 import { offlineFetchers, PUBLICATION_HOST, SOCRATA_GUIDANCE_FILE_SHA256, SOCRATA_GUIDANCE_PATH } from './guidance.mjs';
 import {
@@ -241,10 +241,25 @@ export function routerDataFields(entry) {
   };
 }
 
-async function entryOf(entry, view) {
+/** Router 0.6.0's seven, frozen (hub #309, S2-B): every value this file and
+ *  `to-manifest.mjs` read of the seven, in `CIVIC_MANIFEST`'s order at 0.6.0.
+ *  The seven are built from it, never from the live router, so a router
+ *  release that changes a source (0.8.0 makes City Record a pack) does not
+ *  rebuild 7.json. */
+export const SEVEN_PATH = 'benchmark/inventories/sources/router-0.6.0-seven.json';
+
+/** The frozen copy, parsed: `{ router, note, entries }`, each entry the
+ *  router's data fields with its `toolNames`, `tools` (bare view),
+ *  `guidanceBlock`, `prompt` strings and `hostings`. */
+export function readSeven() {
+  return JSON.parse(readFileSync(new URL('./sources/router-0.6.0-seven.json', import.meta.url), 'utf8'));
+}
+
+/** One of the seven, from its frozen copy. */
+function entryOf(entry) {
   const curated = CURATED[entry.sourceId];
   if (!curated) throw new Error(`build: no curation for ${entry.sourceId}`);
-  const block = await entry.guidance.fetchText({ portal: undefined, publicationHost: PUBLICATION_HOST, ...offlineFetchers }, view);
+  const block = entry.guidanceBlock;
   const guidanceRef =
     entry.sourceId === 'socrata'
       ? { kind: 'prompt', fetch: 'skill-guidance', pinned: SOCRATA_GUIDANCE_PATH, pinnedSha256: SOCRATA_GUIDANCE_FILE_SHA256, blockSha256: sha256OfText(block) }
@@ -276,15 +291,16 @@ async function entryOf(entry, view) {
   };
 }
 
-/** The 7-entry inventory. */
+/** The 7-entry inventory, from router 0.6.0's frozen seven. */
 export async function buildInventory7() {
-  const view = createCivicRouter(CIVIC_MANIFEST).aliasedView;
+  const seven = readSeven();
+  if (seven.router !== ROUTER) throw new Error(`build: ${SEVEN_PATH} is ${seven.router}'s seven, not ${ROUTER}'s`);
   return {
     schema: 'civic-inventory/1',
     id: INVENTORY_7.id,
     version: INVENTORY_7.version,
     note: `Today's seven sources, from the router's manifest (${ROUTER}), in its order. The baseline configuration (baseline-7) leaves Boston OpenContext unconfigured, as production does; the inventory lists all seven.`,
-    entries: await Promise.all(CIVIC_MANIFEST.map((entry) => entryOf(entry, view))),
+    entries: seven.entries.map(entryOf),
   };
 }
 

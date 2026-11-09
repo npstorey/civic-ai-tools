@@ -1,7 +1,10 @@
 // The aliased view of the civic manifest (ADR-0032), held to the goldens:
 //
 //   - reversible: undoing the alias mechanically (`unaliasText`) yields the
-//     bare bytes exactly, for all 42 captured prompts and 5 tools arrays;
+//     bare bytes exactly, for all 42 captured prompts and 5 tools arrays
+//     (since 0.8.0 with the City Record pack, offered in every configuration,
+//     left out of the selection, as `router-goldens.test.ts` holds them; and
+//     with it, against the bare view's own output);
 //   - complete: the aliased output names no bare tool name in text the router
 //     owns, and every remaining "search" or "fetch" is one of the English uses
 //     pinned below, each decided by reading it;
@@ -90,12 +93,13 @@ function textOf(entry: TextEntry | undefined): string | null {
   return 'fixture' in entry ? goldens.fixtureStrings[entry.fixture]! : entry.text;
 }
 
-/** The routes' prompt expression, in the aliased view. */
-async function aliasedPrompt(router: CivicRouter, capture: PromptCapture): Promise<string> {
+/** The routes' prompt expression, in a view (the aliased one by default),
+ *  over `selection` (absent: every offered source). */
+async function aliasedPrompt(router: CivicRouter, capture: PromptCapture, selection?: readonly string[], view: 'aliased' | 'bare' = 'aliased'): Promise<string> {
   const configured = configuredOf(capture);
   const { portal, lockedPortal } = resolvedOf(capture);
   const guidance = capture.client.guidance;
-  const prompt = await router.aliasedBuildSystemPrompt({
+  const input = {
     portal,
     configured,
     today: capture.today,
@@ -104,19 +108,28 @@ async function aliasedPrompt(router: CivicRouter, capture: PromptCapture): Promi
       if (guidance.kind === 'throws') throw new Error('fixture: the Socrata prompt fetch fails');
       return textOf(guidance as TextEntry) as string;
     },
-    fetchInstructions: async (sourceId) =>
+    fetchInstructions: async (sourceId: string) =>
       textOf(Object.hasOwn(capture.client.instructions, sourceId) ? capture.client.instructions[sourceId] : null),
-  });
-  return router.aliasedWithPortalLockGuidance(prompt, lockedPortal, configured);
+    selection,
+  };
+  return view === 'aliased'
+    ? router.aliasedWithPortalLockGuidance(await router.aliasedBuildSystemPrompt(input), lockedPortal, configured, selection)
+    : router.withPortalLockGuidance(await router.buildSystemPrompt(input), lockedPortal, configured, selection);
 }
 
 /** The routes' tools expression, in the aliased view, as the request carries it. */
-function aliasedToolsText(router: CivicRouter, capture: ToolsCapture): string {
+function aliasedToolsText(router: CivicRouter, capture: ToolsCapture, selection?: readonly string[]): string {
   const { lockedPortal } = resolvedOf(capture);
-  return JSON.stringify(router.aliasedOfferedMcpTools(router.aliasedMcpToolsFor(lockedPortal), configuredOf(capture)));
+  return JSON.stringify(router.aliasedOfferedMcpTools(router.aliasedMcpToolsFor(lockedPortal), configuredOf(capture), selection));
 }
 
-const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston|nyc_charter)__/;
+/** The City Record pack (since 0.8.0), offered in every configuration: the
+ *  goldens, which have no City Record, hold with it left out of the
+ *  selection. */
+const lessPack = (capture: { configured: Encoded }): string[] =>
+  civicRouter.offeredSkillSources(configuredOf(capture)).filter((id) => id !== 'nyc-record');
+
+const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston|nyc_charter|nyc_record)__/;
 const ELEVEN = [
   'get_data',
   'search',
@@ -144,17 +157,21 @@ test('aliased view: the bare goldens and the pinned guidance hold no alias prefi
 test('aliased view: every one of the 42 prompts, un-aliased, is its golden byte for byte', async () => {
   assert.equal(goldens.prompts.length, 42);
   for (const capture of goldens.prompts) {
-    const aliased = await aliasedPrompt(civicRouter, capture);
+    const aliased = await aliasedPrompt(civicRouter, capture, lessPack(capture));
     assert.notEqual(aliased, capture.output, `${capture.id}: the aliased prompt differs from the bare one`);
     assert.match(aliased, /socrata__get_data/, `${capture.id}: the aliased prompt names socrata__get_data`);
     assert.ok(unaliasText(civicRouter.dispatchMap, aliased) === capture.output, `${capture.id}: un-aliased, the prompt is not the golden`);
+    // With the pack offered, un-aliased, it is the bare view's own output.
+    const withPack = await aliasedPrompt(civicRouter, capture);
+    assert.match(withPack, /nyc_record__get_data/, `${capture.id}: the pack is offered`);
+    assert.ok(unaliasText(civicRouter.dispatchMap, withPack) === (await aliasedPrompt(civicRouter, capture, undefined, 'bare')), `${capture.id}: with the pack, un-aliased, the bare prompt`);
   }
 });
 
 test('aliased view: every one of the 5 tools arrays, un-aliased, is its golden byte for byte', () => {
   assert.equal(goldens.tools.length, 5);
   for (const capture of goldens.tools) {
-    const aliased = aliasedToolsText(civicRouter, capture);
+    const aliased = aliasedToolsText(civicRouter, capture, lessPack(capture));
     const names = (JSON.parse(aliased) as { function: { name: string } }[]).map((t) => t.function.name);
     assert.ok(names.length > 0 && names.every((n) => civicRouter.dispatchMap.has(n)), `${capture.id}: every tool has an exposed name`);
     assert.ok(unaliasText(civicRouter.dispatchMap, aliased) === capture.output, `${capture.id}: un-aliased, the tools array is not the golden`);
@@ -187,6 +204,9 @@ const ENGLISH_USES = [
   'et gets a v2 resource. Re-run search/get_dataset for current IDs e',
   'here may be more and offer to fetch the next page.',
   'hrase, applied as a full-text search within the data alongside the',
+  // The City Record pack's guidance (since 0.8.0): text the router does not
+  // own, the search recipe's sentence.
+  "in with SELECT as a full-text search of the dataset (SoQL's $q), a",
   'ings County, New York"] }  // search scoped to Brooklyn, by name',
   'ly, data.cityofnewyork.us. To search its catalog by name, socrata_',
   'r boston__ckan__get_schema to fetch field names for querying.',
@@ -314,12 +334,14 @@ test('callable: every tool name the aliased prompt-reaching text presents has an
   assert.ok(seen.length >= 11, `the extractor found only ${seen.length} mentions; it has stopped measuring`);
   assert.ok(seen.every((name) => ALIAS_PREFIX.test(name)), 'every presented name is an exposed one');
   // The three own preamble entries describe three sources, one `Tools:` list
-  // each; with every source offered the composed preamble has four, the
-  // fourth NYC Charter's five exposed names.
+  // each; with every source offered the composed preamble has five, the
+  // fourth NYC Charter's five exposed names and the fifth the City Record
+  // pack's two (since 0.8.0).
   assert.equal([...corpus['the cross-source preamble']!.matchAll(/Tools:\s*([^.\n]+)\./g)].length, 3);
   const lists = [...corpus['the composed preamble, every source offered']!.matchAll(/Tools:\s*([^.\n]+)\./g)].map((m) => m[1]);
-  assert.equal(lists.length, 4);
+  assert.equal(lists.length, 5);
   assert.equal(lists[3], 'nyc_charter__search, nyc_charter__get_section, nyc_charter__list_titles, nyc_charter__get_title, nyc_charter__get_version');
+  assert.equal(lists[4], 'nyc_record__get_data, nyc_record__fetch');
 });
 
 // --- Anchored: the server's guidance --------------------------------------------------

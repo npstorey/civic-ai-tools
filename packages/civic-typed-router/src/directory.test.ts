@@ -46,14 +46,14 @@ const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8
 // --- Inputs ------------------------------------------------------------------------------
 
 const TODAY = '2026-01-15';
-/** Every source on: both optional addresses, and all four hosted sources'
- *  switches (since 0.6.0, the three after Charter's too). */
+/** Every source on: both optional addresses, and all three hosted sources'
+ *  switches (since 0.6.0, the two after Charter's too). City Record, a pack
+ *  over the Socrata server since 0.8.0, is offered with Socrata. */
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
   NYC_CHECKBOOK_HOSTING: 'sandbox',
-  NYC_RECORD_HOSTING: 'sandbox',
   NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
@@ -108,15 +108,15 @@ test('directory: for the seven current entries each line is the rule over the en
   assert.deepEqual(entryLines(directory), CIVIC_MANIFEST.map(lineOf));
 });
 
-test('directory: with every source configured it has seven lines; with Boston OpenContext and the four hosted sources unconfigured, two', () => {
+test('directory: with every source configured it has seven lines; with Boston OpenContext and the three hosted sources unconfigured, three (the City Record pack is offered with Socrata)', () => {
   const directoryPrompt = civicRouter.directoryPrompt;
   assert.deepEqual(
     entryLines(directoryPrompt({ configured: EVERY_SOURCE, today: TODAY })).map((line) => line.split('`')[1]),
     ['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation'],
   );
-  const two = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY });
-  assert.deepEqual(entryLines(two).map((line) => line.split('`')[1]), ['socrata', 'data_commons']);
-  assert.equal(two, expectedDirectory(TODAY, CIVIC_MANIFEST.slice(0, 2)));
+  const three = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY });
+  assert.deepEqual(entryLines(three).map((line) => line.split('`')[1]), ['socrata', 'data_commons', 'nyc_record']);
+  assert.equal(three, expectedDirectory(TODAY, CIVIC_MANIFEST.filter((entry) => entry.configuration.requirement === 'required')));
 });
 
 test('directory: the selection narrows the directory set, in manifest order, and never adds an unconfigured source', () => {

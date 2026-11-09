@@ -12,12 +12,16 @@
  *      null;
  *   3. `civic-inventory.json.sha256` is one line, the SHA-256 of the router's
  *      `canonicalJson` of the parsed file (not of its bytes);
- *   4. its version is `YYYY-MM-DD.N` and `inventory/CHANGELOG.md` has its
- *      line (`- \`<version>\`: ...`);
- *   5. it loads: `manifestFromInventory(file, CIVIC_KINDS)` from the built
+ *   4. its version is `YYYY-MM-DD.N`, the harness's form (S2-B, F3): a
+ *      calendar date and a counter with no leading zero; and
+ *      `inventory/CHANGELOG.md` has its line (`- \`<version>\`: ...`);
+ *   5. every pack states its hash, and the hash is the router's `packHash`
+ *      of the entry: the `canonicalJson` SHA-256 of the entry with `hash`,
+ *      `provenance` and `toolsRef` removed (S2-B, G0-B6);
+ *   6. it loads: `manifestFromInventory(file, CIVIC_KINDS)` from the built
  *      router package, which holds every entry's tools to its `toolsRef`
- *      with the router's `toolsSha256`, and `createCivicRouter` over the
- *      result passes its startup checks.
+ *      with the router's `toolsSha256` and every pack to its hash, and
+ *      `createCivicRouter` over the result passes its startup checks.
  *
  * Hermetic: four file reads and one local import, no network. The router is
  * the package `npm ci` builds (`packages/civic-typed-router/dist`).
@@ -49,12 +53,20 @@ export function nonStrings(value, path = '$') {
   return [`${path} = ${JSON.stringify(value)}`];
 }
 
-const VERSION = /^\d{4}-\d{2}-\d{2}\.\d+$/;
+/** `YYYY-MM-DD.N` as written, before the two rules below. */
+const VERSION = /^(\d{4})-(\d{2})-(\d{2})\.(\d+)$/;
+
+/** Whether year, month and day name a day of the Gregorian calendar. */
+export function isCalendarDate(year, month, day) {
+  if (month < 1 || month > 12 || day < 1) return false;
+  const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  return day <= [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+}
 
 /**
  * Every problem with an inventory, as named lines; `[]` when it passes.
  * `router` is the router package's exports (`canonicalJson`, `sha256Hex`,
- * `manifestFromInventory`, `CIVIC_KINDS`, `createCivicRouter`).
+ * `packHash`, `manifestFromInventory`, `CIVIC_KINDS`, `createCivicRouter`).
  */
 export function inventoryProblems({ inventory, sha256Text, schema, changelog, router }) {
   const problems = [];
@@ -81,10 +93,39 @@ export function inventoryProblems({ inventory, sha256Text, schema, changelog, ro
   }
 
   const version = inventory?.version;
-  if (typeof version !== 'string' || !VERSION.test(version)) {
+  const parts = typeof version === 'string' ? VERSION.exec(version) : null;
+  if (!parts) {
     problems.push(`version: ${JSON.stringify(version)} is not YYYY-MM-DD.N`);
-  } else if (!changelog.split('\n').some((line) => line.startsWith(`- \`${version}\`: `))) {
-    problems.push(`changelog: ${PATHS.changelog} has no line for ${version} ("- \`${version}\`: ...")`);
+  } else {
+    const [, year, month, day, counter] = parts;
+    if (!isCalendarDate(Number(year), Number(month), Number(day))) {
+      problems.push(`version: ${JSON.stringify(version)}: ${year}-${month}-${day} is not a calendar date`);
+    }
+    if (/^0\d/.test(counter)) {
+      problems.push(`version: ${JSON.stringify(version)}: the counter ${JSON.stringify(counter)} has a leading zero`);
+    }
+    if (!changelog.split('\n').some((line) => line.startsWith(`- \`${version}\`: `))) {
+      problems.push(`changelog: ${PATHS.changelog} has no line for ${version} ("- \`${version}\`: ...")`);
+    }
+  }
+
+  for (const [i, entry] of (Array.isArray(inventory?.entries) ? inventory.entries : []).entries()) {
+    if (entry?.kind !== 'pack') continue;
+    const label = typeof entry.alias === 'string' ? entry.alias : `entries[${i}]`;
+    if (typeof entry.hash !== 'string') {
+      problems.push(`hash: ${label}: a pack states its hash, and this one has none`);
+      continue;
+    }
+    let hash;
+    try {
+      hash = router.packHash(entry);
+    } catch (error) {
+      problems.push(`hash: ${label}: the entry has no canonical form (${error.message})`);
+      continue;
+    }
+    if (entry.hash !== hash) {
+      problems.push(`hash: ${label}: states ${entry.hash}; the canonicalJson SHA-256 of the entry less hash, provenance and toolsRef is ${hash}`);
+    }
   }
 
   try {

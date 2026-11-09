@@ -20,8 +20,9 @@
       "pattern": "^[a-z0-9][a-z0-9-]*$"
     },
     "version": {
+      "description": "<YYYY-MM-DD>.<n>: the UTC date the version was written, a calendar date (check:inventory holds it to one), and a counter with no leading zero; the harness's form for considered.inventory.version less its build metadata.",
       "type": "string",
-      "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$"
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.(0|[1-9]\\d*)$"
     },
     "note": {
       "type": "string"
@@ -625,6 +626,7 @@
         "filter",
         "author",
         "version",
+        "hash",
         "place",
         "categories",
         "description",
@@ -670,6 +672,7 @@
           "$ref": "#/definitions/text"
         },
         "hash": {
+          "description": "The pack's hash: the lowercase hex SHA-256 of the router's canonicalJson of this entry with hash, provenance and toolsRef removed (the router's packHash; G0-B6 on hub #309). Required; check:inventory and the router's loader each refuse a pack whose hash is not that value. A record credits the pack as <version>+<its first twelve characters>.",
           "$ref": "#/definitions/sha256"
         },
         "licence": {

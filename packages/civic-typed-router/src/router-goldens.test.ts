@@ -22,20 +22,30 @@
 // directory, the first-step tool, the in-loop prompt and the harness
 // definition) run under the same replacements and give the same outcomes.
 //
-// What the hosted sources move: NYC Charter, Laws and Rules (0.3.0), then
-// NYC Checkbook, NYC City Record and NYS Open Legislation (0.6.0). The
-// goldens are the website at d1919a8, which had three sources; the manifest
-// now holds four more after them, each off unless its switch is on, which no
-// capture sets. Every prompt and every tools array is still its golden byte
-// for byte. The facts that name the whole vocabulary move, each by a stated
-// delta below (`HOSTED`), never by a looser comparison:
+// What the four later entries move: NYC Charter, Laws and Rules (0.3.0),
+// NYC Checkbook and NYS Open Legislation (0.6.0), and NYC City Record (0.6.0,
+// a pack over the Socrata server since 0.8.0). The goldens are the website at
+// d1919a8, which had three sources; the manifest now holds four more after
+// them. The three hosted ones are each off unless its switch is on, which no
+// capture sets. City Record is a pack, required as its base is, so every
+// capture's configuration offers it (hub #309, S2-B): the fixture, which the
+// capture script cannot retake (it refuses a tree that imports this
+// package), is unchanged, and the pack is a stated delta of its own (`PACK`).
+// Every prompt and every tools array is its golden byte for byte with the
+// pack left out of the selection (the selection naming exactly the other
+// sources the configuration offers), and the default output is held to the
+// pack's delta: the tools array is the golden with the pack's two bare
+// schemas appended, and the prompt carries the pack's preamble entry and
+// guidance block. The facts that name the whole vocabulary move, each by a
+// stated delta below (`HOSTED`, `PACK`), never by a looser comparison:
 //   - `mcpTools` (and so replay's tools and the bare `mcpToolsFor`) is the
-//     golden array with the hosted sources' schemas appended, in manifest
-//     order (Charter's five, then 10, 7 and 24);
-//   - the tool-to-source facts gain each hosted name no earlier source has;
+//     golden array with the four entries' schemas appended, in manifest
+//     order (Charter's five, then 10, the pack's 2 and 24);
+//   - the tool-to-source facts gain each hosted name no earlier source has
+//     (the pack's `get_data` and `fetch` are Socrata's names already);
 //     `search` stays Socrata's;
 //   - the withheld tools gain every hosted source's names, in every
-//     configuration;
+//     configuration, and the offered sources gain the pack;
 //   - so nothing is ever withheld-free: `offeredIsBare` and
 //     `offeredIsMcpTools` are false in every capture, where the goldens have
 //     them true with Boston OpenContext configured.
@@ -53,6 +63,7 @@ import {
   CIVIC_MANIFEST,
   civicRouter,
   createCivicRouter,
+  NYC_RECORD_ENTRY,
   readMcpEnv,
   type CivicManifest,
   type CivicManifestEntry,
@@ -132,21 +143,39 @@ const hostedSource = (sourceId: string, fixture: string) => {
   };
 };
 
-/** The four hosted sources, in manifest order. */
+/** The pack (0.8.0): City Record over the Socrata server, offered in every
+ *  configuration. Its routing list and bare schemas are the Socrata kind's
+ *  pack builder's (`src/inventory.test.ts` holds them to the inventory). */
+const PACK = {
+  sourceId: 'nyc-record',
+  toolNames: [...NYC_RECORD_ENTRY.toolNames],
+  tools: NYC_RECORD_ENTRY.tools as unknown[],
+};
+
+/** The four entries after the goldens' three, in manifest order: the three
+ *  hosted sources and the pack. */
 const HOSTED_SOURCES = [
   hostedSource('nyc-charter', 'nyc-charter-tools.json'),
   hostedSource('nyc-checkbook', 'nyc-checkbook-tools.json'),
-  hostedSource('nyc-record', 'nyc-record-tools.json'),
+  PACK,
   hostedSource('nys-legislation', 'nys-legislation-tools.json'),
 ];
 
 /** The goldens' delta, over all four. */
 const HOSTED = {
   sourceIds: HOSTED_SOURCES.map((s) => s.sourceId),
-  /** Every hosted name, in manifest order: what the withheld tools gain. */
-  toolNames: HOSTED_SOURCES.flatMap((s) => s.toolNames),
+  /** Every hosted source's name, in manifest order: what the withheld tools
+   *  gain (the pack is offered, so its names are not among them). */
+  toolNames: HOSTED_SOURCES.filter((s) => s !== PACK).flatMap((s) => s.toolNames),
+  /** Every name of the four, in manifest order: what the vocabulary gains. */
+  vocabularyNames: HOSTED_SOURCES.flatMap((s) => s.toolNames),
   tools: HOSTED_SOURCES.flatMap((s) => s.tools),
 };
+
+/** The sources `configured` offers, the pack left out: the selection the
+ *  goldens hold under. */
+const lessPack = (router: CivicRouter, configured: McpRegistryEnv): string[] =>
+  router.offeredSkillSources(configured).filter((id) => id !== PACK.sourceId);
 
 /** Each hosted name no golden source and no earlier hosted source has, with
  *  the source it belongs to (the first that declares it, in manifest order).
@@ -225,6 +254,7 @@ async function checkPrompt(router: CivicRouter, capture: PromptCapture): Promise
   const { portal, lockedPortal } = resolvedOf(capture);
   const { calls, fetchPrompt, fetchInstructions } = fetchersFor(capture);
 
+  const selection = lessPack(router, configured);
   const prompt = router.withPortalLockGuidance(
     await router.buildSystemPrompt({
       portal,
@@ -233,23 +263,54 @@ async function checkPrompt(router: CivicRouter, capture: PromptCapture): Promise
       publicationHost: capture.publicationHost,
       fetchPrompt,
       fetchInstructions,
+      selection,
+    }),
+    lockedPortal,
+    configured,
+    selection,
+  );
+
+  assert.ok(prompt === capture.output, `the composed prompt, the pack left out, differs from the golden for configuration ${capture.id}`);
+  assert.deepEqual(calls, capture.clientCalls, `the fetcher calls differ from the golden for configuration ${capture.id}`);
+
+  // The pack's delta: the default composition offers it, and carries its
+  // preamble entry and its block; the pack calls no fetcher.
+  const fallback = fetchersFor(capture);
+  const withPack = router.withPortalLockGuidance(
+    await router.buildSystemPrompt({
+      portal,
+      configured,
+      today: capture.today,
+      publicationHost: capture.publicationHost,
+      fetchPrompt: fallback.fetchPrompt,
+      fetchInstructions: fallback.fetchInstructions,
     }),
     lockedPortal,
     configured,
   );
-
-  assert.ok(prompt === capture.output, `the composed prompt differs from the golden for configuration ${capture.id}`);
-  assert.deepEqual(calls, capture.clientCalls, `the fetcher calls differ from the golden for configuration ${capture.id}`);
+  assert.ok(withPack !== capture.output, `the default prompt offers the pack (${capture.id})`);
+  assert.ok(withPack.includes(PACK_PREAMBLE_ENTRY) && withPack.includes(PACK_BLOCK), `the default prompt carries the pack's preamble entry and block (${capture.id})`);
+  assert.deepEqual(fallback.calls, capture.clientCalls, `the pack calls no fetcher (${capture.id})`);
 }
+
+/** The pack's preamble entry and its block in the bare view. */
+const PACK_PREAMBLE_ENTRY = `**${NYC_RECORD_ENTRY.displayName}** — ${NYC_RECORD_ENTRY.description} Tools: get_data, fetch.`;
+const PACK_BLOCK = await NYC_RECORD_ENTRY.guidance.fetchText({ publicationHost: null, fetchPrompt: async () => '', fetchInstructions: async () => null });
 
 /** The routes' expression: `offeredMcpTools(mcpToolsFor(lockedPortal))`. */
 function checkTools(router: CivicRouter, capture: ToolsCapture): void {
   const configured = configuredOf(capture);
   const { lockedPortal } = resolvedOf(capture);
   const bare = router.mcpToolsFor(lockedPortal);
-  const offered = router.offeredMcpTools(bare, configured);
+  const offered = router.offeredMcpTools(bare, configured, lessPack(router, configured));
 
-  assert.ok(JSON.stringify(offered) === capture.output, `the tools array differs from the golden for configuration ${capture.id}`);
+  assert.ok(JSON.stringify(offered) === capture.output, `the tools array, the pack left out, differs from the golden for configuration ${capture.id}`);
+  // The pack's delta: the default offer is the golden with the pack's two
+  // bare schemas appended (the sources after it are withheld).
+  assert.ok(
+    JSON.stringify(router.offeredMcpTools(bare, configured)) === JSON.stringify([...(JSON.parse(capture.output) as unknown[]), ...PACK.tools]),
+    `the default tools array is the golden with the pack's schemas appended (${capture.id})`,
+  );
   // The hosted sources are withheld in every capture, so the offered array is
   // never the bare one (the stated delta); `bareIsMcpTools` is the golden's.
   assert.deepEqual(
@@ -300,9 +361,9 @@ function checkFacts(router: CivicRouter): void {
   // vocabulary now ends with the hosted sources' names (the stated delta).
   const goldenNames = facts.sourceIdForToolName.slice(0, -1).map((f) => f.tool);
   assert.deepEqual(
-    [...goldenNames, ...HOSTED.toolNames],
+    [...goldenNames, ...HOSTED.vocabularyNames],
     router.mcpTools.map((t) => t.function.name),
-    'fact: the tool names, in mcpTools order, then the hosted sources\' names',
+    'fact: the tool names, in mcpTools order, then the four later entries\' names',
   );
   // Every golden answer holds, `search` (Socrata's) included.
   for (const { tool, sourceId } of facts.sourceIdForToolName) {
@@ -310,8 +371,9 @@ function checkFacts(router: CivicRouter): void {
   }
   const newNames = hostedNewNames(goldenNames);
   // Every hosted name but `search` (which Charter and NYS Open Legislation
-  // share with Socrata) is new: 4 + 10 + 7 + 23.
-  assert.equal(newNames.length, 44);
+  // share with Socrata) is new, and none of the pack's (Socrata's `get_data`
+  // and `fetch`): 4 + 10 + 0 + 23.
+  assert.equal(newNames.length, 37);
   for (const [tool, sourceId] of newNames) {
     assert.ok(!facts.sourceIdForToolName.some((f) => f.tool === tool), `fact: "${tool}" is a name no golden source has`);
     assert.equal(router.sourceIdForToolName(tool), sourceId, `fact: the source of tool "${tool}", ${sourceId}'s`);
@@ -324,7 +386,7 @@ function checkFacts(router: CivicRouter): void {
       [...fact.withheldToolNames, ...HOSTED.toolNames],
       `fact: withheld tools, the golden's then the hosted sources' names, env ${JSON.stringify(fact.env)}`,
     );
-    assert.deepEqual(router.offeredSkillSources(configured), fact.offeredSkillSources, `fact: offered sources, env ${JSON.stringify(fact.env)}`);
+    assert.deepEqual(router.offeredSkillSources(configured), [...fact.offeredSkillSources, PACK.sourceId], `fact: offered sources, the golden's then the pack, env ${JSON.stringify(fact.env)}`);
   }
 
   for (const fact of facts.readMcpEnvFromProcess) {
@@ -397,7 +459,6 @@ async function inLoopOutcomes(router: CivicRouter): Promise<unknown> {
     BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
     NYC_CHARTER_HOSTING: 'sandbox',
     NYC_CHECKBOOK_HOSTING: 'sandbox',
-    NYC_RECORD_HOSTING: 'sandbox',
     NYS_LEGISLATION_HOSTING: 'sandbox',
   });
   const input = {
@@ -435,13 +496,14 @@ const SENTINEL = 'sentinel: id is carried, never read';
  *  trapped too. */
 const SENTINEL_HOSTING = Object.freeze({ kind: 'sentinel: hosting is carried, never read' });
 /** The same for 0.4.0's carried fields: the variants, the consent default and
- *  the publisher. */
+ *  the publisher; and for 0.8.0's, a pack's version and hash. */
 const SENTINEL_HOSTINGS = Object.freeze([Object.freeze({ kind: 'sentinel: hostings are carried, never read' })]);
 const SENTINEL_CONSENT_DEFAULT = 'sentinel: consentDefault is carried, never read';
 const SENTINEL_PUBLISHER = 'sentinel: publisher is carried, never read';
+const SENTINEL_PACK = Object.freeze({ version: 'sentinel: pack is carried, never read', hash: 'sentinel' });
 
 /** The carried fields the traps cover, beside `id`. */
-const CARRIED = ['hosting', 'hostings', 'consentDefault', 'publisher'] as const;
+const CARRIED = ['hosting', 'hostings', 'consentDefault', 'publisher', 'pack'] as const;
 
 /** The entries that carry an `npm-package` variant: the hosting traps below
  *  test nothing until one does. */
@@ -456,7 +518,7 @@ const everyEntryCarries = (): boolean =>
   CIVIC_MANIFEST.every((entry) => Object.hasOwn(entry, 'hostings') && Object.hasOwn(entry, 'consentDefault') && Object.hasOwn(entry, 'publisher'));
 
 test('id and the hosting fields are never read and the bare view does not depend on alias: every golden holds with id, hosting, hostings, consentDefault and publisher sentinels and every alias another', async () => {
-  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation'], 'the manifest carries four hosted entries');
+  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nys-legislation'], 'the manifest carries three hosted entries');
   assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   // An alias must pass the startup checks, so each is replaced by another
   // well-formed one rather than by the sentinel. Every entry gets each
@@ -471,6 +533,7 @@ test('id and the hosting fields are never read and the bare view does not depend
         hostings: SENTINEL_HOSTINGS,
         consentDefault: SENTINEL_CONSENT_DEFAULT,
         publisher: SENTINEL_PUBLISHER,
+        pack: SENTINEL_PACK,
       }) as unknown as CivicManifestEntry,
   );
   assert.ok(manifest.every((e) => e.id === SENTINEL && e.alias.startsWith('other_alias_')));
@@ -481,7 +544,8 @@ test('id and the hosting fields are never read and the bare view does not depend
         carried.hosting === SENTINEL_HOSTING &&
         carried.hostings === SENTINEL_HOSTINGS &&
         carried.consentDefault === SENTINEL_CONSENT_DEFAULT &&
-        carried.publisher === SENTINEL_PUBLISHER
+        carried.publisher === SENTINEL_PUBLISHER &&
+        carried.pack === SENTINEL_PACK
       );
     }),
   );
@@ -497,7 +561,7 @@ test('id and the hosting fields are never read and the bare view does not depend
 });
 
 test('id and the hosting fields are never read, and alias only at construction: every golden holds with id, hosting, hostings, consentDefault and publisher behind getters that throw', async () => {
-  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation'], 'the manifest carries four hosted entries');
+  assert.deepEqual(hostedEntries(), ['nyc-charter', 'nyc-checkbook', 'nys-legislation'], 'the manifest carries three hosted entries');
   assert.ok(everyEntryCarries(), 'every entry carries hostings, consentDefault and publisher');
   const reads: string[] = [];
   const manifest: CivicManifest = CIVIC_MANIFEST.map((entry) => {
@@ -529,9 +593,10 @@ test('id and the hosting fields are never read, and alias only at construction: 
   assert.throws(() => charter.consentDefault, /nyc-charter\.consentDefault was read/);
   assert.throws(() => charter.publisher, /nyc-charter\.publisher was read/);
   assert.throws(() => (manifest[0] as unknown as Record<string, unknown>).hostings, /socrata\.hostings was read/);
+  assert.throws(() => (manifest[5] as unknown as Record<string, unknown>).pack, /nyc-record\.pack was read/);
   assert.deepEqual(
     reads,
-    ['socrata.id', 'nyc-charter.hosting', 'nyc-charter.hostings', 'nyc-charter.consentDefault', 'nyc-charter.publisher', 'socrata.hostings'],
+    ['socrata.id', 'nyc-charter.hosting', 'nyc-charter.hostings', 'nyc-charter.consentDefault', 'nyc-charter.publisher', 'socrata.hostings', 'nyc-record.pack'],
   );
   assert.equal(manifest[0]!.alias, 'socrata');
   reads.length = 0;

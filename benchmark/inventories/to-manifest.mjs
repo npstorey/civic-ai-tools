@@ -30,7 +30,7 @@
 
 import { readFileSync } from 'node:fs';
 import { CIVIC_MANIFEST } from '@typedstandards/civic-typed-router';
-import { r5UpstreamTools, routerDataFields, toolsSha256 } from './build.mjs';
+import { r5UpstreamTools, readSeven, routerDataFields, toolsSha256 } from './build.mjs';
 
 const REPO = new URL('../../', import.meta.url);
 
@@ -70,22 +70,54 @@ function toolsOf(item, bySourceId, cache) {
   return structuredClone(tools);
 }
 
-function routerEntry(item, bySourceId) {
-  const entry = bySourceId.get(item.toolsRef.sourceId);
-  if (!entry) throw new Error(`to-manifest: ${item.alias}: the router's manifest has no source ${item.toolsRef.sourceId}`);
-  const expected = routerDataFields(entry);
+/** A manifest entry built from router 0.6.0's frozen copy of a source, for
+ *  a source the live router no longer carries as a server (since 0.8.0, City
+ *  Record, a pack). Its data fields, tools, prompt strings and hostings are
+ *  the copy's; its guidance gives the block the copy holds, the one the
+ *  composition fetched offline in the aliased view. */
+function entryFromCopy(copy) {
+  const { toolNames, tools, guidanceBlock, prompt, hostings, ...fields } = copy;
+  return {
+    ...fields,
+    tools: structuredClone(tools),
+    toolNames: [...toolNames],
+    guidance: Object.freeze({ fetchText: async () => guidanceBlock }),
+    ...(prompt !== undefined ? { prompt: { ...prompt } } : {}),
+    hostings: structuredClone(hostings),
+  };
+}
+
+/** One of the seven: the inventory item held to router 0.6.0's frozen copy
+ *  (`build.mjs`, `readSeven`), then the live router's entry for it where the
+ *  router still carries that server with the copy's values, else an entry
+ *  built from the copy. */
+function routerEntry(item, bySourceId, seven) {
+  const copy = seven.get(item.toolsRef.sourceId);
+  if (!copy) throw new Error(`to-manifest: ${item.alias}: the router's manifest at 0.6.0 has no source ${item.toolsRef.sourceId}`);
+  const expected = routerDataFields(copy);
   const stated = Object.fromEntries(Object.keys(expected).map((key) => [key, item[key]]));
   const extra = ['freshnessSource', 'publisher'].filter((key) => item[key] !== undefined && expected[key] === undefined);
   if (JSON.stringify(stated) !== JSON.stringify(expected) || extra.length) {
-    throw new Error(`to-manifest: ${item.alias}: the inventory's data fields differ from the router's manifest entry`);
+    throw new Error(`to-manifest: ${item.alias}: the inventory's data fields differ from the router's manifest entry at 0.6.0 (the frozen copy)`);
   }
-  if (JSON.stringify(item.toolsRef.toolNames) !== JSON.stringify(entry.toolNames)) {
-    throw new Error(`to-manifest: ${item.alias}: toolsRef.toolNames differ from the router's`);
+  if (JSON.stringify(item.toolsRef.toolNames) !== JSON.stringify(copy.toolNames)) {
+    throw new Error(`to-manifest: ${item.alias}: toolsRef.toolNames differ from the router's at 0.6.0`);
   }
-  if (item.toolsRef.sha256 !== toolsSha256(entry.tools)) {
-    throw new Error(`to-manifest: ${item.alias}: toolsRef.sha256 is not the hash of the router's tools`);
+  if (item.toolsRef.sha256 !== toolsSha256(copy.tools)) {
+    throw new Error(`to-manifest: ${item.alias}: toolsRef.sha256 is not the hash of the router's tools at 0.6.0`);
   }
-  return entry;
+  const live = bySourceId.get(copy.sourceId);
+  if (live === undefined || live.base !== undefined) return entryFromCopy(copy);
+  // The router still carries the server: its own entry, the same object, so
+  // a composition over it is the website's; held to the copy first.
+  if (
+    JSON.stringify(routerDataFields(live)) !== JSON.stringify(expected) ||
+    JSON.stringify(live.toolNames) !== JSON.stringify(copy.toolNames) ||
+    toolsSha256(live.tools) !== toolsSha256(copy.tools)
+  ) {
+    throw new Error(`to-manifest: ${item.alias}: the router's manifest entry differs from its frozen copy at 0.6.0`);
+  }
+  return live;
 }
 
 /** The manifest entry of an entry this loader builds itself. */
@@ -112,10 +144,11 @@ function builtEntry(item, tools) {
  *  fixture. */
 export function toManifest(inventory) {
   const bySourceId = new Map(CIVIC_MANIFEST.map((entry) => [entry.sourceId, entry]));
+  const seven = new Map(readSeven().entries.map((entry) => [entry.sourceId, entry]));
   const cache = new Map();
   return inventory.entries.map((item) => {
     if (item.kind === 'server' && item.tools === 'not-captured') return builtEntry(item, []);
-    if (item.kind === 'server' && item.toolsRef?.kind === 'router-manifest') return routerEntry(item, bySourceId);
+    if (item.kind === 'server' && item.toolsRef?.kind === 'router-manifest') return routerEntry(item, bySourceId, seven);
     if ((item.kind === 'server' && item.toolsRef?.kind === 'fixture') || item.kind === 'pack') return builtEntry(item, toolsOf(item, bySourceId, cache));
     throw new Error(`to-manifest: ${item.alias}: no loader for an entry of kind "${item.kind}"`);
   });

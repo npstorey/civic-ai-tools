@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import Ajv from 'ajv';
 import { canonicalJson, CIVIC_MANIFEST, createCivicRouter, sha256Hex } from '@typedstandards/civic-typed-router';
-import { builtFiles } from '../inventories/build.mjs';
+import { builtFiles, readSeven, routerDataFields, toolsSha256 } from '../inventories/build.mjs';
 import { toManifest } from '../inventories/to-manifest.mjs';
 
 const at = (rel) => new URL(`../inventories/${rel}`, import.meta.url);
@@ -52,10 +52,22 @@ test("A0.6: createCivicRouter over to-manifest's output passes its startup check
     router.manifest.map((e) => e.alias),
     inventory.entries.map((e) => e.alias),
   );
-  // The loader hands back the router's own entries, so a composition over
-  // them is the website's.
-  assert.deepEqual(manifest, [...CIVIC_MANIFEST]);
-  for (let i = 0; i < manifest.length; i++) assert.equal(manifest[i], CIVIC_MANIFEST[i]);
+  // The loader hands back the router's own entry wherever the router still
+  // carries the server, so a composition over it is the website's; for a
+  // source it no longer carries as a server (City Record, a pack since router
+  // 0.8.0), an entry built from router 0.6.0's frozen copy. Either way each
+  // entry's data fields, tool names and tools are the copy's.
+  const seven = readSeven().entries;
+  const live = new Map(CIVIC_MANIFEST.map((entry) => [entry.sourceId, entry]));
+  assert.deepEqual(manifest.map((entry) => entry.sourceId), seven.map((entry) => entry.sourceId));
+  for (const [i, entry] of manifest.entries()) {
+    const own = live.get(entry.sourceId);
+    if (own !== undefined && own.base === undefined) assert.equal(entry, own, `${entry.sourceId}: the router's own entry`);
+    else assert.ok(!CIVIC_MANIFEST.includes(entry), `${entry.sourceId}: built from the frozen copy`);
+    assert.deepEqual(routerDataFields(entry), routerDataFields(seven[i]), `${entry.sourceId}: the copy's data fields`);
+    assert.deepEqual([...entry.toolNames], seven[i].toolNames, `${entry.sourceId}: the copy's tool names`);
+    assert.equal(toolsSha256(entry.tools), toolsSha256(seven[i].tools), `${entry.sourceId}: the copy's tools`);
+  }
   // And it refuses an inventory that drifts from the router.
   const drifted = structuredClone(inventory);
   drifted.entries[0].description = `${drifted.entries[0].description} (edited)`;
