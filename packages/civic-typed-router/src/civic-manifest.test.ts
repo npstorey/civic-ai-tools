@@ -25,7 +25,8 @@ import {
 test('manifest: seven entries, each carrying identity, alias, configuration, schemas and guidance', () => {
   // 0.3.0 adds NYC Charter, Laws and Rules after the three of 0.2.0; 0.6.0
   // adds NYC Checkbook, NYC City Record and NYS Open Legislation after it, in
-  // that order.
+  // that order. Since 0.8.0 City Record is a pack over the Socrata server,
+  // with the Socrata entry's configuration: required.
   assert.deepEqual(
     CIVIC_MANIFEST.map((e) => [e.sourceId, e.alias, e.configuration.requirement]),
     [
@@ -34,7 +35,7 @@ test('manifest: seven entries, each carrying identity, alias, configuration, sch
       ['boston-opencontext', 'boston', 'optional'],
       ['nyc-charter', 'nyc_charter', 'optional'],
       ['nyc-checkbook', 'nyc_checkbook', 'optional'],
-      ['nyc-record', 'nyc_record', 'optional'],
+      ['nyc-record', 'nyc_record', 'required'],
       ['nys-legislation', 'nys_legislation', 'optional'],
     ],
   );
@@ -54,11 +55,15 @@ test('manifest: seven entries, each carrying identity, alias, configuration, sch
   }
 });
 
-test('manifest: one bare name is shared, search (Socrata, NYC Charter and NYS Open Legislation); every exposed name is unique', () => {
+test('manifest: three bare names are shared, search (Socrata, NYC Charter and NYS Open Legislation), and get_data and fetch (Socrata and the City Record pack); every exposed name is unique', () => {
   // Through 0.2.0 no two sources shared a bare name. The exposed names, the
   // router's key, are unique, and the startup checks run over them.
-  assert.deepEqual(findDuplicateToolNames(CIVIC_MANIFEST), [{ tool: 'search', sourceIds: ['socrata', 'nyc-charter', 'nys-legislation'] }]);
-  assert.throws(() => assertUniqueToolNames(CIVIC_MANIFEST), /Duplicate tool name "search"/);
+  assert.deepEqual(findDuplicateToolNames(CIVIC_MANIFEST), [
+    { tool: 'get_data', sourceIds: ['socrata', 'nyc-record'] },
+    { tool: 'search', sourceIds: ['socrata', 'nyc-charter', 'nys-legislation'] },
+    { tool: 'fetch', sourceIds: ['socrata', 'nyc-record'] },
+  ]);
+  assert.throws(() => assertUniqueToolNames(CIVIC_MANIFEST), /Duplicate tool name "get_data"/);
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
   assert.equal(new Set(civicRouter.aliasedMcpTools.map((t) => t.function.name)).size, civicRouter.aliasedMcpTools.length);
 });
@@ -81,9 +86,9 @@ test('manifest: each entry\'s configuration variable is the one the configuratio
   }
 });
 
-test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-seven', () => {
+test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-two', () => {
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
-  assert.equal(civicRouter.dispatchMap.size, 57);
+  assert.equal(civicRouter.dispatchMap.size, 52);
   assert.deepEqual(
     [...civicRouter.dispatchMap.values()].map((t) => [t.exposedName, t.upstreamName]),
     civicRouter.mcpTools.map((t) => [`${CIVIC_MANIFEST.find((e) => e.tools.includes(t))!.alias}__${t.function.name}`, t.function.name]),
@@ -109,10 +114,15 @@ test('views: each civic entry\'s tools are its toolsFor in the bare view, byte f
   assert.equal(JSON.stringify(socrataTools(BARE_VIEW)), JSON.stringify(socrata!.tools));
   assert.equal(JSON.stringify(dataCommonsTools(BARE_VIEW)), JSON.stringify(dataCommons!.tools));
   assert.equal(JSON.stringify(bostonTools(BARE_VIEW)), JSON.stringify(boston!.tools));
-  // The four hosted sources' schemas are their servers' text, not the
-  // package's: no toolsFor.
-  assert.equal(hosted.length, 4, 'four hosted entries');
-  for (const entry of hosted) assert.equal(entry.toolsFor, undefined, `${entry.sourceId} has no toolsFor`);
+  // The three hosted sources' schemas are their servers' text, not the
+  // package's: no toolsFor. The City Record pack's are the Socrata kind's,
+  // so it has one, and its tools are its toolsFor in the bare view.
+  assert.equal(hosted.length, 4, 'four entries after the three');
+  for (const entry of hosted) {
+    if (entry.base === undefined) assert.equal(entry.toolsFor, undefined, `${entry.sourceId} has no toolsFor`);
+    else assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools), `${entry.sourceId}: toolsFor in the bare view`);
+  }
+  assert.deepEqual(hosted.filter((entry) => entry.base !== undefined).map((entry) => entry.sourceId), ['nyc-record']);
   for (const entry of CIVIC_MANIFEST.slice(0, 3)) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
 });
 

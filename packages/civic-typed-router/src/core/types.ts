@@ -243,11 +243,18 @@ export interface ManifestEntry<Context = unknown> {
   /** A pack's base: the `sourceId` of the server entry whose tools the pack
    *  calls with fixed arguments (sources-at-scale design §4.1). Absent on a
    *  server entry. A call of one of the pack's tools goes to the base's
-   *  server, and is recorded under the pack's `sourceId`: the dispatch map
-   *  carries it (`DispatchTarget.base`), and the startup checks refuse a
-   *  pack whose base names no entry or names a pack (since the inventory
-   *  loader, `manifestFromInventory`). */
+   *  server, and is recorded under the base's `sourceId`, with the pack's
+   *  inventory `id` beside it as `mcp.pack_id`: the dispatch map carries the
+   *  base (`DispatchTarget.base`), and the startup checks refuse a pack whose
+   *  base names no entry or names a pack (since the inventory loader,
+   *  `manifestFromInventory`). */
   readonly base?: string;
+  /** A pack's own version and hash, as its inventory entry states them
+   *  (`hash` is `packHash`, which the loader checks). Set by the loader on a
+   *  pack's entry, absent on a server entry; a record credits the pack as
+   *  `<version>+<first twelve characters of hash>`. Carried, never read by
+   *  the router (since 0.8.0). */
+  readonly pack?: { readonly version: string; readonly hash: string };
 }
 
 /** An ordered list of sources. The order is the order the prompt and the
@@ -257,7 +264,9 @@ export type Manifest<Context = unknown> = readonly ManifestEntry<Context>[];
 /** Each source's configured address, keyed by `sourceId`. A source with no
  *  key, or with an empty value, is not configured. A hosted source, which
  *  takes no address, is configured by its switch: its value here is the
- *  switch's value while the switch is on, and it has no key otherwise. */
+ *  switch's value while the switch is on, and it has no key otherwise. A
+ *  pack, which takes no address of its own, is keyed by its base's address
+ *  (since 0.8.0). */
 export type ConfiguredAddresses = { readonly [sourceId: string]: string | undefined };
 
 // --- The harness definition (ADR-0037) ---------------------------------------------

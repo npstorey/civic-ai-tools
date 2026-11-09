@@ -16,12 +16,14 @@
 // when the switch is on, so with the switch unset every reading is 0.2.0's,
 // key for key.
 //
-// Since 0.6.0 it reads three more switches of the same kind, one per hosted
-// source: `NYC_CHECKBOOK_HOSTING`, `NYC_RECORD_HOSTING` and
-// `NYS_LEGISLATION_HOSTING` (`./nyc-checkbook.ts`, `./nyc-record.ts`,
-// `./nys-legislation.ts`). Each is on only at exactly `sandbox` after
-// trimming, and each key is in the result only while its switch is on, so
-// with the three unset every reading is 0.5.0's, key for key.
+// Since 0.6.0 it reads two more switches of the same kind, one per hosted
+// source: `NYC_CHECKBOOK_HOSTING` and `NYS_LEGISLATION_HOSTING`
+// (`./nyc-checkbook.ts`, `./nys-legislation.ts`). Each is on only at exactly
+// `sandbox` after trimming, and each key is in the result only while its
+// switch is on, so with the switches unset every reading is 0.5.0's, key for
+// key. 0.6.0 and 0.7.0 read a third, City Record's; since 0.8.0 City Record
+// is a pack over the Socrata server (`./nyc-record.ts`), takes no switch, and
+// is keyed by the Socrata address (`configuredAddresses`).
 
 import type { ConfiguredAddresses } from '../core/types.ts';
 
@@ -36,8 +38,6 @@ export const NYC_CHARTER_HOSTING_VARIABLE = 'NYC_CHARTER_HOSTING';
 
 /** The switch that offers NYC Checkbook (since 0.6.0). */
 export const NYC_CHECKBOOK_HOSTING_VARIABLE = 'NYC_CHECKBOOK_HOSTING';
-/** The switch that offers NYC City Record (since 0.6.0). */
-export const NYC_RECORD_HOSTING_VARIABLE = 'NYC_RECORD_HOSTING';
 /** The switch that offers NYS Open Legislation (since 0.6.0). */
 export const NYS_LEGISLATION_HOSTING_VARIABLE = 'NYS_LEGISLATION_HOSTING';
 
@@ -74,9 +74,6 @@ export interface McpRegistryEnv {
   /** Present only when `NYC_CHECKBOOK_HOSTING` is `sandbox` after trimming
    *  (since 0.6.0). */
   nycCheckbookHosting?: typeof HOSTING_SANDBOX;
-  /** Present only when `NYC_RECORD_HOSTING` is `sandbox` after trimming
-   *  (since 0.6.0). */
-  nycRecordHosting?: typeof HOSTING_SANDBOX;
   /** Present only when `NYS_LEGISLATION_HOSTING` is `sandbox` after trimming
    *  (since 0.6.0). */
   nysLegislationHosting?: typeof HOSTING_SANDBOX;
@@ -100,8 +97,7 @@ function hostingSwitchOn(raw: string | undefined): boolean {
  *  key fields are always present, in this order, with `undefined` for an
  *  absent value. Each switch's key follows them only when that switch is on,
  *  in manifest order (`nycCharterHosting`, `nycCheckbookHosting`,
- *  `nycRecordHosting`, `nysLegislationHosting`); otherwise the result has no
- *  such key. */
+ *  `nysLegislationHosting`); otherwise the result has no such key. */
 export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
   return {
     socrataUrl: presentOrUndefined(source[SOCRATA_ADDRESS_VARIABLE]),
@@ -110,32 +106,42 @@ export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
     bostonOpencontextUrl: presentOrUndefined(source[BOSTON_OPENCONTEXT_ADDRESS_VARIABLE]),
     ...(hostingSwitchOn(source[NYC_CHARTER_HOSTING_VARIABLE]) ? { nycCharterHosting: NYC_CHARTER_HOSTING_SANDBOX } : {}),
     ...(hostingSwitchOn(source[NYC_CHECKBOOK_HOSTING_VARIABLE]) ? { nycCheckbookHosting: HOSTING_SANDBOX } : {}),
-    ...(hostingSwitchOn(source[NYC_RECORD_HOSTING_VARIABLE]) ? { nycRecordHosting: HOSTING_SANDBOX } : {}),
     ...(hostingSwitchOn(source[NYS_LEGISLATION_HOSTING_VARIABLE]) ? { nysLegislationHosting: HOSTING_SANDBOX } : {}),
   };
 }
 
+/** Each civic pack's base, by the pack's source id (since 0.8.0): City
+ *  Record over the Socrata server. A pack takes no address of its own. */
+const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata' });
+
 /** Each civic source's configured address, keyed by source id: the mapping
  *  the reference website keeps as `MCP_SOURCE_ADDRESS_FIELD`. Addresses only:
  *  a hosted source has none, so no hosted source ever has a key here, switch
- *  on or off. */
+ *  on or off. Since 0.8.0 a pack is keyed by its base's address: it has a key
+ *  when its base has an address, with that address as its value, and none
+ *  otherwise. */
 export function configuredAddresses(configured: McpRegistryEnv): ConfiguredAddresses {
-  return {
+  const addresses: Record<string, string | undefined> = {
     socrata: configured.socrataUrl,
     'data-commons': configured.dataCommonsUrl,
     'boston-opencontext': configured.bostonOpencontextUrl,
   };
+  for (const [pack, base] of Object.entries(PACK_BASES)) {
+    const address = addresses[base];
+    if (address !== undefined) addresses[pack] = address;
+  }
+  return addresses;
 }
 
-/** What selection reads: `configuredAddresses`, and each hosted source whose
- *  switch is on, keyed by its source id with the switch's value. A hosted
- *  source is offered by its switch, never by an address. */
+/** What selection reads: `configuredAddresses` (a pack keyed by its base's
+ *  address), and each hosted source whose switch is on, keyed by its source
+ *  id with the switch's value. A hosted source is offered by its switch,
+ *  never by an address. */
 export function configuredSources(configured: McpRegistryEnv): ConfiguredAddresses {
   return {
     ...configuredAddresses(configured),
     ...(configured.nycCharterHosting === NYC_CHARTER_HOSTING_SANDBOX ? { 'nyc-charter': NYC_CHARTER_HOSTING_SANDBOX } : {}),
     ...(configured.nycCheckbookHosting === HOSTING_SANDBOX ? { 'nyc-checkbook': HOSTING_SANDBOX } : {}),
-    ...(configured.nycRecordHosting === HOSTING_SANDBOX ? { 'nyc-record': HOSTING_SANDBOX } : {}),
     ...(configured.nysLegislationHosting === HOSTING_SANDBOX ? { 'nys-legislation': HOSTING_SANDBOX } : {}),
   };
 }

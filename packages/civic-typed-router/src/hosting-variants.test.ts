@@ -28,7 +28,8 @@ import { CIVIC_MANIFEST, configuredSources, NYC_CHARTER_HOSTING_SANDBOX, readMcp
 const READ_ON = '2026-10-18';
 
 /** The UTC date 0.6.0's phase (R8 H3) read the statements its three entries
- *  cite. */
+ *  cite; two since 0.8.0, when City Record became a pack over the Socrata
+ *  server and took Socrata's variant. */
 const READ_ON_H3 = '2026-10-19';
 
 /** The date each stated posture was read, by source: the phase that wrote
@@ -37,7 +38,6 @@ const READ_ON_BY_SOURCE: Record<string, string> = {
   'data-commons': READ_ON,
   'boston-opencontext': READ_ON,
   'nyc-checkbook': READ_ON_H3,
-  'nyc-record': READ_ON_H3,
   'nys-legislation': READ_ON_H3,
 };
 
@@ -93,6 +93,7 @@ test('hosting variants: every entry lists one variant, states its consent defaul
       ['nyc-charter', 1, 'on', false],
       // D7b = A.
       ['nyc-checkbook', 1, 'ask-first', false],
+      // A pack: Socrata's variant and consent default.
       ['nyc-record', 1, 'on', false],
       ['nys-legislation', 1, 'ask-first', false],
     ],
@@ -116,7 +117,7 @@ test('hosting variants: each entry names its publisher, as the source\'s own pag
 
 // --- The variants ------------------------------------------------------------------
 
-test('hosting variants: Socrata, Data Commons and Boston OpenContext each have one remote variant, with no package field and no address', () => {
+test('hosting variants: Socrata, Data Commons and Boston OpenContext each have one remote variant, with no package field and no address; the City Record pack carries Socrata\'s', () => {
   const remote = (sourceId: string) => {
     const [variant] = variants(sourceId);
     assert.ok(variant);
@@ -126,6 +127,7 @@ test('hosting variants: Socrata, Data Commons and Boston OpenContext each have o
   assert.deepEqual(remote('socrata'), ['remote', 'remote', 'other']);
   assert.deepEqual(remote('data-commons'), ['remote', 'remote', 'publisher']);
   assert.deepEqual(remote('boston-opencontext'), ['remote', 'remote', 'government']);
+  assert.equal(variants('nyc-record'), variants('socrata'), 'the pack\'s variants are its base\'s, the same array');
 });
 
 test('hosting variants: NYC Charter has one npm-package variant, sandbox, in the instance\'s sandbox, with 0.3.0\'s package, version and commit and no outbound host', () => {
@@ -204,16 +206,12 @@ test('logging posture: each variant\'s holders, in the order the data flows, sta
           },
         ],
       ],
+      // A pack over the Socrata server since 0.8.0: Socrata's variant, its
+      // holders named by role.
       'nyc-record': [
         [
-          { statedBy: 'instance', role: 'sandbox-platform' },
-          {
-            statedBy: 'manifest',
-            holder: 'City of New York',
-            keeps: 'not-stated',
-            statementUrl: 'https://www.nyc.gov/home/privacy-policy.page',
-            readOn: READ_ON_H3,
-          },
+          { statedBy: 'instance', role: 'server-operator' },
+          { statedBy: 'instance', role: 'portal-operator' },
         ],
       ],
       'nys-legislation': [

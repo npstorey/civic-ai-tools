@@ -54,7 +54,11 @@ const EXAMPLE_ENTRY: CivicManifestEntry = {
   consentDefault: 'on',
 };
 
-const FOUR: CivicManifest = [...CIVIC_MANIFEST, EXAMPLE_ENTRY];
+/** The civic manifest's server entries, then the fourth source. City Record,
+ *  a pack over the Socrata server since 0.8.0, is offered in every
+ *  configuration, so it is left out here: the three sources the
+ *  configurations below offer stay three, and the stub is the fourth. */
+const FOUR: CivicManifest = [...CIVIC_MANIFEST.filter((entry) => entry.base === undefined), EXAMPLE_ENTRY];
 
 function input(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptInput> = {}): BuildSystemPromptInput {
   return {
@@ -69,13 +73,14 @@ function input(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptInput
 
 const ALL_CONFIGURED = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org', BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp' });
 
-/** The three hosted sources of 0.6.0, after NYC Charter: their switches are
+/** The two hosted sources of 0.6.0 after NYC Charter (City Record, the
+ *  third, is a pack over the Socrata server since 0.8.0): their switches are
  *  unset in every configuration here, so each is not-configured. */
-const HOSTED_OF_06 = ['nyc-checkbook', 'nyc-record', 'nys-legislation'];
+const HOSTED_OF_06 = ['nyc-checkbook', 'nys-legislation'];
 
-/** Their exposed names, in manifest order: withheld in every configuration
- *  here. */
-const HOSTED_OF_06_EXPOSED = [...civicRouter.dispatchMap.values()].filter((t) => HOSTED_OF_06.includes(t.sourceId)).map((t) => t.exposedName);
+/** A source's exposed names, in its order. */
+const exposedOf = (sourceId: string): string[] =>
+  [...civicRouter.dispatchMap.values()].filter((t) => t.sourceId === sourceId).map((t) => t.exposedName);
 
 // --- F4 ---------------------------------------------------------------------------------
 
@@ -149,21 +154,24 @@ test('selection: the default is every configured source, and its outputs are the
       ['boston-opencontext', 'boston', 'not-configured'],
       ['nyc-charter', 'nyc_charter', 'not-configured'],
       ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
-      ['nyc-record', 'nyc_record', 'not-configured'],
+      // A pack over the Socrata server, required as its base is.
+      ['nyc-record', 'nyc_record', 'configured'],
       ['nys-legislation', 'nys_legislation', 'not-configured'],
     ],
   );
   const bare = await civicRouter.buildSystemPrompt(input(configured));
   assert.equal(await civicRouter.buildSystemPrompt(input(configured, { selection: undefined })), bare);
   // Selecting every offered source by name changes the reasons, not the bytes.
-  const all = ['socrata', 'data-commons'];
+  const all = ['socrata', 'data-commons', 'nyc-record'];
   assert.equal(await civicRouter.buildSystemPrompt(input(configured, { selection: all })), bare);
   assert.deepEqual(civicRouter.sourcesOffered(configured, all).map((s) => s.reason), [
     'selected',
     'selected',
     'not-configured',
     'not-configured',
-    ...HOSTED_OF_06.map(() => 'not-configured'),
+    'not-configured',
+    'selected',
+    'not-configured',
   ]);
 });
 
@@ -174,7 +182,9 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'selected',
     'not-selected',
     'not-configured',
-    ...HOSTED_OF_06.map(() => 'not-configured'),
+    'not-configured',
+    'not-selected',
+    'not-configured',
   ]);
 
   const prompt = await civicRouter.buildSystemPrompt(input(ALL_CONFIGURED, { selection }));
@@ -197,10 +207,14 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'nyc_charter__list_titles',
     'nyc_charter__get_title',
     'nyc_charter__get_version',
-    // So are the three hosted sources of 0.6.0.
-    ...HOSTED_OF_06_EXPOSED,
+    // So are the two hosted sources of 0.6.0; the City Record pack between
+    // them is offered and not selected.
+    ...exposedOf('nyc-checkbook'),
+    'nyc_record__get_data',
+    'nyc_record__fetch',
+    ...exposedOf('nys-legislation'),
   ]);
-  assert.equal(HOSTED_OF_06_EXPOSED.length, 41);
+  assert.equal(HOSTED_OF_06.flatMap(exposedOf).length, 34);
   assert.match(civicRouter.portalLockGuidance('data.cityofnewyork.us', ALL_CONFIGURED, selection), /\(Data Commons\) is separate/);
 
   // Not selected, the source is not offered at dispatch either.
@@ -216,7 +230,9 @@ test('selection: a source the configuration does not offer is not-configured wha
     'not-selected',
     'not-configured',
     'not-configured',
-    ...HOSTED_OF_06.map(() => 'not-configured'),
+    'not-configured',
+    'not-selected',
+    'not-configured',
   ]);
   assert.deepEqual(civicRouter.offeredSkillSources(configured, selection), ['socrata']);
 });
@@ -239,7 +255,13 @@ test('fields: each civic entry carries a description and a freshness line, one l
 });
 
 test('fields: the bare outputs do not read description or freshness', async () => {
-  const blanked: CivicManifest = CIVIC_MANIFEST.map((entry) => ({ ...entry, description: 'X', freshness: 'Y', freshnessSource: 'Z' }));
+  // Of an entry with a preamble entry of its own (the three civic sources).
+  // City Record, a pack offered in every configuration since 0.8.0, has none:
+  // its preamble entry is composed from its displayName and description.
+  const blanked: CivicManifest = CIVIC_MANIFEST.map((entry) =>
+    entry.prompt?.preambleEntry ? { ...entry, description: 'X', freshness: 'Y', freshnessSource: 'Z' } : entry,
+  );
+  assert.equal(blanked.filter((entry, i) => entry !== CIVIC_MANIFEST[i]).length, 3);
   const router = createCivicRouter(blanked);
   const configured = ALL_CONFIGURED;
   assert.equal(await router.buildSystemPrompt(input(configured)), await civicRouter.buildSystemPrompt(input(configured)));

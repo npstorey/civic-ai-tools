@@ -260,8 +260,10 @@ export interface DispatchTarget {
   /** Whether the exposed name differs from `<alias>__<upstreamName>`. */
   readonly normalized: boolean;
   /** On a pack's tool, the base's `sourceId`: the server the call goes to,
-   *  while `sourceId` is the pack's, the key the call is recorded under.
-   *  Absent on a server entry's tool. */
+   *  and the source the call is recorded under, with the pack's inventory
+   *  `id` beside it as `mcp.pack_id`. `sourceId` and `alias` are the pack's:
+   *  they name the exposed tool and the source the model loaded. Absent on a
+   *  server entry's tool. */
   readonly base?: string;
 }
 

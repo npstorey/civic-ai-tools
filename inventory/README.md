@@ -4,8 +4,9 @@
 entries, each a source's identity, routing lines, configuration, hosting variants with their logging postures, and its
 tools by name and hash. The router builds a manifest from it by entry kind (`manifestFromInventory(inventory, kinds)`
 in `@typedstandards/civic-typed-router`); the router's own `CIVIC_MANIFEST` stays code and is held equal to this file
-by the router's tests (hub #309, G0-5 A). Version `2026-11-06.1` holds the router's seven sources, as `server` entries
-in `CIVIC_MANIFEST`'s order.
+by the router's tests (hub #309, G0-5 A). Version `2026-11-09.1` (version 2, router 0.8.0) holds the router's seven
+sources in `CIVIC_MANIFEST`'s order: six `server` entries, and City Record (`nyc-record`) as a `pack` over the Socrata
+server. Version 1, `2026-11-06.1`, held the seven as `server` entries.
 
 | File | What it is |
 |---|---|
@@ -18,21 +19,23 @@ in `CIVIC_MANIFEST`'s order.
 
 `{ schema, id, version, note?, entries }`, each entry a `server` or a `pack` (`schema.json`; the sources-at-scale
 design §3.2). Every value is a string, an array or an object: the router's `canonicalJson`, which hashes the file,
-refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of version 1 has a value of
+refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of version 1 or 2 has a value of
 another type (each was checked: the router's entries carry none in the fields the file states, and the tool schemas,
 which do hold booleans and numbers, are referenced by hash, never carried).
 
-- **`id`** is `civic`. **`version`** is `YYYY-MM-DD.N`: the UTC date the version was written and a counter, with one
-  `CHANGELOG.md` line.
+- **`id`** is `civic`. **`version`** is `YYYY-MM-DD.N`: the UTC date the version was written, a calendar date, and a
+  counter with no leading zero (`2026-11-09.1`, never `2026-11-09.01`), with one `CHANGELOG.md` line. It is the
+  harness's form for a record's `considered.inventory.version` less its build metadata (`<version>+<hash12>`).
 - **The hash** is the SHA-256 of the router's `canonicalJson` of the parsed file, not of its bytes (S1's definition,
   `benchmark/README.md`, kept so the hash can become a content node's hash later, hub #299). It is computed by the
   same code that hashes a harness definition, so re-indenting the file does not move it. `civic-inventory.json.sha256`
   states it, and the router's `CIVIC_INVENTORY.hash` names it.
 - **The release.** Each version is served raw at the hub tag `civic-inventory/<version>`, its own tag family (the
   bundle's pattern, ADR-0038 §5), so a reader resolves a cited version by its tag and checks its hash.
-- **Curation.** One editor merges; an entry arrives by pull request with its `provenance`. Every column of version 1 is
-  curated (a person read and dated it): no entry is a portal pack, so no column is generated from a catalog, and the
-  refresh script for generated columns lands with the first packs (S6).
+- **Curation.** One editor merges; an entry arrives by pull request with its `provenance`. Every column of versions 1
+  and 2 is curated (a person read and dated it): no entry is a portal pack (City Record is a pack written by hand), so
+  no column is generated from a catalog, and the refresh script for generated columns lands with the first portal packs
+  (S6).
 - **Logging postures** keep ADR-0036's rule: a posture is stated by the manifest (`statedBy: manifest`) only where a
   holder's statement was read, with its `statementUrl` and `readOn` date; where the instance decides the holder, the
   entry names it by role (`statedBy: instance`). The schema requires both fields of a stated posture.
@@ -48,11 +51,20 @@ the preamble entry where a source has its own, the portal lock). A kind is code;
 data.
 
 **A pack** is a base server's tools called with fixed arguments (`filter`), plus text (design §4.1's three-part rule).
-Its `configuration`, hosting variants and consent default are its base's; the loader sets `base` on its manifest entry
-so a call names the base's server and the pack's `sourceId`. Over the Socrata server a filter fixes `portal` and
-optionally `dataset_id`; the pack's `get_data` and `fetch` are rewritten for them as the one-portal lock rewrites a
-portal, and its `search` exists only for a portal-only pack over the portal the server is configured for (`search`
-takes one argument and covers that portal alone). Version 1 holds no pack.
+Its `configuration`, hosting variants and consent default are its base's; the loader sets `base` on its manifest entry,
+and a call of one of its tools goes to the base's server and is recorded under the base's `sourceId`, with the pack's
+`id` beside it (`mcp.pack_id`). Over the Socrata server a filter fixes `portal` and optionally `dataset_id`; the pack's
+`get_data` and `fetch` are rewritten for them as the one-portal lock rewrites a portal, and its `search` exists only
+for a portal-only pack over the portal the server is configured for (`search` takes one argument and covers that portal
+alone). A pack's own text is its **`guidance`** member (a `guidanceRef` object of kind `inline`, or `none`), held to its
+`blockSha256`. Its **`version`** is the pack's own, and its **`hash`** is required: the SHA-256 of the router's
+`canonicalJson` of the entry with `hash`, `provenance` and `toolsRef` removed (the router's `packHash`), so it moves
+when the pack's identity, filter, routing lines, prompt strings, place, categories or guidance move, and not when its
+provenance note is edited. `check:inventory` and the router's loader each refuse a pack whose `hash` is not that
+value; the loader carries the two on the pack's manifest entry as `pack: { version, hash }`, and a record credits the
+pack as `<version>+<the hash's first twelve characters>`. A pack has no `configuration` of its own, and the router
+keys it by its base's address. Version 1 holds no pack; version 2 holds City Record, `get_data` and `fetch` over the
+dataset `dg92-zbpx` on `data.cityofnewyork.us`, with seven query recipes as its guidance.
 
 ## Against civic-inventory/1
 
@@ -66,8 +78,10 @@ vocabulary (`text`, `alias`, `sha256`, `date`, `configuration`, `place`, `catego
   package its `package`, `version`, `commit` and `outbound` hosts.
 - `prompt` on any entry: the prompt frame's strings, `citation` and `lockMention`.
 - On a pack: `id` (required), `publisher`, `freshnessSource` and `prompt`; `base` and `filter` as the loader reads them
-  (`base` a server entry's `sourceId`; `filter` one or more fixed arguments, each a non-empty string).
-- `guidanceRef.kind: inline` with `text`, a pack's own guidance, held to its `blockSha256`.
+  (`base` a server entry's `sourceId`; `filter` one or more fixed arguments, each a non-empty string); `hash`, required
+  since version 2 (above).
+- `guidanceRef.kind: inline` with `text`, held to its `blockSha256`: a pack's own guidance, carried in the pack's
+  `guidance` member.
 
 **Changed:**
 - `toolsRef` is `{ toolNames, sha256, fixture? }`: no `kind`, `package` or `sourceId`. `guidanceRef` is
@@ -132,6 +146,7 @@ the repository named:
 
 `npm run check:inventory` (`scripts/check-inventory.mjs`) prints `Inventory check passed.` when the file validates
 against `schema.json` (ajv 6.15.0), holds only strings, arrays and objects, has a `.sha256` equal to its
-`canonicalJson` SHA-256, a `YYYY-MM-DD.N` version with a `CHANGELOG.md` line, and loads with the router's
+`canonicalJson` SHA-256, a `YYYY-MM-DD.N` version (a calendar date, a counter with no leading zero) with a
+`CHANGELOG.md` line, a `hash` on every pack equal to its `packHash`, and loads with the router's
 `manifestFromInventory(file, CIVIC_KINDS)`. Its self-test, `check:inventory:self-test`, runs it on the file and on
 decoys.

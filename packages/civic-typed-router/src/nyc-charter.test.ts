@@ -220,7 +220,8 @@ test('switch: readMcpEnv holds nycCharterHosting only for "sandbox" after trimmi
 test('switch: configuredAddresses never has a key for nyc-charter, switch on or off', () => {
   for (const value of [undefined, '', 'sandbox', ' sandbox ', 'hosted']) {
     const addresses = configuredAddresses(env(value));
-    assert.deepEqual(Object.keys(addresses), ['socrata', 'data-commons', 'boston-opencontext']);
+    // The City Record pack (since 0.8.0) is keyed by the Socrata address.
+    assert.deepEqual(Object.keys(addresses), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-record']);
     assert.equal(Object.hasOwn(addresses, 'nyc-charter'), false, `NYC_CHARTER_HOSTING=${String(value)}`);
   }
 });
@@ -232,17 +233,18 @@ test('switch: sourcesOffered gives nyc-charter not-configured with the switch of
     ['data-commons', 'data_commons', 'configured'],
     ['boston-opencontext', 'boston', 'configured'],
   ];
-  // The three hosted sources of 0.6.0, their switches unset in `env`.
+  // The two hosted sources of 0.6.0, their switches unset in `env`, and the
+  // City Record pack between them (since 0.8.0), offered with Socrata.
   const after = [
     ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
-    ['nyc-record', 'nyc_record', 'not-configured'],
+    ['nyc-record', 'nyc_record', 'configured'],
     ['nys-legislation', 'nys_legislation', 'not-configured'],
   ];
   assert.deepEqual(rows(env(undefined)), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
   assert.deepEqual(rows(env('hosted')), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
   assert.deepEqual(rows(env('sandbox')), [...three, ['nyc-charter', 'nyc_charter', 'configured'], ...after]);
-  assert.deepEqual(civicRouter.offeredSkillSources(env('sandbox')), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter']);
-  assert.deepEqual(civicRouter.offeredSkillSources(env(undefined)), ['socrata', 'data-commons', 'boston-opencontext']);
+  assert.deepEqual(civicRouter.offeredSkillSources(env('sandbox')), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', 'nyc-record']);
+  assert.deepEqual(civicRouter.offeredSkillSources(env(undefined)), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-record']);
   // A selection narrows it as any other source.
   assert.deepEqual(civicRouter.sourcesOffered(env('sandbox'), ['socrata']).map((s) => s.reason), [
     'selected',
@@ -250,27 +252,34 @@ test('switch: sourcesOffered gives nyc-charter not-configured with the switch of
     'not-selected',
     'not-selected',
     'not-configured',
-    'not-configured',
+    'not-selected',
     'not-configured',
   ]);
 });
 
 // --- Switched on: the tools and the prompt ----------------------------------------------
 
+/** The City Record pack's two (since 0.8.0): offered with Socrata, after
+ *  Charter in the manifest. */
+const PACK_TWO = ['nyc_record__get_data', 'nyc_record__fetch'];
+
 test('switch on: the aliased offered tools gain exactly Charter\'s five, after the sources before it, in its order', () => {
   for (const boston of [true, false]) {
     const off = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpToolsFor(undefined), env(undefined, boston));
     const on = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpToolsFor(undefined), env('sandbox', boston));
     const names = (tools: FunctionToolSchema[]) => tools.map((t) => t.function.name);
-    assert.equal(off.length, boston ? 11 : 5);
-    assert.deepEqual(names(on), [...names(off), ...EXPOSED_FIVE], `Boston ${boston ? 'set' : 'unset'}: the five are appended`);
-    assert.equal(JSON.stringify(on.slice(0, off.length)), JSON.stringify(off), 'the tools before them are unchanged');
+    assert.equal(off.length, boston ? 13 : 7);
+    assert.deepEqual(names(off).slice(-2), PACK_TWO, 'the pack\'s two close the offer');
+    const before = off.length - PACK_TWO.length;
+    assert.deepEqual(names(on), [...names(off).slice(0, before), ...EXPOSED_FIVE, ...PACK_TWO], `Boston ${boston ? 'set' : 'unset'}: the five follow the sources before Charter`);
+    assert.equal(JSON.stringify(on.slice(0, before)), JSON.stringify(off.slice(0, before)), 'the tools before them are unchanged');
+    assert.equal(JSON.stringify(on.slice(-2)), JSON.stringify(off.slice(-2)), 'and the pack\'s after them');
     // Positions: 11-15 with Boston set, 5-9 without.
     assert.deepEqual(EXPOSED_FIVE.map((n) => names(on).indexOf(n)), boston ? [11, 12, 13, 14, 15] : [5, 6, 7, 8, 9]);
   }
   // The five are the fixture's schemas under their exposed names.
   const on = civicRouter.aliasedOfferedMcpTools(civicRouter.aliasedMcpToolsFor(undefined), env('sandbox'));
-  const five = on.slice(-5);
+  const five = on.slice(11, 16);
   assert.deepEqual(five.map((t) => t.function.parameters), FIXTURE_TOOLS.map((t) => t.function.parameters));
   assert.deepEqual(five.map((t) => t.function.description), FIXTURE_TOOLS.map((t) => t.function.description), 'no anchored name in them to rewrite');
 });
@@ -300,7 +309,7 @@ const CHARTER_DESCRIPTION =
   "New York City's own law: the full text of the New York City Charter, the Administrative Code and the Rules of the City of New York, by section, with title and chapter listings and keyword search. Covers New York City only. Holds no court decisions, no New York State or federal law, and no bills still in progress.";
 const CHARTER_CITATION = 'the section citation and the document it is from (for the NYC Charter, Administrative Code and Rules)';
 
-test('switch on: the prompt differs from the same configuration unset in exactly the count word, one preamble entry and one outro citation, in both views', async () => {
+test('switch on: the prompt differs from the same configuration unset in exactly the count word, one preamble entry (the City Record pack\'s after it renumbered) and one outro citation, in both views', async () => {
   for (const view of ['bare', 'aliased'] as const) {
     const build = view === 'bare' ? civicRouter.buildSystemPrompt : civicRouter.aliasedBuildSystemPrompt;
     const off = recording();
@@ -308,17 +317,18 @@ test('switch on: the prompt differs from the same configuration unset in exactly
     const unset = await build(off.input(env(undefined)));
     const set = await build(on.input(env('sandbox')));
     const tools = (view === 'bare' ? FIVE : EXPOSED_FIVE).join(', ');
+    // Offered unset: Socrata, Data Commons, Boston OpenContext and the City
+    // Record pack (since 0.8.0); Charter goes in before the pack.
     const expected = unset
-      .replace('You have access to THREE MCP data sources', 'You have access to FOUR MCP data sources')
+      .replace('You have access to FOUR MCP data sources', 'You have access to FIVE MCP data sources')
       .replace(
-        /(\n3\. \*\*Boston OpenContext\*\*[^\n]*\n)/,
-        `$1${`4. **NYC Charter, Laws and Rules MCP Server** — ${CHARTER_DESCRIPTION} Tools: ${tools}.`.replace(/\$/g, '$$$$')}\n`,
+        /(\n3\. \*\*Boston OpenContext\*\*[^\n]*\n)4\. (\*\*NYC City Record)/,
+        `$1${`4. **NYC Charter, Laws and Rules MCP Server** — ${CHARTER_DESCRIPTION} Tools: ${tools}.`.replace(/\$/g, '$$$$')}\n5. $2`,
       )
       .replace(
-        'the resource UUID + dataset title (for Boston OpenContext).',
-        `the resource UUID + dataset title (for Boston OpenContext), or ${CHARTER_CITATION}.`,
-      )
-      .replace('cite the dataset ID (for Socrata), the variable DCID + source dataset (for Data Commons), or the resource UUID', 'cite the dataset ID (for Socrata), the variable DCID + source dataset (for Data Commons), the resource UUID');
+        'the resource UUID + dataset title (for Boston OpenContext), or ',
+        `the resource UUID + dataset title (for Boston OpenContext), ${CHARTER_CITATION}, or `,
+      );
     assert.notEqual(set, unset, `${view}: switched on, the prompt changes`);
     assert.ok(set === expected, `${view}: the switched-on prompt is the unset one with exactly those three changes`);
     // No block: the guidance asked no fetcher, and the block count is unchanged.
@@ -334,11 +344,12 @@ test('switch on: the one-portal lock section names Charter among the other sourc
     const lock = view === 'bare' ? civicRouter.portalLockGuidance : civicRouter.aliasedPortalLockGuidance;
     const unset = lock('data.cityofnewyork.us', env(undefined));
     const set = lock('data.cityofnewyork.us', env('sandbox'));
-    assert.ok(unset.includes('(Data Commons, and Boston OpenContext for Boston) are separate'), `${view}: the unset mention`);
+    // The City Record pack (since 0.8.0) is offered with Socrata, after Charter.
+    assert.ok(unset.includes('(Data Commons, Boston OpenContext for Boston, and the City Record server for New York City notices) are separate'), `${view}: the unset mention`);
     assert.ok(
       set === unset.replace(
-        '(Data Commons, and Boston OpenContext for Boston) are separate',
-        '(Data Commons, Boston OpenContext for Boston, and the NYC Charter server for New York City law) are separate',
+        '(Data Commons, Boston OpenContext for Boston, and the City Record server for New York City notices) are separate',
+        '(Data Commons, Boston OpenContext for Boston, the NYC Charter server for New York City law, and the City Record server for New York City notices) are separate',
       ),
       `${view}: one mention added, nothing else`,
     );
@@ -400,10 +411,11 @@ test('bare view, switch on: it cannot tell the two "search" tools apart by name,
   const searchSources = (list: typeof tools) =>
     list.filter((t) => t.function.name === 'search').map((t) => civicRouter.manifest.find((e) => e.tools.includes(t))!.sourceId);
   assert.deepEqual(searchSources(tools), ['socrata', 'nyc-charter']);
-  // Only the three hosted sources of 0.6.0, whose switches are unset, are
-  // withheld, by their own schema objects: Socrata's and Charter's tools are
-  // the vocabulary's, in order.
-  const hostedOf06 = new Set(civicRouter.manifest.slice(4).flatMap((e) => e.tools));
+  // Only the two hosted sources of 0.6.0, whose switches are unset, are
+  // withheld, by their own schema objects: Socrata's, Charter's and the City
+  // Record pack's tools are the vocabulary's, in order.
+  const hostedOf06 = new Set(civicRouter.manifest.filter((e) => ['nyc-checkbook', 'nys-legislation'].includes(e.sourceId)).flatMap((e) => e.tools));
+  assert.equal(hostedOf06.size, 34);
   assert.deepEqual(tools, civicRouter.mcpTools.filter((t) => !hostedOf06.has(t)));
   // With every switch on, nothing is withheld: the vocabulary itself.
   const everySwitch = readMcpEnv({
@@ -411,7 +423,6 @@ test('bare view, switch on: it cannot tell the two "search" tools apart by name,
     BOSTON_OPENCONTEXT_MCP_URL: BOSTON,
     NYC_CHARTER_HOSTING: 'sandbox',
     NYC_CHECKBOOK_HOSTING: 'sandbox',
-    NYC_RECORD_HOSTING: 'sandbox',
     NYS_LEGISLATION_HOSTING: 'sandbox',
   });
   const all = civicRouter.offeredMcpTools(civicRouter.mcpToolsFor(undefined), everySwitch);

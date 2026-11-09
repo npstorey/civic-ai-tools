@@ -96,10 +96,11 @@ import { SOCRATA_ENTRY } from './socrata.ts';
 /** The civic sources, in the order the prompt and the tools array name them.
  *  NYC Charter, Laws and Rules follows the three remote sources: optional and
  *  off unless its switch is on, so with the switch off every output of the
- *  three before it is 0.2.0's. The three hosted sources of 0.6.0 follow it, in
- *  this order: NYC Checkbook, NYC City Record, NYS Open Legislation; each is
- *  optional and off unless its own switch is on, so with the three switches
- *  off every offered output is 0.5.0's. */
+ *  three before it is 0.2.0's. The three sources of 0.6.0 follow it, in this
+ *  order: NYC Checkbook, NYC City Record, NYS Open Legislation. Checkbook and
+ *  NYS Open Legislation are hosted, optional and off unless their own switch
+ *  is on. City Record is a pack over the Socrata server since 0.8.0, required
+ *  as Socrata is, so it is offered in every configuration. */
 export const CIVIC_MANIFEST: CivicManifest = [
   SOCRATA_ENTRY,
   DATA_COMMONS_ENTRY,

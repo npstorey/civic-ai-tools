@@ -1,8 +1,8 @@
 {
   "schema": "civic-inventory/2",
   "id": "civic",
-  "version": "2026-11-06.1",
-  "note": "The router's seven sources, as server entries in CIVIC_MANIFEST's order; the router keeps CIVIC_MANIFEST as code, held equal to this file by its tests (G0-5 A).",
+  "version": "2026-11-09.1",
+  "note": "The router's seven sources, in CIVIC_MANIFEST's order: six server entries and City Record as a pack over the Socrata server; the router keeps CIVIC_MANIFEST as code, held equal to this file by its tests (G0-5 A).",
   "entries": [
     {
       "kind": "server",
@@ -375,51 +375,27 @@
       }
     },
     {
-      "kind": "server",
-      "id": "@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp",
+      "kind": "pack",
+      "id": "nyc-record@https://data.cityofnewyork.us/d/dg92-zbpx",
       "alias": "nyc_record",
       "sourceId": "nyc-record",
       "displayName": "NYC City Record MCP Server",
       "description": "Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online.",
       "freshness": "Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily.",
       "freshnessSource": "The publisher's README for version 1.1.0, \"Data source\" (github.com/BetaNYC/nyc-record-mcp): the City Record Online dataset on NYC Open Data \"is updated daily and includes notices published in the official City Record since 2015\".",
-      "configuration": {
-        "addressVariable": "NYC_RECORD_HOSTING",
-        "requirement": "optional"
+      "base": "socrata",
+      "filter": {
+        "portal": "data.cityofnewyork.us",
+        "dataset_id": "dg92-zbpx"
       },
-      "hostings": [
-        {
-          "variant": "sandbox",
-          "kind": "npm-package",
-          "package": "@betanyc/nyc-record-mcp",
-          "version": "1.1.0",
-          "commit": "6c52a5353381592713678caa109870d1e912c858",
-          "outbound": [
-            "data.cityofnewyork.us"
-          ],
-          "runsAt": "instance-sandbox",
-          "logging": [
-            {
-              "statedBy": "instance",
-              "role": "sandbox-platform"
-            },
-            {
-              "statedBy": "manifest",
-              "holder": "City of New York",
-              "keeps": "not-stated",
-              "statementUrl": "https://www.nyc.gov/home/privacy-policy.page",
-              "readOn": "2026-10-19"
-            }
-          ]
-        }
-      ],
-      "consentDefault": "on",
+      "author": "BetaNYC",
       "publisher": "BetaNYC",
+      "version": "1",
+      "hash": "b4a208462f8d18b72be9817982e21c61374e1bdd3aab6f670cd68ce7dece8236",
       "prompt": {
         "citation": "the agency, notice type and publication date of each notice (for The City Record)",
         "lockMention": "the City Record server for New York City notices"
       },
-      "serverType": "npm-package",
       "place": {
         "country": "US",
         "level": "local",
@@ -432,27 +408,26 @@
         "public-notices",
         "spending-contracts"
       ],
+      "guidance": {
+        "kind": "inline",
+        "text": "# NYC City Record: query recipes\n\nThis source reads one dataset, City Record Online (`dg92-zbpx` on `data.cityofnewyork.us`): the notices published in The City Record, New York City's official journal, since 2015, one row per notice. The recipes use four of its columns: `agency_name`, `type_of_notice_description`, `start_date` (the date the notice was published) and `due_date` (a solicitation's response deadline).\n\nRead it with `get_data` and \"type\": \"query\". Every call names the portal and the dataset, \"portal\": \"data.cityofnewyork.us\" and \"dataset_id\": \"dg92-zbpx\": without \"dataset_id\" the server reads the \"query\" value as a dataset ID. `fetch` returns the dataset's metadata and columns, or one record by its identifier.\n\nEach recipe below is the query one tool of the City Record server (BetaNYC's nyc-record-mcp 1.1.0) sent to this dataset. Replace each value in angle brackets. Inside a SoQL string literal, write a single quote as two. Raise \"limit\" to see more rows.\n\n1. Search the notices' text for a phrase. Pass the phrase as \"query\": the server applies a \"query\" that does not begin with SELECT as a full-text search of the dataset (SoQL's $q), alongside \"order\" and \"limit\". A phrase that begins with the word SELECT is read as a SoQL statement instead, so reword it.\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"query\": \"sidewalk repair\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n2. Notices from one agency, by a full or partial name, such as DCAS or Parks:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"upper(agency_name) like upper('%<agency>%')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n3. Notices of one type. The types are Solicitation, Award, Intent to Award, Intent to Negotiate, Public Hearings, Public Comment, Meeting, Notice, Vendor List and Sale:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description='<type>'\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n4. Procurement notices: solicitations, awards, intents to award or negotiate, and vendor lists:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description in ('Solicitation','Award','Intent to Award','Intent to Negotiate','Vendor List')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n5. Public hearings, comment periods, meetings and other notices:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description in ('Public Hearings','Public Comment','Meeting','Notice')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n6. Open solicitations, whose response deadline has not passed, soonest first. <today> is today's date in New York, YYYY-MM-DD:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description='Solicitation' AND due_date >= '<today>'\", \"order\": \"due_date ASC\", \"limit\": 25 }\n\n7. Notices published between two dates, YYYY-MM-DD, both days included:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"start_date >= '<start>' AND start_date <= '<end>'\", \"order\": \"start_date DESC\", \"limit\": 50 }",
+        "blockSha256": "68b48b71b7e990b84d60edb2c777b1815c341215781fd379551bd89b148ad37d"
+      },
       "provenance": {
-        "addedOn": "2026-11-06",
+        "addedOn": "2026-11-09",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
-        "sourceUrl": "packages/civic-typed-router/src/civic/nyc-record.ts"
+        "by": "City Record as a pack over the Socrata server (hub #309, S2-B, inventory version 2). Its identity, routing lines, prompt strings, place and categories are the server entry's of version 1 (from the router's manifest at 0.6.0). Its guidance is seven query recipes, in order one for each tool of @betanyc/nyc-record-mcp 1.1.0, with the where, order and limit of that tool's handler in the package's dist/city-record.js (searchNotices, getNoticesByAgency, getNoticesByType, getProcurementNotices, getPublicHearings, getOpenSolicitations, getNoticesByDateRange); searchNotices' $q becomes the Socrata server's query, which it applies as $q. Read from the registry's tarball for 1.1.0, whose shasum and integrity equal the registry's dist; file and fileSha256 name the file inside the package.",
+        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0",
+        "file": "dist/city-record.js",
+        "commit": "6c52a5353381592713678caa109870d1e912c858",
+        "fileSha256": "622edb9fb6263b9a3ad40a20415f4b409d652c2531bf4dbbf7cfac619e2b0512"
       },
       "toolsRef": {
         "toolNames": [
-          "search_notices",
-          "get_notices_by_agency",
-          "get_notices_by_type",
-          "get_procurement_notices",
-          "get_public_hearings",
-          "get_open_solicitations",
-          "get_notices_by_date_range"
+          "get_data",
+          "fetch"
         ],
-        "sha256": "29d8a4a27d67db62324b36a36bb8325a92c68c63fd2236ed5aff11494efae147",
-        "fixture": "packages/civic-typed-router/src/__fixtures__/nyc-record-tools.json"
-      },
-      "guidanceRef": {
-        "kind": "none"
+        "sha256": "b451b84161fe8ac08156ef6f1ea3442d7809a18dc152a0760041997fb5a45873"
       }
     },
     {

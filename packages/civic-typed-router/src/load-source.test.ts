@@ -42,14 +42,14 @@ function r5With(aliases: readonly string[]): FunctionToolSchema {
   return tool as unknown as FunctionToolSchema;
 }
 
-/** Every source on: both optional addresses, and all four hosted sources'
- *  switches (since 0.6.0, the three after Charter's too). */
+/** Every source on: both optional addresses, and all three hosted sources'
+ *  switches (since 0.6.0, the two after Charter's too). City Record, a pack
+ *  over the Socrata server since 0.8.0, is offered with Socrata. */
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
   NYC_CHECKBOOK_HOSTING: 'sandbox',
-  NYC_RECORD_HOSTING: 'sandbox',
   NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
@@ -70,9 +70,9 @@ test('load_source: with every source configured it is R5\'s tool with the seven 
   assert.equal(tool.function.description, R5.loadSourceTool.function.description, 'the description is R5\'s');
 });
 
-test('load_source: its enum is the directory set: two aliases with the optional sources off, and a selection narrows it', () => {
+test('load_source: its enum is the directory set: three aliases with the optional sources off (the City Record pack is offered with Socrata), and a selection narrows it', () => {
   const aliasedLoadSourceTool = civicRouter.aliasedLoadSourceTool;
-  assert.deepEqual(aliasedLoadSourceTool({ configured: REQUIRED_ONLY }), r5With(['socrata', 'data_commons']));
+  assert.deepEqual(aliasedLoadSourceTool({ configured: REQUIRED_ONLY }), r5With(['socrata', 'data_commons', 'nyc_record']));
   assert.deepEqual(
     aliasedLoadSourceTool({ configured: EVERY_SOURCE, selection: ['nyc-charter', 'data-commons'] }),
     r5With(['data_commons', 'nyc_charter']),
