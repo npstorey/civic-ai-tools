@@ -2,6 +2,60 @@
 
 Factual record of what changed per published version.
 
+## 0.8.0 — 2026-11-09
+
+NYC City Record becomes a pack over the Socrata server, and the inventory
+moves to version 2 (`2026-11-09.1`). City Record keeps its `sourceId`
+(`nyc-record`) and alias (`nyc_record`), so a reader's consent and the
+directory carry over; its server, its sandbox and its switch are gone.
+
+- **City Record is a pack** (`NYC_RECORD_ENTRY`, sixth in `CIVIC_MANIFEST`
+  as before). `base` `socrata`; filter `{ portal: 'data.cityofnewyork.us',
+  dataset_id: 'dg92-zbpx' }`; `id`
+  `nyc-record@https://data.cityofnewyork.us/d/dg92-zbpx`; `version` `1`.
+  Its tools are `nyc_record__get_data` and `nyc_record__fetch`, the Socrata
+  server's held to that dataset; it has no `search`, since its filter names
+  a dataset. Its guidance is seven query recipes, one for each tool of
+  `@betanyc/nyc-record-mcp` 1.1.0, with that tool's `where`, `order` and
+  `limit`; the search recipe passes the phrase as `query` with
+  `type: query`, which the Socrata server applies as a full-text search
+  (`$q`). Its configuration, hosting variant and consent default are the
+  Socrata entry's: `required`, so the pack is offered in every
+  configuration, with the Socrata address set or unset, as Socrata is. So
+  every composition with no selection gains City Record's preamble entry,
+  block, citation and lock-section mention, and its tools array the pack's
+  two tools; and a bare `get_data` or `fetch` is refused as ambiguous
+  (`socrata__get_data` or `nyc_record__get_data`) in every configuration.
+  Every golden prompt and tools array holds byte for byte with the pack left
+  out of the selection; the in-loop fixture is re-captured, its directory
+  gaining City Record's line.
+- **The configuration (removed field and variable).** `readMcpEnv` reads
+  `NYC_RECORD_HOSTING` no more, and `McpRegistryEnv` loses its
+  `nycRecordHosting` field. `configuredAddresses`, and so
+  `configuredSources`, keys a pack by its base's address: `nyc-record` has a
+  key, the `SOCRATA_MCP_URL` value, exactly when `socrata` has an address.
+- **Five exports removed:** `NYC_RECORD_HOSTING_VARIABLE`,
+  `NYC_RECORD_HOSTING`, `NYC_RECORD_SANDBOX_VARIANT`,
+  `NYC_RECORD_TOOL_NAMES` and `NYC_RECORD_TOOLS`. `NYC_RECORD_ENTRY` stays.
+- **`pack: { version, hash }`**, a new optional member of `ManifestEntry`:
+  set by `manifestFromInventory` on a pack's entry from the inventory's
+  `version` and `hash`, absent on a server entry, and carried, never read
+  by the router. A consumer credits a pack as `<version>+<hash12>`.
+- **`packHash(entry)`**: a pack's hash, the SHA-256 of `canonicalJson` of
+  its inventory entry with `hash`, `provenance` and `toolsRef` removed.
+  `manifestFromInventory` refuses, with `InventoryLoadError` naming the
+  pack's alias and the field `hash`, a pack that states no hash or one that
+  is not its `packHash`. `InventoryPackEntry` gains `version` and `hash`.
+- **Three passages corrected.** `ManifestEntry.base`'s comment, the README's
+  pack paragraph and `DispatchTarget.base`'s comment named the pack's
+  `sourceId` as the one a pack's call is recorded by. Each now says the call
+  is recorded under the base's `sourceId`, with the pack's inventory `id`
+  beside it as `mcp.pack_id`.
+- **`CIVIC_INVENTORY`** is `{ id: 'civic', version: '2026-11-09.1', hash }`.
+  The hub's inventory check and schema now hold the version to a calendar
+  date and a counter with no leading zero (`2026-11-06.01` and
+  `2026-13-01.1` are refused), and require every pack's `hash`.
+
 ## 0.7.0 — 2026-11-07
 
 The seven sources as data: the hub's `inventory/civic-inventory.json`
