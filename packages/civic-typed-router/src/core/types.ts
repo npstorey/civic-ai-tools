@@ -5,6 +5,8 @@
 // entries that fill these shapes live in `../civic/`, and this directory
 // imports nothing from there and nothing from any package (`boundary.test.ts`).
 
+import type { BasePin } from './base-pins.ts';
+
 /** A JSON-schema object, structurally. The router never interprets one; it
  *  hands the object to the model as it is. */
 export type JsonSchema = { readonly [key: string]: unknown };
@@ -193,9 +195,13 @@ export type ConsentDefault = 'on' | 'ask-first';
 
 /** One source in a manifest. */
 export interface ManifestEntry<Context = unknown> {
-  /** The source's global identity: its MCP Registry name where it is
-   *  published there, otherwise its package or service name and address.
-   *  Carried, never read by the router. */
+  /** The source's global identity, `<name>@<locator>` (ADR-0039): for a
+   *  server an operator runs from published source, its package or
+   *  repository name and the repository's URL; for a service one party runs
+   *  at a fixed address, its name and that address; for a pack, its name and
+   *  the URL of the place in the API it reads. A server's MCP Registry name,
+   *  where it has one, goes in its inventory entry's `registry.name`, not
+   *  here. Unique in an inventory. Carried, never read by the router. */
   readonly id: string;
   /** The operator's short name for the source, and the prefix of every tool
    *  name the aliased view exposes: `<alias>__<upstream name>`. It starts
@@ -241,7 +247,9 @@ export interface ManifestEntry<Context = unknown> {
    *  read by the router. */
   readonly publisher?: string;
   /** A pack's base: the `sourceId` of the server entry whose tools the pack
-   *  calls with fixed arguments (sources-at-scale design §4.1). Absent on a
+   *  calls with fixed arguments (sources-at-scale design §4.1). The inventory
+   *  names the base by its full `id` (since 0.9.0); the loader resolves it and
+   *  writes the base's `sourceId` here, the dispatch map's key. Absent on a
    *  server entry. A call of one of the pack's tools goes to the base's
    *  server, and is recorded under the base's `sourceId`, with the pack's
    *  inventory `id` beside it as `mcp.pack_id`: the dispatch map carries the
@@ -249,12 +257,15 @@ export interface ManifestEntry<Context = unknown> {
    *  base names no entry or names a pack (since the inventory loader,
    *  `manifestFromInventory`). */
   readonly base?: string;
-  /** A pack's own version and hash, as its inventory entry states them
-   *  (`hash` is `packHash`, which the loader checks). Set by the loader on a
-   *  pack's entry, absent on a server entry; a record credits the pack as
-   *  `<version>+<first twelve characters of hash>`. Carried, never read by
-   *  the router (since 0.8.0). */
-  readonly pack?: { readonly version: string; readonly hash: string };
+  /** A pack's own version, hash and base pins, as its inventory entry
+   *  states them (`hash` is `packHash`, which the loader checks). Set by the
+   *  loader on a pack's entry, absent on a server entry; a record credits the
+   *  pack as `<version>+<first twelve characters of hash>`. `basePins` (since
+   *  0.9.0) is what the base reported when each pin was captured, so a
+   *  consumer compares the live base with them (`checkBasePins`) without
+   *  reading the inventory. Carried, never read by the router (since
+   *  0.8.0). */
+  readonly pack?: { readonly version: string; readonly hash: string; readonly basePins: readonly BasePin[] };
 }
 
 /** An ordered list of sources. The order is the order the prompt and the

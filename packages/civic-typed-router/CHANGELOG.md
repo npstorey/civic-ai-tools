@@ -2,6 +2,72 @@
 
 Factual record of what changed per published version.
 
+## 0.9.0 — 2026-11-12
+
+The route-identity conventions (ADR-0039), and the inventory moves to
+version 3 (`2026-11-12.1`, schema `civic-inventory/3`).
+
+- **`pack.basePins`**, a new member of `pack` on a pack's manifest entry:
+  `pack` is now `{ version, hash, basePins }`. Each pin is what the pack's
+  base reported when it was captured: `serverName`, `serverVersion`, and
+  `tools`, the `mcpToolSchemaSha256` of each base tool the pack calls.
+  Carried, never read by the router. `NYC_RECORD_ENTRY.pack` holds one pin,
+  for the Socrata server `socrata-mcp-server` `0.9.2`, `get_data` and
+  `fetch`.
+- **`mcpToolSchemaSha256(tool)`**, with `mcpToolSchemaText` and
+  `schemaWithoutAnnotations`: a server tool's schema hash, the SHA-256 of
+  the RFC 8785 canonical JSON of `{ name, inputSchema }` with `title` and
+  `description` removed from every schema object the walk reaches (the walk
+  is ADR-0039's). **`canonicalJsonValue(value)`** and
+  `CanonicalJsonValueError`: RFC 8785 over every JSON value type.
+- **`checkBasePins(pins, observed)`**: the first pin a live base's report
+  equals, or each pin's first difference (member, pinned value, observed
+  value). A tool no pin names is not compared.
+- **`routesByApi(inventory)`** and **`apiContains(a, b)`**: the groups of
+  inventory entries that are routes to the same data, by their `api`. No
+  router code calls them.
+- **`manifestFromInventory`** reads `civic-inventory/3`: a pack names its
+  base by the base server entry's full `id`, and the loader writes that
+  entry's `sourceId` as the manifest entry's `base`, as before. It refuses
+  (`InventoryLoadError`, naming the alias and the field) an `id` a second
+  entry states; a `base` naming no server entry's `id` (a `sourceId` is
+  refused with the `id` to use); a pack with no `basePins`, a malformed
+  pin, a pin that leaves out a tool the pack calls, or one naming a tool
+  the base does not have; and, in the Socrata kind, a pack whose `api` is
+  not its filter's (`platform` `socrata`, `host` its `filter.portal`,
+  `dataset` its `filter.dataset_id`). `InventoryPackEntry` gains
+  `basePins`; `packManifestEntry` writes the base's `sourceId` and the pins.
+- **NYC City Record**: display name "NYC City Record" (was "NYC City Record
+  MCP Server"), lock-section mention "City Record for New York City
+  notices" (was "the City Record server for New York City notices"), pack
+  version `1.1`, and a new hash, which also covers its `base` by `id`, its
+  pin, its `api` and its `derivedFrom`. So a composition offering City
+  Record with the one-portal lock names it by the new mention. Every golden
+  holds byte for byte.
+- **The prompt frame's helpers refuse an id they have no text for**, by
+  name, with an `Error` whose message holds the id in double quotes:
+  `crossSourcePreamble` and `civicPreambleEntry` (which wrote `undefined`
+  or threw a `TypeError` for an id outside the three code sources),
+  `civicCitation`, and `outroFor`. `outroFor` and `civicCitation` take
+  `CitedSourceId` (new): the three and `nyc-record`, whose citation they
+  now name; through 0.8.0 `outroFor` cited City Record as nothing, or as
+  `undefined` when it came last of three or more.
+- **Google Data Commons** (`DATA_COMMONS_ENTRY`): `id`
+  `Data Commons MCP Server@https://api.datacommons.org/mcp` (was
+  `datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit`), the
+  endpoint form, with the name the hosted server reports. The one stated
+  exception to "an `id` is never changed once released" (ADR-0039 §B).
+  A component that names the source carries the new `id`, so a harness
+  definition over it moves. Its `freshnessSource` now says the hosted
+  server is the one built into Google's Data Commons Mixer.
+- **`ManifestEntry.id`'s comment** no longer says an MCP Registry name comes
+  first: a Registry name goes in an inventory entry's `registry.name`.
+- **`CIVIC_INVENTORY`** is `{ id: 'civic', version: '2026-11-12.1', hash }`.
+- **The Socrata server's capture**: `src/__fixtures__/socrata-tools.json`,
+  its `initialize` and `tools/list` at a stated commit, and
+  `pin-socrata-tools.mjs`, which writes it (README, "Re-running the
+  captures"). Not in the package's files.
+
 ## 0.8.0 — 2026-11-09
 
 NYC City Record becomes a pack over the Socrata server, and the inventory

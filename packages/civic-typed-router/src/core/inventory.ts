@@ -15,14 +15,19 @@
 //
 //   - `server`: the entry's data fields, then its kind's code.
 //   - `pack`: a base server's tools with fixed arguments (design §4.1). Its
-//     own identity and routing lines; the base's configuration, hosting
+//     `base` names the base server entry by its full `id` (since schema 3).
+//     Its own identity and routing lines; the base's configuration, hosting
 //     variants and consent default; `base` set to the base's `sourceId`;
-//     `pack`, its version and its hash (`packHash`), which the loader checks;
-//     its tools and guidance from the base's kind (`EntryKind.pack`).
+//     `pack`, its version, its hash (`packHash`), which the loader checks, and
+//     its base pins (`basePins`); its tools and guidance from the base's kind
+//     (`EntryKind.pack`).
+//
+// Every entry's `id` is unique in the file; the loader refuses a second.
 //
 // Pure: it reads no file, no environment, no clock and no network. The
 // consumer reads the file and hands the parsed document in.
 
+import type { BasePin } from './base-pins.ts';
 import { canonicalJson } from './canonical-json.ts';
 import { sha256Hex } from './sha256.ts';
 import type { FunctionToolSchema, ManifestEntry } from './types.ts';
@@ -78,8 +83,13 @@ export interface InventoryServerEntry extends InventoryEntryCommon {
 /** A pack: a base server's tools with fixed arguments. */
 export interface InventoryPackEntry extends InventoryEntryCommon {
   readonly kind: 'pack';
-  /** The base server's `sourceId`. */
+  /** The base server entry's full `id` (since schema 3; its `sourceId`
+   *  before). */
   readonly base: string;
+  /** What the base reported when each pin was captured: one pin normally,
+   *  two while a release of the base is staged. Each pin names exactly the
+   *  base tools the pack calls. Required; checked by the loader. */
+  readonly basePins?: readonly BasePin[];
   /** The fixed arguments, by name. */
   readonly filter: { readonly [argument: string]: string };
   /** The pack's own version. */
@@ -226,9 +236,10 @@ function checkPackHash(alias: string, entry: InventoryPackEntry): void {
  * A pack's manifest entry, from its inventory entry, its base's manifest
  * entry and the code its base's kind built for it: its own identity and
  * routing lines; the base's `configuration`, `hostings` and
- * `consentDefault`; `base`, the base's `sourceId`; `pack`, its `version` and
- * `hash` as the entry states them; then the code. The loader's own builder,
- * and the one a mirror of a pack in code uses. Checks nothing.
+ * `consentDefault`; `base`, the base's `sourceId` (the dispatch map's key,
+ * whatever the inventory names the base by); `pack`, its `version`, `hash`
+ * and `basePins` as the entry states them; then the code. The loader's own
+ * builder, and the one a mirror of a pack in code uses. Checks nothing.
  */
 export function packManifestEntry<E extends ManifestEntry<never>>(pack: InventoryPackEntry, base: E, built: PackCode<E>): E {
   return {
@@ -238,10 +249,42 @@ export function packManifestEntry<E extends ManifestEntry<never>>(pack: Inventor
     hostings: base.hostings,
     consentDefault: base.consentDefault,
     ...(pack.publisher !== undefined ? { publisher: pack.publisher } : {}),
-    base: pack.base,
-    pack: { version: pack.version, hash: pack.hash as string },
+    base: base.sourceId,
+    pack: { version: pack.version, hash: pack.hash as string, basePins: pack.basePins as readonly BasePin[] },
     ...built.code,
   } as unknown as E;
+}
+
+const SHA256 = /^[0-9a-f]{64}$/;
+const isText = (value: unknown): value is string => typeof value === 'string' && value !== '';
+
+/** Hold a pack's `basePins` to their form, and each pin's tools to the base
+ *  tools the pack calls: every tool the pack calls on this instance
+ *  (`toolNames`, the names sent on the wire) is pinned, and every pinned
+ *  tool is one of the base's (`baseToolNames`). A portal-only pack's `search`
+ *  is offered on some instances only, so a pin may name it where the pack
+ *  does not call it. */
+function checkBasePinsOf(alias: string, pack: InventoryPackEntry, toolNames: readonly string[], baseToolNames: readonly string[]): void {
+  const pins = pack.basePins as unknown;
+  if (!Array.isArray(pins) || pins.length === 0) throw new InventoryLoadError(alias, 'basePins', 'is missing or empty; every pack pins its base (one pin, or two while a base release is staged)');
+  pins.forEach((pin: unknown, i: number) => {
+    const at = `basePins[${i}]`;
+    if (pin === null || typeof pin !== 'object' || Array.isArray(pin)) throw new InventoryLoadError(alias, at, 'is not an object');
+    const { serverName, serverVersion, tools, ...rest } = pin as Record<string, unknown>;
+    const extra = Object.keys(rest);
+    if (extra.length > 0) throw new InventoryLoadError(alias, `${at}.${extra[0]}`, 'a pin states serverName, serverVersion and tools only');
+    if (!isText(serverName)) throw new InventoryLoadError(alias, `${at}.serverName`, 'is not a non-empty string');
+    if (!isText(serverVersion)) throw new InventoryLoadError(alias, `${at}.serverVersion`, 'is not a non-empty string');
+    if (tools === null || typeof tools !== 'object' || Array.isArray(tools)) throw new InventoryLoadError(alias, `${at}.tools`, 'is not an object');
+    for (const [name, hash] of Object.entries(tools)) {
+      if (typeof hash !== 'string' || !SHA256.test(hash)) throw new InventoryLoadError(alias, `${at}.tools.${name}`, 'is not 64 lowercase hex characters (mcpToolSchemaSha256)');
+    }
+    const pinned = Object.keys(tools);
+    const unpinned = toolNames.filter((name) => !pinned.includes(name));
+    if (unpinned.length > 0) throw new InventoryLoadError(alias, `${at}.tools`, `pins ${JSON.stringify(pinned)}; the pack calls ${JSON.stringify(unpinned[0])}, which no member pins`);
+    const foreign = pinned.filter((name) => !baseToolNames.includes(name));
+    if (foreign.length > 0) throw new InventoryLoadError(alias, `${at}.tools.${foreign[0]}`, `is not a tool of the base (${JSON.stringify(baseToolNames)})`);
+  });
 }
 
 /**
@@ -250,16 +293,30 @@ export function packManifestEntry<E extends ManifestEntry<never>>(pack: Inventor
  * Throws `InventoryLoadError`, naming the entry's alias and the field, for an
  * entry of an unknown `kind`, a server whose `serverType` has no kind, tools
  * whose names or hash differ from its `toolsRef`, a pack with no `hash` or
- * whose `hash` is not its `packHash`, and a pack whose `base` names no server
- * entry, names a pack, or names a server whose kind takes no pack. A
- * manifest it returns still goes through the router's own startup checks
- * when a router is built over it.
+ * whose `hash` is not its `packHash`, an `id` a second entry states, a pack
+ * whose `base` names no server entry's `id`, names a pack, or names a server
+ * whose kind takes no pack, and a pack with no `basePins`, a malformed pin,
+ * a pin that leaves out a tool the pack calls, or one naming a tool the
+ * base does not have. A manifest it
+ * returns still goes through the router's own startup checks when a router
+ * is built over it.
  */
 export function manifestFromInventory<E extends ManifestEntry<never>>(inventory: InventoryDocument, kinds: EntryKinds<E>): E[] {
   if (!Array.isArray(inventory.entries)) throw new InventoryLoadError(String(inventory.id), 'entries', 'is not an array');
   const kindOf = (serverType: string): EntryKind<E> | undefined => (Object.hasOwn(kinds, serverType) ? kinds[serverType] : undefined);
 
-  // Servers first, so a pack may name a base listed after it.
+  // An `id` is the entry's global identity: once in the file.
+  const ids = new Map<string, number>();
+  inventory.entries.forEach((item, i) => {
+    const first = ids.get(item.id);
+    if (first !== undefined) {
+      throw new InventoryLoadError(labelOf(item, i), 'id', `"${item.id}" is also ${labelOf(inventory.entries[first]!, first)}'s id; an id is unique in the file`);
+    }
+    ids.set(item.id, i);
+  });
+
+  // Servers first, so a pack may name a base listed after it. Keyed by `id`,
+  // which is how a pack names its base.
   const servers = new Map<string, { entry: E; serverType: string }>();
   const built: (E | undefined)[] = inventory.entries.map((item, i) => {
     if (item.kind === 'pack') return undefined;
@@ -280,7 +337,7 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
       ...(item.publisher !== undefined ? { publisher: item.publisher } : {}),
       ...code,
     } as unknown as E;
-    servers.set(item.sourceId, { entry, serverType: item.serverType });
+    servers.set(item.id, { entry, serverType: item.serverType });
     return entry;
   });
 
@@ -290,10 +347,19 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
     const pack = item as InventoryPackEntry;
     const alias = labelOf(pack, i);
     checkPackHash(alias, pack);
-    const base = servers.get(pack.base);
+    const base = typeof pack.base === 'string' ? servers.get(pack.base) : undefined;
     if (!base) {
-      const isPack = inventory.entries.some((other) => other.kind === 'pack' && other.sourceId === pack.base);
-      throw new InventoryLoadError(alias, 'base', isPack ? `"${pack.base}" is a pack; a pack's base is a server entry` : `"${pack.base}" names no server entry`);
+      const isPack = inventory.entries.some((other) => other.kind === 'pack' && (other.id === pack.base || other.sourceId === pack.base));
+      const bySourceId = inventory.entries.find((other) => other.kind === 'server' && other.sourceId === pack.base);
+      throw new InventoryLoadError(
+        alias,
+        'base',
+        isPack
+          ? `"${pack.base}" is a pack; a pack's base is a server entry`
+          : bySourceId
+            ? `"${pack.base}" is a sourceId; a pack names its base by the server entry's id ("${bySourceId.id}")`
+            : `"${pack.base}" names no server entry's id`,
+      );
     }
     const kind = kindOf(base.serverType);
     if (!kind?.pack) throw new InventoryLoadError(alias, 'base', `the kind of "${pack.base}" (${base.serverType}) takes no pack`);
@@ -303,6 +369,7 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
     else if (!sameNames(code.toolNames, tools.map((tool) => tool.function.name))) {
       throw new InventoryLoadError(alias, 'toolNames', "the pack's routing list is not its schemas' set");
     }
+    checkBasePinsOf(alias, pack, code.toolNames, (base.entry as { toolNames: readonly string[] }).toolNames);
     return packManifestEntry(pack, base.entry, code);
   });
 }

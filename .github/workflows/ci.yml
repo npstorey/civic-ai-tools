@@ -127,7 +127,7 @@ jobs:
       - name: Gate-table check (AGENTS.md ↔ ci.yml)
         run: npm run check:gate-table
 
-      # The civic inventory (inventory/civic-inventory.json, civic-inventory/2;
+      # The civic inventory (inventory/civic-inventory.json, civic-inventory/3;
       # hub #309): it validates against its schema, holds only strings, arrays
       # and objects, its .sha256 is the router's canonicalJson SHA-256 of the
       # parsed file, its version has a CHANGELOG line, and it loads with the

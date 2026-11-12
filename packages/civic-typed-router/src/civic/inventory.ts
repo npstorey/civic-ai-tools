@@ -1,10 +1,10 @@
 // The civic kinds: the code half of the civic inventory's entries, by
 // `serverType`, and the identity of the inventory `CIVIC_MANIFEST` mirrors.
 //
-// The hub's `inventory/civic-inventory.json` (`civic-inventory/2`) is the
-// source of truth for the seven sources' data (G0-5 A on hub #309): six
-// servers and, since version 2 (router 0.8.0), City Record as a pack over the
-// Socrata server.
+// The hub's `inventory/civic-inventory.json` (`civic-inventory/3` since
+// version 3, router 0.9.0) is the source of truth for the seven sources' data
+// (G0-5 A on hub #309): six servers and, since version 2 (router 0.8.0), City
+// Record as a pack over the Socrata server.
 // `CIVIC_MANIFEST` stays code and is held equal to the file by
 // `src/inventory.test.ts`; `CIVIC_INVENTORY` names the file it equals. This
 // module reads no file: a consumer reads the inventory and passes the parsed
@@ -44,8 +44,8 @@ import { SOCRATA_ENTRY, SOCRATA_TOOL_NAMES, socrataTools } from './socrata.ts';
  *  it). Released raw at the hub tag `civic-inventory/<version>`. */
 export const CIVIC_INVENTORY = Object.freeze({
   id: 'civic',
-  version: '2026-11-09.1',
-  hash: 'ed7302810ed46a452381083e50fefe99ce284bcbbfdcf926d4c192c069453442',
+  version: '2026-11-12.1',
+  hash: '0654b2c29331bd3e2f2a9cea7752f2a313b139d0fb154f1c1ae78eda3a349912',
 });
 
 /** What the civic inventory's entries carry for the prompt frame: strings
@@ -176,6 +176,26 @@ This source reads ${scope}: an identifier or URL naming ${refused} is refused an
 /** What a Socrata pack's filter may fix. */
 const SOCRATA_FILTER_ARGUMENTS = ['portal', 'dataset_id'];
 
+/** Hold a Socrata pack's `api` to its filter (since 0.9.0): the platform
+ *  `socrata`, `host` its `filter.portal`, and `dataset` its
+ *  `filter.dataset_id`, or both absent. */
+function checkSocrataPackApi(entry: InventoryPackEntry, portal: string, datasetId: string | undefined): void {
+  const stated = (value: unknown): string => (value === undefined ? 'absent' : `${JSON.stringify(value)}`);
+  const api = entry.api as { platform?: unknown; host?: unknown; dataset?: unknown; [member: string]: unknown } | undefined;
+  if (api === null || typeof api !== 'object' || Array.isArray(api)) throw new InventoryLoadError(entry.alias, 'api', 'is missing; a pack states the API it reads');
+  const extra = Object.keys(api).filter((member) => !['platform', 'host', 'dataset'].includes(member));
+  if (extra.length > 0) throw new InventoryLoadError(entry.alias, `api.${extra[0]}`, 'an api states platform, host and dataset only');
+  if (api.platform !== 'socrata') throw new InventoryLoadError(entry.alias, 'api.platform', `is ${stated(api.platform)}; a Socrata pack's platform is "socrata"`);
+  if (api.host !== portal) throw new InventoryLoadError(entry.alias, 'api.host', `is ${stated(api.host)}; a Socrata pack's host is its filter.portal, "${portal}"`);
+  if (api.dataset !== datasetId) {
+    throw new InventoryLoadError(
+      entry.alias,
+      'api.dataset',
+      datasetId === undefined ? `is ${stated(api.dataset)}; the filter fixes no dataset_id` : `is ${stated(api.dataset)}; a Socrata pack's dataset is its filter.dataset_id, "${datasetId}"`,
+    );
+  }
+}
+
 /** The kinds' options: what the instance knows of its servers. */
 export interface CivicKindsOptions {
   /** The portal the instance's Socrata server is configured for (its
@@ -202,6 +222,7 @@ export function socrataPack(options: CivicKindsOptions) {
     const portal = filter.portal;
     if (portal === undefined) throw new InventoryLoadError(entry.alias, 'filter.portal', 'a Socrata pack fixes its portal');
     const datasetId = filter.dataset_id;
+    checkSocrataPackApi(entry, portal, datasetId);
     // `search` takes one argument, `query`, and covers the server's
     // configured portal alone: it can fix neither a portal nor a dataset.
     const withSearch = datasetId === undefined && options.socrataPortal !== undefined && options.socrataPortal === portal;

@@ -186,8 +186,9 @@ test('hosted entries: the manifest holds seven entries, the three of 0.6.0 after
     CIVIC_MANIFEST.slice(4).map((entry) => [entry.alias, entry.displayName, entry.configuration.requirement]),
     [
       ['nyc_checkbook', 'NYC Checkbook MCP Server', 'optional'],
-      // A pack over the Socrata server since 0.8.0, required as its base is.
-      ['nyc_record', 'NYC City Record MCP Server', 'required'],
+      // A pack over the Socrata server since 0.8.0, required as its base is;
+      // named "NYC City Record" since 0.9.0 (S2-B's D2 = A).
+      ['nyc_record', 'NYC City Record', 'required'],
       ['nys_legislation', 'NYS Open Legislation MCP Server', 'optional'],
     ],
   );

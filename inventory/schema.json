@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "civic-inventory/2",
-  "title": "The civic inventory (sources-at-scale design §3.2; hub #309, G0-3 A)",
-  "description": "Every value is a string, an array or an object: the router's canonicalJson, which hashes an inventory, refuses numbers, booleans and null. A field with nothing to say is left out. inventory/README.md states what this adds to and drops from civic-inventory/1.",
+  "$id": "civic-inventory/3",
+  "title": "The civic inventory (sources-at-scale design §3.2; hub #309, G0-3 A; schema 3, the route-identity conventions, hub #317)",
+  "description": "Every value is a string, an array or an object: the router's canonicalJson, which hashes an inventory, refuses numbers, booleans and null. A field with nothing to say is left out. inventory/README.md states what this adds to and drops from civic-inventory/2, and the conventions (ADR-0039).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,7 +13,7 @@
   ],
   "properties": {
     "schema": {
-      "const": "civic-inventory/2"
+      "const": "civic-inventory/3"
     },
     "id": {
       "type": "string",
@@ -213,18 +213,9 @@
         },
         "sourceUrl": {
           "$ref": "#/definitions/text"
-        },
-        "file": {
-          "$ref": "#/definitions/text"
-        },
-        "commit": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
-        },
-        "fileSha256": {
-          "$ref": "#/definitions/sha256"
         }
-      }
+      },
+      "description": "Who curated the entry, from what, and when. Outside a pack's hash. A pinned source a pack's text is drawn from is its derivedFrom, inside the hash."
     },
     "https": {
       "type": "string",
@@ -448,7 +439,7 @@
       }
     },
     "toolsRef": {
-      "description": "The entry's tools by reference: their names in routing order and the tools' hash (SHA-256 of JSON.stringify of the bare-view schemas, S1's definition; the router's toolsSha256). The schemas are the kind's code mirror; `fixture` names the pinned tools/list capture a hosted source's mirror is held to. No package version: the hash moves only when a schema does.",
+      "description": "The entry's tools by reference: their names in routing order and the tools' hash (SHA-256 of JSON.stringify of the bare-view schemas, S1's definition; the router's toolsSha256). The schemas are the kind's code mirror; `fixture` names a pinned tools/list capture: the one a hosted source's mirror is held to, or the one a pack's basePins over this server were read from. No package version: the hash moves only when a schema does. `toolNames` may be empty only on a server entry some pack names as its base (check:inventory).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -458,7 +449,6 @@
       "properties": {
         "toolNames": {
           "type": "array",
-          "minItems": 1,
           "items": {
             "$ref": "#/definitions/text"
           },
@@ -527,6 +517,7 @@
         "hostings",
         "consentDefault",
         "serverType",
+        "api",
         "place",
         "categories",
         "provenance",
@@ -586,6 +577,9 @@
             "custom"
           ]
         },
+        "api": {
+          "$ref": "#/definitions/api"
+        },
         "place": {
           "$ref": "#/definitions/place"
         },
@@ -613,7 +607,7 @@
       }
     },
     "packEntry": {
-      "description": "A pack (design §3.2, §4.1): a base server's tools called with fixed arguments (`filter`), and text. Its configuration, hosting variants and consent default are its base's; `toolsRef`, when present, holds the tools the loader builds.",
+      "description": "A pack (design §3.2, §4.1): a base server's tools called with fixed arguments (`filter`), and text. `base` is the base server entry's `id`. Its configuration, hosting variants and consent default are its base's; `toolsRef`, when present, holds the tools the loader builds.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -623,7 +617,9 @@
         "sourceId",
         "displayName",
         "base",
+        "basePins",
         "filter",
+        "api",
         "author",
         "version",
         "hash",
@@ -650,7 +646,16 @@
           "$ref": "#/definitions/text"
         },
         "base": {
+          "description": "The base server entry's full `id` (never its `sourceId`), so the pack's hash covers which server it is built over. The loader resolves it and sets the manifest entry's `base` to that entry's `sourceId`.",
           "$ref": "#/definitions/text"
+        },
+        "basePins": {
+          "description": "One pin normally; two while a release of the base is staged. Inside the hash.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/basePin"
+          }
         },
         "filter": {
           "type": "object",
@@ -659,8 +664,18 @@
             "$ref": "#/definitions/text"
           }
         },
+        "api": {
+          "$ref": "#/definitions/api"
+        },
         "guidance": {
           "$ref": "#/definitions/guidanceRef"
+        },
+        "derivedFrom": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/derivedFromEntry"
+          }
         },
         "author": {
           "$ref": "#/definitions/text"
@@ -669,10 +684,11 @@
           "$ref": "#/definitions/text"
         },
         "version": {
+          "description": "The pack's own version, `<major>.<minor>` (ADR-0039): the minor moves when the pack's hashed entry changes and its recipes do not; the major moves when a recipe changes. The version `1`, released before this rule, reads as `1.0`.",
           "$ref": "#/definitions/text"
         },
         "hash": {
-          "description": "The pack's hash: the lowercase hex SHA-256 of the router's canonicalJson of this entry with hash, provenance and toolsRef removed (the router's packHash; G0-B6 on hub #309). Required; check:inventory and the router's loader each refuse a pack whose hash is not that value. A record credits the pack as <version>+<its first twelve characters>.",
+          "description": "The pack's hash: the lowercase hex SHA-256 of the router's canonicalJson of this entry with hash, provenance and toolsRef removed (the router's packHash; G0-B6 on hub #309). Required; check:inventory and the router's loader each refuse a pack whose hash is not that value. It covers `base`, `basePins`, `api` and `derivedFrom`. A record credits the pack as <version>+<its first twelve characters>.",
           "$ref": "#/definitions/sha256"
         },
         "licence": {
@@ -701,6 +717,92 @@
         },
         "prompt": {
           "$ref": "#/definitions/prompt"
+        }
+      }
+    },
+    "api": {
+      "description": "The API the entry reads (the route-identity design §2.5): its platform; the host, where it reads one host; and the dataset, where it reads one dataset of that host. A server's api is the curator's statement; a pack's is held to its filter by its base's kind. Entry A contains entry B when their platforms are equal, A states no host or B's, and no dataset or B's: the router's routesByApi.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "socrata",
+            "ckan",
+            "arcgis",
+            "data-commons",
+            "custom-api",
+            "bundled-data"
+          ]
+        },
+        "host": {
+          "$ref": "#/definitions/text"
+        },
+        "dataset": {
+          "$ref": "#/definitions/text"
+        }
+      },
+      "dependencies": {
+        "dataset": [
+          "host"
+        ]
+      }
+    },
+    "basePin": {
+      "description": "What a pack's base server reported when the pin was captured: its serverInfo name and version, and mcpToolSchemaSha256 of each base tool the pack calls, by the name sent on the wire (the router's checkBasePins; ADR-0039).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serverName",
+        "serverVersion",
+        "tools"
+      ],
+      "properties": {
+        "serverName": {
+          "$ref": "#/definitions/text"
+        },
+        "serverVersion": {
+          "$ref": "#/definitions/text"
+        },
+        "tools": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/definitions/sha256"
+          }
+        }
+      }
+    },
+    "derivedFromEntry": {
+      "description": "A pinned source a pack's text is drawn from: its id in the id convention, and its page; the version, commit, file and the file's SHA-256 where the source has them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sourceUrl"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/text"
+        },
+        "version": {
+          "$ref": "#/definitions/text"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "file": {
+          "$ref": "#/definitions/text"
+        },
+        "fileSha256": {
+          "$ref": "#/definitions/sha256"
+        },
+        "sourceUrl": {
+          "$ref": "#/definitions/text"
         }
       }
     }

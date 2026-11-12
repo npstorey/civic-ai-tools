@@ -87,6 +87,21 @@ function entryFromCopy(copy) {
   };
 }
 
+/** The one live entry whose data may differ from its frozen copy, and the
+ *  fields that may (hub #317, S2-C P1; H18): inventory version 3 moved the
+ *  Data Commons entry's `id` to the endpoint form and corrected its
+ *  `freshnessSource` (G0-C1 = A, ADR-0039 §B). */
+const MOVED_SINCE_COPY = Object.freeze({ 'data-commons': Object.freeze(['id', 'freshnessSource']) });
+
+/** Whether `live` differs from `expected` (both `routerDataFields`) in the
+ *  fields `MOVED_SINCE_COPY` admits for `sourceId` only, and in at least one. */
+function differsOnlyInMoved(sourceId, live, expected) {
+  const moved = Object.hasOwn(MOVED_SINCE_COPY, sourceId) ? MOVED_SINCE_COPY[sourceId] : [];
+  if (moved.length === 0) return false;
+  const without = (fields) => Object.fromEntries(Object.entries(fields).filter(([key]) => !moved.includes(key)));
+  return JSON.stringify(without(live)) === JSON.stringify(without(expected));
+}
+
 /** One of the seven: the inventory item held to router 0.6.0's frozen copy
  *  (`build.mjs`, `readSeven`), then the live router's entry for it where the
  *  router still carries that server with the copy's values, else an entry
@@ -110,14 +125,23 @@ function routerEntry(item, bySourceId, seven) {
   if (live === undefined || live.base !== undefined) return entryFromCopy(copy);
   // The router still carries the server: its own entry, the same object, so
   // a composition over it is the website's; held to the copy first.
-  if (
-    JSON.stringify(routerDataFields(live)) !== JSON.stringify(expected) ||
-    JSON.stringify(live.toolNames) !== JSON.stringify(copy.toolNames) ||
-    toolsSha256(live.tools) !== toolsSha256(copy.tools)
-  ) {
-    throw new Error(`to-manifest: ${item.alias}: the router's manifest entry differs from its frozen copy at 0.6.0`);
+  const liveFields = routerDataFields(live);
+  const sameCode = JSON.stringify(live.toolNames) === JSON.stringify(copy.toolNames) && toolsSha256(live.tools) === toolsSha256(copy.tools);
+  if (sameCode && JSON.stringify(liveFields) === JSON.stringify(expected)) return live;
+  // Data Commons since inventory version 3: its id and freshnessSource moved,
+  // and nothing else may. The live entry's code (tools, guidance, preamble
+  // entry) with the frozen copy's data fields, so the composition and its
+  // components (the frozen id among them) are the copy's.
+  if (sameCode && differsOnlyInMoved(copy.sourceId, liveFields, expected)) {
+    const { [copy.sourceId]: moved } = MOVED_SINCE_COPY;
+    const out = { ...live };
+    for (const key of moved) {
+      if (expected[key] === undefined) delete out[key];
+      else out[key] = expected[key];
+    }
+    return out;
   }
-  return live;
+  throw new Error(`to-manifest: ${item.alias}: the router's manifest entry differs from its frozen copy at 0.6.0`);
 }
 
 /** The manifest entry of an entry this loader builds itself. */

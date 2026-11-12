@@ -280,14 +280,17 @@ export async function dataCommonsGuidanceText(ctx: CivicGuidanceContext, view: S
 }
 
 /**
- * The Google Data Commons source. Its `id` is the server's package name and
- * repository address as its PyPI metadata publishes them (`datacommons-mcp`,
- * homepage `https://github.com/datacommonsorg/agent-toolkit`), which declare
- * no MCP Registry name. Required, with Google's hosted endpoint as its
- * default address.
+ * The Google Data Commons source. Its `id` (since 0.9.0, inventory version 3)
+ * is the endpoint form of ADR-0039: the name the hosted server at its default
+ * address reports (`serverInfo.name`, "Data Commons MCP Server") and that
+ * address. That server is the one built into Google's Data Commons Mixer,
+ * not the `datacommons-mcp` package the `id` named through 0.8.0
+ * (`datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit`). The one
+ * stated exception to "an `id` is never changed once released". Required,
+ * with Google's hosted endpoint as its default address.
  */
 export const DATA_COMMONS_ENTRY: CivicManifestEntry = {
-  id: 'datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit',
+  id: 'Data Commons MCP Server@https://api.datacommons.org/mcp',
   alias: 'data_commons',
   sourceId: 'data-commons',
   displayName: 'Google Data Commons MCP Server',
@@ -296,7 +299,7 @@ export const DATA_COMMONS_ENTRY: CivicManifestEntry = {
   freshness:
     'Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).',
   freshnessSource:
-    'The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub\'s docs/skills/data-commons.md): "ACS releases annually" and "Surface the vintage". The server is Google\'s datacommons-mcp (github.com/datacommonsorg/agent-toolkit).',
+    "The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub's docs/skills/data-commons.md): \"ACS releases annually\" and \"Surface the vintage\". The server at the default address is the MCP server built into Google's Data Commons Mixer (github.com/datacommonsorg/mixer, internal/server/mcp): it reported its version as 8aed5d1, a mixer commit, on 2026-11-12, and mixer's deploy/apigee/README.md states that it \"runs inside Mixer and is served by the same Cloud Endpoints (ESP) service as the Mixer API\".",
   configuration: {
     addressVariable: DATA_COMMONS_ADDRESS_VARIABLE,
     keyVariable: DATA_COMMONS_KEY_VARIABLE,

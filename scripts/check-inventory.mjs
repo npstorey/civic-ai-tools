@@ -5,7 +5,7 @@
  * `inventory/civic-inventory.json` is the source of truth for the router's
  * sources. This check holds it to what makes it citable:
  *
- *   1. it validates against `inventory/schema.json` (`civic-inventory/2`),
+ *   1. it validates against `inventory/schema.json` (`civic-inventory/3`),
  *      with ajv 6.15.0, the root devDependency;
  *   2. every value in it is a string, an array or an object: the router's
  *      `canonicalJson`, which defines its hash, refuses numbers, booleans and
@@ -20,8 +20,15 @@
  *      `provenance` and `toolsRef` removed (S2-B, G0-B6);
  *   6. it loads: `manifestFromInventory(file, CIVIC_KINDS)` from the built
  *      router package, which holds every entry's tools to its `toolsRef`
- *      with the router's `toolsSha256` and every pack to its hash, and
- *      `createCivicRouter` over the result passes its startup checks.
+ *      with the router's `toolsSha256` and every pack to its hash, resolves
+ *      each pack's `base` by the server entry's `id`, holds its `basePins`
+ *      to the tools it calls and (the Socrata kind) its `api` to its
+ *      `filter`, and `createCivicRouter` over the result passes its startup
+ *      checks;
+ *   7. `id`, `sourceId` and `alias` are each unique across the entries
+ *      (hub #317, S2-C);
+ *   8. a server entry's `toolsRef.toolNames` is empty only when some pack
+ *      names that entry as its base (hub #314's item 5; S2-C).
  *
  * Hermetic: four file reads and one local import, no network. The router is
  * the package `npm ci` builds (`packages/civic-typed-router/dist`).
@@ -125,6 +132,28 @@ export function inventoryProblems({ inventory, sha256Text, schema, changelog, ro
     }
     if (entry.hash !== hash) {
       problems.push(`hash: ${label}: states ${entry.hash}; the canonicalJson SHA-256 of the entry less hash, provenance and toolsRef is ${hash}`);
+    }
+  }
+
+  const entries = Array.isArray(inventory?.entries) ? inventory.entries : [];
+  const labelOf = (entry, i) => `entries[${i}]${typeof entry?.alias === 'string' ? ` (${entry.alias})` : ''}`;
+  for (const member of ['id', 'sourceId', 'alias']) {
+    const holders = new Map();
+    entries.forEach((entry, i) => {
+      const value = entry?.[member];
+      if (typeof value !== 'string') return;
+      holders.set(value, [...(holders.get(value) ?? []), labelOf(entry, i)]);
+    });
+    for (const [value, at] of holders) {
+      if (at.length > 1) problems.push(`unique: ${member} ${JSON.stringify(value)} is stated by ${at.slice(0, -1).join(', ')} and ${at[at.length - 1]}`);
+    }
+  }
+
+  const bases = new Set(entries.filter((entry) => entry?.kind === 'pack').map((entry) => entry.base));
+  for (const [i, entry] of entries.entries()) {
+    if (entry?.kind !== 'server' || !Array.isArray(entry.toolsRef?.toolNames) || entry.toolsRef.toolNames.length > 0) continue;
+    if (!bases.has(entry.id)) {
+      problems.push(`tools: ${typeof entry.alias === 'string' ? entry.alias : `entries[${i}]`}: toolsRef.toolNames is empty, and no pack names this entry as its base`);
     }
   }
 

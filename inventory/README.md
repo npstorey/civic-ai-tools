@@ -4,26 +4,27 @@
 entries, each a source's identity, routing lines, configuration, hosting variants with their logging postures, and its
 tools by name and hash. The router builds a manifest from it by entry kind (`manifestFromInventory(inventory, kinds)`
 in `@typedstandards/civic-typed-router`); the router's own `CIVIC_MANIFEST` stays code and is held equal to this file
-by the router's tests (hub #309, G0-5 A). Version `2026-11-09.1` (version 2, router 0.8.0) holds the router's seven
-sources in `CIVIC_MANIFEST`'s order: six `server` entries, and City Record (`nyc-record`) as a `pack` over the Socrata
-server. Version 1, `2026-11-06.1`, held the seven as `server` entries.
+by the router's tests (hub #309, G0-5 A). Version `2026-11-12.1` (version 3, router 0.9.0, schema `civic-inventory/3`)
+holds the router's seven sources in `CIVIC_MANIFEST`'s order: six `server` entries, and City Record (`nyc-record`) as a
+`pack` over the Socrata server, named by its `id` and pinned. Version 2, `2026-11-09.1`, introduced the pack; version
+1, `2026-11-06.1`, held the seven as `server` entries.
 
 | File | What it is |
 |---|---|
-| `civic-inventory.json` | The inventory, `civic-inventory/2` |
+| `civic-inventory.json` | The inventory, `civic-inventory/3` |
 | `civic-inventory.json.sha256` | Its hash (below), one line |
-| `schema.json` | The schema, `$id: civic-inventory/2` (JSON Schema draft-07) |
+| `schema.json` | The schema, `$id: civic-inventory/3` (JSON Schema draft-07) |
 | `CHANGELOG.md` | One line per version |
 
 ## The format and the hash
 
 `{ schema, id, version, note?, entries }`, each entry a `server` or a `pack` (`schema.json`; the sources-at-scale
 design §3.2). Every value is a string, an array or an object: the router's `canonicalJson`, which hashes the file,
-refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of version 1 or 2 has a value of
+refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of versions 1 to 3 has a value of
 another type (each was checked: the router's entries carry none in the fields the file states, and the tool schemas,
 which do hold booleans and numbers, are referenced by hash, never carried).
 
-- **`id`** is `civic`. **`version`** is `YYYY-MM-DD.N`: the UTC date the version was written, a calendar date, and a
+- **The file's `id`** is `civic`. **`version`** is `YYYY-MM-DD.N`: the UTC date the version was written, a calendar date, and a
   counter with no leading zero (`2026-11-09.1`, never `2026-11-09.01`), with one `CHANGELOG.md` line. It is the
   harness's form for a record's `considered.inventory.version` less its build metadata (`<version>+<hash12>`).
 - **The hash** is the SHA-256 of the router's `canonicalJson` of the parsed file, not of its bytes (S1's definition,
@@ -33,12 +34,50 @@ which do hold booleans and numbers, are referenced by hash, never carried).
 - **The release.** Each version is served raw at the hub tag `civic-inventory/<version>`, its own tag family (the
   bundle's pattern, ADR-0038 §5), so a reader resolves a cited version by its tag and checks its hash.
 - **Curation.** One editor merges; an entry arrives by pull request with its `provenance`. Every column of versions 1
-  and 2 is curated (a person read and dated it): no entry is a portal pack (City Record is a pack written by hand), so
+  to 3 is curated (a person read and dated it): no entry is a portal pack (City Record is a pack written by hand), so
   no column is generated from a catalog, and the refresh script for generated columns lands with the first portal packs
   (S6).
 - **Logging postures** keep ADR-0036's rule: a posture is stated by the manifest (`statedBy: manifest`) only where a
   holder's statement was read, with its `statementUrl` and `readOn` date; where the instance decides the holder, the
   entry names it by role (`statedBy: instance`). The schema requires both fields of a stated posture.
+
+## Names, `api` and base pins (the conventions, ADR-0039)
+
+**Three names, each with its job.** An entry's `id` is its global identity, the one a record carries; `sourceId` is
+the key for routing, traces, addresses and consent rows within one inventory; `alias` is the prefix of the tool names the
+model sees (ADR-0032). **Each is unique in the file:** `check:inventory` and the router's loader refuse a second.
+
+**The `id` form is `<name>@<locator>`.** A server an operator can run from published source: its package name (or its
+repository's name) and the source repository's URL. A service one party runs at a fixed address: its name and that
+address. A pack: its name and the URL of the place in the API it reads. A server's MCP Registry name, where it has one,
+goes in `registry.name`, never in the `id`. From schema 3 on, an `id` a released version carries is never changed. The
+one stated exception is made in version 3 itself: the Data Commons entry's `id` moves from
+`datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit`, a repository whose server is not the hosted one, to
+the endpoint form `Data Commons MCP Server@https://api.datacommons.org/mcp` (G0-C1 = A; ADR-0039 §B). Two
+packs of one dataset over different bases share a locator; uniqueness is held within one file only, and a record tells
+such packs apart by the pack's hash characters in its credit.
+
+**A pack names its base by the base's full `id`,** not its `sourceId`, so the pack's hash covers which server it is
+built over. The loader resolves the `id` and sets the manifest entry's `base` to that entry's `sourceId`, as before.
+
+**`basePins`** (required on a pack, inside its hash): what the base reported when each pin was captured, its
+`serverInfo` `name` and `version` and `mcpToolSchemaSha256` of each base tool the pack calls. One pin normally, two while
+a base release is staged. The capture the values were read from is named once, in the base entry's `toolsRef.fixture`.
+The router carries the pins on the pack's manifest entry, and a consumer compares the live base with them
+(`checkBasePins`) before it sends a pack's call.
+
+**`api`** (required on every entry): the API the entry reads, `{ platform, host?, dataset? }`, `platform` one of
+`socrata`, `ckan`, `arcgis`, `data-commons`, `custom-api` and `bundled-data`. A server's `api` is the curator's
+statement; a pack's is held to its `filter` by its base's kind at load (for a Socrata pack: `socrata`, its portal and
+its dataset). Entry A contains entry B when their platforms are equal and A states no `host` or B's, and no `dataset`
+or B's; the router's `routesByApi` gives the groups, and decides nothing.
+
+**`derivedFrom`** (optional on a pack, inside its hash): each pinned source the pack's text is drawn from, its `id` and
+page, and its version, commit, file and file hash where it has them. `provenance` keeps who curated the entry and from
+what, outside the hash.
+
+**A pack's `version`** is `<major>.<minor>`: the minor moves when the pack's hashed entry changes and its recipes do not;
+the major moves when a recipe changes. The version `1`, released before this rule, reads as `1.0`.
 
 ## What an entry is
 
@@ -51,7 +90,8 @@ the preamble entry where a source has its own, the portal lock). A kind is code;
 data.
 
 **A pack** is a base server's tools called with fixed arguments (`filter`), plus text (design §4.1's three-part rule).
-Its `configuration`, hosting variants and consent default are its base's; the loader sets `base` on its manifest entry,
+Its `configuration`, hosting variants and consent default are its base's; it names its base by the base's `id`, and the
+loader sets `base` on its manifest entry to the base's `sourceId`,
 and a call of one of its tools goes to the base's server and is recorded under the base's `sourceId`, with the pack's
 `id` beside it (`mcp.pack_id`). Over the Socrata server a filter fixes `portal` and optionally `dataset_id`; the pack's
 `get_data` and `fetch` are rewritten for them as the one-portal lock rewrites a portal, and its `search` exists only
@@ -61,14 +101,33 @@ alone). A pack's own text is its **`guidance`** member (a `guidanceRef` object o
 `canonicalJson` of the entry with `hash`, `provenance` and `toolsRef` removed (the router's `packHash`), so it moves
 when the pack's identity, filter, routing lines, prompt strings, place, categories or guidance move, and not when its
 provenance note is edited. `check:inventory` and the router's loader each refuse a pack whose `hash` is not that
-value; the loader carries the two on the pack's manifest entry as `pack: { version, hash }`, and a record credits the
-pack as `<version>+<the hash's first twelve characters>`. A pack has no `configuration` of its own, and the router
-keys it by its base's address. Version 1 holds no pack; version 2 holds City Record, `get_data` and `fetch` over the
-dataset `dg92-zbpx` on `data.cityofnewyork.us`, with seven query recipes as its guidance.
+value; the loader carries them on the pack's manifest entry as `pack: { version, hash, basePins }`, and a record
+credits the pack as `<version>+<the hash's first twelve characters>`. The hash covers `base`, `basePins`, `api` and
+`derivedFrom`. A pack has no `configuration` of its own, and the router
+keys it by its base's address. Version 1 holds no pack; versions 2 and 3 hold City Record, `get_data` and `fetch` over
+the dataset `dg92-zbpx` on `data.cityofnewyork.us`, with seven query recipes as its guidance (version 3: version `1.1`,
+named "NYC City Record").
+
+## Against civic-inventory/2
+
+`/3` (version 3) keeps `/2`'s vocabulary and its hash definitions, and differs as follows.
+
+**Added:**
+- `api` on every entry, required (above).
+- On a pack: `basePins`, required, and `derivedFrom`, optional (above).
+
+**Changed:**
+- A pack's `base` is the base server entry's full `id` (in `/2`, its `sourceId`).
+- `toolsRef.toolNames` may be empty, on a server entry only when some pack names that entry as its base
+  (`check:inventory`; hub #314). The loader still holds a server's tools to its kind's schemas.
+- `toolsRef.fixture` also names the capture a pack's `basePins` over the server were read from.
+
+**Dropped:**
+- `file`, `commit` and `fileSha256` from `provenance`: a pack's pinned source is its `derivedFrom`, inside the hash.
 
 ## Against civic-inventory/1
 
-`civic-inventory/1` (`benchmark/inventories/schema.json`, S1's, unchanged) is the benchmark's format. `/2` keeps its
+`civic-inventory/1` (`benchmark/inventories/schema.json`, S1's, unchanged) is the benchmark's format. `/2` kept its
 vocabulary (`text`, `alias`, `sha256`, `date`, `configuration`, `place`, `categories`, `registry`, `authentication`,
 `provenance`) and the hash definition, and differs as follows.
 
@@ -147,6 +206,7 @@ the repository named:
 `npm run check:inventory` (`scripts/check-inventory.mjs`) prints `Inventory check passed.` when the file validates
 against `schema.json` (ajv 6.15.0), holds only strings, arrays and objects, has a `.sha256` equal to its
 `canonicalJson` SHA-256, a `YYYY-MM-DD.N` version (a calendar date, a counter with no leading zero) with a
-`CHANGELOG.md` line, a `hash` on every pack equal to its `packHash`, and loads with the router's
+`CHANGELOG.md` line, a `hash` on every pack equal to its `packHash`, an `id`, a `sourceId` and an `alias` each unique
+across the entries, no server entry with no tools that no pack names as its base, and loads with the router's
 `manifestFromInventory(file, CIVIC_KINDS)`. Its self-test, `check:inventory:self-test`, runs it on the file and on
 decoys.

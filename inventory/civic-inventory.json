@@ -1,7 +1,7 @@
 {
-  "schema": "civic-inventory/2",
+  "schema": "civic-inventory/3",
   "id": "civic",
-  "version": "2026-11-09.1",
+  "version": "2026-11-12.1",
   "note": "The router's seven sources, in CIVIC_MANIFEST's order: six server entries and City Record as a pack over the Socrata server; the router keeps CIVIC_MANIFEST as code, held equal to this file by its tests (G0-5 A).",
   "entries": [
     {
@@ -40,6 +40,9 @@
         "citation": "the dataset ID (for Socrata)"
       },
       "serverType": "socrata",
+      "api": {
+        "platform": "socrata"
+      },
       "place": {
         "country": "multiple",
         "level": "multiple",
@@ -57,7 +60,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from its description: any Socrata portal",
         "sourceUrl": "packages/civic-typed-router/src/civic/socrata.ts"
       },
       "toolsRef": {
@@ -66,7 +69,8 @@
           "search",
           "fetch"
         ],
-        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac"
+        "sha256": "d346c1f8a12d34a34b857e8e3b5db75880e7c8f615c9407cdedb2f4c9f2e60ac",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/socrata-tools.json"
       },
       "guidanceRef": {
         "kind": "prompt",
@@ -75,13 +79,13 @@
     },
     {
       "kind": "server",
-      "id": "datacommons-mcp@https://github.com/datacommonsorg/agent-toolkit",
+      "id": "Data Commons MCP Server@https://api.datacommons.org/mcp",
       "alias": "data_commons",
       "sourceId": "data-commons",
       "displayName": "Google Data Commons MCP Server",
       "description": "Google Data Commons: statistical series from the U.S. Census Bureau (ACS, Decennial), BLS, CDC, the Department of Education, EPA and other official agencies, for countries, states, counties, cities, census tracts and ZIP code areas. Cannot return city operational records such as 311 requests, permits or inspections, and has no figures for city-drawn areas such as community districts, council districts or neighborhoods.",
       "freshness": "Live API over published statistical releases: a figure changes only when an agency publishes a new release, and each carries its release vintage (the ACS releases annually).",
-      "freshnessSource": "The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub's docs/skills/data-commons.md): \"ACS releases annually\" and \"Surface the vintage\". The server is Google's datacommons-mcp (github.com/datacommonsorg/agent-toolkit).",
+      "freshnessSource": "The Data Commons guidance this package embeds (src/civic/data-commons.ts, hand-synced from the hub's docs/skills/data-commons.md): \"ACS releases annually\" and \"Surface the vintage\". The server at the default address is the MCP server built into Google's Data Commons Mixer (github.com/datacommonsorg/mixer, internal/server/mcp): it reported its version as 8aed5d1, a mixer commit, on 2026-11-12, and mixer's deploy/apigee/README.md states that it \"runs inside Mixer and is served by the same Cloud Endpoints (ESP) service as the Mixer API\".",
       "configuration": {
         "addressVariable": "DATA_COMMONS_MCP_URL",
         "keyVariable": "DATA_COMMONS_API_KEY",
@@ -116,6 +120,10 @@
         "keyVariable": "DATA_COMMONS_API_KEY"
       },
       "serverType": "mcp-remote",
+      "api": {
+        "platform": "data-commons",
+        "host": "api.datacommons.org"
+      },
       "place": {
         "country": "multiple",
         "level": "multiple",
@@ -131,7 +139,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from the codebase whose commit the hosted server reports as its version, datacommonsorg/mixer at 8aed5d1, deploy/apigee/terraform/prod/vars.tfvars:6 (api_hostname); id, in version 3, the endpoint form: the name the server at its default address reports, and that address (G0-C1 = A, hub #317)",
         "sourceUrl": "packages/civic-typed-router/src/civic/data-commons.ts"
       },
       "toolsRef": {
@@ -182,6 +190,10 @@
         "lockMention": "Boston OpenContext for Boston"
       },
       "serverType": "mcp-remote",
+      "api": {
+        "platform": "ckan",
+        "host": "data.boston.gov"
+      },
       "place": {
         "country": "US",
         "level": "local",
@@ -202,7 +214,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from its freshness line",
         "sourceUrl": "packages/civic-typed-router/src/civic/boston.ts"
       },
       "toolsRef": {
@@ -257,6 +269,9 @@
         "lockMention": "the NYC Charter server for New York City law"
       },
       "serverType": "npm-package",
+      "api": {
+        "platform": "bundled-data"
+      },
       "place": {
         "country": "US",
         "level": "local",
@@ -271,7 +286,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from its hosting variant, outbound []",
         "sourceUrl": "packages/civic-typed-router/src/civic/nyc-charter.ts"
       },
       "toolsRef": {
@@ -335,6 +350,10 @@
         "lockMention": "the Checkbook server for New York City spending"
       },
       "serverType": "npm-package",
+      "api": {
+        "platform": "custom-api",
+        "host": "www.checkbooknyc.com"
+      },
       "place": {
         "country": "US",
         "level": "local",
@@ -351,7 +370,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from its hosting variant's outbound list",
         "sourceUrl": "packages/civic-typed-router/src/civic/nyc-checkbook.ts"
       },
       "toolsRef": {
@@ -379,22 +398,37 @@
       "id": "nyc-record@https://data.cityofnewyork.us/d/dg92-zbpx",
       "alias": "nyc_record",
       "sourceId": "nyc-record",
-      "displayName": "NYC City Record MCP Server",
+      "displayName": "NYC City Record",
       "description": "Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online.",
       "freshness": "Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily.",
       "freshnessSource": "The publisher's README for version 1.1.0, \"Data source\" (github.com/BetaNYC/nyc-record-mcp): the City Record Online dataset on NYC Open Data \"is updated daily and includes notices published in the official City Record since 2015\".",
-      "base": "socrata",
+      "base": "socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server",
+      "basePins": [
+        {
+          "serverName": "socrata-mcp-server",
+          "serverVersion": "0.9.2",
+          "tools": {
+            "get_data": "5b19e21075e96c70b461c1d93f6bf5c51b3c461e1c839dbaa57180e35191c9fa",
+            "fetch": "c4593d9b980316180b61820e09055e5721c297a31b02ada653b74c1eda778959"
+          }
+        }
+      ],
       "filter": {
         "portal": "data.cityofnewyork.us",
         "dataset_id": "dg92-zbpx"
       },
+      "api": {
+        "platform": "socrata",
+        "host": "data.cityofnewyork.us",
+        "dataset": "dg92-zbpx"
+      },
       "author": "BetaNYC",
       "publisher": "BetaNYC",
-      "version": "1",
-      "hash": "b4a208462f8d18b72be9817982e21c61374e1bdd3aab6f670cd68ce7dece8236",
+      "version": "1.1",
+      "hash": "ef1b4b6089e91232bc2b3e2ceca1557d1aaa065dfb60aebc9552a16f9303d0b3",
       "prompt": {
         "citation": "the agency, notice type and publication date of each notice (for The City Record)",
-        "lockMention": "the City Record server for New York City notices"
+        "lockMention": "City Record for New York City notices"
       },
       "place": {
         "country": "US",
@@ -413,14 +447,21 @@
         "text": "# NYC City Record: query recipes\n\nThis source reads one dataset, City Record Online (`dg92-zbpx` on `data.cityofnewyork.us`): the notices published in The City Record, New York City's official journal, since 2015, one row per notice. The recipes use four of its columns: `agency_name`, `type_of_notice_description`, `start_date` (the date the notice was published) and `due_date` (a solicitation's response deadline).\n\nRead it with `get_data` and \"type\": \"query\". Every call names the portal and the dataset, \"portal\": \"data.cityofnewyork.us\" and \"dataset_id\": \"dg92-zbpx\": without \"dataset_id\" the server reads the \"query\" value as a dataset ID. `fetch` returns the dataset's metadata and columns, or one record by its identifier.\n\nEach recipe below is the query one tool of the City Record server (BetaNYC's nyc-record-mcp 1.1.0) sent to this dataset. Replace each value in angle brackets. Inside a SoQL string literal, write a single quote as two. Raise \"limit\" to see more rows.\n\n1. Search the notices' text for a phrase. Pass the phrase as \"query\": the server applies a \"query\" that does not begin with SELECT as a full-text search of the dataset (SoQL's $q), alongside \"order\" and \"limit\". A phrase that begins with the word SELECT is read as a SoQL statement instead, so reword it.\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"query\": \"sidewalk repair\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n2. Notices from one agency, by a full or partial name, such as DCAS or Parks:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"upper(agency_name) like upper('%<agency>%')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n3. Notices of one type. The types are Solicitation, Award, Intent to Award, Intent to Negotiate, Public Hearings, Public Comment, Meeting, Notice, Vendor List and Sale:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description='<type>'\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n4. Procurement notices: solicitations, awards, intents to award or negotiate, and vendor lists:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description in ('Solicitation','Award','Intent to Award','Intent to Negotiate','Vendor List')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n5. Public hearings, comment periods, meetings and other notices:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description in ('Public Hearings','Public Comment','Meeting','Notice')\", \"order\": \"start_date DESC\", \"limit\": 25 }\n\n6. Open solicitations, whose response deadline has not passed, soonest first. <today> is today's date in New York, YYYY-MM-DD:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"type_of_notice_description='Solicitation' AND due_date >= '<today>'\", \"order\": \"due_date ASC\", \"limit\": 25 }\n\n7. Notices published between two dates, YYYY-MM-DD, both days included:\n   { \"type\": \"query\", \"portal\": \"data.cityofnewyork.us\", \"dataset_id\": \"dg92-zbpx\", \"where\": \"start_date >= '<start>' AND start_date <= '<end>'\", \"order\": \"start_date DESC\", \"limit\": 50 }",
         "blockSha256": "68b48b71b7e990b84d60edb2c777b1815c341215781fd379551bd89b148ad37d"
       },
+      "derivedFrom": [
+        {
+          "id": "@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp",
+          "version": "1.1.0",
+          "commit": "6c52a5353381592713678caa109870d1e912c858",
+          "file": "dist/city-record.js",
+          "fileSha256": "622edb9fb6263b9a3ad40a20415f4b409d652c2531bf4dbbf7cfac619e2b0512",
+          "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0"
+        }
+      ],
       "provenance": {
         "addedOn": "2026-11-09",
         "from": "hand",
-        "by": "City Record as a pack over the Socrata server (hub #309, S2-B, inventory version 2). Its identity, routing lines, prompt strings, place and categories are the server entry's of version 1 (from the router's manifest at 0.6.0). Its guidance is seven query recipes, in order one for each tool of @betanyc/nyc-record-mcp 1.1.0, with the where, order and limit of that tool's handler in the package's dist/city-record.js (searchNotices, getNoticesByAgency, getNoticesByType, getProcurementNotices, getPublicHearings, getOpenSolicitations, getNoticesByDateRange); searchNotices' $q becomes the Socrata server's query, which it applies as $q. Read from the registry's tarball for 1.1.0, whose shasum and integrity equal the registry's dist; file and fileSha256 name the file inside the package.",
-        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0",
-        "file": "dist/city-record.js",
-        "commit": "6c52a5353381592713678caa109870d1e912c858",
-        "fileSha256": "622edb9fb6263b9a3ad40a20415f4b409d652c2531bf4dbbf7cfac619e2b0512"
+        "by": "City Record as a pack over the Socrata server (hub #309, S2-B, inventory version 2). Its identity, routing lines, citation, place and categories are the server entry's of version 1 (from the router's manifest at 0.6.0). Version 3 (hub #317, S2-C) names it NYC City Record, with the lock mention City Record for New York City notices (S2-B's D2 = A), and states its base by id, its base pins (read from the Socrata entry's toolsRef.fixture), its api (read from its filter) and derivedFrom; its version moves to 1.1. Its guidance is seven query recipes, in order one for each tool of @betanyc/nyc-record-mcp 1.1.0, with the where, order and limit of that tool's handler in the package's dist/city-record.js (searchNotices, getNoticesByAgency, getNoticesByType, getProcurementNotices, getPublicHearings, getOpenSolicitations, getNoticesByDateRange); searchNotices' $q becomes the Socrata server's query, which it applies as $q. Read from the registry's tarball for 1.1.0, whose shasum and integrity equal the registry's dist; derivedFrom's file and fileSha256 name the file inside the package.",
+        "sourceUrl": "https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0"
       },
       "toolsRef": {
         "toolNames": [
@@ -477,6 +518,10 @@
         "lockMention": "the NYS legislation server for New York State bills and laws"
       },
       "serverType": "npm-package",
+      "api": {
+        "platform": "custom-api",
+        "host": "legislation.nysenate.gov"
+      },
       "place": {
         "country": "US",
         "level": "state",
@@ -492,7 +537,7 @@
       "provenance": {
         "addedOn": "2026-11-06",
         "from": "hand",
-        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json",
+        "by": "the router's manifest at 0.6.0, its data fields copied as they stand; serverType, place, categories and authentication from S1's benchmark/inventories/7.json; api, in version 3, read from its hosting variant's outbound list",
         "sourceUrl": "packages/civic-typed-router/src/civic/nys-legislation.ts"
       },
       "toolsRef": {
