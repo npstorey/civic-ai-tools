@@ -29,6 +29,7 @@ import { packManifestEntry, type InventoryPackEntry } from '../core/inventory.ts
 import { sha256Hex } from '../core/sha256.ts';
 import type { CivicManifestEntry } from './context.ts';
 import { socrataPack } from './inventory.ts';
+import { civicCitation } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The pack's guidance: seven query recipes, one for each tool of
@@ -89,7 +90,7 @@ const NYC_RECORD_PACK: InventoryPackEntry = {
   version: '1',
   hash: 'b4a208462f8d18b72be9817982e21c61374e1bdd3aab6f670cd68ce7dece8236',
   prompt: {
-    citation: 'the agency, notice type and publication date of each notice (for The City Record)',
+    citation: civicCitation('nyc-record'),
     // The lock section lists the other sources with commas: a name without one.
     lockMention: 'the City Record server for New York City notices',
   },

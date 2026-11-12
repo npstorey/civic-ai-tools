@@ -21,6 +21,20 @@ export type SourceId = 'socrata' | 'data-commons' | 'boston-opencontext';
 /** Every civic source, in the order the prompt names them. */
 export const ALL_SOURCES: readonly SourceId[] = ['socrata', 'data-commons', 'boston-opencontext'];
 
+/** The ids the outro has a citation for: the three, and City Record's pack,
+ *  which the router offers wherever Socrata is (since 0.8.0). */
+export type CitedSourceId = SourceId | 'nyc-record';
+
+/** `table[sourceId]`, or a refusal naming the id: an `Error` whose message
+ *  holds the id in double quotes, the shape of the reference website's
+ *  guard. So no helper here writes `undefined` into a prompt. */
+function lookUp<T>(table: Readonly<Record<string, T>>, sourceId: string, what: string, whose: string): T {
+  if (!Object.hasOwn(table, sourceId)) {
+    throw new Error(`${what}: "${sourceId}" is not one of ${Object.keys(table).join(', ')}; ${whose}`);
+  }
+  return table[sourceId]!;
+}
+
 /** A `Tools:` list: each name through the view, comma-separated. */
 const toolsList = (view: SourceView, sourceId: string, names: readonly string[]): string =>
   names.map((name) => view.toolName(sourceId, name)).join(', ');
@@ -38,7 +52,7 @@ const PREAMBLE_ENTRIES: Record<SourceId, (view: SourceView) => string> = {
 
 /** A civic source's preamble entry (without its number), in `view`. */
 export function civicPreambleEntry(sourceId: SourceId, view: SourceView = BARE_VIEW): string {
-  return PREAMBLE_ENTRIES[sourceId](view);
+  return lookUp(PREAMBLE_ENTRIES, sourceId, "civicPreambleEntry has the three code sources' entries only", "another source's entry is its manifest entry's")(view);
 }
 
 /** The preamble's source-selection rules, in order; a rule that routes to a
@@ -89,10 +103,19 @@ See the Cross-source decision logic section in the Data Commons guidance below f
  * view: one numbered entry per source, and the selection rules that route to
  * a source listed. Every line it can produce is a line of
  * `CROSS_SOURCE_PREAMBLE` except the first, which states the count.
+ *
+ * It composes the three code sources' entries only (`ALL_SOURCES`). A pack's
+ * entry and a hosted source's are the router's, composed by `composePrompt`
+ * from the manifest; such an id is refused by name (since 0.9.0), as the
+ * reference website's own guard refuses it, rather than written as
+ * `undefined`.
  */
 export function crossSourcePreamble(sources: readonly SourceId[]): string {
   return composePreamble(
-    sources.map((sourceId) => ({ sourceId, preambleEntry: `${PREAMBLE_ENTRIES[sourceId]?.(BARE_VIEW)}` })),
+    sources.map((sourceId) => ({
+      sourceId,
+      preambleEntry: lookUp(PREAMBLE_ENTRIES, sourceId, "crossSourcePreamble composes the three code sources' entries only", "its entry is the router's")(BARE_VIEW),
+    })),
   );
 }
 
@@ -106,16 +129,19 @@ export const introFor = (today: string): string =>
 
 Today's date is ${today}. Always use this as the current date for interpreting relative time expressions like "last year" or "past two months."`;
 
-/** What the outro asks the model to cite, per civic source. */
-const OUTRO_CITATIONS: Record<SourceId, string> = {
+/** What the outro asks the model to cite, per civic source, and for City
+ *  Record's pack (its inventory entry's `prompt.citation`, which the mirror
+ *  in `./nyc-record.ts` reads from here). */
+const OUTRO_CITATIONS: Record<CitedSourceId, string> = {
   socrata: 'the dataset ID (for Socrata)',
   'data-commons': 'the variable DCID + source dataset (for Data Commons)',
   'boston-opencontext': 'the resource UUID + dataset title (for Boston OpenContext)',
+  'nyc-record': 'the agency, notice type and publication date of each notice (for The City Record)',
 };
 
-/** A civic source's outro citation. */
-export function civicCitation(sourceId: SourceId): string {
-  return OUTRO_CITATIONS[sourceId];
+/** A civic source's outro citation. Refuses, by name, an id with none. */
+export function civicCitation(sourceId: CitedSourceId): string {
+  return lookUp(OUTRO_CITATIONS, sourceId, 'civicCitation has a citation for these only', "another source's citation is its manifest entry's");
 }
 
 /** The closing instruction, citing these, in order. */
@@ -127,9 +153,12 @@ export function composeOutro(citations: readonly string[]): string {
   return `When you get results, summarize clearly and cite ${list}.`;
 }
 
-/** The closing instruction, citing exactly these civic sources. */
-export function outroFor(sources: readonly SourceId[]): string {
-  return composeOutro(sources.map((sourceId) => OUTRO_CITATIONS[sourceId]));
+/** The closing instruction, citing exactly these civic sources, City
+ *  Record's pack among them where listed. Refuses, by name, an id it has no
+ *  citation for (since 0.9.0; before, such an id was cited as `undefined`,
+ *  or as nothing). */
+export function outroFor(sources: readonly CitedSourceId[]): string {
+  return composeOutro(sources.map((sourceId) => lookUp(OUTRO_CITATIONS, sourceId, 'outroFor cites these only', "another source's citation is its manifest entry's")));
 }
 
 // --- The directory (ADR-0037) ---------------------------------------------------

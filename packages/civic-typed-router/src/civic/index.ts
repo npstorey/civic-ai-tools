@@ -115,5 +115,6 @@ export {
   outroFor,
   sourceCountWord,
   type PromptSource,
+  type CitedSourceId,
   type SourceId,
 } from './prompt-frame.ts';
