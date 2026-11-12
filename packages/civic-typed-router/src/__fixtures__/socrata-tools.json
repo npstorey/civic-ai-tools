@@ -1,0 +1,155 @@
+{
+  "_meta": {
+    "description": "The Socrata MCP server's own report (initialize's serverInfo) and its tools/list, at a stated commit of its repository, started with an empty environment. The City Record pack's basePins are read from it: serverInfo's name and version, and mcpToolSchemaSha256 of get_data and fetch.",
+    "repository": "https://github.com/npstorey/socrata-mcp-server",
+    "commit": "1761bcef3583de33b61e5f689e1ae18204e7ac0a",
+    "packageVersion": "0.9.2",
+    "script": {
+      "path": "packages/civic-typed-router/src/__fixtures__/pin-socrata-tools.mjs",
+      "sha256": "72eda33ec88e741c5653bce79d0aefed3b6d2bb463406444381abb956c285a0e"
+    },
+    "captureDate": "2026-11-12",
+    "node": "v22.23.4",
+    "resolved": {
+      "@modelcontextprotocol/sdk": "1.32.2"
+    },
+    "install": "git clone over HTTPS into a fresh directory under the OS temporary directory, the commit checked out detached; npm ci --ignore-scripts; npm run build:tsc",
+    "transport": "stdio: node dist/index.js --stdio, the working directory the clone (no .env), the environment empty",
+    "environment": {},
+    "requests": [
+      "initialize",
+      "notifications/initialized",
+      "tools/list"
+    ]
+  },
+  "initialize": {
+    "requestedProtocolVersion": "2025-06-18",
+    "protocolVersion": "2025-06-18",
+    "serverInfo": {
+      "name": "socrata-mcp-server",
+      "version": "0.9.2"
+    },
+    "capabilities": {
+      "tools": {},
+      "prompts": {},
+      "resources": {
+        "subscribe": false,
+        "listChanged": true
+      },
+      "logging": {},
+      "experimental": {
+        "elicit": {}
+      }
+    },
+    "instructions": null
+  },
+  "tools": [
+    {
+      "name": "get_data",
+      "title": "Unified Socrata Access",
+      "description": "A unified tool to interact with Socrata open-data portals.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "catalog",
+              "metadata",
+              "query",
+              "metrics"
+            ],
+            "description": "Operation to perform"
+          },
+          "query": {
+            "type": "string",
+            "description": "General search phrase OR a full SoQL query string. If this is a full SoQL query (e.g., starts with SELECT), other SoQL parameters like select, where, q might be overridden or ignored by the handler in favor of the full SoQL query. If it's a search phrase, it will likely be used for a full-text search ($q parameter to Socrata)."
+          },
+          "domain": {
+            "type": "string",
+            "description": "The Socrata domain to query: the host of the portal this call is about. Required on every call, because this server has no default portal configured; a call without one is refused."
+          },
+          "portal": {
+            "type": "string",
+            "description": "Alias for domain — the Socrata portal domain"
+          },
+          "limit": {
+            "type": "string",
+            "description": "Number of results to return (e.g., \"10\", \"100\"), or \"all\". For type \"query\", at most 10,000 rows per call: a larger number is reduced to 10,000, and \"all\" returns up to 10,000 rows, with next_offset when more remain."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Offset for pagination"
+          },
+          "select": {
+            "type": "string",
+            "description": "SoQL SELECT clause"
+          },
+          "where": {
+            "type": "string",
+            "description": "SoQL WHERE clause"
+          },
+          "order": {
+            "type": "string",
+            "description": "SoQL ORDER BY clause"
+          },
+          "group": {
+            "type": "string",
+            "description": "SoQL GROUP BY clause"
+          },
+          "having": {
+            "type": "string",
+            "description": "SoQL HAVING clause"
+          },
+          "dataset_id": {
+            "type": "string",
+            "description": "Dataset ID (for metadata, column-info, data-access)"
+          },
+          "q": {
+            "type": "string",
+            "description": "Full-text search query within the dataset (used in data access)"
+          }
+        },
+        "required": [
+          "type"
+        ]
+      }
+    },
+    {
+      "name": "search",
+      "title": "Search (no default portal configured)",
+      "description": "Search a configured default portal and return matching dataset IDs. This server has no default portal configured, so search is refused; to find datasets on a portal you name, use get_data with type \"catalog\", a \"query\" and that portal's host as \"domain\".",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query for full-text search"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "fetch",
+      "title": "Fetch Document",
+      "description": "Retrieve full dataset metadata or record content from a Socrata open data portal. This server has no default portal configured, so the identifier must name its portal: dataset:<portal-host>:<dataset-id>, record:<portal-host>:<dataset-id>:<row-id>, or the dataset's URL.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier returned by the search tool"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  ]
+}
