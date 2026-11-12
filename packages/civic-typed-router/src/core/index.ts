@@ -54,6 +54,8 @@ export {
   type LoadSourceToolText,
 } from './directory.ts';
 export { canonicalJson, CanonicalJsonError } from './canonical-json.ts';
+export { canonicalJsonValue, CanonicalJsonValueError } from './canonical-json-value.ts';
+export { mcpToolSchemaSha256, mcpToolSchemaText, schemaWithoutAnnotations, type McpListedTool } from './mcp-tool-schema.ts';
 export { sha256, sha256Hex } from './sha256.ts';
 export {
   InventoryLoadError,
