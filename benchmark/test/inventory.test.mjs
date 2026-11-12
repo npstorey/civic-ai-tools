@@ -62,7 +62,13 @@ test("A0.6: createCivicRouter over to-manifest's output passes its startup check
   assert.deepEqual(manifest.map((entry) => entry.sourceId), seven.map((entry) => entry.sourceId));
   for (const [i, entry] of manifest.entries()) {
     const own = live.get(entry.sourceId);
-    if (own !== undefined && own.base === undefined) assert.equal(entry, own, `${entry.sourceId}: the router's own entry`);
+    if (own !== undefined && own.base === undefined && entry.sourceId === 'data-commons') {
+      // Since inventory version 3 (hub #317) the router's Data Commons entry
+      // states another id and freshnessSource: to-manifest returns its code
+      // with the frozen copy's data fields.
+      assert.notEqual(entry, own, `${entry.sourceId}: a copy`);
+      for (const part of ['tools', 'guidance', 'prompt', 'toolsFor', 'portalLock']) assert.equal(entry[part], own[part], `${entry.sourceId}: the router's own ${part}`);
+    } else if (own !== undefined && own.base === undefined) assert.equal(entry, own, `${entry.sourceId}: the router's own entry`);
     else assert.ok(!CIVIC_MANIFEST.includes(entry), `${entry.sourceId}: built from the frozen copy`);
     assert.deepEqual(routerDataFields(entry), routerDataFields(seven[i]), `${entry.sourceId}: the copy's data fields`);
     assert.deepEqual([...entry.toolNames], seven[i].toolNames, `${entry.sourceId}: the copy's tool names`);

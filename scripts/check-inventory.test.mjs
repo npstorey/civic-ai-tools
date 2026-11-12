@@ -146,3 +146,119 @@ test("decoy (G0-B6): a pack whose hash is not the canonical hash of the entry le
   });
   assert.ok(!provenance.some((p) => p.startsWith('hash: ')), provenance.join('\n'));
 });
+
+
+// S2-C (hub #317): schema 3, inventory version 3 and the route-identity
+// conventions (A1.1). Each decoy asserts the rule that fails by its name.
+
+const SOCRATA_ID = 'socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server';
+/** The design's §2.5 table, as version 3 states it. */
+const API = {
+  socrata: { platform: 'socrata' },
+  'data-commons': { platform: 'data-commons', host: 'api.datacommons.org' },
+  'boston-opencontext': { platform: 'ckan', host: 'data.boston.gov' },
+  'nyc-charter': { platform: 'bundled-data' },
+  'nyc-checkbook': { platform: 'custom-api', host: 'www.checkbooknyc.com' },
+  'nyc-record': { platform: 'socrata', host: 'data.cityofnewyork.us', dataset: 'dg92-zbpx' },
+  'nys-legislation': { platform: 'custom-api', host: 'legislation.nysenate.gov' },
+};
+const CAPTURE = JSON.parse(readFileSync(join(REPO, 'packages/civic-typed-router/src/__fixtures__/socrata-tools.json'), 'utf8'));
+const captured = (name) => CAPTURE.tools.find((t) => t.name === name);
+
+/** The pack's position, and the pack changed by `change` with its hash restated. */
+const PACK = () => packIndexes()[0];
+const withPack = (given, change) => {
+  const pack = given.inventory.entries[PACK()];
+  change(pack, given.inventory);
+  pack.hash = router.packHash(pack);
+};
+
+test('A1.1: the repository inventory is civic-inventory/3: seven entries, each with its api; the pack over the Socrata entry by id, pinned, derived from the dedicated server, with the owed names', () => {
+  const { inventory } = inputs();
+  assert.equal(inventory.schema, 'civic-inventory/3');
+  assert.equal(inventory.entries.length, 7);
+  assert.deepEqual(Object.fromEntries(inventory.entries.map((e) => [e.sourceId, e.api])), API);
+  const pack = inventory.entries[PACK()];
+  assert.equal(inventory.entries[0].id, SOCRATA_ID);
+  assert.equal(pack.base, SOCRATA_ID);
+  assert.deepEqual(pack.basePins, [
+    {
+      serverName: CAPTURE.initialize.serverInfo.name,
+      serverVersion: CAPTURE.initialize.serverInfo.version,
+      tools: { get_data: router.mcpToolSchemaSha256(captured('get_data')), fetch: router.mcpToolSchemaSha256(captured('fetch')) },
+    },
+  ]);
+  assert.equal(pack.version, '1.1');
+  assert.equal(pack.displayName, 'NYC City Record');
+  assert.equal(pack.prompt.lockMention, 'City Record for New York City notices');
+  assert.deepEqual(pack.derivedFrom, [
+    {
+      id: '@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp',
+      version: '1.1.0',
+      commit: '6c52a5353381592713678caa109870d1e912c858',
+      file: 'dist/city-record.js',
+      fileSha256: '622edb9fb6263b9a3ad40a20415f4b409d652c2531bf4dbbf7cfac619e2b0512',
+      sourceUrl: 'https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0',
+    },
+  ]);
+  for (const entry of inventory.entries) {
+    for (const member of ['file', 'commit', 'fileSha256']) assert.equal(Object.hasOwn(entry.provenance, member), false, `${entry.sourceId}: provenance.${member}`);
+  }
+});
+
+test("decoy (A1.1): a pack whose base is the Socrata entry's sourceId fails the load by name", () => {
+  const problems = problemsWith((given) => withPack(given, (pack) => (pack.base = 'socrata')));
+  assert.ok(problems.some((p) => p.startsWith('load: manifestFromInventory: nyc_record: base: "socrata" is a sourceId; ')), problems.join('\n'));
+});
+
+test('decoy (A1.1): a duplicate id, a duplicate sourceId and a duplicate alias each fail the uniqueness rule by name', () => {
+  const id = problemsWith((given) => (given.inventory.entries[4].id = given.inventory.entries[3].id));
+  assert.ok(id.includes(`unique: id "${inputs().inventory.entries[3].id}" is stated by entries[3] (nyc_charter) and entries[4] (nyc_checkbook)`), id.join('\n'));
+  const sourceId = problemsWith((given) => (given.inventory.entries[2].sourceId = 'data-commons'));
+  assert.ok(sourceId.includes('unique: sourceId "data-commons" is stated by entries[1] (data_commons) and entries[2] (boston)'), sourceId.join('\n'));
+  const alias = problemsWith((given) => (given.inventory.entries[6].alias = 'nyc_checkbook'));
+  assert.ok(alias.includes('unique: alias "nyc_checkbook" is stated by entries[4] (nyc_checkbook) and entries[6] (nyc_checkbook)'), alias.join('\n'));
+});
+
+test('decoy (A1.1): a pack with no basePins fails the schema and the load by name', () => {
+  const problems = problemsWith((given) => withPack(given, (pack) => delete pack.basePins));
+  assert.ok(problems.includes(`schema: .entries[${PACK()}] should have required property 'basePins'`), problems.join('\n'));
+  assert.ok(problems.some((p) => p.startsWith('load: manifestFromInventory: nyc_record: basePins: is missing')), problems.join('\n'));
+});
+
+test("decoy (A1.1): a pack whose api.host differs from its filter.portal fails the load by name", () => {
+  const problems = problemsWith((given) => withPack(given, (pack) => (pack.api = { ...pack.api, host: 'data.cityofchicago.org' })));
+  assert.ok(problems.some((p) => p.startsWith('load: manifestFromInventory: nyc_record: api.host: is "data.cityofchicago.org"; ')), problems.join('\n'));
+});
+
+test('decoy (A1.1): a server entry with no tools that no pack names fails the empty-tools rule by name; one a pack names passes it', () => {
+  const unnamed = problemsWith((given) => (given.inventory.entries[1].toolsRef.toolNames = []));
+  assert.ok(unnamed.includes('tools: data_commons: toolsRef.toolNames is empty, and no pack names this entry as its base'), unnamed.join('\n'));
+  assert.ok(!unnamed.some((p) => p.startsWith('schema: ')), `the schema admits it: ${unnamed.join('\n')}`);
+  // The Socrata entry, the pack's base, may list none (CKAN-1's case); its kind's schemas then fail the load, not this rule.
+  const named = problemsWith((given) => (given.inventory.entries[0].toolsRef.toolNames = []));
+  assert.ok(!named.some((p) => p.startsWith('tools: ')), named.join('\n'));
+});
+
+test('decoy (A1.1): a version-2 file fails schema 3 by name', () => {
+  const problems = problemsWith((given) => {
+    const v2 = given.inventory;
+    v2.schema = 'civic-inventory/2';
+    for (const entry of v2.entries) delete entry.api;
+    const pack = v2.entries[PACK()];
+    pack.base = 'socrata';
+    delete pack.basePins;
+    const from = pack.derivedFrom?.[0] ?? pack.provenance;
+    delete pack.derivedFrom;
+    Object.assign(pack.provenance, { file: from.file, commit: from.commit, fileSha256: from.fileSha256 });
+    pack.hash = router.packHash(pack);
+  });
+  for (const expected of [
+    '/schema should be equal to constant',
+    `/entries[0] should have required property 'api'`,
+    `/entries[${PACK()}] should have required property 'basePins'`,
+    `/entries[${PACK()}].provenance should NOT have additional properties`,
+  ]) {
+    assert.ok(problems.some((p) => p.startsWith('schema: ') && p.replace('schema: .', '/').startsWith(expected)), `${expected}:\n${problems.join('\n')}`);
+  }
+});

@@ -20,7 +20,9 @@
 // variants and consent default are the Socrata entry's.
 //
 // The hub's `inventory/civic-inventory.json` is the source of truth for the
-// pack's data (version 2). The entry below is its mirror in code, built by
+// pack's data (version 3 since 0.9.0: its `base` by the Socrata entry's `id`,
+// its base pins, its `api`, and the names S2-B's D2 = A owed). The entry
+// below is its mirror in code, built by
 // the same code the inventory loader builds a pack with
 // (`packManifestEntry`, the Socrata kind's pack builder), and held equal to
 // the file by `src/inventory.test.ts`.
@@ -67,32 +69,47 @@ Each recipe below is the query one tool of the City Record server (BetaNYC's nyc
    { "type": "query", "portal": "data.cityofnewyork.us", "dataset_id": "dg92-zbpx", "where": "start_date >= '<start>' AND start_date <= '<end>'", "order": "start_date DESC", "limit": 50 }`;
 
 /** The pack as the inventory states it, less what the manifest does not
- *  carry (its place, categories, provenance and tools' reference, which are
- *  the file's alone). `hash` is the file's `packHash` of the whole entry. */
+ *  carry (its place, categories, `derivedFrom`, provenance and tools'
+ *  reference, which are the file's alone). `api` stays, since the Socrata
+ *  kind holds it to the filter. `hash` is the file's `packHash` of the whole
+ *  entry. */
 const NYC_RECORD_PACK: InventoryPackEntry = {
   kind: 'pack',
   id: 'nyc-record@https://data.cityofnewyork.us/d/dg92-zbpx',
   alias: 'nyc_record',
   sourceId: 'nyc-record',
-  displayName: 'NYC City Record MCP Server',
+  displayName: 'NYC City Record',
   description:
     "Notices in The City Record, New York City's official journal, since 2015: procurement solicitations, awards and intent-to-award notices, public hearings and comment periods, and other agency notices, by agency, notice type, keyword and publication date. Covers New York City only. Does not hold the notices' full documents or any dataset other than City Record Online.",
   freshness: 'Live: every call queries the City Record Online dataset on NYC Open Data, which is updated daily.',
   freshnessSource:
     "The publisher's README for version 1.1.0, \"Data source\" (github.com/BetaNYC/nyc-record-mcp): the City Record Online dataset on NYC Open Data \"is updated daily and includes notices published in the official City Record since 2015\".",
-  base: 'socrata',
+  base: SOCRATA_ENTRY.id,
+  // What the Socrata server reported at the capture the Socrata entry's
+  // `toolsRef.fixture` names (src/__fixtures__/socrata-tools.json).
+  basePins: [
+    {
+      serverName: 'socrata-mcp-server',
+      serverVersion: '0.9.2',
+      tools: {
+        get_data: '5b19e21075e96c70b461c1d93f6bf5c51b3c461e1c839dbaa57180e35191c9fa',
+        fetch: 'c4593d9b980316180b61820e09055e5721c297a31b02ada653b74c1eda778959',
+      },
+    },
+  ],
   filter: { portal: 'data.cityofnewyork.us', dataset_id: 'dg92-zbpx' },
+  api: { platform: 'socrata', host: 'data.cityofnewyork.us', dataset: 'dg92-zbpx' },
   guidance: { kind: 'inline', text: NYC_RECORD_GUIDANCE, blockSha256: sha256Hex(NYC_RECORD_GUIDANCE) },
   // The package's publisher, as its page names it: BetaNYC wrote the
   // queries the recipes copy.
   author: 'BetaNYC',
   publisher: 'BetaNYC',
-  version: '1',
-  hash: 'b4a208462f8d18b72be9817982e21c61374e1bdd3aab6f670cd68ce7dece8236',
+  version: '1.1',
+  hash: 'ef1b4b6089e91232bc2b3e2ceca1557d1aaa065dfb60aebc9552a16f9303d0b3',
   prompt: {
     citation: civicCitation('nyc-record'),
     // The lock section lists the other sources with commas: a name without one.
-    lockMention: 'the City Record server for New York City notices',
+    lockMention: 'City Record for New York City notices',
   },
 };
 

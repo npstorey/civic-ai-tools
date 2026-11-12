@@ -1,8 +1,9 @@
 // The inventory as data (hub #309, S2-A P0): the hub's
-// `inventory/civic-inventory.json` (`civic-inventory/2`) is the source of
-// truth for the seven sources, and `CIVIC_MANIFEST` stays code, held equal to
-// it here (G0-5 A). Since version 2 (S2-B, router 0.8.0) City Record is a
-// pack over the Socrata server, mirrored in `src/civic/nyc-record.ts`.
+// `inventory/civic-inventory.json` (`civic-inventory/3` since version 3) is
+// the source of truth for the seven sources, and `CIVIC_MANIFEST` stays code,
+// held equal to it here (G0-5 A). Since version 2 (S2-B, router 0.8.0) City
+// Record is a pack over the Socrata server, mirrored in
+// `src/civic/nyc-record.ts`.
 //
 //   A0.2  `createCivicRouter(manifestFromInventory(file, CIVIC_KINDS))`
 //         reproduces every golden of `router-goldens.test.ts` and the in-loop
@@ -21,6 +22,13 @@
 //         fails on nyc-record's tools. B9: the loader sets `pack` on a pack
 //         and on nothing else. F-E: the loader refuses a pack whose stated
 //         hash is not its `packHash`, naming its alias.
+//   S2-C  (hub #317, router 0.9.0) A1.5: the pack names its base by the
+//         Socrata entry's `id`, and the loaded entry's `base` is still
+//         `socrata`; `pack` carries `basePins`; the loader refuses a second
+//         `id`, a `base` naming no server's `id`, and a pack with no pins or
+//         with pins that leave out a tool it calls. The Socrata kind holds a
+//         pack's `api` to its filter. A1.3: `basePins[0]` is the capture's.
+//         A1.6: `routesByApi` over the file.
 //
 // The file is read here, by the test; the loader and the kinds read no file.
 
@@ -53,7 +61,10 @@ import {
   type CivicRouter,
   type InventoryDocument,
   type InventoryPackEntry,
+  type McpListedTool,
   type McpRegistryEnv,
+  mcpToolSchemaSha256,
+  routesByApi,
 } from './index.ts';
 
 const SRC = dirname(fileURLToPath(import.meta.url));
@@ -65,6 +76,8 @@ const readInventory = (): InventoryDocument => JSON.parse(readFileSync(INVENTORY
 const FILE = readInventory();
 const LOADED: CivicManifest = manifestFromInventory(FILE, CIVIC_KINDS);
 const LOADED_ROUTER = createCivicRouter(LOADED);
+/** The Socrata server entry's full id: how a pack names it as its base. */
+const SOCRATA_ID = FILE.entries[0]!.id;
 
 // --- A0.3: the mirror ------------------------------------------------------------------
 
@@ -141,11 +154,14 @@ test('A0.3: the loaded entries are CIVIC_MANIFEST, field for field, in its order
     FILE.entries.map((e) => e.sourceId),
     CIVIC_MANIFEST.map((e) => e.sourceId),
   );
-  // Every entry of version 2 is a server but City Record, a pack over socrata.
+  // Every entry is a server but City Record, a pack over the Socrata server, named by its id.
+  assert.equal(SOCRATA_ID, 'socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server');
   assert.deepEqual(
     FILE.entries.map((e) => (e.kind === 'pack' ? `${e.sourceId} pack over ${e.base}` : e.kind)),
-    ['server', 'server', 'server', 'server', 'server', 'nyc-record pack over socrata', 'server'],
+    ['server', 'server', 'server', 'server', 'server', `nyc-record pack over ${SOCRATA_ID}`, 'server'],
   );
+  // The loaded pack's base is the base's sourceId, the dispatch map's key.
+  assert.equal(LOADED[5]!.base, 'socrata');
 });
 
 test("B2: the pack's guidance, as the loader builds it, is the mirror's text", async () => {
@@ -153,11 +169,11 @@ test("B2: the pack's guidance, as the loader builds it, is the mirror's text", a
   assert.deepEqual(Object.keys(await packGuidance(CIVIC_MANIFEST)), ['nyc-record']);
 });
 
-test('B9: the loader sets pack ({ version, hash }) on a pack from the file, equal to the mirror, and on no server entry', () => {
+test('B9, A1.5: the loader sets pack ({ version, hash, basePins }) on a pack from the file, equal to the mirror, and on no server entry', () => {
   for (const [i, item] of FILE.entries.entries()) {
     const entry = LOADED[i]!;
     if (item.kind === 'pack') {
-      assert.deepEqual(entry.pack, { version: item.version, hash: item.hash }, `${entry.sourceId}: pack is the file's version and hash`);
+      assert.deepEqual(entry.pack, { version: item.version, hash: item.hash, basePins: item.basePins }, `${entry.sourceId}: pack is the file's version, hash and pins`);
       assert.deepEqual(CIVIC_MANIFEST[i]!.pack, entry.pack, `${entry.sourceId}: the mirror carries the same`);
       assert.equal(entry.pack!.hash, packHash(item), `${entry.sourceId}: the hash is the pack's packHash`);
     } else {
@@ -165,14 +181,17 @@ test('B9: the loader sets pack ({ version, hash }) on a pack from the file, equa
       assert.equal(Object.hasOwn(CIVIC_MANIFEST[i]!, 'pack'), false, `${entry.sourceId}: nor does its mirror`);
     }
   }
-  assert.deepEqual(NYC_RECORD_ENTRY.pack, { version: '1', hash: (FILE.entries[5] as InventoryPackEntry).hash });
+  const pack = FILE.entries[5] as InventoryPackEntry;
+  assert.deepEqual(NYC_RECORD_ENTRY.pack, { version: '1.1', hash: pack.hash, basePins: pack.basePins });
+  assert.equal(NYC_RECORD_ENTRY.pack!.basePins.length, 1);
 });
 
-test("B2 decoy: the version-2 file with the pack's filter moved by one character fails on nyc-record's tools", () => {
+test("B2 decoy: the file with the pack's filter (and its api) moved by one character fails on nyc-record's tools", () => {
   const moved = (keepToolsRef: boolean): InventoryDocument => {
     const copy = readInventory();
-    const pack = copy.entries[5] as unknown as Record<string, unknown> & { filter: Record<string, string> };
+    const pack = copy.entries[5] as unknown as Record<string, unknown> & { filter: Record<string, string>; api: Record<string, string> };
     pack.filter.dataset_id = 'dg92-zbpy';
+    pack.api.dataset = 'dg92-zbpy';
     if (!keepToolsRef) delete pack.toolsRef;
     // The hash restated, so the loader's hash check passes and the tools are compared.
     pack.hash = packHash(pack as unknown as InventoryPackEntry);
@@ -574,7 +593,18 @@ test('manifestFromInventory refuses, naming the alias and the field: an unknown 
 const PORTAL = 'data.cityofnewyork.us';
 const DATASET = 'dg92-zbpx';
 
-/** A pack over `socrata`, as an inventory entry, its hash its packHash. */
+/** A pin naming `get_data` and `fetch`, and `search` for a portal-only
+ *  filter (offered on an instance configured for that portal). The values
+ *  are placeholders: the loader holds a pin's form, never a live server. */
+const pinsFor = (filter: Record<string, string>) => [
+  {
+    serverName: 'socrata-mcp-server',
+    serverVersion: '0.9.2',
+    tools: { get_data: 'a'.repeat(64), fetch: 'b'.repeat(64), ...(filter.dataset_id === undefined ? { search: 'c'.repeat(64) } : {}) },
+  },
+];
+
+/** A pack over the Socrata server, as an inventory entry, its hash its packHash. */
 function packEntry(filter: Record<string, string>, extra: Partial<InventoryPackEntry> = {}): InventoryPackEntry {
   const entry: InventoryPackEntry = {
     kind: 'pack',
@@ -582,8 +612,10 @@ function packEntry(filter: Record<string, string>, extra: Partial<InventoryPackE
     alias: 'city_record',
     sourceId: 'city-record',
     displayName: 'City Record (a test pack)',
-    base: 'socrata',
+    base: SOCRATA_ID,
+    basePins: pinsFor(filter),
     filter,
+    api: { platform: 'socrata', ...(filter.portal !== undefined ? { host: filter.portal } : {}), ...(filter.dataset_id !== undefined ? { dataset: filter.dataset_id } : {}) },
     author: 'a test',
     version: '1.0.0',
     place: { country: 'US', level: 'local', names: ['New York City'] },
@@ -782,12 +814,13 @@ test("A0.5: the pack's guidance is its own text, as text the router does not own
 test("A0.5 decoys: a pack whose base names no entry, a pack, or a kind with no pack is refused with the pack's alias; a filter argument a Socrata pack cannot fix is refused", () => {
   const refuses = (doc: InventoryDocument, pattern: RegExp) =>
     assert.throws(() => manifestFromInventory(doc, CIVIC_KINDS), (error: unknown) => error instanceof InventoryLoadError && error.alias === 'city_record' && pattern.test(error.message));
-  refuses(withPacks(packEntry({ portal: PORTAL }, { base: 'no-such-source' })), /city_record: base: "no-such-source" names no server entry/);
+  refuses(withPacks(packEntry({ portal: PORTAL }, { base: 'no-such-source' })), /city_record: base: "no-such-source" names no server entry's id$/);
   refuses(
-    withPacks(packEntry({ portal: PORTAL }, { alias: 'other_pack', sourceId: 'other-pack' }), packEntry({ portal: PORTAL }, { base: 'other-pack' })),
-    /city_record: base: "other-pack" is a pack/,
+    withPacks(packEntry({ portal: PORTAL }, { alias: 'other_pack', sourceId: 'other-pack', id: 'other-pack@example' }), packEntry({ portal: PORTAL }, { base: 'other-pack@example' })),
+    /city_record: base: "other-pack@example" is a pack/,
   );
-  refuses(withPacks(packEntry({ portal: PORTAL }, { base: 'data-commons' })), /city_record: base: the kind of "data-commons" \(mcp-remote\) takes no pack/);
+  const dataCommonsId = FILE.entries[1]!.id;
+  refuses(withPacks(packEntry({ portal: PORTAL }, { base: dataCommonsId })), /city_record: base: the kind of ".+" \(mcp-remote\) takes no pack/);
   refuses(withPacks(packEntry({ portal: PORTAL, where: 'x' })), /city_record: filter\.where: a Socrata pack fixes only portal and dataset_id/);
   refuses(withPacks(packEntry({ dataset_id: DATASET })), /city_record: filter\.portal: a Socrata pack fixes its portal/);
   // A toolsRef on a pack holds the tools the loader builds.
@@ -810,4 +843,123 @@ test('the loaded manifest holds no entry of CIVIC_MANIFEST itself: every entry i
   for (const [i, entry] of LOADED.entries()) {
     assert.notEqual(entry, CIVIC_MANIFEST[i] as CivicManifestEntry, `${entry.sourceId} is a new object`);
   }
+});
+
+// --- S2-C (hub #317): the route-identity conventions --------------------------------
+
+test("A1.5: the pack's base is the Socrata entry's id in the file and the mirror; its manifest base is socrata; its two names are S2-B's owed words", () => {
+  const pack = FILE.entries[5] as InventoryPackEntry;
+  assert.equal(pack.base, SOCRATA_ID);
+  assert.equal(NYC_RECORD_ENTRY.base, 'socrata');
+  assert.equal(pack.displayName, 'NYC City Record');
+  assert.equal((pack.prompt as { lockMention: string }).lockMention, 'City Record for New York City notices');
+  assert.equal(NYC_RECORD_ENTRY.displayName, 'NYC City Record');
+  assert.equal(NYC_RECORD_ENTRY.prompt?.lockMention, 'City Record for New York City notices');
+  // The pack's version under ADR-0039's form, and derivedFrom holding version 2's provenance pin.
+  assert.equal(pack.version, '1.1');
+  assert.deepEqual(pack.derivedFrom, [
+    {
+      id: '@betanyc/nyc-record-mcp@https://github.com/BetaNYC/nyc-record-mcp',
+      version: '1.1.0',
+      commit: '6c52a5353381592713678caa109870d1e912c858',
+      file: 'dist/city-record.js',
+      fileSha256: '622edb9fb6263b9a3ad40a20415f4b409d652c2531bf4dbbf7cfac619e2b0512',
+      sourceUrl: 'https://www.npmjs.com/package/@betanyc/nyc-record-mcp/v/1.1.0',
+    },
+  ]);
+  assert.deepEqual(Object.keys(pack.provenance as object), ['addedOn', 'from', 'by', 'sourceUrl']);
+});
+
+test("A1.3: basePins[0] is the capture's serverInfo and the hashes of its get_data and fetch; the Socrata entry's toolsRef.fixture names the capture", () => {
+  const capture: { initialize: { serverInfo: { name: string; version: string } }; tools: McpListedTool[] } = JSON.parse(readFileSync(join(FIXTURES, 'socrata-tools.json'), 'utf8'));
+  const tool = (name: string) => capture.tools.find((t) => t.name === name)!;
+  const pack = FILE.entries[5] as InventoryPackEntry;
+  assert.deepEqual(pack.basePins, [
+    {
+      serverName: capture.initialize.serverInfo.name,
+      serverVersion: capture.initialize.serverInfo.version,
+      tools: { get_data: mcpToolSchemaSha256(tool('get_data')), fetch: mcpToolSchemaSha256(tool('fetch')) },
+    },
+  ]);
+  assert.equal(FILE.entries[0]!.toolsRef!.fixture, 'packages/civic-typed-router/src/__fixtures__/socrata-tools.json');
+});
+
+test('A1.6: routesByApi over the file groups socrata with nyc-record and leaves the rest alone; no router code calls it', () => {
+  assert.deepEqual(routesByApi(FILE), [{ api: { platform: 'socrata' }, sourceIds: ['socrata', 'nyc-record'] }]);
+});
+
+test('A1.5: manifestFromInventory refuses a second id, naming the entry and the first holder', () => {
+  const copy = readInventory();
+  (copy.entries[4] as { id: string }).id = copy.entries[2]!.id;
+  assert.throws(
+    () => manifestFromInventory(copy, CIVIC_KINDS),
+    (error: unknown) =>
+      error instanceof InventoryLoadError &&
+      error.alias === 'nyc_checkbook' &&
+      error.field === 'id' &&
+      error.message === `manifestFromInventory: nyc_checkbook: id: "${copy.entries[2]!.id}" is also boston's id; an id is unique in the file`,
+  );
+  // A pack's id counts too.
+  assert.throws(() => manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET }, { id: FILE.entries[5]!.id, alias: 'other', sourceId: 'other' })), CIVIC_KINDS), /: other: id: .* is also nyc_record's id/);
+});
+
+/** The file with the pack changed by `change`, its hash restated. */
+const packChanged = (change: (pack: Record<string, unknown>) => void): InventoryDocument => {
+  const copy = readInventory();
+  const pack = copy.entries[5] as unknown as Record<string, unknown>;
+  change(pack);
+  pack.hash = packHash(pack as unknown as InventoryPackEntry);
+  return copy;
+};
+const refusedPack = (doc: InventoryDocument, field: string, pattern: RegExp) =>
+  assert.throws(
+    () => manifestFromInventory(doc, CIVIC_KINDS),
+    (error: unknown) => error instanceof InventoryLoadError && error.alias === 'nyc_record' && error.field === field && pattern.test(error.message),
+    `${field}: ${pattern}`,
+  );
+
+test("A1.5: manifestFromInventory refuses a base naming no server's id, by name; a base by sourceId names the id to use", () => {
+  refusedPack(packChanged((p) => (p.base = 'socrata')), 'base', /: "socrata" is a sourceId; a pack names its base by the server entry's id \("socrata-mcp-server@https:\/\/github\.com\/npstorey\/socrata-mcp-server"\)$/);
+  refusedPack(packChanged((p) => (p.base = 'socrata-mcp-server@https://github.com/someone-else/socrata-mcp-server')), 'base', /names no server entry's id$/);
+});
+
+test('A1.5: manifestFromInventory refuses a pack with no basePins, a malformed pin, a pin that leaves out a tool the pack calls, and one naming a tool the base lacks', () => {
+  refusedPack(packChanged((p) => delete p.basePins), 'basePins', /is missing or empty/);
+  refusedPack(packChanged((p) => (p.basePins = [])), 'basePins', /is missing or empty/);
+  const pin = () => structuredClone((FILE.entries[5] as InventoryPackEntry).basePins![0]!) as unknown as Record<string, unknown> & { tools: Record<string, string> };
+  refusedPack(packChanged((p) => (p.basePins = [{ ...pin(), serverVersion: '' }])), 'basePins[0].serverVersion', /not a non-empty string/);
+  refusedPack(packChanged((p) => (p.basePins = [{ ...pin(), capture: 'x.json' }])), 'basePins[0].capture', /serverName, serverVersion and tools only/);
+  refusedPack(packChanged((p) => (p.basePins = [{ ...pin(), tools: { ...pin().tools, fetch: 'F'.repeat(64) } }])), 'basePins[0].tools.fetch', /64 lowercase hex/);
+  const noFetch = pin();
+  delete noFetch.tools.fetch;
+  refusedPack(packChanged((p) => (p.basePins = [noFetch])), 'basePins[0].tools', /the pack calls "fetch", which no member pins$/);
+  refusedPack(packChanged((p) => (p.basePins = [pin(), { ...pin(), tools: { ...pin().tools, query: 'd'.repeat(64) } }])), 'basePins[1].tools.query', /is not a tool of the base/);
+  // A pin may also name search, a base tool this dataset pack does not call; two pins load.
+  const both = packChanged((p) => (p.basePins = [pin(), { ...pin(), serverVersion: '0.9.3', tools: { ...pin().tools, search: 'e'.repeat(64) } }]));
+  assert.equal(manifestFromInventory(both, CIVIC_KINDS)[5]!.pack!.basePins.length, 2);
+});
+
+test("A1.5: the Socrata kind holds a pack's api to its filter: platform socrata, host its portal, dataset its dataset_id", () => {
+  refusedPack(packChanged((p) => ((p.api as Record<string, string>).host = 'data.cityofchicago.org')), 'api.host', /is "data\.cityofchicago\.org"; a Socrata pack's host is its filter\.portal, "data\.cityofnewyork\.us"$/);
+  refusedPack(packChanged((p) => ((p.api as Record<string, string>).dataset = 'erm2-nwe9')), 'api.dataset', /its filter\.dataset_id, "dg92-zbpx"$/);
+  refusedPack(packChanged((p) => delete (p.api as Record<string, string>).dataset), 'api.dataset', /is absent; a Socrata pack's dataset is its filter\.dataset_id, "dg92-zbpx"$/);
+  refusedPack(packChanged((p) => ((p.api as Record<string, string>).platform = 'ckan')), 'api.platform', /is "ckan"/);
+  refusedPack(packChanged((p) => delete p.api), 'api', /is missing/);
+  // A portal-only pack states no dataset.
+  assert.equal(manifestFromInventory(withPacks(packEntry({ portal: PORTAL })), CIVIC_KINDS).length, 8);
+  assert.throws(() => manifestFromInventory(withPacks(packEntry({ portal: PORTAL }, { api: { platform: 'socrata', host: PORTAL, dataset: DATASET } })), CIVIC_KINDS), /city_record: api\.dataset: is "dg92-zbpx"; the filter fixes no dataset_id/);
+});
+
+test("A1.7 (G0-C1 = A): the Data Commons entry's id is the endpoint form in the file and the mirror, and its freshnessSource no longer names agent-toolkit's server", () => {
+  const item = FILE.entries.find((e) => e.sourceId === 'data-commons')!;
+  const mirror = CIVIC_MANIFEST.find((e) => e.sourceId === 'data-commons')!;
+  assert.equal(item.id, 'Data Commons MCP Server@https://api.datacommons.org/mcp');
+  assert.equal(mirror.id, item.id);
+  assert.equal(mirror.freshnessSource, item.freshnessSource);
+  assert.doesNotMatch(item.freshnessSource!, /agent-toolkit/);
+  assert.match(item.freshnessSource!, /datacommonsorg\/mixer/);
+  assert.deepEqual(item.api, { platform: 'data-commons', host: 'api.datacommons.org' });
+  // A space in an id is carried as it is: the loaded router accepts it and offers the source by its alias.
+  assert.equal(LOADED_ROUTER.manifest[1]!.id, item.id);
+  assert.equal(LOADED_ROUTER.sourceForAliasedName('data_commons__get_observations')?.sourceId, 'data-commons');
 });

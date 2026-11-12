@@ -344,12 +344,14 @@ test('switch on: the one-portal lock section names Charter among the other sourc
     const lock = view === 'bare' ? civicRouter.portalLockGuidance : civicRouter.aliasedPortalLockGuidance;
     const unset = lock('data.cityofnewyork.us', env(undefined));
     const set = lock('data.cityofnewyork.us', env('sandbox'));
-    // The City Record pack (since 0.8.0) is offered with Socrata, after Charter.
-    assert.ok(unset.includes('(Data Commons, Boston OpenContext for Boston, and the City Record server for New York City notices) are separate'), `${view}: the unset mention`);
+    // The City Record pack (since 0.8.0) is offered with Socrata, after
+    // Charter; its mention is "City Record for New York City notices" since
+    // 0.9.0 (S2-B's D2 = A).
+    assert.ok(unset.includes('(Data Commons, Boston OpenContext for Boston, and City Record for New York City notices) are separate'), `${view}: the unset mention`);
     assert.ok(
       set === unset.replace(
-        '(Data Commons, Boston OpenContext for Boston, and the City Record server for New York City notices) are separate',
-        '(Data Commons, Boston OpenContext for Boston, the NYC Charter server for New York City law, and the City Record server for New York City notices) are separate',
+        '(Data Commons, Boston OpenContext for Boston, and City Record for New York City notices) are separate',
+        '(Data Commons, Boston OpenContext for Boston, the NYC Charter server for New York City law, and City Record for New York City notices) are separate',
       ),
       `${view}: one mention added, nothing else`,
     );
