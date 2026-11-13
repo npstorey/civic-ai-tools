@@ -55,6 +55,19 @@
 // which shows an unoffered hit as not set up). `aliasedFindSourceTool` is the
 // search tool, `find_source(query)`, with S1's words (`./prompt-frame.ts`).
 // No output of 0.9.0 reads the search.
+//
+// The one-portal lock and a Socrata pack (0.10.0; G0-6 on hub #318). When the
+// configuration's `lockedPortal` names a Socrata portal other than a Socrata
+// pack's own (`socrataPacksOutsideLock`, `./env.ts`), the pack is not
+// configured: `configuredAddresses` gives it no address, and, since a pack
+// takes its base's configuration and Socrata's is required, selection reads
+// it as optional for that call (`offerInputs`). So it is `not-configured` in
+// `sourcesOffered`, and absent from every output selection builds, and no
+// search finds it, with a space or without one; the index still covers it,
+// so no other score moves. The lock text leaves it out too when the lock
+// arrives only as `portalLockGuidance`'s argument. With no lock, or a lock to
+// the pack's own portal, selection reads the manifest itself, and every
+// output is 0.9.0's.
 
 import {
   aliasedTools,
@@ -87,6 +100,7 @@ import {
 import { assertUniqueToolNames, toolSourceIndex } from '../core/tool-index.ts';
 import type {
   ChosenBy,
+  ConfiguredAddresses,
   FunctionToolSchema,
   HarnessDefinition,
   HarnessDefinitionComponent,
@@ -96,7 +110,7 @@ import type {
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
-import { configuredSources, type McpRegistryEnv } from './env.ts';
+import { configuredSources, socrataPacksOutsideLock, type McpRegistryEnv } from './env.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
 import { NYC_CHECKBOOK_ENTRY } from './nyc-checkbook.ts';
 import { NYC_RECORD_ENTRY } from './nyc-record.ts';
@@ -223,7 +237,10 @@ export interface CivicRouter {
   /** The composed system prompt: intro and preamble, one block per offered
    *  source, outro. */
   buildSystemPrompt(input: BuildSystemPromptInput): Promise<string>;
-  /** The section a locked instance appends. */
+  /** The section a locked instance appends. Since 0.10.0 the sources it
+   *  names leave out a Socrata pack fixed to a portal other than
+   *  `lockedPortal` (or the configuration's `lockedPortal`), compared
+   *  trimmed and lower-cased. */
   portalLockGuidance(lockedPortal: string, configured: McpRegistryEnv, selection?: SourceSelection): string;
   /** `systemPrompt` with the lock section appended when `lockedPortal` is
    *  non-empty; `systemPrompt` unchanged when it is not. */
@@ -359,15 +376,49 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     });
   };
 
+  /**
+   * What selection reads for `configured`: the manifest and the configured
+   * sources (`configuredSources`). With a one-portal lock, the configuration's
+   * `lockedPortal` or `lockedPortal` here (the lock text's argument), each
+   * Socrata pack outside it is `removed`: it has no configured source, and
+   * the manifest selection reads holds it as optional, so it is
+   * `not-configured`. A removed pack is read through an object whose
+   * prototype is its entry, with only `configuration` its own: no other
+   * field of the entry is read to make it. With nothing removed, `entries`
+   * is the manifest itself.
+   */
+  const offerInputs = (
+    configured: McpRegistryEnv,
+    lockedPortal?: string,
+  ): { entries: CivicManifest; addresses: ConfiguredAddresses; removed: ReadonlySet<string> } => {
+    const outside = [...socrataPacksOutsideLock(configured.lockedPortal), ...socrataPacksOutsideLock(lockedPortal)];
+    const removed = new Set(manifest.filter((entry) => outside.includes(entry.sourceId)).map((entry) => entry.sourceId));
+    const sources = configuredSources(configured);
+    if (removed.size === 0) return { entries: manifest, addresses: sources, removed };
+    return {
+      entries: manifest.map((entry) =>
+        removed.has(entry.sourceId)
+          ? (Object.create(entry, {
+              configuration: { value: { ...entry.configuration, requirement: 'optional' }, enumerable: true },
+            }) as CivicManifestEntry)
+          : entry,
+      ),
+      addresses: Object.fromEntries(Object.entries(sources).filter(([sourceId]) => !removed.has(sourceId))),
+      removed,
+    };
+  };
+
   const isSourceOffered = (configured: McpRegistryEnv, sourceId: string): boolean => {
-    const entry = manifest.find((e) => e.sourceId === sourceId);
-    return entry === undefined || isEntryOffered(entry, configuredSources(configured));
+    const { entries, addresses } = offerInputs(configured);
+    const entry = entries.find((e) => e.sourceId === sourceId);
+    return entry === undefined || isEntryOffered(entry, addresses);
   };
 
   const lockGuidance = (view: SourceView, lockedPortal: string, configured: McpRegistryEnv, selection?: SourceSelection): string => {
     if (!lockEntry?.portalLock) throw new Error('portalLockGuidance: no source in the manifest takes a portal lock');
     // `offeredEntries` keeps manifest entries as they are: these are civic ones.
-    const others = (offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[])
+    const { entries, addresses } = offerInputs(configured, lockedPortal);
+    const others = (offeredEntries(entries, addresses, selection) as CivicManifestEntry[])
       .filter((entry) => entry !== lockEntry)
       .map((entry) => entry.prompt?.lockMention ?? entry.displayName);
     return lockEntry.portalLock.section(lockedPortal, others, view);
@@ -386,7 +437,8 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   // the result is the full composition less its intro and the blank line
   // after it (the civic preamble is never empty).
   const compose = (view: SourceView, input: BuildSystemPromptInput, withIntro = true): Promise<string> => {
-    const entries = offeredEntries(manifest, configuredSources(input.configured), input.selection) as CivicManifestEntry[];
+    const offer = offerInputs(input.configured);
+    const entries = offeredEntries(offer.entries, offer.addresses, input.selection) as CivicManifestEntry[];
     const sources = entries.map((entry) => ({
       sourceId: entry.sourceId,
       preambleEntry: preambleEntryOf(entry, view),
@@ -421,25 +473,29 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   // For a manifest whose sources share no name, that is exactly the 0.2.0
   // filter by name. With nothing withheld, `tools` itself is returned.
   const bareOfferedTools = <T extends ToolLike>(tools: T[], configured: McpRegistryEnv, selection?: SourceSelection): T[] => {
-    const addresses = configuredSources(configured);
-    const withheld = withheldToolNames(manifest, addresses, selection);
+    const { entries, addresses } = offerInputs(configured);
+    const withheld = withheldToolNames(entries, addresses, selection);
     if (withheld.length === 0) return tools;
-    const offered = new Set(offeredEntries(manifest, addresses, selection));
+    const offered = new Set(offeredEntries(entries, addresses, selection));
     const offeredNames = new Set([...offered].flatMap((entry) => entry.tools.map((tool) => tool.function.name)));
-    const notOfferedSchemas = new Set<unknown>(manifest.filter((entry) => !offered.has(entry)).flatMap((entry) => entry.tools));
+    const notOfferedSchemas = new Set<unknown>(entries.filter((entry) => !offered.has(entry)).flatMap((entry) => entry.tools));
     const byName = offerTools(tools, withheld.filter((name) => !offeredNames.has(name)));
     return byName.filter((tool) => !(tool.type === 'function' && notOfferedSchemas.has(tool)));
   };
 
-  const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] =>
-    offeredEntries(manifest, configuredSources(configured), selection).map((entry) => entry.sourceId);
+  const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] => {
+    const { entries, addresses } = offerInputs(configured);
+    return offeredEntries(entries, addresses, selection).map((entry) => entry.sourceId);
+  };
 
   /** The search's index: the whole manifest, in its order (0.10.0). */
   const searchIndex = createSearchIndex(manifest);
 
   /** The directory set: the sources `selection` offers, in manifest order. */
-  const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] =>
-    offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[];
+  const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] => {
+    const { entries, addresses } = offerInputs(configured);
+    return offeredEntries(entries, addresses, selection) as CivicManifestEntry[];
+  };
 
   return {
     manifest,
@@ -454,7 +510,8 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     withheldToolNames(configured, selection) {
-      return withheldToolNames(manifest, configuredSources(configured), selection);
+      const { entries, addresses } = offerInputs(configured);
+      return withheldToolNames(entries, addresses, selection);
     },
 
     isSourceOffered,
@@ -480,7 +537,8 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     sourcesOffered(configured, selection) {
-      return sourcesOffered(manifest, configuredSources(configured), selection);
+      const { entries, addresses } = offerInputs(configured);
+      return sourcesOffered(entries, addresses, selection);
     },
 
     dispatchMap: map,
@@ -492,11 +550,13 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     },
 
     aliasedOfferedMcpTools(tools, configured, selection) {
-      return offerTools(tools, aliasedWithheldToolNames(manifest, configuredSources(configured), selection, aliased));
+      const { entries, addresses } = offerInputs(configured);
+      return offerTools(tools, aliasedWithheldToolNames(entries, addresses, selection, aliased));
     },
 
     aliasedWithheldToolNames(configured, selection) {
-      return aliasedWithheldToolNames(manifest, configuredSources(configured), selection, aliased);
+      const { entries, addresses } = offerInputs(configured);
+      return aliasedWithheldToolNames(entries, addresses, selection, aliased);
     },
 
     aliasedBuildSystemPrompt(input) {
@@ -554,14 +614,16 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
 
     searchSources(input) {
       const space = input.space;
-      const addresses = configuredSources(input.configured);
+      const { entries, addresses, removed } = offerInputs(input.configured);
       const inSpace =
         space === undefined
           ? undefined
-          : new Set(manifest.filter((entry) => space.includes(entry.sourceId) && isEntryOffered(entry, addresses)).map((entry) => entry.sourceId));
-      return searchIndex
-        .search(input.query, { top: input.top, within: (entry) => inSpace === undefined || inSpace.has(entry.sourceId) })
-        .map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
+          : new Set(entries.filter((entry) => space.includes(entry.sourceId) && isEntryOffered(entry, addresses)).map((entry) => entry.sourceId));
+      // A pack the lock removes is never a hit (F2 on hub #318): with no
+      // space, every other entry may be.
+      const within = (entry: CivicManifestEntry): boolean =>
+        !removed.has(entry.sourceId) && (inSpace === undefined || inSpace.has(entry.sourceId));
+      return searchIndex.search(input.query, { top: input.top, within }).map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
     },
 
     aliasedFindSourceTool() {

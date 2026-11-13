@@ -24,6 +24,13 @@
 // key. 0.6.0 and 0.7.0 read a third, City Record's; since 0.8.0 City Record
 // is a pack over the Socrata server (`./nyc-record.ts`), takes no switch, and
 // is keyed by the Socrata address (`configuredAddresses`).
+//
+// Since 0.10.0 the configuration may carry the instance's one-portal lock,
+// `lockedPortal`, which the consumer sets: `readMcpEnv` never reads or sets
+// it, so every reading is 0.9.0's, key for key. A lock to a Socrata portal
+// other than a Socrata pack's own (its `filter.portal`, compared trimmed and
+// lower-cased) leaves the pack unconfigured (G0-6 on hub #318): it has no
+// address here, and the router offers, lists and finds it nowhere.
 
 import type { ConfiguredAddresses } from '../core/types.ts';
 
@@ -78,7 +85,11 @@ export interface McpRegistryEnv {
    *  (since 0.6.0). */
   nysLegislationHosting?: typeof HOSTING_SANDBOX;
   /** The one Socrata portal the instance is locked to, set by the consumer
-   *  (since 0.10.0). RED STUB: not read yet. */
+   *  (since 0.10.0); the value it passes as `lockedPortal` to
+   *  `withPortalLockGuidance` and `mcpToolsFor`. `readMcpEnv` never sets it.
+   *  Absent, empty or blank after trimming, there is no lock. Set, a Socrata
+   *  pack fixed to another portal (compared trimmed and lower-cased) is not
+   *  configured: every offer output leaves it out, and no search finds it. */
   lockedPortal?: string;
 }
 
@@ -117,21 +128,45 @@ export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
  *  Record over the Socrata server. A pack takes no address of its own. */
 const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata' });
 
+/** Each civic Socrata pack's portal, its `filter.portal`, by the pack's
+ *  source id (since 0.10.0): City Record's, `data.cityofnewyork.us`
+ *  (`./nyc-record.ts`, and the inventory file). */
+const SOCRATA_PACK_PORTALS: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'data.cityofnewyork.us' });
+
+/** A portal hostname compared the way the reference website compares one:
+ *  trimmed and lower-cased. */
+const normalizePortal = (portal: string): string => portal.trim().toLowerCase();
+
+/** The Socrata packs a one-portal lock leaves unconfigured, by source id, in
+ *  the order above (since 0.10.0): each whose portal is not `lockedPortal`,
+ *  compared trimmed and lower-cased. None when `lockedPortal` is absent, or
+ *  empty or blank after trimming. */
+export function socrataPacksOutsideLock(lockedPortal: string | undefined): string[] {
+  if (typeof lockedPortal !== 'string') return [];
+  const lock = normalizePortal(lockedPortal);
+  if (lock === '') return [];
+  return Object.entries(SOCRATA_PACK_PORTALS)
+    .filter(([, portal]) => normalizePortal(portal) !== lock)
+    .map(([pack]) => pack);
+}
+
 /** Each civic source's configured address, keyed by source id: the mapping
  *  the reference website keeps as `MCP_SOURCE_ADDRESS_FIELD`. Addresses only:
  *  a hosted source has none, so no hosted source ever has a key here, switch
  *  on or off. Since 0.8.0 a pack is keyed by its base's address: it has a key
  *  when its base has an address, with that address as its value, and none
- *  otherwise. */
+ *  otherwise. Since 0.10.0 a Socrata pack outside the configuration's
+ *  `lockedPortal` (`socrataPacksOutsideLock`) has no key. */
 export function configuredAddresses(configured: McpRegistryEnv): ConfiguredAddresses {
   const addresses: Record<string, string | undefined> = {
     socrata: configured.socrataUrl,
     'data-commons': configured.dataCommonsUrl,
     'boston-opencontext': configured.bostonOpencontextUrl,
   };
+  const outsideLock = socrataPacksOutsideLock(configured.lockedPortal);
   for (const [pack, base] of Object.entries(PACK_BASES)) {
     const address = addresses[base];
-    if (address !== undefined) addresses[pack] = address;
+    if (address !== undefined && !outsideLock.includes(pack)) addresses[pack] = address;
   }
   return addresses;
 }
