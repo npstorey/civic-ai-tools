@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.14.0 — 2026-11-13
 
 - **The search span** ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
   amendment 5): a tool span whose `tool.operation_type` is `find_source` is
