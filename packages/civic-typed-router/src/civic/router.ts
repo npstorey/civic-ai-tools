@@ -45,6 +45,16 @@
 // Selection reads `configuredSources(configured)`: each source's configured
 // address, and a hosted source's switch while it is on (`./env.ts`). A hosted
 // source is offered by its switch, never by an address.
+//
+// The search (0.10.0): `searchSources` runs method `bm25` version 1
+// (`../core/search.ts`) over an index of the whole manifest, built once at
+// construction, so a score never depends on the configuration, the space or
+// the selection. The consumer may pass a space, the source ids a hit may
+// have; the router intersects it with the sources the configuration offers.
+// With no space every entry may be a hit, offered or not (a reader's search,
+// which shows an unoffered hit as not set up). `aliasedFindSourceTool` is the
+// search tool, `find_source(query)`, with S1's words (`./prompt-frame.ts`).
+// No output of 0.9.0 reads the search.
 
 import {
   aliasedTools,
@@ -64,6 +74,7 @@ import {
 import { BLOCK_SEPARATOR, composeManifestPrompt } from '../core/compose.ts';
 import { harnessDefinitionOf } from '../core/definition.ts';
 import { composeDirectory, findSourceTool, loadSourceTool } from '../core/directory.ts';
+import { createSearchIndex } from '../core/search.ts';
 import {
   isEntryOffered,
   offeredEntries,
@@ -142,17 +153,22 @@ export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 's
 
 /** What a search needs from the consumer (since 0.10.0). */
 export interface SearchSourcesInput {
-  /** The instance's configuration. */
+  /** The instance's configuration (`readMcpEnv`). */
   readonly configured: McpRegistryEnv;
-  /** The search's text. */
+  /** The search's text: a `find_source` call's `query`, or a reader's. */
   readonly query: string;
-  /** The source ids a hit may have. */
+  /** The search space: the source ids a hit may have. The router keeps
+   *  those the configuration offers; an id the manifest does not hold is
+   *  ignored. Absent, every entry of the manifest may be a hit, offered or
+   *  not. */
   readonly space?: readonly string[];
-  /** How many hits at most. */
+  /** How many hits at most, a non-negative integer; absent,
+   *  `SEARCH_DEFAULT_TOP` (10). */
   readonly top?: number;
 }
 
-/** One hit of a search (since 0.10.0). */
+/** One hit of a search (since 0.10.0): the source, by the id it is selected
+ *  and recorded under and by the alias the model and the result text name. */
 export interface SourceHit {
   readonly sourceId: string;
   readonly alias: string;
@@ -286,9 +302,17 @@ export interface CivicRouter {
 
   // --- The search (since 0.10.0) --------------------------------------------------
 
-  /** The sources a search finds. RED STUB: finds nothing. */
+  /** The sources a search finds: method `bm25` version 1 over the whole
+   *  manifest, the entries scoring above 0 for `query`, best first, ties in
+   *  manifest order; then those in the space (`input.space` intersected
+   *  with what the configuration offers; every entry when no space is
+   *  passed); then the first `top`. A new array on every call. */
   searchSources(input: SearchSourcesInput): SourceHit[];
-  /** The search tool, `find_source(query)`. RED STUB. */
+  /** The search tool: `find_source(query)`, S1's schema and words
+   *  (`FIND_SOURCE_TOOL_TEXT`), one required string argument. A new object
+   *  on every call. Its name is reserved (`FIND_SOURCE_TOOL_NAME`); a
+   *  consumer answers at most `FIND_SOURCE_LIMIT` calls a run with a search
+   *  (`FIND_SOURCE_RESULT_TEXT`). */
   aliasedFindSourceTool(): FunctionToolSchema;
 }
 
@@ -410,6 +434,9 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   const offeredIds = (configured: McpRegistryEnv, selection?: SourceSelection): string[] =>
     offeredEntries(manifest, configuredSources(configured), selection).map((entry) => entry.sourceId);
 
+  /** The search's index: the whole manifest, in its order (0.10.0). */
+  const searchIndex = createSearchIndex(manifest);
+
   /** The directory set: the sources `selection` offers, in manifest order. */
   const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] =>
     offeredEntries(manifest, configuredSources(configured), selection) as CivicManifestEntry[];
@@ -525,8 +552,16 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
       );
     },
 
-    searchSources() {
-      return [];
+    searchSources(input) {
+      const space = input.space;
+      const addresses = configuredSources(input.configured);
+      const inSpace =
+        space === undefined
+          ? undefined
+          : new Set(manifest.filter((entry) => space.includes(entry.sourceId) && isEntryOffered(entry, addresses)).map((entry) => entry.sourceId));
+      return searchIndex
+        .search(input.query, { top: input.top, within: (entry) => inSpace === undefined || inSpace.has(entry.sourceId) })
+        .map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
     },
 
     aliasedFindSourceTool() {

@@ -195,10 +195,24 @@ export const LOAD_SOURCE_TOOL_TEXT: LoadSourceToolText = Object.freeze({
   aliasDescription: 'The alias of the source to load, exactly as the directory lists it.',
 });
 
-// RED STUB (since 0.10.0): the search tool's words, empty.
+/** The search tool's text (since 0.10.0): S1's `find_source` (the hub's
+ *  `benchmark/runner/texts.mjs`), byte for byte. "Up to 10" is
+ *  `SEARCH_DEFAULT_TOP`; "adds them to the directory and to load_source's
+ *  choices" is the consumer's to make true, by adding the hits to the
+ *  selection it passes for the next request. */
+export const FIND_SOURCE_TOOL_TEXT: FindSourceToolText = Object.freeze({
+  description:
+    "Search every source this assistant can load, including sources the directory does not list, by what they hold and where. Returns up to 10 sources, best match first, and adds them to the directory and to load_source's choices for your next turn. Use it when no source in the directory fits the question.",
+  queryDescription: 'The records the question needs and the place they are for, in a few words.',
+});
 
-/** The search tool's text. */
-export const FIND_SOURCE_TOOL_TEXT: FindSourceToolText = Object.freeze({ description: '', queryDescription: '' });
-
-/** What a `find_source` call returns. */
-export const FIND_SOURCE_RESULT_TEXT: FindSourceResultText = Object.freeze({ found: () => '', none: '', limit: '' });
+/** What a `find_source` call returns (since 0.10.0): S1's three texts, byte
+ *  for byte. `found` for a search with hits (their aliases, best first),
+ *  `none` for one without, and `limit` for a call after `FIND_SOURCE_LIMIT`
+ *  (two) searches, which runs no search: "at most twice" is that limit. */
+export const FIND_SOURCE_RESULT_TEXT: FindSourceResultText = Object.freeze({
+  found: (aliases: readonly string[]) =>
+    `Found ${aliases.length} ${aliases.length === 1 ? 'source' : 'sources'}, best match first: ${aliases.map((a) => `\`${a}\``).join(', ')}. Each is now listed in the directory in the system prompt, and load_source accepts its alias on your next turn.`,
+  none: 'No source matched that search. The directory is unchanged.',
+  limit: 'The search limit for this question is reached: find_source runs at most twice. Load a source from the directory, or answer without one.',
+});

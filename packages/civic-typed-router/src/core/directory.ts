@@ -1,5 +1,6 @@
 // The directory: the text a model reads before any source is loaded, and the
-// first-step tool it loads a source with (ADR-0037). The directory is an
+// first-step tool it loads a source with (ADR-0037); and, since 0.10.0, the
+// search tool, `find_source`, whose hits a consumer adds to the directory. The directory is an
 // intro, a heading, a paragraph, and one line per source:
 //
 //   - `<alias>`: <description as a sentence> <freshness label> <freshness>
@@ -91,13 +92,19 @@ export function loadSourceTool(aliases: readonly string[], text: LoadSourceToolT
 }
 
 // --- The search tool (since 0.10.0) ----------------------------------------------
-// RED STUB: the exports exist with their final signatures.
 
-/** The search tool's name. */
+/** The search tool's name. Reserved as `load_source` is: the startup check
+ *  refuses an alias or an upstream tool of this name
+ *  (`findToolNameProblems`). */
 export const FIND_SOURCE_TOOL_NAME = 'find_source';
 
-/** At most this many `find_source` calls a run are answered with a search. */
-export const FIND_SOURCE_LIMIT: number = 0;
+/**
+ * At most this many `find_source` calls a run are answered with a search; a
+ * call after them is answered with the `limit` text and runs no search. Part
+ * of the tool's contract, with the search method's version (`SEARCH_METHOD`,
+ * `./search.ts`): a change to it is a new search version.
+ */
+export const FIND_SOURCE_LIMIT: number = 2;
 
 /** The search tool's text, from the consumer's frame. */
 export interface FindSourceToolText {
@@ -109,15 +116,32 @@ export interface FindSourceToolText {
 
 /** What a `find_source` call returns, from the consumer's frame. */
 export interface FindSourceResultText {
-  /** The hits' aliases, best first. */
+  /** The text for a search with hits: their aliases, best first. */
   found(aliases: readonly string[]): string;
-  /** No hit. */
+  /** The text for a search with no hit. */
   readonly none: string;
-  /** The call after `FIND_SOURCE_LIMIT` searches. */
+  /** The text for a call after `FIND_SOURCE_LIMIT` searches. */
   readonly limit: string;
 }
 
-/** The search tool. */
+/**
+ * The search tool: `find_source`, one required string argument `query`, and
+ * no other argument. A new object on every call.
+ */
 export function findSourceTool(text: FindSourceToolText): FunctionToolSchema {
-  return { type: 'function', function: { name: '', description: text.description } };
+  return {
+    type: 'function',
+    function: {
+      name: FIND_SOURCE_TOOL_NAME,
+      description: text.description,
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: text.queryDescription },
+        },
+        required: ['query'],
+        additionalProperties: false,
+      },
+    },
+  };
 }
