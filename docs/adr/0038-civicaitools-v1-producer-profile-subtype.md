@@ -352,3 +352,53 @@ Revision 4 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record
 ### What does not change
 
 No record byte moves for a record built without `reportedName` or `reportedVersion`. The 38 entries of revision 3 keep their ids, paths and classes; the 7 never-carried entries keep their ids, facts and rules; the version rule's text in the bundle, and §9.2 checks #16 and #17, are unchanged. The specification's §8.1.8 is not edited (C12 = C): its definition of a failed call, "rejected by the source", stays false of a call the producer did not send, which is the filed question; revision 4's own words say who did not send it. Every published record keeps its bytes and its verdicts.
+
+## Amendment — 2026-11-13: revision 5 of the bundle (rulings G0-4 = A and G0-5 = A; the seat's Q1 to Q8, D1 to D3 and ASK 1; the words ruled W1 to W8 = A)
+
+Ruled by the owner on 2026-11-12 at gate G0 of sprint S3, anchor [civic-ai-tools#318](https://github.com/npstorey/civic-ai-tools/issues/318): G0-4 = A (no search on a run whose sources the reader picked, and the record says the reader chose the list, `reader-picked`) and G0-5 = A (the full record of a search and a picked run: a harness release, a bundle revision and a verifier patch). The program seat ruled the phase's questions on #318: [comment 6842901380](https://github.com/npstorey/civic-ai-tools/issues/318#issuecomment-6842901380) (Q1 to Q8: among them Q2, the new entries' classes; Q3, revision 5 corrects `composition.components`' values; Q4, the harness does not compare `considered` with `routingConfiguration`; Q5, the hits are a plain JSON array; Q6, the hits' and the cap's forms), [comment 6843106565](https://github.com/npstorey/civic-ai-tools/issues/318#issuecomment-6843106565) (D1, a search span states its outcome; D2, a search span carries no failure and no source's attributes; D3, `considered` names no pick; U1 to U6, six revision 4 members drafted for correction or clarification) and [comment 6853075521](https://github.com/npstorey/civic-ai-tools/issues/318#issuecomment-6853075521) (ASK 1: six refused attributes). Written by sprint S3-A's phase P2 and landing in its PR, with [ADR-0033](0033-composed-harness-record-fields.md) amendment 5 and `@typedstandards/civic-typed-harness` 0.14.0 as planned. §4 and §5 are not edited.
+
+**The words went through a draft, a check and a research check** before the phase's gate, as revisions 2 to 4's did: a draft (r1, r2, r2b), an Opus check of the draft, and an independent research check of r2b against the reference host's code, the record's derivation, the router's search and the project's research on consent and data-flow wording, reported in `research-check-s3a-p2.md` (SHA-256 `eb158d83e9cf486a8d1cf94e25b190cbd8645a97cd333b82d68a13dbc7249b5d`): KEEP 31 · REVISE 7 · DROP 0 · ASK 1. Its seven REVISE rows replace their members whole, and its ASK is the seat's ASK 1. The words the owner ruled are r3b, `p2-words.r3b.md` (SHA-256 `0427dd8376c4da5be99351acf97461c49906b6d8e60beb3386a69ef69fd6244d`), 39 members; the owner ruled every card A on 2026-11-13 ([#318 comment 6857310659](https://github.com/npstorey/civic-ai-tools/issues/318#issuecomment-6857310659)). A script folds each member into `bundle.json` and checks that the parsed member equals the row's words.
+
+### What revision 5 adds
+
+Eight entries, each with the seven members and an absence rule, for the field, the span attributes and the terms of [ADR-0033](0033-composed-harness-record-fields.md) amendment 5:
+
+1. **`composition.routingConfiguration`** (class `may-show`, as `composition.definitionHash`): the routing configuration the run was routed under, `{ rule, cap, search, inventory, hash }`, after `considered`. Its words say that `search` states what was offered, never that the model searched; that the hash states the four members beside it and nothing more; and that the harness does not compare the block with `considered`. Absent reads as not recorded, never as `none` or as `directory-set`.
+2. **`trace.searchSpan.operationType`** (class `shows`): `find_source` on a search span, a call the instance's own loop answered and no source saw, read as a load span is; the six attributes the harness refuses on it; and that the span does not state which sources a search could return.
+3. **`trace.searchSpan.searchOutcome`** (class `shows`): `searched` or `limit-reached`. Its words for a call stopped at the limit say that the site did not run the search and why, and never that a search ran, returned anything or returned no sources.
+4. **`trace.searchSpan.searchQuery`** (class `shows`): the query the model sent, on either outcome; the model wrote it, and a host never shows it as the question.
+5. **`trace.searchSpan.searchHits`** (class `shows`): on outcome `searched` only, the sources the search returned, by `sourceId`, in the search's order; `[]` states a search that ran and returned none. A hit states that the search returned the source, not that it was loaded or used.
+6. **`civic.searchOutcome`**, 7. **`civic.searchQuery`** and 8. **`civic.searchHits`** (class `may-show`, as `civic.loadOutcome`): the graph's statements of the three span attributes, on the search activity.
+
+### What revision 5 revises
+
+- **`composition.considered`**, its values and sentence: `listed` counts the sources the rule listed for the model's first request, which a search can add to; the sentence says 'was first shown' on a record whose trace holds a search that returned a source; `reader-picked`, version 1, is defined, with its words ('The person who asked this question picked those sources. …'), and `considered` names no pick (D3).
+- **`environment.toolDefinitions`**, its values: the tools array names `find_source` when the run offered a search, which states an offer, not a search.
+- **`civic.sourceId`**, its values and absence rule: a search span's activity, like a load span's, states none.
+- **`composition.components`**, its values (Q3): "One entry per offered source" becomes one entry per source the run composed; on an in-loop run those are the sources the model loaded and the base of each loaded pack.
+- **`trace.loadSpan.loadOutcome`**, its sentence and values (U1): `not-offered` says the alias was not on the run's list of sources at the time, in place of "which the site that ran this question does not offer".
+- **`skillMetadata.skillText`**, its sentence and values (U2): the count of system prompts is "during this question", and the earlier prompts are those of an in-loop run whose loads or searches recomposed the prompt.
+- **`composition.routing`**, its sentence and values (U3, U4): the chooser sentence gives the words of each `find_source` call after `considered`'s; a record whose `considered.rule` is `reader-picked` states method `in-loop`, and picks are told apart by the rule, never by the method `picker`.
+- **`trace.loadSpan.operationType`**, **`civic.operationType`** and **`civic.toolName`**, their values (U5, U6): `find_source` is named among the operation types, and a call the instance's own loop answers has a bare tool name.
+- **Two citations** moved by harness 0.14.0's own lines: `environment.toolDefinitions`' absence rule cites `format/dathere.ts:821-835`, and `civic.failed`'s `carriedBy` cites `capture/provenance.ts:622`. `composition.considered`'s `carriedBy` names the two new goldens.
+
+### The version rule's reading
+
+§2 lists "an added entry with an absence rule, a new reader sentence or a corrected citation" among the changes that stay `v1`, and names `civicaitools-v2` "when a declared field changes meaning, is removed, or a v1 reader statement (§4) would be false of the record". Each change, read against it:
+
+- **The eight added entries** are each an added entry with an absence rule, and each reads as not recorded on every record before harness 0.14.0; no record of the reference host carries a search span or `routingConfiguration` when this revision is written: `v1`.
+- **`composition.considered`'s, `environment.toolDefinitions`', `civic.sourceId`'s and the five U3 to U6 members' changes** are new reader sentences and clarifications. Each is true of every earlier record, none of which holds a search span, `find_source` in its tools or the rule `reader-picked`, and no declared field changes meaning: `v1`.
+- **The three corrections.** Two correct statements that were false of some records the producer could write before this revision: `composition.components`' values (the components of an in-loop record are its loaded sources, `in-loop-golden.json` and `considered-golden.json`), and `trace.loadSpan.loadOutcome`'s sentence and values (a `not-offered` load names an alias outside the run's directory, which on an Auto run leaves out a source the reader set Off, though the site offers it: website `src/lib/mcp/routing-mode.ts:102`, `:351-352` in S2-B's tree 7b, `2ab8b6c0…`). The third, `skillMetadata.skillText`'s sentence and values, is true of every earlier record, whose prompt changed only on a load, and is corrected before a record whose search recomposed the prompt exists. No field changes meaning: the producer writes the same values for the same cases. As the amendment of 2026-11-02 reads §2 (its version rule's reading), a statement that was wrong of unchanged records is corrected by a revision, and a sentence that stays true of them is a new reader sentence: `v1`.
+- **The two moved citations and the `carriedBy` change** are corrected citations: `v1`.
+
+Revision 5 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record is re-labelled.
+
+### The URL and the digest
+
+- **URL:** `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.17-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`.
+- **SHA-256 of `bundle.json`, revision 5 (2026-11-13):** `9946c58f2a4e800388b10f31a43a099c5a1d97b4f5084dbbff8351480d9223d5`.
+- Revision 4's URL and digest (the amendment of 2026-11-12) still name revision 4's bytes, at their own tag. `@typedstandards/verify-core` 0.15.3 is published, and its table row pins revision 4. The row is to pin revision 5 in `@typedstandards/verify-core` 0.15.4, planned (§2).
+
+### What does not change
+
+No record byte moves for a record built without a search span or `analysis.routing_configuration`. The 40 entries of revision 4 keep their ids, paths and classes; the 7 never-carried entries keep their ids, facts and rules; the version rule's text in the bundle, and §9.2 checks #16 and #17, are unchanged. Every published record keeps its bytes and its verdicts.
