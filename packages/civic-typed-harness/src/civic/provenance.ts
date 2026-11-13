@@ -67,7 +67,7 @@ import {
 // so the package entry exports the same names from here; and the load span's
 // refusal (ADR-0033 amendment 2).
 export type { ProvenanceInput, ProvGraph, ProvNode } from '../capture/provenance.ts';
-export { LoadSpanError } from '../capture/provenance.ts';
+export { LoadSpanError, SearchSpanError } from '../capture/provenance.ts';
 
 /** Instance configuration for the graph build (config-not-constants). */
 export interface ProvenanceConfig {

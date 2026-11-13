@@ -264,6 +264,9 @@ export interface DatHerePolicyInput {
   /** The source inventory the run was routed against and how many of its
    *  entries the model was shown (composition block; ADR-0033 amendment 3). */
   considered?: ConsideredInput;
+  /** The routing configuration the run was routed under, with its hash
+   *  (composition block; ADR-0033 amendment 5). */
+  routingConfiguration?: RoutingConfigurationInput;
   /** Caller-supplied extensions to layer the environment extension onto. */
   extensions?: Record<string, unknown>;
 }
@@ -378,7 +381,21 @@ export interface ConsideredInput {
   ruleVersion: string;
 }
 
-/** The composition block's inputs (ADR-0033 §E, and amendments 2 and 3). */
+/** The routing configuration a run was routed under (ADR-0033 amendment 5):
+ *  the router's object `{ rule: { id, version }, cap, search, inventory: { id,
+ *  version, hash } }`, and `hash`, the lowercase hex SHA-256 of the router's
+ *  canonical JSON of those four members. `cap` is `'none'` or a positive
+ *  whole number in decimal digits with no leading zero; `search` is `'none'`
+ *  or `{ method, version }`. */
+export interface RoutingConfigurationInput {
+  rule: { id: string; version: string };
+  cap: string;
+  search: string | { method: string; version: string };
+  inventory: { id: string; version: string; hash: string };
+  hash: string;
+}
+
+/** The composition block's inputs (ADR-0033 §E, and amendments 2, 3 and 5). */
 export interface CompositionInput {
   assertedDate?: string;
   sourcesOffered?: readonly SourceOfferedInput[];
@@ -387,6 +404,7 @@ export interface CompositionInput {
   routing?: RoutingInput;
   definitionHash?: string;
   considered?: ConsideredInput;
+  routingConfiguration?: RoutingConfigurationInput;
 }
 
 const ASSERTED_DATE_FORM = /^(\d{4})-(\d{2})-(\d{2})$/;

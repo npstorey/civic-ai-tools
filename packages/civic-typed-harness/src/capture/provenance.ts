@@ -35,9 +35,10 @@ import {
 import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
 import { isLoadSpan, LoadSpanError } from './load-span.ts';
+import { SearchSpanError } from './search-span.ts';
 
 export type { ProvGraph, ProvNode };
-export { LoadSpanError };
+export { LoadSpanError, SearchSpanError };
 
 /** Package-level inputs to the graph build. */
 export interface ProvenanceInput {
@@ -120,6 +121,13 @@ export interface ProvenanceTerms {
    *  earlier load of the same source whose decision it reuses (ADR-0033
    *  amendment 3). */
   readonly loadAsked?: string;
+  /** The query of a `find_source` call, as the model sent it (ADR-0033
+   *  amendment 5). Optional, as are `packId` and `loadAsked`: given no name
+   *  for a term, the builder emits no key for it. */
+  readonly searchQuery?: string;
+  /** The source ids a `find_source` call returned, in rank order (ADR-0033
+   *  amendment 5). */
+  readonly searchHits?: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group

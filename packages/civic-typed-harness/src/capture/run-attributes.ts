@@ -52,6 +52,17 @@ export interface ExtractedRunAttributes {
     rule: string;
     ruleVersion: string;
   };
+  routingConfiguration?: ExtractedRoutingConfiguration;
+}
+
+/** `analysis.routing_configuration` as the extractor returns it (ADR-0033
+ *  amendment 5): the routing configuration's four members and its hash. */
+export interface ExtractedRoutingConfiguration {
+  rule: { id: string; version: string };
+  cap: string;
+  search: string | { method: string; version: string };
+  inventory: { id: string; version: string; hash: string };
+  hash: string;
 }
 
 /** A root-span attribute that is present but not the shape ADR-0033 names. */
