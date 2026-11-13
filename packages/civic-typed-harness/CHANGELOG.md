@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.13.0 — 2026-11-12
 
 - **`reportedName` and `reportedVersion`**, two optional keys of a
   composition `components[]` entry
