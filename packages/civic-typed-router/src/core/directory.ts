@@ -89,3 +89,35 @@ export function loadSourceTool(aliases: readonly string[], text: LoadSourceToolT
     },
   };
 }
+
+// --- The search tool (since 0.10.0) ----------------------------------------------
+// RED STUB: the exports exist with their final signatures.
+
+/** The search tool's name. */
+export const FIND_SOURCE_TOOL_NAME = 'find_source';
+
+/** At most this many `find_source` calls a run are answered with a search. */
+export const FIND_SOURCE_LIMIT: number = 0;
+
+/** The search tool's text, from the consumer's frame. */
+export interface FindSourceToolText {
+  /** The tool's description. */
+  readonly description: string;
+  /** The `query` argument's description. */
+  readonly queryDescription: string;
+}
+
+/** What a `find_source` call returns, from the consumer's frame. */
+export interface FindSourceResultText {
+  /** The hits' aliases, best first. */
+  found(aliases: readonly string[]): string;
+  /** No hit. */
+  readonly none: string;
+  /** The call after `FIND_SOURCE_LIMIT` searches. */
+  readonly limit: string;
+}
+
+/** The search tool. */
+export function findSourceTool(text: FindSourceToolText): FunctionToolSchema {
+  return { type: 'function', function: { name: '', description: text.description } };
+}

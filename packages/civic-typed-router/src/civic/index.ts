@@ -13,6 +13,8 @@ export {
   type HarnessDefinitionInput,
   type InLoopSystemPromptInput,
   type LoadSourceToolInput,
+  type SearchSourcesInput,
+  type SourceHit,
 } from './router.ts';
 export { CIVIC_INVENTORY, CIVIC_KINDS, civicKinds, type CivicKindsOptions } from './inventory.ts';
 export type {
@@ -110,6 +112,8 @@ export {
   DIRECTORY_HEADING,
   DIRECTORY_PARAGRAPH,
   directoryFrameFor,
+  FIND_SOURCE_RESULT_TEXT,
+  FIND_SOURCE_TOOL_TEXT,
   introFor,
   LOAD_SOURCE_TOOL_TEXT,
   outroFor,

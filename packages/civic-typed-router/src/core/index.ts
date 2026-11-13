@@ -47,12 +47,34 @@ export {
   composeDirectory,
   directoryLine,
   directorySentence,
+  FIND_SOURCE_LIMIT,
+  FIND_SOURCE_TOOL_NAME,
+  findSourceTool,
   LOAD_SOURCE_TOOL_NAME,
   loadSourceTool,
   type DirectoryEntry,
   type DirectoryFrame,
+  type FindSourceResultText,
+  type FindSourceToolText,
   type LoadSourceToolText,
 } from './directory.ts';
+export {
+  createSearchIndex,
+  SEARCH_DEFAULT_TOP,
+  SEARCH_METHOD,
+  type SearchableEntry,
+  type SearchIndex,
+  type SearchMethod,
+  type SearchOptions,
+} from './search.ts';
+export {
+  routingConfiguration,
+  RoutingConfigurationError,
+  type RoutingConfiguration,
+  type RoutingConfigurationRecord,
+  type RoutingInventory,
+  type RoutingRule,
+} from './routing-configuration.ts';
 export { canonicalJson, CanonicalJsonError } from './canonical-json.ts';
 export { canonicalJsonValue, CanonicalJsonValueError } from './canonical-json-value.ts';
 export { checkBasePins, type BasePin, type BasePinCheck, type BasePinDifference, type ObservedBase } from './base-pins.ts';

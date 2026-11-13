@@ -63,7 +63,7 @@ import {
 } from '../core/alias.ts';
 import { BLOCK_SEPARATOR, composeManifestPrompt } from '../core/compose.ts';
 import { harnessDefinitionOf } from '../core/definition.ts';
-import { composeDirectory, loadSourceTool } from '../core/directory.ts';
+import { composeDirectory, findSourceTool, loadSourceTool } from '../core/directory.ts';
 import {
   isEntryOffered,
   offeredEntries,
@@ -90,7 +90,7 @@ import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
 import { NYC_CHECKBOOK_ENTRY } from './nyc-checkbook.ts';
 import { NYC_RECORD_ENTRY } from './nyc-record.ts';
 import { NYS_LEGISLATION_ENTRY } from './nys-legislation.ts';
-import { composeOutro, composePreamble, directoryFrameFor, introFor, LOAD_SOURCE_TOOL_TEXT } from './prompt-frame.ts';
+import { composeOutro, composePreamble, directoryFrameFor, FIND_SOURCE_TOOL_TEXT, introFor, LOAD_SOURCE_TOOL_TEXT } from './prompt-frame.ts';
 import { SOCRATA_ENTRY } from './socrata.ts';
 
 /** The civic sources, in the order the prompt and the tools array name them.
@@ -139,6 +139,24 @@ export type DirectoryPromptInput = Pick<BuildSystemPromptInput, 'configured' | '
 /** What the first-step tool needs: the directory set's configuration and
  *  selection. */
 export type LoadSourceToolInput = Pick<BuildSystemPromptInput, 'configured' | 'selection'>;
+
+/** What a search needs from the consumer (since 0.10.0). */
+export interface SearchSourcesInput {
+  /** The instance's configuration. */
+  readonly configured: McpRegistryEnv;
+  /** The search's text. */
+  readonly query: string;
+  /** The source ids a hit may have. */
+  readonly space?: readonly string[];
+  /** How many hits at most. */
+  readonly top?: number;
+}
+
+/** One hit of a search (since 0.10.0). */
+export interface SourceHit {
+  readonly sourceId: string;
+  readonly alias: string;
+}
 
 /** What a harness definition is made from. */
 export interface HarnessDefinitionInput {
@@ -265,6 +283,13 @@ export interface CivicRouter {
    *  JSON of the other four fields. Throws `HarnessDefinitionError` for a
    *  field outside its shape. */
   harnessDefinition(input: HarnessDefinitionInput): HarnessDefinition;
+
+  // --- The search (since 0.10.0) --------------------------------------------------
+
+  /** The sources a search finds. RED STUB: finds nothing. */
+  searchSources(input: SearchSourcesInput): SourceHit[];
+  /** The search tool, `find_source(query)`. RED STUB. */
+  aliasedFindSourceTool(): FunctionToolSchema;
 }
 
 /** An entry's preamble entry in `view`: its own, or composed from its
@@ -498,6 +523,14 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
         directoryEntries(input.configured, input.selection).map((entry) => entry.alias),
         LOAD_SOURCE_TOOL_TEXT,
       );
+    },
+
+    searchSources() {
+      return [];
+    },
+
+    aliasedFindSourceTool() {
+      return findSourceTool(FIND_SOURCE_TOOL_TEXT);
     },
   };
 }

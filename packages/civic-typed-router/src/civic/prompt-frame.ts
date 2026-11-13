@@ -12,7 +12,7 @@
 // with every tool they name going through the view.
 
 import { BARE_VIEW } from '../core/alias.ts';
-import type { DirectoryFrame, LoadSourceToolText } from '../core/directory.ts';
+import type { DirectoryFrame, FindSourceResultText, FindSourceToolText, LoadSourceToolText } from '../core/directory.ts';
 import type { SourceView } from '../core/types.ts';
 
 /** The civic source ids, as the website's registry keys them. */
@@ -194,3 +194,11 @@ export const LOAD_SOURCE_TOOL_TEXT: LoadSourceToolText = Object.freeze({
     "Load one data source from the directory in the system prompt, by its alias. The source's tools and guidance are added to this conversation, and you can call those tools on your next turn. Call it once per source; call it more than once to load several sources.",
   aliasDescription: 'The alias of the source to load, exactly as the directory lists it.',
 });
+
+// RED STUB (since 0.10.0): the search tool's words, empty.
+
+/** The search tool's text. */
+export const FIND_SOURCE_TOOL_TEXT: FindSourceToolText = Object.freeze({ description: '', queryDescription: '' });
+
+/** What a `find_source` call returns. */
+export const FIND_SOURCE_RESULT_TEXT: FindSourceResultText = Object.freeze({ found: () => '', none: '', limit: '' });

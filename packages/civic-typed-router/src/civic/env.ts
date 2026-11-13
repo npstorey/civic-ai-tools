@@ -77,6 +77,9 @@ export interface McpRegistryEnv {
   /** Present only when `NYS_LEGISLATION_HOSTING` is `sandbox` after trimming
    *  (since 0.6.0). */
   nysLegislationHosting?: typeof HOSTING_SANDBOX;
+  /** The one Socrata portal the instance is locked to, set by the consumer
+   *  (since 0.10.0). RED STUB: not read yet. */
+  lockedPortal?: string;
 }
 
 /** A plain object of configuration variables, such as a process environment. */
