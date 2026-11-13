@@ -57,7 +57,7 @@ else refuse(call.message); // names the candidates
 - An upstream name outside that set is **normalized**, deterministically: each character outside `[A-Za-z0-9_-]` becomes `_` (one per code point), and a name over 64 characters is cut to 55 and ends in `_` and an eight-character hash of the name it came from (FNV-1a, the same on every run and platform). Both names are kept in the dispatch map.
 - An **alias** starts with a letter or an underscore, holds only `[A-Za-z0-9_-]`, contains no `__`, and is at most 32 characters. It is the operator's own, so an ill-formed alias is refused, never normalized.
 
-**The startup checks.** `createCivicRouter(manifest)` runs `checkToolNames` (an ill-formed alias, an alias or a source id two entries share, an alias or an upstream tool named `load_source`, the first-step tool's reserved name, and two tools whose exposed names collide after normalizing) and `assertUniqueToolNames` over the exposed names, then builds the dispatch map. A manifest that fails is refused with every problem named (`ToolNameError`, `DuplicateToolNameError`). Two sources may declare the same upstream name: their exposed names differ.
+**The startup checks.** `createCivicRouter(manifest)` runs `checkToolNames` (an ill-formed alias, an alias or a source id two entries share, an alias or an upstream tool named `load_source`, the first-step tool's reserved name, or since 0.10.0 `find_source`, the search tool's, and two tools whose exposed names collide after normalizing) and `assertUniqueToolNames` over the exposed names, then builds the dispatch map. A manifest that fails is refused with every problem named (`ToolNameError`, `DuplicateToolNameError`). Two sources may declare the same upstream name: their exposed names differ.
 
 **The dispatch map** (`router.dispatchMap`, `dispatchMap(manifest)`) maps each exposed name to `{ exposedName, sourceId, alias, upstreamName, normalized }`. Dispatch reads it; it never splits a name, because an upstream name may itself hold `__` (`ckan__search_datasets`). `upstreamToolName(name)` and `sourceForAliasedName(name)` read it too.
 
@@ -243,6 +243,7 @@ Not moved: the website's network client, its endpoint routing (address normaliza
 | `today` (`YYYY-MM-DD`) | `new Date()` at call time |
 | `publicationHost` (`string \| null`), which the Data Commons guidance names | its environment, when the module loaded |
 | `configured`: the result of `readMcpEnv(source)` over a plain object of configuration variables | its process environment |
+| `configured.lockedPortal` (since 0.10.0): the one Socrata portal the instance is locked to, which the consumer sets on the reading; `readMcpEnv` never does | its portal-lock setting |
 | `fetchPrompt(name, args)`: returns the text or throws | its MCP client's `callMcpPrompt` |
 | `fetchInstructions(sourceId)`: returns the text or `null` | its MCP client's `getServerInstructions` |
 
@@ -268,8 +269,8 @@ That is the bare view; the aliased view is the same calls through the `aliased*`
 
 | Directory | What it holds |
 |---|---|
-| `src/core/` | The manifest entry type, selection by configuration and by an explicit selection, the composer's join, the directory's join and the first-step tool, the harness definition with its canonical JSON and SHA-256, the offered-tools filter, the tool-to-source index, two validations (duplicate tool names; a routing list against its schemas), and the naming layer (`alias.ts`: exposed names and their normalization, the checks, the dispatch map and rule, the views, the anchored rewrite and its reverse). No source text: every sentence arrives as a value. |
-| `src/civic/` | The seven entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, the directory's heading and paragraph and the first-step tool's text, and the configuration reader. |
+| `src/core/` | The manifest entry type, selection by configuration and by an explicit selection, the composer's join, the directory's join and the first-step tool, the search and the search tool (since 0.10.0), the routing configuration (since 0.10.0), the harness definition with its canonical JSON and SHA-256, the offered-tools filter, the tool-to-source index, two validations (duplicate tool names; a routing list against its schemas), and the naming layer (`alias.ts`: exposed names and their normalization, the checks, the dispatch map and rule, the views, the anchored rewrite and its reverse). No source text: every sentence arrives as a value. |
+| `src/civic/` | The seven entries (schemas and guidance texts as functions of the view, `SOCRATA_SKILL_FALLBACK`, the portal table), the one-portal rewrites and lock section, the intro, preamble and outro, the directory's heading and paragraph, the first-step tool's text and the search tool's texts, and the configuration reader with the Socrata packs' portals. |
 
 `src/civic/` may import `src/core/`; `src/core/` imports nothing from `src/civic/` and nothing from any package. `src/boundary.test.ts` enforces this, so extracting the core later as `@typedstandards/typed-router` (the reserved name) is a directory move. `src/index.ts` exports both.
 
@@ -333,6 +334,44 @@ Four pure functions in `src/core/`, none called by the router itself (ADR-0039):
 - **`canonicalJsonValue(value)`**: RFC 8785 over every JSON value type (`canonicalJson` refuses numbers, booleans and null, which tool schemas hold).
 - **`checkBasePins(pins, observed)`**: compares what a pack's live base reports (`serverInfo`'s name and version, and its `tools/list`) with each of the pack's `basePins`, and returns the first pin it equals, or each pin's first difference (the member, the pinned value, the observed one). A tool no pin names is not compared. What to do on a difference is the consumer's.
 - **`routesByApi(inventory)`**: the groups of entries that are routes to the same data, by their `api`. The reference router offers every configured route and lets the model choose; the groups decide nothing.
+
+## The search, `find_source`, and the routing configuration (since 0.10.0)
+
+**The search.** `searchSources({ configured, query, space?, top? })` (`SearchSourcesInput`) runs method `bm25` version 1 (`SEARCH_METHOD`, a `SearchMethod`: `{ method: 'bm25', version: '1' }`), the method the hub's S1 benchmark ran (`benchmark/runner/search.mjs`), and returns hits as `{ sourceId, alias }` (`SourceHit`), best first. Each entry's document is its alias split on `_`, its display name and its description; tokens are lower-cased, split on anything not a letter a-z or a digit, a fixed stopword list dropped and a trailing `s` removed from a token longer than three characters; k1 is 1.2 and b 0.75, and the IDF counts every entry indexed. The index covers the whole manifest, built once per router, so a score never depends on the configuration, the space or the selection. The hits are the entries scoring above 0, best first, ties in manifest order, then those in the search space, then the first `top` (`SEARCH_DEFAULT_TOP`, 10).
+
+- **The space** is the consumer's: the source ids a hit may have. The router intersects it with the sources the configuration offers, so a hit is always configured and in the space. An id the manifest does not hold is ignored. A space removes entries from the result and moves no score: the hits it keeps are in the order the unspaced search has them.
+- **With no space**, every entry may be a hit, offered or not. A reader's search uses it, and shows a hit the configuration does not offer as not set up (`sourcesOffered`). The one exception is a Socrata pack the one-portal lock removes (below): no search finds it.
+- **The core** is `createSearchIndex(entries)`, over any entries with `alias`, `displayName` and `description` (`SearchableEntry`), a manifest's or an inventory file's; its `search(query, { top?, within? })` takes the space as a predicate (`SearchOptions`) and returns the entries.
+
+**The search tool.** `aliasedFindSourceTool()` is `find_source` with one required string argument, `query`: S1's schema and words, byte for byte (`FIND_SOURCE_TOOL_TEXT`; the core builder is `findSourceTool(text)`, over a `FindSourceToolText`). A new object on every call. Its result texts are `FIND_SOURCE_RESULT_TEXT` (a `FindSourceResultText`): `found(aliases)` for a search with hits, `none` for one without, and `limit` for a call after `FIND_SOURCE_LIMIT` (2) searches in a run, which runs no search. The limit is part of the tool's contract: a change to it is a new search version, as a change to the method is. The router runs no loop. The consumer answers each call: it counts the searches, runs `searchSources` with the space it allows, answers with the result text, and adds the hits to the selection it passes for the next request, so `directoryPrompt` and `aliasedLoadSourceTool` list each found source at its manifest position. The tool's description says that a search "adds them to the directory and to load_source's choices for your next turn"; the consumer makes that true. `find_source` (`FIND_SOURCE_TOOL_NAME`) is reserved as `load_source` is: `createCivicRouter` refuses a manifest whose alias, or whose upstream tool, takes the name, with a `ToolNameError` whose problem has the kind `reserved-name`.
+
+**The routing configuration.** `routingConfiguration({ rule, cap, search, inventory })` returns `{ routingConfiguration, routingConfigurationHash }` (`RoutingConfigurationRecord`): S1's object, rebuilt key for key in its order, `{ rule: { id, version }, cap, search, inventory: { id, version, hash } }` (`RoutingConfiguration`, `RoutingRule`, `RoutingInventory`), and the lowercase hex SHA-256 of its canonical JSON (`canonicalJson`, `sha256Hex`), as S1 hashed it. `cap` is `'none'` or a positive decimal integer with no leading zero (`'25'`; `'0'`, `'025'`, `''` and `'2.5'` are refused, so one cap has one hash); `search` is `'none'` or an object of exactly the strings `method` and `version`; `rule` and `inventory` are objects of exactly their string members, and `inventory.hash` is 64 lowercase hex characters. Anything else is refused with `RoutingConfigurationError` and hashed never. The router ships no rule that cuts a list: a consumer that lists every source states `cap: 'none'`, and one that offers no search states `search: 'none'`.
+
+```ts
+import { civicRouter, FIND_SOURCE_RESULT_TEXT, readMcpEnv, routingConfiguration, SEARCH_METHOD } from '@typedstandards/civic-typed-router';
+
+const configured = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
+
+// A reader's search: no space; Boston OpenContext is a hit, though this configuration does not offer it.
+civicRouter.searchSources({ configured, query: 'Boston permits' });
+// [{ sourceId: 'boston-opencontext', alias: 'boston' }, { sourceId: 'socrata', alias: 'socrata' }, { sourceId: 'data-commons', alias: 'data_commons' }]
+
+// The model's search, over a space: only configured sources in it.
+const hits = civicRouter.searchSources({ configured, query: 'Boston permits', space: ['boston-opencontext', 'socrata', 'nyc-record'] });
+// [{ sourceId: 'socrata', alias: 'socrata' }]
+const answer = hits.length ? FIND_SOURCE_RESULT_TEXT.found(hits.map((hit) => hit.alias)) : FIND_SOURCE_RESULT_TEXT.none;
+
+const { routingConfigurationHash } = routingConfiguration({
+  rule: { id: 'none', version: 'none' },
+  cap: 'none',
+  search: SEARCH_METHOD,
+  inventory: { id: inventoryId, version: inventoryVersion, hash: inventoryHash },
+});
+```
+
+## The one-portal lock and a Socrata pack (since 0.10.0)
+
+An instance locked to one Socrata portal does not offer, list or find a pack over the Socrata server that is fixed to another portal. The consumer sets the lock on the configuration it passes, `{ ...readMcpEnv(source), lockedPortal }` (`McpRegistryEnv.lockedPortal`); the portals are compared trimmed and lower-cased. On an instance locked to `data.cityofchicago.org`, NYC City Record's pack (`data.cityofnewyork.us`) is `not-configured` in `sourcesOffered`, and absent from `offeredSkillSources`, the composition, `directoryPrompt`, `aliasedLoadSourceTool`'s enum, `aliasedInLoopSystemPrompt`, `harnessDefinition`'s sources and both searches; `offeredMcpTools` and `aliasedOfferedMcpTools` withhold its tools, `isSourceOffered` is `false`, `resolveCalledName` refuses its tools as not offered, and `configuredAddresses` gives it no address. Its configuration is Socrata's, which is required, so the router reads it as optional for that call, with no address. The lock text (`portalLockGuidance` and its siblings) leaves it out as well, also when the lock arrives only as their `lockedPortal` argument. Locked to the pack's own portal, or with no lock, every output is 0.9.0's. CKAN packs are not touched. The pack's portal is the router's own table (`src/civic/env.ts`); a test locks the router over the inventory file to each Socrata pack's own `filter.portal`, which keeps it, and to another portal, which removes it.
 
 ## Purity
 
