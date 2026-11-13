@@ -18,6 +18,7 @@
 
 import type { DataSourceEntry } from '@typedstandards/produce-core';
 import { isLoadSpan } from './load-span.ts';
+import { isSearchSpan } from './search-span.ts';
 
 export type { DataSourceEntry };
 
@@ -131,7 +132,9 @@ export function resolveToolSourceWith(
  *
  * A LOAD CALL — one whose span's `tool.operation_type` is `load_source`
  * (ADR-0033 amendment 2) — contributes nothing either: the instance's loop
- * answered it and no source did. It too keeps its position in the walk.
+ * answered it and no source did. It too keeps its position in the walk. So
+ * does a SEARCH CALL, whose span's `tool.operation_type` is `find_source`
+ * (amendment 5).
  *
  * The run's portal is not a parameter: an entry states the portal the call
  * carried, never the run's (the civic layer's `buildDataSources` keeps its
@@ -160,6 +163,10 @@ export function buildDataSourcesWith(
     // amendment 2) reached no source, so it mints no entry. Skipped in place,
     // for the same reason as a failed call.
     if (isLoadSpan(toolSpans[i]?.attributes)) continue;
+    // A search call (its span's `tool.operation_type` is `find_source`,
+    // ADR-0033 amendment 5): the instance answered it and no source saw it,
+    // so it mints no entry either. Skipped in place, for the same reason.
+    if (isSearchSpan(toolSpans[i]?.attributes)) continue;
     const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
     if (config.isDatasetKeyed(source)) {
       const datasetId = tc.args.dataset_id as string | undefined;

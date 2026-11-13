@@ -3,6 +3,58 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.14.0 — 2026-11-13
+
+- **The search span** ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
+  amendment 5): a tool span whose `tool.operation_type` is `find_source` is
+  read as a load span is. The graph mints no source agent and no
+  data-response entity for it, even when it carries `tool.response_hash`;
+  `buildDataSources` mints no entry for it and skips it in place, so the
+  calls after it keep their own spans. Its tool-call activity is associated
+  with the platform agent and states no `civic:sourceId`. Until this
+  release such a span was resolved like a source's call, so an untagged
+  search was credited to an agent named `unknown`.
+- **`civic:searchOutcome`, `civic:searchQuery` and `civic:searchHits`**
+  (`CIVIC_TERM_SEARCH_OUTCOME`, `CIVIC_TERM_SEARCH_QUERY`,
+  `CIVIC_TERM_SEARCH_HITS`), three terms on a search span's activity, after
+  every earlier key, in that order: the outcome, `searched` or
+  `limit-reached` (`SEARCH_OUTCOMES`, `SearchOutcome`), verbatim from
+  `tool.search_outcome`; the query, from `tool.search_query`; and, on
+  outcome `searched` only, the hits' source ids in rank order, a JSON array
+  read from `tool.search_hits`. A call stopped at the limit states no hits.
+  `ProvenanceTerms` names the three as optional members.
+- **`SearchSpanError`** (exported) refuses, when the graph is built, a
+  search span whose outcome is absent or neither value; whose query is
+  absent or not a string; whose hits, on outcome `searched`, are absent or
+  not JSON text of an array of non-empty strings with no id twice; that
+  carries hits, `[]` included, on outcome `limit-reached`; or that carries
+  `error: true`, `mcp.source`, `mcp.server.id`, `mcp.alias`, `mcp.pack_id`
+  or `tool.upstream_name`. An empty hits array on outcome `searched`, an
+  empty query and `error: false` are not refused.
+- **`routingConfiguration`**, a composition key after `considered`: the
+  router's routing configuration `{ rule: { id, version }, cap, search,
+  inventory: { id, version, hash } }` key for key, then `hash`, the
+  lowercase hex SHA-256 of the router's canonical JSON of those four
+  members. Input `routingConfiguration` (`RoutingConfigurationInput`), or
+  the root-span attribute `analysis.routing_configuration`, JSON text of one
+  object of those five members. The extractor refuses a present attribute
+  that is not text, not JSON of one object, or has a missing, extra or
+  non-string member (`RunAttributeError`); the derivation refuses a `cap`
+  that is neither `'none'` nor a positive whole number with no leading zero
+  (`'0'` and `'025'` included), a `search` that is neither `'none'` nor
+  `{ method, version }`, an empty string, a hash that is not lowercase hex
+  SHA-256, and a `hash` that is not the SHA-256 of the four members, which
+  it recomputes (`RecordFieldError('routingConfiguration', …)`).
+- **`search-golden.json` and `picked-golden.json`**, two new goldens: an
+  in-loop record of a run whose search ran (`searched`) and whose model
+  loaded a source it returned, under the test rule `test-listed-subset`
+  version `1`, with search `bm25` version `1`; and an in-loop record of a
+  run whose sources the reader picked, `considered.rule` `reader-picked`
+  version `1`, search `'none'`. Each declares
+  `ai-assisted-analysis/civicaitools-v1` and reads `ok` under verify-core's
+  checks 1, 4, 15, 16 and 17. Every record built without a search span or
+  the attribute keeps its bytes: no existing golden fixture moves.
+
 ## 0.13.0 — 2026-11-12
 
 - **`reportedName` and `reportedVersion`**, two optional keys of a

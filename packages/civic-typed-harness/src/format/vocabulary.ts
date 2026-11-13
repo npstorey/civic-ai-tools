@@ -271,6 +271,52 @@ export const LOAD_OUTCOMES: readonly LoadOutcome[] = ['loaded', 'declined', 'no-
 export const CIVIC_TERM_LOAD_ASKED = 'civic:loadAsked';
 
 /**
+ * `civic:searchOutcome` — how a `find_source` call ended (ADR-0033 amendment
+ * 5): one of {@link SEARCH_OUTCOMES}, verbatim from the span's
+ * `tool.search_outcome`. A search span is a tool span whose
+ * `tool.operation_type` is `find_source`: the instance's own loop answered it
+ * and no source saw it, so its activity is associated with the platform agent
+ * and states no `civic:sourceId`. Stated on that activity, after every
+ * earlier key and before {@link CIVIC_TERM_SEARCH_QUERY}, and on no other
+ * node. A search span whose outcome is absent or another value is refused
+ * when the graph is built.
+ */
+export const CIVIC_TERM_SEARCH_OUTCOME = 'civic:searchOutcome';
+
+/** How a `find_source` call ended (ADR-0033 amendment 5): `searched`, the
+ *  instance ran the search the model asked for; `limit-reached`, the instance
+ *  had already run the searches a run may make, so it answered the call with
+ *  its limit text and ran no search. */
+export type SearchOutcome = 'searched' | 'limit-reached';
+
+/** The two outcomes, in that order. A search span carrying any other value,
+ *  or none, is refused when the graph is built. */
+export const SEARCH_OUTCOMES: readonly SearchOutcome[] = ['searched', 'limit-reached'];
+
+/**
+ * `civic:searchQuery` — the query of a `find_source` call, as the model sent
+ * it (ADR-0033 amendment 5), verbatim from the span's `tool.search_query`, on
+ * a search span of either outcome. Stated on the search span's activity,
+ * after {@link CIVIC_TERM_SEARCH_OUTCOME} and before
+ * {@link CIVIC_TERM_SEARCH_HITS}, and on no other node. A search span whose
+ * query is absent or not a string is refused when the graph is built.
+ */
+export const CIVIC_TERM_SEARCH_QUERY = 'civic:searchQuery';
+
+/**
+ * `civic:searchHits` — what a `find_source` call's search returned (ADR-0033
+ * amendment 5): the hits' source ids, a JSON array of distinct non-empty
+ * strings in rank order, the best first, read from the span's
+ * `tool.search_hits` (JSON text of that array). An empty array is a search
+ * that ran and returned none. Stated on the activity of a search span whose
+ * outcome is `searched`, after {@link CIVIC_TERM_SEARCH_QUERY}, as its last
+ * key, and on no other node; absent on outcome `limit-reached`, where no
+ * search ran. A search span whose hits break that form, or that carries hits
+ * on outcome `limit-reached`, is refused when the graph is built.
+ */
+export const CIVIC_TERM_SEARCH_HITS = 'civic:searchHits';
+
+/**
  * One era of the civic vocabulary: the two literals plus the emitters bound
  * to them. The vocabulary is not deployment configuration (a deployment does
  * not choose its own term set); this seam exists only so a prior-era package

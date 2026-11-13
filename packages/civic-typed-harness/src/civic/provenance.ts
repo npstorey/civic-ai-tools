@@ -43,6 +43,9 @@ import {
   CIVIC_TERM_PORTAL_DOMAIN,
   CIVIC_TERM_PROMPT_TOKENS,
   CIVIC_TERM_RESPONSE_ROWS,
+  CIVIC_TERM_SEARCH_HITS,
+  CIVIC_TERM_SEARCH_OUTCOME,
+  CIVIC_TERM_SEARCH_QUERY,
   CIVIC_TERM_SERVER_ID,
   CIVIC_TERM_SERVER_URL,
   CIVIC_TERM_SOURCE_ALIAS,
@@ -64,10 +67,10 @@ import {
 } from '../format/sources.ts';
 
 // The public surface capture/provenance.ts carried before the seam, re-exported
-// so the package entry exports the same names from here; and the load span's
-// refusal (ADR-0033 amendment 2).
+// so the package entry exports the same names from here; the load span's
+// refusal (ADR-0033 amendment 2); and the search span's (amendment 5).
 export type { ProvenanceInput, ProvGraph, ProvNode } from '../capture/provenance.ts';
-export { LoadSpanError } from '../capture/provenance.ts';
+export { LoadSpanError, SearchSpanError } from '../capture/provenance.ts';
 
 /** Instance configuration for the graph build (config-not-constants). */
 export interface ProvenanceConfig {
@@ -142,6 +145,9 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
   packId: CIVIC_TERM_PACK_ID,
   loadOutcome: CIVIC_TERM_LOAD_OUTCOME,
   loadAsked: CIVIC_TERM_LOAD_ASKED,
+  searchOutcome: CIVIC_TERM_SEARCH_OUTCOME,
+  searchQuery: CIVIC_TERM_SEARCH_QUERY,
+  searchHits: CIVIC_TERM_SEARCH_HITS,
 };
 
 /**
@@ -165,6 +171,14 @@ const CIVIC_PROVENANCE_TERMS: ProvenanceTerms = {
  * @throws LoadSpanError for a load span whose `tool.load_outcome` is absent
  *   or outside `LOAD_OUTCOMES`, or whose `tool.load_asked` is present and not
  *   a boolean (ADR-0033 amendment 3).
+ * @throws SearchSpanError for a search span (`tool.operation_type`
+ *   `find_source`) whose `tool.search_outcome` is absent or not `searched` or
+ *   `limit-reached`, whose `tool.search_query` is absent or not a string,
+ *   whose `tool.search_hits` on outcome `searched` is absent or not JSON text
+ *   of an array of distinct non-empty strings, which carries hits on outcome
+ *   `limit-reached`, or which carries `error: true`, `mcp.source`,
+ *   `mcp.server.id`, `mcp.alias`, `mcp.pack_id` or `tool.upstream_name`
+ *   (ADR-0033 amendment 5).
  */
 export function buildProvenanceGraph(
   trace: Record<string, unknown>,

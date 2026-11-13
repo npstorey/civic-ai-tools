@@ -1721,6 +1721,21 @@ function everyCivicTermTrace(): Record<string, unknown> {
       { key: 'tool.load_asked', value: { boolValue: false } },
     ],
   };
+  // A search call stating its query and hits (ADR-0033 amendment 5).
+  const search: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-search-all-terms',
+    startTimeUnixNano: '1530000000',
+    endTimeUnixNano: '1540000000',
+    attributes: attrs({
+      'tool.name': 'find_source',
+      'tool.operation_type': 'find_source',
+      'tool.arguments': '{"query":"street trees"}',
+      'tool.search_outcome': 'searched',
+      'tool.search_query': 'street trees',
+      'tool.search_hits': '["socrata"]',
+    }),
+  };
   const synthesis: SpanStub = {
     name: 'synthesis',
     spanId: 'span-synthesis',
@@ -1728,7 +1743,7 @@ function everyCivicTermTrace(): Record<string, unknown> {
     endTimeUnixNano: '2700000000',
     attributes: [],
   };
-  return traceOf([skillSpan('5f6e7d'), inference, load, answered, rejected, synthesis]);
+  return traceOf([skillSpan('5f6e7d'), inference, search, load, answered, rejected, synthesis]);
 }
 
 /** Every `civic:` property key anywhere in a graph, nested nodes included. */
@@ -1784,6 +1799,9 @@ test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', (
     'civic:packId',
     'civic:loadOutcome',
     'civic:loadAsked',
+    'civic:searchOutcome',
+    'civic:searchQuery',
+    'civic:searchHits',
   ]) {
     assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
   }

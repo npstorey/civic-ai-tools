@@ -3,8 +3,9 @@
 // read from this repository, against the revision it states.
 //
 // WHAT IT PINS (civic-ai-tools#293; sprint anchors civic-ai-tools#294, P1,
-// civic-ai-tools#309, S2-A P1, and civic-ai-tools#317, S2-C P2).
-//   - The header: revision 4, the day its bytes were written, and its URL at
+// civic-ai-tools#309, S2-A P1, civic-ai-tools#317, S2-C P2, and
+// civic-ai-tools#318, S3-A P2).
+//   - The header: revision 5, the day its bytes were written, and its URL at
 //     the spec tag the merge kit sets.
 //   - The words a host derives where reached sources are shown: the chooser
 //     sentence and the per-load reasons, which state no question put or
@@ -41,10 +42,20 @@
 //     civic-ai-tools#317); the three texts that said every failed call was
 //     refused, corrected; the refusal rule tied to basePins and the route to a
 //     pack's entry for a record without considered, in civic.packId.
-//   - The field set: the 40 field ids and the 7 never-carried ids. A revision
-//     that adds or removes a field moves this list: revision 3 added four and
-//     revision 4 two, each with an absence rule (ADR-0038 section 2); the
-//     assertion fails on one fewer and on one more.
+//   - Revision 5 (ADR-0033 amendment 5; ADR-0038's amendment of 2026-11-13):
+//     the eight entries it adds (the routing configuration, the search span's
+//     four attributes and the graph's three terms), each with the seven
+//     members and the class the seat ruled (Q2); the words the owner ruled
+//     (OA-766, the words record p2-words.r3b.md): the chooser sentence's place
+//     for a find_source call, not-offered's corrected words, the system-prompt
+//     count's words for a search, the considered sentence's 'was first shown'
+//     and reader-picked words; that every attribute the harness refuses on a
+//     search span is named in trace.searchSpan.operationType's values, and that
+//     a call stopped at the limit is given no words of a search that ran.
+//   - The field set: the 48 field ids and the 7 never-carried ids. A revision
+//     that adds or removes a field moves this list: revision 3 added four,
+//     revision 4 two and revision 5 eight, each with an absence rule (ADR-0038
+//     section 2); the assertion fails on one fewer and on one more.
 //   - The digest: `bundle.md`'s SHA-256 row and the ADR-0038 text name the
 //     file's own SHA-256, and `bundle.md`'s URL row names the file's URL.
 //
@@ -80,12 +91,12 @@ const ADR_0038_PATH = join(REPO_ROOT, 'docs', 'adr', '0038-civicaitools-v1-produ
 
 // --- The revision -------------------------------------------------------------------------
 
-const REVISION = 4;
+const REVISION = 5;
 /** ADR-0038 §5: the day the revision's bytes were written. */
-const REVISION_DATE = '2026-11-12';
+const REVISION_DATE = '2026-11-13';
 /** The raw address at the tag the merge kit sets on this revision's merge commit. */
 const REVISION_URL =
-  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.16-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
+  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.17-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
 
 // --- The words ----------------------------------------------------------------------------
 
@@ -106,7 +117,8 @@ const PACK_CLAUSE = "'{the host's name for the pack}, a pack by {author}, using 
 const ROUTING_SENTENCE =
   "Shown wherever reached sources are shown, read from routing.method, the load spans, sourcesOffered and, when " +
   "present, considered. in-loop: 'The model chose which sources to load, from those this question could use.', " +
-  "followed, when the record carries composition.considered, by that entry's sentences, then three groups by the " +
+  "followed, when the record carries composition.considered, by that entry's sentences, then, when the trace holds " +
+  "a search span, by the words of each find_source call (see trace.searchSpan.operationType), then three groups by the " +
   "host's names for the sources: 'Loaded: {loaded}', a loaded source the host resolves as a pack, as civic.packId " +
   `says, named ${PACK_CLAUSE}; ` +
   "'Requested, not loaded: {source} — {its last load's reason}', " +
@@ -121,8 +133,8 @@ const LOAD_OUTCOME_SENTENCE =
   `unavailable '${REASON_UNAVAILABLE}' ` +
   'No reason states whether a question was put or answered: a record states whether one was put only in ' +
   "trace.loadSpan.loadAsked, when it carries that attribute, and that entry's words are the only words for it. " +
-  "loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which the site that ran " +
-  "this question does not offer'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.";
+  "loaded places the source in the 'Loaded' group; not-offered 'it asked for {alias}, which was not on its list of " +
+  "sources at the time'. The outcome tells 'the model wanted this source and did not get it' from 'the model never asked'.";
 
 const LOAD_OUTCOME_VALUES =
   'One of loaded, declined, no-answer, unavailable, not-offered (LOAD_OUTCOMES, format/vocabulary.ts). ' +
@@ -132,13 +144,13 @@ const LOAD_OUTCOME_VALUES =
   'no-answer: no decision arrived; the reader did not answer in time, or could not be asked (website ' +
   'src/lib/sources/decision.ts:243-248 at 4777b79). ' +
   'unavailable: the instance could not offer the source for a reason known without contacting it. ' +
-  'not-offered: the alias named no source of the directory set.';
+  "not-offered: the call named no alias, or its alias named no source in the run's directory when the call was made.";
 
 const TOOL_DEFINITIONS_ABSENT =
   'Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 ' +
   'carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere ' +
   "(this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, " +
-  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:679-693); that ' +
+  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:821-835); that ' +
   'absence states nothing about the tools.';
 
 /** Website `SYSTEM_PROMPT_TEXT` (`src/lib/sources/copy.ts:587-615` at 4777b79). */
@@ -146,7 +158,8 @@ const PROMPT_NOT_CARRIED =
   'This record does not include the text of the system prompt (the instructions the model was given before the question).';
 const PROMPT_NOT_CARRIED_NOR_HASH =
   'This record does not include the text of the system prompt (the instructions the model was given before the question), or a hash of it.';
-const PROMPT_MANY = 'The model was given {count} system prompts as it loaded data sources. This section describes the last one.';
+/** Revision 5 (U2): a search can recompose the prompt without a load; the website's copy takes these words in S3-B. */
+const PROMPT_MANY = 'The model was given {count} system prompts during this question. This section describes the last one.';
 const PROMPT_INTRO_BLOB =
   'The text of the system prompt the model was given, kept outside the signed record. It is shown only if it matches the hash this record states.';
 const PROMPT_INTRO_INLINE = 'The text of the system prompt the model was given, as the signed record includes it.';
@@ -154,7 +167,7 @@ const PROMPT_INTRO_INLINE = 'The text of the system prompt the model was given, 
 /** P1b's rules (website `src/lib/evidence/prompt-blob.ts` at 4777b79), as criterion 6 names them. */
 const SKILL_TEXT_FINAL_PROMPT = "the final request's system prompt";
 const SKILL_TEXT_EARLIER_PROMPTS =
-  'on an in-loop run whose loads recomposed the prompt, the earlier prompts are not carried as text and each is ' +
+  'on an in-loop run whose loads or searches recomposed the prompt, the earlier prompts are not carried as text and each is ' +
   'identified by gen_ai.system_prompt_hash on its llm_inference span';
 const SKILL_TEXT_WRITE_FAILED =
   'a new record carries systemPromptHash with no skillText when the run-end write of the text failed';
@@ -173,14 +186,10 @@ const PER_SOURCE_STATES_RULE =
 
 /** Revision 3's words, as the research check gave them and the owner ruled (civic-ai-tools#309 comment 6706653107). */
 const UNKNOWN_RULE_WORDS = "which this site has no words for";
+/** Revision 5's words (OA-766): 'was first shown' after a search that returned a source, and the reader-picked words. */
 const CONSIDERED_SENTENCE =
-  "Shown beside the chooser sentence (see composition.routing), as two sentences: 'The model was shown {listed} of " +
-  "the {total} sources in the source inventory {the host's name for the inventory, or its id as written} (version " +
-  "{version}).', then the rule's words. For directory-set, version 1: 'Those were the sources set up on the site " +
-  "that ran this question, less any turned off for it.' A rule, or a ruleVersion, the host has no words for is " +
-  "named as written: 'They were chosen by a rule recorded as {rule}, version {ruleVersion}, " + UNKNOWN_RULE_WORDS +
-  ".'; a host never reads an unknown rule as a known one. Absent: no count is stated, and a host never derives one " +
-  "from sourcesOffered, whose entries are the manifest's, not the inventory's.";
+  "Shown beside the chooser sentence (see composition.routing): first 'The model was shown {listed} of the {total} sources in the source inventory {the host's name for the inventory, or its id as written} (version {version}).', then the rule's words. On a record whose trace holds a search that returned a source (a search span whose outcome is searched and whose hits are not []), the first sentence says 'was first shown' in place of 'was shown': such a search may have added sources after the first list, and listed does not count them. For directory-set, version 1: 'Those were the sources set up on the site that ran this question, less any turned off for it.' For reader-picked, version 1: 'The person who asked this question picked those sources. A picked source was left out if it was turned off, or not set up on the site that ran this question.' The second of these states the rule: the record does not say whether any pick was left out, and a host names no pick from considered. A rule, or a ruleVersion, the host has no words for is named as written: 'They were chosen by a rule recorded as {rule}, version {ruleVersion}, " + UNKNOWN_RULE_WORDS +
+  ".'; a host never reads an unknown rule as a known one. Absent: no count is stated, and a host never derives one from sourcesOffered, whose entries are the manifest's, not the inventory's.";
 const CONSIDERED_ABSENT =
   "Key omitted when the run's root span carried no analysis.considered: every record before harness 0.12.0, and " +
   'every record whose producer did not state the inventory it routed against. Absent reads as not recorded: never ' +
@@ -272,13 +281,16 @@ const REVISION_4_ADDED = ['composition.components.reportedName', 'composition.co
 const FIELD_IDS = [
   'composition.assertedDate', 'composition.sourcesOffered', 'composition.components',
   'composition.components.reportedName', 'composition.components.reportedVersion', 'composition.flowsStatement',
-  'composition.routing', 'composition.definitionHash', 'composition.considered', 'environment.toolDefinitions',
-  'notebook.execution', 'notebook.summary', 'notebook.provenance', 'trace.loadSpan.operationType',
-  'trace.loadSpan.loadOutcome', 'trace.loadSpan.loadAsked', 'civic.failed', 'civic.failureKind', 'civic.contentHash',
-  'civic.serverUrl', 'civic.sourceId', 'civic.url', 'civic.promptTokens', 'civic.completionTokens', 'civic.toolName',
+  'composition.routing', 'composition.definitionHash', 'composition.considered', 'composition.routingConfiguration',
+  'environment.toolDefinitions', 'notebook.execution', 'notebook.summary', 'notebook.provenance',
+  'trace.loadSpan.operationType', 'trace.loadSpan.loadOutcome', 'trace.loadSpan.loadAsked',
+  'trace.searchSpan.operationType', 'trace.searchSpan.searchOutcome', 'trace.searchSpan.searchQuery',
+  'trace.searchSpan.searchHits', 'civic.failed', 'civic.failureKind', 'civic.contentHash', 'civic.serverUrl',
+  'civic.sourceId', 'civic.url', 'civic.promptTokens', 'civic.completionTokens', 'civic.toolName',
   'civic.operationType', 'civic.datasetId', 'civic.portalDomain', 'civic.datasetUrl', 'civic.croissantMetadataUrl',
   'civic.responseRows', 'civic.durationMs', 'civic.upstreamToolName', 'civic.sourceAlias', 'civic.serverId',
-  'civic.packId', 'civic.loadOutcome', 'civic.loadAsked', 'skillMetadata.skillText', 'skillMetadata.systemPromptHash',
+  'civic.packId', 'civic.loadOutcome', 'civic.loadAsked', 'civic.searchOutcome', 'civic.searchQuery',
+  'civic.searchHits', 'skillMetadata.skillText', 'skillMetadata.systemPromptHash',
 ];
 /** The four entries revision 3 added (ADR-0033 amendment 3). */
 const REVISION_3_ADDED = ['composition.considered', 'trace.loadSpan.loadAsked', 'civic.packId', 'civic.loadAsked'];
@@ -332,7 +344,7 @@ function bundleMdRow(label: string): string {
 
 // --- Criterion 1: the header --------------------------------------------------------------
 
-test('civicaitools-v1 bundle: the header states revision 4, the day its bytes were written, and its URL at the v0.1.16 spec tag', () => {
+test('civicaitools-v1 bundle: the header states revision 5, the day its bytes were written, and its URL at the v0.1.17 spec tag', () => {
   const bundle = readBundle();
   assert.equal(bundle.revision, REVISION);
   assert.equal(bundle.date, REVISION_DATE);
@@ -657,18 +669,18 @@ function assertFieldSet(bundle: Bundle): void {
   }
 }
 
-test('civicaitools-v1 bundle: the 40 field ids and the 7 never-carried ids', () => {
-  assert.equal(FIELD_IDS.length, 40);
+test('civicaitools-v1 bundle: the 48 field ids and the 7 never-carried ids', () => {
+  assert.equal(FIELD_IDS.length, 48);
   assert.equal(NEVER_CARRIED_IDS.length, 7);
   assertFieldSet(readBundle());
 });
 
-test('civicaitools-v1 bundle: the field-set assertion fails on 39 fields and on 41 (decoy)', () => {
+test('civicaitools-v1 bundle: the field-set assertion fails on 47 fields and on 49 (decoy)', () => {
   const bundle = readBundle();
   const fewer = { ...bundle, fields: bundle.fields.filter((f) => f.id !== 'civic.packId') };
   const more = { ...bundle, fields: [...bundle.fields, { ...bundle.fields[0]!, id: 'composition.extra' }] };
-  assert.equal(fewer.fields.length, 39);
-  assert.equal(more.fields.length, 41);
+  assert.equal(fewer.fields.length, 47);
+  assert.equal(more.fields.length, 49);
   assert.throws(() => assertFieldSet(fewer), assert.AssertionError);
   assert.throws(() => assertFieldSet(more), assert.AssertionError);
 });
@@ -682,4 +694,67 @@ test('civicaitools-v1 bundle: bundle.md and ADR-0038 name the file\'s own SHA-25
   const adr = readFileSync(ADR_0038_PATH, 'utf8');
   assert.ok(adr.includes(digest), 'ADR-0038 records the digest');
   assert.ok(adr.includes(bundle.url), 'ADR-0038 records the URL');
+});
+
+// --- Revision 5: a search, the routing configuration and a picked run ---------------------
+
+/** The eight entries revision 5 added (ADR-0033 amendment 5), with the class the seat ruled (Q2). */
+const REVISION_5_ADDED: Record<string, BundleField['class']> = {
+  'composition.routingConfiguration': 'may-show',
+  'trace.searchSpan.operationType': 'shows',
+  'trace.searchSpan.searchOutcome': 'shows',
+  'trace.searchSpan.searchQuery': 'shows',
+  'trace.searchSpan.searchHits': 'shows',
+  'civic.searchOutcome': 'may-show',
+  'civic.searchQuery': 'may-show',
+  'civic.searchHits': 'may-show',
+};
+
+test('civicaitools-v1 bundle: each entry revision 5 added carries the seven members, an absence rule and its ruled class', () => {
+  for (const [id, cls] of Object.entries(REVISION_5_ADDED)) {
+    const entry = field(id);
+    assert.deepEqual(Object.keys(entry), ['id', 'path', 'values', 'absent', 'carriedBy', 'sentence', 'class'], id);
+    assert.equal(entry.class, cls, id);
+    assert.ok(entry.absent.length > 0 && entry.carriedBy.includes('search-golden.json'), id);
+  }
+  assert.ok(field('trace.searchSpan.searchOutcome').path.endsWith('attributes[key="tool.search_outcome"]'));
+  assert.ok(field('civic.searchHits').path.endsWith('["civic:searchHits"]'));
+});
+
+test('civicaitools-v1 bundle: every attribute the harness refuses on a search span is named in trace.searchSpan.operationType\'s values', () => {
+  const values = field('trace.searchSpan.operationType').values;
+  for (const words of ['error: true', 'mcp.source', 'mcp.server.id', 'mcp.alias', 'mcp.pack_id', 'tool.upstream_name', '(SearchSpanError)']) {
+    assert.ok(values.includes(words), words);
+  }
+  // The hits' refusals, as the code makes them: an empty string and an id named twice (Q6), and hits on limit-reached (D1).
+  const absent = field('trace.searchSpan.searchHits').absent;
+  assert.ok(absent.includes('an empty string or the same id twice'));
+  assert.ok(absent.includes('the harness refuses hits on such a span'));
+  assert.ok(field('trace.searchSpan.searchOutcome').absent.includes('is absent or is neither value'));
+  // The cap's form is the code's (Q6).
+  assert.ok(field('composition.routingConfiguration').values.includes('a positive whole number written in decimal digits with no leading zero'));
+});
+
+test('civicaitools-v1 bundle: a call stopped at the limit is given no words of a search that ran', () => {
+  const sentence = field('trace.searchSpan.searchOutcome').sentence;
+  const limitPart = sentence.slice(sentence.indexOf('limit-reached:'), sentence.indexOf('On a limit-reached call'));
+  const quoted = [...limitPart.matchAll(/'([^']+)'/g)].map((m) => m[1]!);
+  assert.equal(quoted.length, 3, limitPart);
+  for (const words of quoted) {
+    for (const claim of ['searched for', 'returned', 'found', 'The model searched']) {
+      assert.ok(!words.includes(claim), `${words}: ${claim}`);
+    }
+  }
+  assert.ok(field('trace.searchSpan.searchHits').sentence.includes('A call whose outcome is limit-reached has no hits'));
+  assert.ok(field('civic.searchHits').absent.includes('outcome is limit-reached, where no search ran'));
+});
+
+test('civicaitools-v1 bundle: the reader-picked words, and the composition and tools entries read a search and a picked run', () => {
+  const considered = field('composition.considered');
+  assert.ok(considered.values.includes('reader-picked is the sources the reader picked for this question'));
+  assert.ok(considered.sentence.includes("For reader-picked, version 1: 'The person who asked this question picked those sources."));
+  assert.ok(considered.sentence.includes("says 'was first shown' in place of 'was shown'"));
+  assert.ok(field('composition.components').values.startsWith('One entry per source the run composed, in manifest order'));
+  assert.ok(field('environment.toolDefinitions').values.includes('find_source when the run offered the model a search'));
+  assert.ok(field('composition.routing').values.includes('never by the method picker'));
 });

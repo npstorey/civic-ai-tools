@@ -35,9 +35,10 @@ import {
 import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
 import { isLoadSpan, LoadSpanError } from './load-span.ts';
+import { isSearchSpan, readSearchSpan, SearchSpanError } from './search-span.ts';
 
 export type { ProvGraph, ProvNode };
-export { LoadSpanError };
+export { LoadSpanError, SearchSpanError };
 
 /** Package-level inputs to the graph build. */
 export interface ProvenanceInput {
@@ -120,6 +121,17 @@ export interface ProvenanceTerms {
    *  earlier load of the same source whose decision it reuses (ADR-0033
    *  amendment 3). */
   readonly loadAsked?: string;
+  /** Whether a `find_source` call's search ran, `searched`, or the call was
+   *  stopped at the limit, `limit-reached` (ADR-0033 amendment 5). Optional,
+   *  as are `packId` and `loadAsked`: given no name for a term, the builder
+   *  emits no key for it. */
+  readonly searchOutcome?: string;
+  /** The query of a `find_source` call, as the model sent it (ADR-0033
+   *  amendment 5). */
+  readonly searchQuery?: string;
+  /** The source ids a `find_source` call's search returned, in rank order,
+   *  stated on outcome `searched` only (ADR-0033 amendment 5). */
+  readonly searchHits?: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -160,7 +172,12 @@ export interface ProvenanceBuildConfig {
   /** The values a load span's `tool.load_outcome` may carry (ADR-0033
    *  amendment 2); any other value, or none, is refused with
    *  `LoadSpanError`. A load span's `tool.load_asked`, when present, is a
-   *  boolean or is refused the same way (ADR-0033 amendment 3). */
+   *  boolean or is refused the same way (ADR-0033 amendment 3). A search
+   *  span is checked without a config value: its outcome is `searched` or
+   *  `limit-reached`, its query a string, its hits (on `searched` only) JSON
+   *  text of an array of distinct non-empty strings, and it carries no
+   *  failure and no source, server, alias, pack or wire-name attribute, or it
+   *  is refused with `SearchSpanError` (ADR-0033 amendment 5). */
   loadOutcomes: readonly string[];
 }
 
@@ -318,7 +335,8 @@ export function buildProvenanceGraphWith(
 
   // The ONE resolution of a span's source, used for its agent node, its
   // attribution and its `civic:sourceId` alike. A load span has none
-  // (ADR-0033 amendment 2): no source answers it.
+  // (ADR-0033 amendment 2), and nor has a search span (amendment 5): no
+  // source answers either.
   function sourceOfSpan(attributes: OTelAttribute[]): string {
     const tagged = getAttr(attributes, 'mcp.source');
     if (tagged) return tagged;
@@ -346,6 +364,17 @@ export function buildProvenanceGraphWith(
       if (asked !== undefined && typeof asked.value?.boolValue !== 'boolean') {
         throw new LoadSpanError(span.spanId, outcome, config.loadOutcomes, { loadAsked: asked.value });
       }
+      continue;
+    }
+    // A SEARCH SPAN (ADR-0033 amendment 5) is a tool span whose
+    // `tool.operation_type` is `find_source`: the instance's own loop answered
+    // it from its search, and no source saw it, so it is read as a load span
+    // is. Its outcome, query and hits are checked here, before any node is
+    // built, so a graph never states a find_source call without saying
+    // whether a search ran, what was asked and what it returned, and never
+    // states a failure, a source, a server or a pack for it.
+    if (isSearchSpan(span.attributes)) {
+      readSearchSpan(span.spanId, span.attributes);
       continue;
     }
     sourcesInTrace.add(sourceOfSpan(span.attributes));
@@ -480,6 +509,15 @@ export function buildProvenanceGraphWith(
     const loadAsked = loadOutcome !== undefined
       ? getBoolAttr(span.attributes, 'tool.load_asked')
       : undefined;
+    // A search span: the outcome, the query and the hits, read on a search
+    // span only and checked above (ADR-0033 amendment 5).
+    const search = isSearchSpan(span.attributes)
+      ? readSearchSpan(span.spanId, span.attributes)
+      : undefined;
+    // A call the instance's own loop answered (a load or a search): no source
+    // answered it, so its activity is the platform agent's and states no
+    // source, and it mints no data response.
+    const answeredByInstance = loadOutcome !== undefined || search !== undefined;
 
     // Query entity (tool arguments). Find the most recent inference span
     // before this tool call to link as generator.
@@ -502,8 +540,9 @@ export function buildProvenanceGraphWith(
       }),
     );
 
-    // Data response entity — never for a load span, which reached no data.
-    if (responseHash && loadOutcome === undefined) {
+    // Data response entity — never for a load or a search span, neither of
+    // which reached data.
+    if (responseHash && !answeredByInstance) {
       const dataUrn = vocab.urn(packageId, 'data', responseHash);
       dataResponseUrns.push(dataUrn);
 
@@ -589,9 +628,9 @@ export function buildProvenanceGraphWith(
         'dcterms:description': toolName
           ? `MCP tool call: ${toolName} (${opType})`
           : `MCP tool call (${opType})`,
-        ...(loadOutcome === undefined ? { [terms.sourceId]: toolSource } : {}),
+        ...(answeredByInstance ? {} : { [terms.sourceId]: toolSource }),
         ...provUsed([queryUrn]),
-        ...provWasAssociatedWith(loadOutcome === undefined ? toolAgentUrn : platformUrn),
+        ...provWasAssociatedWith(answeredByInstance ? platformUrn : toolAgentUrn),
         ...(span.startTimeUnixNano
           ? { 'prov:startedAtTime': xsdDateTime(nanoToIso(span.startTimeUnixNano)) }
           : {}),
@@ -634,6 +673,14 @@ export function buildProvenanceGraphWith(
         // 3): `false` is stated, because the producer stated it; absent is
         // not recorded.
         ...(loadAsked !== undefined && terms.loadAsked !== undefined ? { [terms.loadAsked]: loadAsked } : {}),
+        // A search span's outcome, its query, then, on outcome `searched`
+        // only, its hits in rank order (ADR-0033 amendment 5); no other span
+        // carries these keys, so no earlier key list moves. An empty list is
+        // stated: the search ran and returned none. A call stopped at the
+        // limit states no hits: no search ran.
+        ...(search !== undefined && terms.searchOutcome !== undefined ? { [terms.searchOutcome]: search.outcome } : {}),
+        ...(search !== undefined && terms.searchQuery !== undefined ? { [terms.searchQuery]: search.query } : {}),
+        ...(search?.hits !== undefined && terms.searchHits !== undefined ? { [terms.searchHits]: [...search.hits] } : {}),
       }),
     );
   }
