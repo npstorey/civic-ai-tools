@@ -2,6 +2,69 @@
 
 Factual record of what changed per published version.
 
+## 0.10.0 — 2026-11-13
+
+The search, its tool and the routing configuration, and the one-portal lock
+for a Socrata pack (S3-A P1, hub #318). Nothing here reads a clock, a file
+or the network. With no lock and no search call, every output is 0.9.0's.
+
+- **The search, method `bm25` version 1**, the method the hub's S1
+  benchmark ran (`benchmark/runner/search.mjs`), with the same arithmetic
+  in the same order: for each of the 876 searches S1's committed run
+  records, it returns the same aliases in the same order. In the core:
+  **`createSearchIndex(entries)`**, an index (`SearchIndex`) over any
+  entries with `alias`, `displayName` and `description`
+  (`SearchableEntry`), whose `search(query, { top?, within? })`
+  (`SearchOptions`) returns the entries scoring above 0, best first, ties
+  in the entries' order, then those `within` the space, then the first
+  `top`; **`SEARCH_METHOD`** (`SearchMethod`, `{ method: 'bm25', version:
+  '1' }`) and **`SEARCH_DEFAULT_TOP`** (10). The space is a filter after
+  scoring: it moves no score.
+- **`router.searchSources({ configured, query, space?, top? })`**
+  (`SearchSourcesInput`), hits as `{ sourceId, alias }` (`SourceHit`): the
+  search over an index of the whole manifest, with the space the consumer
+  passes intersected with the sources the configuration offers. With no
+  space, every entry may be a hit, offered or not, except a Socrata pack
+  the one-portal lock removes.
+- **The search tool, `find_source(query)`**: **`router.aliasedFindSourceTool()`**,
+  built by the core's **`findSourceTool(text)`** (`FindSourceToolText`) from
+  **`FIND_SOURCE_TOOL_TEXT`**, S1's schema and description byte for byte, a
+  new object on every call; its result texts **`FIND_SOURCE_RESULT_TEXT`**
+  (`FindSourceResultText`: `found(aliases)`, `none`, `limit`), S1's; and
+  **`FIND_SOURCE_LIMIT`** (2), the searches a run answers, part of the
+  tool's contract, so a change to it is a new search version.
+  **`FIND_SOURCE_TOOL_NAME`** (`'find_source'`) is reserved as
+  `load_source` is: `findToolNameProblems` reports an alias or an upstream
+  tool of that name as a `reserved-name` problem, and `checkToolNames` and
+  `createCivicRouter` throw `ToolNameError`. The `load_source` problems and
+  their messages are unchanged.
+- **`routingConfiguration({ rule, cap, search, inventory })`**: S1's
+  routing configuration (`RoutingConfiguration`, `RoutingRule`,
+  `RoutingInventory`), rebuilt key for key in S1's order, and the
+  lowercase hex SHA-256 of its canonical JSON, returned as
+  `{ routingConfiguration, routingConfigurationHash }`
+  (`RoutingConfigurationRecord`). For each of the 16 configurations of
+  S1's committed run, the object and the hash equal the ones its
+  `meta.json` records. A value outside the shape (a `cap` neither `'none'`
+  nor a positive decimal integer with no leading zero, so `'0'` and `'025'`
+  are refused, a `search` neither `'none'` nor exactly the strings
+  `method` and `version`, a `rule` or `inventory` with a missing, extra or
+  non-string member, an `inventory.hash` not 64 lowercase hex characters)
+  is refused with **`RoutingConfigurationError`** and never hashed.
+- **The one-portal lock and a Socrata pack** (G0-6 on hub #318):
+  `McpRegistryEnv` gains **`lockedPortal`**, optional, set by the consumer
+  (`readMcpEnv` never sets it). Locked to a Socrata portal other than a
+  Socrata pack's own (compared trimmed and lower-cased), the pack is not
+  configured: `configuredAddresses` gives it no address, its reason in
+  `sourcesOffered` is `not-configured`, every offer output leaves it out
+  and withholds its tools, `isSourceOffered` is `false`,
+  `resolveCalledName` refuses its tools, and no search finds it. The lock
+  text (`portalLockGuidance`, `withPortalLockGuidance` and their aliased
+  twins) no longer names it, also when the lock arrives only as their
+  `lockedPortal` argument. So an instance locked to another portal no
+  longer offers NYC City Record; one locked to `data.cityofnewyork.us`, or
+  not locked, is unchanged. No existing function's signature changes.
+
 ## 0.9.0 — 2026-11-12
 
 The route-identity conventions (ADR-0039), and the inventory moves to
