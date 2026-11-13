@@ -21,6 +21,7 @@
 import {
   DATHERE_AG_JUPYTER_CANONICALIZATION,
   LEGACY_JSON_CANONICALIZATION,
+  sha256Hex,
 } from '@typedstandards/produce-core';
 
 /** The datHere content-profile label (ADR-0004). */
@@ -439,6 +440,18 @@ const ROUTING_KEYS = ['method', 'version'] as const;
 const CONSIDERED_KEYS = ['inventory', 'total', 'listed', 'rule', 'ruleVersion'] as const;
 const CONSIDERED_INVENTORY_KEYS = ['id', 'version', 'hash'] as const;
 
+/** The routing configuration's members, and those of its rule, its search
+ *  and its inventory, in the record's order (ADR-0033 amendment 5): the
+ *  router's object key for key, then its hash. */
+const ROUTING_CONFIGURATION_KEYS = ['rule', 'cap', 'search', 'inventory', 'hash'] as const;
+const ROUTING_CONFIGURATION_RULE_KEYS = ['id', 'version'] as const;
+const ROUTING_CONFIGURATION_SEARCH_KEYS = ['method', 'version'] as const;
+const ROUTING_CONFIGURATION_INVENTORY_KEYS = ['id', 'version', 'hash'] as const;
+
+/** A cap: a positive whole number in decimal digits with no leading zero
+ *  (the other value is `'none'`). */
+const CAP_FORM = /^[1-9][0-9]*$/;
+
 /** An inventory version in build-metadata form: `<YYYY-MM-DD>.<n>+<hash12>`. */
 const INVENTORY_VERSION_FORM = /^(\d{4}-\d{2}-\d{2})\.(0|[1-9]\d*)\+([0-9a-f]{12})$/;
 
@@ -616,6 +629,12 @@ export function buildCompositionExtension(
     block.considered = consideredOf(input.considered);
   }
 
+  // ADR-0033 amendment 5: routingConfiguration after considered, only when
+  // passed, so a block built without it keeps its bytes.
+  if (input.routingConfiguration !== undefined) {
+    block.routingConfiguration = routingConfigurationOf(input.routingConfiguration);
+  }
+
   return Object.keys(block).length > 0 ? block : undefined;
 }
 
@@ -673,6 +692,111 @@ function consideredOf(input: unknown): Record<string, unknown> {
   return { inventory: { id, version, hash }, total, listed, rule, ruleVersion };
 }
 
+/** The router's canonical JSON of a value made of strings and plain objects
+ *  only, which is every value a routing configuration holds: RFC 8785 (JCS)
+ *  restricted to those, members in the order of their names' UTF-16 code
+ *  units, no whitespace, each string as `JSON.stringify` writes it. The
+ *  router's `canonicalJson` (packages/civic-typed-router/src/core/
+ *  canonical-json.ts) gives the same text for such a value; the harness
+ *  spells it here because it does not depend on the router (ADR-0033
+ *  amendment 5). */
+function canonicalStringJson(value: string | Record<string, unknown>): string {
+  if (typeof value === 'string') return JSON.stringify(value);
+  const members = Object.keys(value)
+    .sort()
+    .map((name) => `${JSON.stringify(name)}:${canonicalStringJson(value[name] as string | Record<string, unknown>)}`);
+  return `{${members.join(',')}}`;
+}
+
+/** Check one `routingConfiguration` input and return it in the record's key
+ *  order, or refuse it with `RecordFieldError('routingConfiguration', …)`
+ *  (ADR-0033 amendment 5). The hash is recomputed: every member it covers is
+ *  in the record, so a hash that is not theirs would state a configuration
+ *  the run was not routed under. */
+function routingConfigurationOf(input: unknown): Record<string, unknown> {
+  const fail: (message: string) => never = (message) => {
+    throw new RecordFieldError('routingConfiguration', message);
+  };
+  /** One nested member: a plain object of exactly `keys`, each a non-empty
+   *  string. */
+  const closed = (member: string, value: unknown, keys: readonly string[]): Record<string, string> => {
+    if (!isPlainObject(value)) {
+      return fail(`${member} must be an object { ${keys.join(', ')} }; got ${JSON.stringify(value)}`);
+    }
+    const extraKeys = Object.keys(value).filter((k) => !keys.includes(k));
+    if (extraKeys.length > 0) {
+      fail(`${member} carries ${keys.join(', ')} only; got ${extraKeys.map((k) => JSON.stringify(k)).join(', ')}`);
+    }
+    for (const key of keys) {
+      if (!nonEmptyString(value[key])) {
+        fail(`${member}.${key} must be a non-empty string; got ${JSON.stringify(value[key])}`);
+      }
+    }
+    return value as Record<string, string>;
+  };
+  if (!isPlainObject(input)) {
+    return fail('must be an object { rule, cap, search, inventory, hash }');
+  }
+  const missing = ROUTING_CONFIGURATION_KEYS.filter((k) => !Object.hasOwn(input, k));
+  if (missing.length > 0) {
+    fail(`carries rule, cap, search, inventory and hash; missing ${missing.join(', ')}`);
+  }
+  const extra = Object.keys(input).filter((k) => !(ROUTING_CONFIGURATION_KEYS as readonly string[]).includes(k));
+  if (extra.length > 0) {
+    fail(`carries rule, cap, search, inventory and hash only; got ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  const rule = closed('rule', input.rule, ROUTING_CONFIGURATION_RULE_KEYS);
+  const { cap } = input;
+  if (!(typeof cap === 'string' && (cap === 'none' || CAP_FORM.test(cap)))) {
+    fail(`cap must be 'none' or a positive whole number in decimal digits with no leading zero; got ${JSON.stringify(cap)}`);
+  }
+  const search = input.search === 'none'
+    ? 'none'
+    : (() => {
+        if (typeof input.search === 'string') {
+          return fail(`search must be 'none' or an object { method, version }; got ${JSON.stringify(input.search)}`);
+        }
+        const s = closed('search', input.search, ROUTING_CONFIGURATION_SEARCH_KEYS);
+        return { method: s.method, version: s.version };
+      })();
+  const inventoryValue = input.inventory;
+  if (!isPlainObject(inventoryValue)) {
+    return fail(`inventory must be an object { id, version, hash }; got ${JSON.stringify(inventoryValue)}`);
+  }
+  const extraInventory = Object.keys(inventoryValue).filter((k) => !(ROUTING_CONFIGURATION_INVENTORY_KEYS as readonly string[]).includes(k));
+  if (extraInventory.length > 0) {
+    fail(`inventory carries id, version and hash only; got ${extraInventory.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  for (const key of ['id', 'version'] as const) {
+    if (!nonEmptyString(inventoryValue[key])) {
+      fail(`inventory.${key} must be a non-empty string; got ${JSON.stringify(inventoryValue[key])}`);
+    }
+  }
+  if (!(typeof inventoryValue.hash === 'string' && SHA256_HEX_FORM.test(inventoryValue.hash))) {
+    fail(`inventory.hash must be a lowercase hex SHA-256; got ${JSON.stringify(inventoryValue.hash)}`);
+  }
+  const inventory = {
+    id: inventoryValue.id as string,
+    version: inventoryValue.version as string,
+    hash: inventoryValue.hash as string,
+  };
+  const { hash } = input;
+  if (!(typeof hash === 'string' && SHA256_HEX_FORM.test(hash))) {
+    fail(`hash must be a lowercase hex SHA-256; got ${JSON.stringify(hash)}`);
+  }
+  const configuration = {
+    rule: { id: rule.id, version: rule.version },
+    cap: cap as string,
+    search,
+    inventory,
+  };
+  const computed = sha256Hex(canonicalStringJson(configuration));
+  if (computed !== hash) {
+    fail(`hash ${JSON.stringify(hash)} is not the SHA-256 of the canonical JSON of rule, cap, search and inventory (${computed})`);
+  }
+  return { ...configuration, hash };
+}
+
 /** The derived envelope-field values, ready to spread into produce-core's
  *  `EnvelopeInput`. Fields are `undefined` exactly when the reference
  *  packager left them unemitted. */
@@ -719,6 +843,7 @@ export function deriveDatHereEnvelopeFields(
     routing: input.routing,
     definitionHash: input.definitionHash,
     considered: input.considered,
+    routingConfiguration: input.routingConfiguration,
   });
   if (composition !== undefined) {
     extensions[COMPOSITION_EXTENSION_KEY] = composition;

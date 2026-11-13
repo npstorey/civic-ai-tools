@@ -4,8 +4,10 @@
 // sources it was offered, the components that composed its prompt, the
 // flows statement in force (by reference: address, hash and date), for an
 // in-loop run, how its sources were chosen and the hash of its harness
-// definition (ADR-0033 amendment 2), and the inventory the run was routed
-// against with how many of its entries the model was shown (amendment 3).
+// definition (ADR-0033 amendment 2), the inventory the run was routed
+// against with how many of its entries the model was shown (amendment 3),
+// and the routing configuration the run was routed under, with its hash
+// (amendment 5).
 //
 // WHY THE TRACE (civic-ai-tools-website#495). A record is packaged after the
 // run, sometimes much later; a fact read at packaging is packaging-time state.
@@ -17,10 +19,13 @@
 // are strings; for `analysis.flows_statement`, of one object of exactly three
 // strings; for `analysis.routing`, of one object of exactly two; for
 // `analysis.considered`, of one object of exactly five keys, whose
-// `inventory` is one object of exactly three strings) and returns it under
+// `inventory` is one object of exactly three strings; for
+// `analysis.routing_configuration`, of one object of exactly five members,
+// each a string or an object of exactly its strings) and returns it under
 // the derivation's input names. The values — the date form, the reason set,
 // the hash forms, the origin set, the address form, the routing method set,
-// the inventory version's form and the counts — are policy, checked by the
+// the inventory version's form and the counts, the cap's and the search's
+// forms and the routing configuration's hash — are policy, checked by the
 // format group's derivation, which refuses a bad one by name.
 //
 // An ABSENT attribute is an absent field. A PRESENT attribute that does not
@@ -228,6 +233,86 @@ function consideredObject(
   };
 }
 
+/** One nested object of exactly `fields`, each a string, for
+ *  `analysis.routing_configuration`'s `member`. */
+function nestedStringObject(
+  attribute: string,
+  member: string,
+  value: unknown,
+  fields: readonly string[],
+): Record<string, string> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new RunAttributeError(attribute, `${member} is not a JSON object`);
+  }
+  for (const field of fields) {
+    if (typeof (value as Record<string, unknown>)[field] !== 'string') {
+      throw new RunAttributeError(attribute, `${member} has no string ${field}`);
+    }
+  }
+  const extra = Object.keys(value).filter((k) => !fields.includes(k));
+  if (extra.length > 0) {
+    throw new RunAttributeError(attribute, `${member} has a field outside ${fields.join(', ')}: ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  return value as Record<string, string>;
+}
+
+/** Parse `analysis.routing_configuration` (ADR-0033 amendment 5): JSON text
+ *  of ONE object whose members are exactly `rule`, `cap`, `search`,
+ *  `inventory` and `hash`; `rule` one object of exactly the strings `id` and
+ *  `version`; `cap` a string; `search` a string or one object of exactly the
+ *  strings `method` and `version`; `inventory` one object of exactly the
+ *  strings `id`, `version` and `hash`; `hash` a string. Shape only, returned
+ *  in the record's member order: the cap's and the search's forms, the
+ *  non-empty strings, the hash forms and the hash's value are the
+ *  derivation's. */
+function routingConfigurationObject(
+  attribute: string,
+  text: string,
+): ExtractedRoutingConfiguration {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new RunAttributeError(attribute, 'is not JSON text');
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new RunAttributeError(attribute, 'is not a JSON object');
+  }
+  const entry = parsed as Record<string, unknown>;
+  const fields = ['rule', 'cap', 'search', 'inventory', 'hash'];
+  for (const field of fields) {
+    if (!Object.hasOwn(entry, field)) {
+      throw new RunAttributeError(attribute, `has no ${field}`);
+    }
+  }
+  const extra = Object.keys(entry).filter((k) => !fields.includes(k));
+  if (extra.length > 0) {
+    throw new RunAttributeError(attribute, `has a field outside ${fields.join(', ')}: ${extra.map((k) => JSON.stringify(k)).join(', ')}`);
+  }
+  const rule = nestedStringObject(attribute, 'rule', entry.rule, ['id', 'version']);
+  if (typeof entry.cap !== 'string') {
+    throw new RunAttributeError(attribute, 'cap is not a string');
+  }
+  let search: ExtractedRoutingConfiguration['search'];
+  if (typeof entry.search === 'string') {
+    search = entry.search;
+  } else {
+    const { method, version } = nestedStringObject(attribute, 'search', entry.search, ['method', 'version']);
+    search = { method, version };
+  }
+  const inventory = nestedStringObject(attribute, 'inventory', entry.inventory, ['id', 'version', 'hash']);
+  if (typeof entry.hash !== 'string') {
+    throw new RunAttributeError(attribute, 'hash is not a string');
+  }
+  return {
+    rule: { id: rule.id, version: rule.version },
+    cap: entry.cap,
+    search,
+    inventory: { id: inventory.id, version: inventory.version, hash: inventory.hash },
+    hash: entry.hash,
+  };
+}
+
 /**
  * Read the run attributes from a trace's root span. Returns `{}` for a trace
  * with no root span — including a BlobRef trace's inspection view
@@ -280,6 +365,17 @@ export function extractRunAttributes(
 
   const considered = stringAttr(root, 'analysis.considered');
   if (considered !== undefined) out.considered = consideredObject('analysis.considered', considered);
+
+  // Read by key, not through `stringAttr`: an attribute that is present and
+  // carries no text is refused, never read as absent (ADR-0033 amendment 5).
+  const routingConfiguration = root.attributes?.find((a) => a.key === 'analysis.routing_configuration');
+  if (routingConfiguration !== undefined) {
+    const text = routingConfiguration.value?.stringValue;
+    if (typeof text !== 'string') {
+      throw new RunAttributeError('analysis.routing_configuration', 'is not text');
+    }
+    out.routingConfiguration = routingConfigurationObject('analysis.routing_configuration', text);
+  }
 
   return out;
 }
