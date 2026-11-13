@@ -35,6 +35,11 @@ to the Typed Standards specification unless noted otherwise.
   `ToolCallSummary.failed` and `.failureKind`'s comments** say "failed" in
   place of "refused" or "rejected by the source". Comment only, as is the
   entry above: the code and every golden fixture are unchanged.
+- **`buildEvaluationPrompt`** tells the evaluator `FAILED: no data was
+  returned, and no row count is claimed` for every failed call, in place of
+  `REJECTED by the source — …`; the website re-exports it from the harness
+  (`src/lib/evidence/adversarial-eval-core.ts`), so its publication gate
+  sends the new words once it takes 0.13.0.
 
 ## 0.12.0 — 2026-11-07
 

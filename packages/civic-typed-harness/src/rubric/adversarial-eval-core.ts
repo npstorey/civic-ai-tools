@@ -105,21 +105,23 @@ interface RecordedCallOutcome {
   failureKind?: string;
 }
 
-/** Did the producer record this entry as REJECTED by the source? Only a
- *  literal `failed: true` is a rejection (see `RecordedCallOutcome`). */
+/** Did the producer record this entry as FAILED, returning no data? Only a
+ *  literal `failed: true` is a failure (see `RecordedCallOutcome`). */
 function wasRecordedRejected(query: RecordPackage['queries'][number]): boolean {
   return (query as typeof query & RecordedCallOutcome).failed === true;
 }
 
-/** What the evaluator is told about a call the source rejected. A FIXED
+/** What the evaluator is told about a call that failed: the source answered
+ *  with an error, did not answer, or was never sent the call (the guidance
+ *  bundle's revision 4, `civic.failed`), so it names no refuser. A FIXED
  *  string: it interpolates nothing the producer wrote, and it claims no row
  *  count — there were no rows to count, which is neither "zero rows" nor "an
  *  unknown number of rows". The rubric asks the evaluator to cross-check
- *  figures against the data returned in the tool calls, so a rejected call
+ *  figures against the data returned in the tool calls, so a failed call
  *  reading `→ ? rows` invited it to treat absent data as merely unrecorded
  *  (civic-ai-tools#203). */
 const REJECTED_CALL_RENDERING =
-  'REJECTED by the source — no data was returned, and no row count is claimed';
+  'FAILED: no data was returned, and no row count is claimed';
 
 /** A non-empty string field of a `dataSources` entry, or `undefined`. The
  *  entry is read as stored: a package from an older producer may lack a

@@ -248,6 +248,18 @@ test('buildEvaluationPrompt: a rejected call is rendered as rejected and claims 
   );
 });
 
+test('buildEvaluationPrompt: a failed call reads FAILED in fixed words, not "rejected by the source" (revision 4)', () => {
+  // The guidance bundle's revision 4: a failed call returned no data, whether
+  // the source answered with an error, did not answer, or was never sent the
+  // call. The evaluator is told that, and no refuser.
+  const line = lineFor(buildEvaluationPrompt(packageWithARejectedCall()), REJECTED_DATASET);
+  assert.ok(
+    line.endsWith('→ FAILED: no data was returned, and no row count is claimed'),
+    `the failed call's rendering:\n  ${line}`,
+  );
+  assert.doesNotMatch(line, /reject|refus|by the source/i);
+});
+
 test('buildEvaluationPrompt: absence stays absence — no recorded row count still reads "? rows"', () => {
   const line = lineFor(buildEvaluationPrompt(packageWithARejectedCall()), UNRECORDED_DATASET);
   assert.match(line, /\? rows/);
