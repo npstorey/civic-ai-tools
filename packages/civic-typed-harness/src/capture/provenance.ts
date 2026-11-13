@@ -185,7 +185,7 @@ function getAttr(attrs: OTelAttribute[], key: string): string | undefined {
  *
  * The comparison is strict, and only `true` counts. A truthiness test over
  * `stringValue` would read the string `"false"` as an assertion of failure —
- * marking a call that ANSWERED as refused, inside bytes a publisher signs.
+ * marking a call that ANSWERED as failed, inside bytes a publisher signs.
  * The cost of the strictness is that a producer encoding this attribute as a
  * string gets no marker; the reference producer does not, and under-reading a
  * foreign encoding leaves the graph silent, where over-reading one would make
@@ -558,10 +558,13 @@ export function buildProvenanceGraphWith(
     // agent (e.g. socrata for `get_data`, data-commons for `get_observations`).
     const durationMs = getAttr(span.attributes, 'tool.duration_ms');
 
-    // Did the SOURCE REFUSE this call? Before 0.4.0 the graph never asked, so
-    // a refused call and one that answered were the same node with the same
-    // description — the absence of a data-response entity was the only trace
-    // of the rejection, and absence stated as nothing is not absence stated.
+    // Did this call FAIL, returning no data? The source answered with an error
+    // or with a reply the producer could not read, did not answer, or was never
+    // sent the call; the label below is the producer's for it. Before 0.4.0 the
+    // graph never asked, so a failed call and one that returned data were the
+    // same node with the same description — the absence of a data-response
+    // entity was the only trace of the failure, and absence stated as nothing
+    // is not absence stated.
     //
     // `error` is the ASSERTION and `error.kind` only a LABEL on one. A span
     // carrying a kind and no assertion is not a rejection, so the kind is read
