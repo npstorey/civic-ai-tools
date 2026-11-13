@@ -2,10 +2,10 @@
   "subtype": "ai-assisted-analysis/civicaitools-v1",
   "profileType": "ai-assisted-analysis",
   "displayName": "Civic AI Tools profile, v1",
-  "revision": 3,
-  "date": "2026-11-07",
+  "revision": 4,
+  "date": "2026-11-12",
   "decisionRecord": "https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0038-civicaitools-v1-producer-profile-subtype.md",
-  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
+  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.16-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
   "versionRule": "The subtype name carries the major: v2 when a declared field changes meaning, is removed, or a v1 reader statement would be false of the record. This file's SHA-256 carries the revisions: an added entry with an absence rule, a new reader sentence or a corrected citation stays v1 and moves the digest and the verifier table row's pin (ADR-0038 section 2).",
   "producer": "The reference host of this project, civicaitools.org, through the composed harness (ADR-0033, ADR-0037). Every new record of this producer, full-text or hash-only, declares this subtype.",
   "contentProfiles": {
@@ -46,10 +46,28 @@
     {
       "id": "composition.components",
       "path": "extensions[\"org.civicaitools.composition\"].components[]",
-      "values": "One entry per offered source in manifest order, then one for the composing package: { id, version?, guidanceHash?, guidanceOrigin? }; guidanceHash is lowercase hex SHA-256 of the guidance text as composed; guidanceOrigin is present exactly when guidanceHash is, one of endpoint, inline, fallback. A pack (an inventory entry whose calls go to a base server with fixed arguments) is one entry of its own, in manifest order like any offered source: id the pack's id, version <version>+<hash12>, the pack's own version and the first twelve hex characters of the hash its inventory entry states (hash), whose coverage is the inventory schema's definition, not this bundle's (ADR-0033 amendment 3). Its base's entry is present whenever the pack's is, because the base's server answers the pack's calls.",
+      "values": "One entry per offered source in manifest order, then one for the composing package: { id, version?, guidanceHash?, guidanceOrigin?, reportedName?, reportedVersion? }; guidanceHash is lowercase hex SHA-256 of the guidance text as composed; guidanceOrigin is present exactly when guidanceHash is, one of endpoint, inline, fallback; reportedName and reportedVersion, on a remote server's entry only, are what that server reported itself as (see composition.components.reportedName and composition.components.reportedVersion; ADR-0033 amendment 4). A pack (an inventory entry whose calls go to a base server with fixed arguments) is one entry of its own, in manifest order like any offered source: id the pack's id, version <version>+<hash12>, the pack's own version and the first twelve hex characters of the hash its inventory entry states (hash), whose coverage is the inventory schema's definition, not this bundle's (ADR-0033 amendment 3). Its base's entry is present whenever the pack's is, because the base's server answers the pack's calls.",
       "absent": "Key omitted when the root span carried no analysis.components. A missing version or guidanceHash is unknown or no guidance, respectively; neither is stated as a placeholder.",
       "carriedBy": "in-loop-golden.json (socrata 0.9.2 with endpoint guidance; the router 0.5.0); the three website fixture records.",
-      "sentence": "Composed from: {id} {version} (guidance {guidanceOrigin}, hash {guidanceHash short}); ... ; a pack's entry is named '{the host's name for the pack}, a pack by {author}, using {the host's name for its base}', then its version, guidance and hash as for any entry. The host knows an entry as a pack's from the inventory composition.considered names, or from a call's civic.packId of the same id, and resolves the pack's name and author only from that inventory, as civic.packId says; when it cannot, it names the entry by its id, as any other entry, and names no author. The record never spells either. Until a record carries skillMetadata.skillText (website #694), these entries are the record's only statement of the prompt's pieces, by hash and origin, not by text.",
+      "sentence": "Composed from: {id} {version} (guidance {guidanceOrigin}, hash {guidanceHash short}); ... ; a pack's entry is named '{the host's name for the pack}, a pack by {author}, using {the host's name for its base}', then its version, guidance and hash as for any entry. The host knows an entry as a pack's from the inventory entry it finds as civic.packId says, or from a call's civic.packId of the same id, and resolves the pack's name and author only from that inventory entry; when it finds none, it names the entry by its id, as any other entry, and names no author. The record never spells either. An entry that states reportedName or reportedVersion may be followed by composition.components.reportedName's words. Until a record carries skillMetadata.skillText (website #694), these entries are the record's only statement of the prompt's pieces, by hash and origin, not by text.",
+      "class": "may-show"
+    },
+    {
+      "id": "composition.components.reportedName",
+      "path": "extensions[\"org.civicaitools.composition\"].components[].reportedName",
+      "values": "The name a remote server reported itself as, verbatim: the serverInfo.name of its MCP initialize result (the older protocol era) or of its server/discover result's _meta['io.modelcontextprotocol/serverInfo'] (the newer), from this producer's read of that server, which may have been made for an earlier run (ADR-0033 amendment 4). Written only from that read, never from a pin, the manifest or version. On a remote server's entry only: a pack's entry and the composing package's never carry it. Stated after guidanceOrigin, before reportedVersion.",
+      "absent": "Key omitted when this producer held no report from the server when it wrote the entry, or the server stated no name; and on every record before harness 0.13.0. Absent reads as not recorded: never as the name in the entry's id, and never as a report that matched anything.",
+      "carriedBy": "reported-keys-golden.json (the base server's entry).",
+      "sentence": "Beside the entry, a host MAY say 'The server for {name} reported itself as {reportedName} {reportedVersion}.'; with only one of the two keys, 'The server for {name} reported its name as {reportedName}.' or 'The server for {name} reported its version as {reportedVersion}.'; nothing when both are absent. {name} is the host's name for the entry, or its id as written. The words are the server's own statement: nothing in the record checks it against the entry's id, and a host never shows it as the server's identity, which is the id.",
+      "class": "may-show"
+    },
+    {
+      "id": "composition.components.reportedVersion",
+      "path": "extensions[\"org.civicaitools.composition\"].components[].reportedVersion",
+      "values": "The version a remote server reported itself as, verbatim: the serverInfo.version of the same read as composition.components.reportedName (ADR-0033 amendment 4). It is the server's own string, not checked against a release or a commit, and never the entry's version, which keeps its meaning. On a remote server's entry only. Stated after reportedName, the entry's last key.",
+      "absent": "Key omitted when this producer held no report from the server when it wrote the entry, or the server stated no version; and on every record before harness 0.13.0. Absent reads as not recorded, never as the entry's version.",
+      "carriedBy": "reported-keys-golden.json (the base server's entry).",
+      "sentence": "Stated in composition.components.reportedName's sentence, beside the name, or alone when the entry states no reportedName.",
       "class": "may-show"
     },
     {
@@ -92,7 +110,7 @@
       "id": "environment.toolDefinitions",
       "path": "extensions[\"org.civicaitools.environment\"].toolDefinitions",
       "values": "The tools array as offered to the model, in offered order, verbatim (the router's output: load_source and each loaded source's tools), or a BlobRef when large (spec section 8.7.1 requirement 3; ADR-0033 section C).",
-      "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere (this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:662-676); that absence states nothing about the tools.",
+      "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere (this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:679-693); that absence states nothing about the tools.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "Tools offered to the model: {count}, named {names}.",
       "class": "may-show"
@@ -154,19 +172,19 @@
     {
       "id": "civic.failed",
       "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:failed\"]",
-      "values": "true, only when the producer stated that the source refused the call; never false.",
+      "values": "true, only when the producer stated that the call failed: it returned no data, whether the source answered with an error or with a reply the producer could not read, did not answer, or was never sent the call; civic:failureKind is the producer's label for it. Never false. Spec section 8.1.8 defines a failed call as one rejected by the source; this producer also marks failed a call the source did not answer and one the producer did not send (civic.failureKind's values say which labels mark one).",
       "absent": "Absent when nothing was recorded about how the call ended: the record states nothing, and a reader never reads the absence as success (spec section 8.1.8).",
-      "carriedBy": "No measured fixture record carries it (no fixture call was refused); emitted by the harness since produce-core 0.4.0 whenever a queries[] entry carries failed: true.",
-      "sentence": "'{source} refused this call.' Nothing when absent.",
+      "carriedBy": "reported-keys-golden.json (one call, labelled base_changed); emitted by the harness since 0.4.0 on the tool-call activity of a span the producer ended with error: true (capture/provenance.ts:583).",
+      "sentence": "Read with the same activity's civic:failureKind: timeout '{source} did not respond in time, so this call returned no data.'; unavailable '{source} could not be reached or could not answer, so this call returned no data.'; not_configured 'No live data source was configured for this call, so it returned no data.'; not_offered 'This question was not using this data source at the time, so nothing was sent to it.'; unknown 'The request could not be completed, so it returned no data.'; base_changed 'The site that ran this question did not send this call: {source} did not match what {pack} was written for.'; with no civic:failureKind, the words for unknown; a label not among these six, 'This call returned no data. It was recorded as {failureKind}.', the label as written. {source} is the host's name for the activity's civic:sourceId; where a label's words name {source} and the host has no source of that id (this producer writes the id unknown on a call no source took), the host gives the words for unknown. {pack} is the host's name for the pack, found as civic.packId says, or 'the pack recorded as {packId}' when it finds no entry. None of these says that the source refused the call: unknown and unavailable each cover calls a source answered with an error and calls this producer never sent. Nothing when absent.",
       "class": "may-show"
     },
     {
       "id": "civic.failureKind",
       "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:failureKind\"]",
-      "values": "An open producer label beside civic:failed, stated verbatim; the reference producer's four values are timeout, unavailable, not_configured, unknown. No normative vocabulary.",
-      "absent": "Absent unless civic:failed is present; a kind without a failure is not a rejection.",
-      "carriedBy": "No measured fixture record carries it.",
-      "sentence": "'{source} refused this call ({failureKind}).' A host never switches on the value exhaustively or treats an unknown one as invalid.",
+      "values": "An open producer label beside civic:failed, stated verbatim; the reference producer's six values are timeout, unavailable, not_configured, not_offered, unknown and base_changed. No normative vocabulary. Three mark a call the producer did not send: not_configured, a call no live source was configured for; not_offered, a call to a source the run had not offered or, on an in-loop run, had not yet loaded; base_changed, a pack's call whose base did not match the pack's basePins (see civic.packId). Two mark calls sent and unsent alike, which the label does not tell apart: unknown covers an error the source answered with, a reply the producer could not read, and the refusals the producer makes before sending, such as arguments that do not parse, a portal outside the run's lock, a pack call outside its filter or a bare tool name two sources share; unavailable covers a source the producer could not reach or talk to, as on a network error or an error status from it, and a call to a tool no source has.",
+      "absent": "Absent unless civic:failed is present: a kind without civic:failed states no failure. A failed call with no kind reads as unknown does.",
+      "carriedBy": "reported-keys-golden.json (base_changed).",
+      "sentence": "The words civic.failed's sentence gives for the label, for a failed call with no label and for a label not among the six. A host never switches on the value exhaustively or treats an unknown one as invalid.",
       "class": "may-show"
     },
     {
@@ -184,7 +202,7 @@
       "values": "The MCP server URL the source agent answered from, as the deployment's source registry states it (or, for the skill source, as the skill-fetch span carried it).",
       "absent": "Absent on an agent whose address the producer did not state.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
-      "sentence": "'Answered by {source} at {serverUrl host}.'",
+      "sentence": "'Answered by {source} at {serverUrl host}.', only when at least one activity associated with that agent (prov:wasAssociatedWith) carries no civic:failed; when every one carries civic:failed, the host gives no answered-by sentence for the agent, and civic.failed's words say how each of its calls ended.",
       "class": "may-show"
     },
     {
@@ -193,7 +211,7 @@
       "values": "The stable registry id of the source that answered a call, on the source agent, the tool-call activity and the data-response entity. A load span's activity states none: no source answered it.",
       "absent": "Absent on a call no source answered (a load) and on a call whose source the span did not name; the graph never defaults a source id (ADR-0024).",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
-      "sentence": "'{the host's name for sourceId} answered this call.' The host resolves the id against its own manifest; the record never spells the reader-facing name.",
+      "sentence": "'{the host's name for sourceId} answered this call.', only on a call that carries no civic:failed; civic.failed's words say how a failed call ended. The host resolves the id against its own manifest; the record never spells the reader-facing name.",
       "class": "may-show"
     },
     {
@@ -289,7 +307,7 @@
     {
       "id": "civic.durationMs",
       "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:durationMs\"]",
-      "values": "The elapsed milliseconds the producer measured for one tool call, on a call that answered and on one the source refused alike.",
+      "values": "The elapsed milliseconds the producer measured for one tool call, on one clock from just before the call until it answered or failed, on every call alike; on a call the producer did not send, the time until its own refusal.",
       "absent": "Absent when the span carried no duration.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "'{n} ms.'",
@@ -319,16 +337,16 @@
       "values": "The identity of the server that answered: the router manifest entry's id, which composition.components[].id also carries, so a call joins to its component.",
       "absent": "Absent when the span carried no mcp.server.id.",
       "carriedBy": "The three website fixture records. Not carried by in-loop-golden.json.",
-      "sentence": "'Answered by {serverId}', joined to the component of the same id for its version and guidance hash.",
+      "sentence": "'Answered by {serverId}', only on a call that carries no civic:failed, joined to the component of the same id for its version and guidance hash.",
       "class": "may-show"
     },
     {
       "id": "civic.packId",
       "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:packId\"]",
-      "values": "The id of the pack whose fixed arguments shaped the call: the inventory entry's id, verbatim from the span's mcp.pack_id (ADR-0033 amendment 3). A pack's calls go to its base's server, so the same activity's civic:serverId and civic:sourceId name the base's server and source, and the pack is the composition.components entry of the same id. The key follows civic:serverId.",
+      "values": "The id of the pack whose fixed arguments shaped the call: the inventory entry's id, verbatim from the span's mcp.pack_id (ADR-0033 amendment 3). A pack's calls go to its base's server, so the same activity's civic:serverId and civic:sourceId name the base's server and source, and the pack is the composition.components entry of the same id. The key follows civic:serverId. When the pack's inventory entry states basePins, this producer sent the pack's calls only after the base's reported name and version and the argument schemas of the base tools the pin names equalled one of those pins, compared as ADR-0039 (docs/adr/0039-route-identity-conventions.md) states, from its own reads of the base made before the call; on a difference it did not send the call, and recorded it failed, labelled base_changed.",
       "absent": "Absent on a call no pack shaped, and on every record before harness 0.12.0; the graph never names a pack the span did not.",
       "carriedBy": "considered-golden.json (one call).",
-      "sentence": "'{the host's name for the pack}, a pack by {author}, using {the host's name for the base}', beside the call. The host resolves the pack's name and author only from the inventory composition.considered names, at its tag with its hash checked, by the entry of that id; when the record carries no considered, or that inventory cannot be resolved or holds no entry of that id, the host says 'a pack recorded as {packId}, using {the host's name for the base}' and names no author. The record never spells the pack's name or author.",
+      "sentence": "'{the host's name for the pack}, a pack by {author}, using {the host's name for the base}', beside the call. The host resolves the pack's name and author only from the pack's inventory entry: in the inventory composition.considered names, at its tag with its hash checked, by the entry of that id; or, on a record that carries no considered, in the hub's inventory versions, each read at its tag civic-inventory/<version> with its hash checked, or in a copy of them, by the entry of that id whose hash begins with the twelve characters after the + in the version of the pack's composition.components entry (ADR-0039, docs/adr/0039-route-identity-conventions.md). Every fact the host reads from the entry is inside that hash, so any version holding the entry gives the same facts. When it finds no such entry, the host says 'a pack recorded as {packId}, using {the host's name for the base}' and names no author. The record never spells the pack's name or author. When the entry states basePins, beside a call that carries no civic:failed a host MAY say 'The site that ran this question checked {base} before sending this call. {base} reported the name, version and tool inputs that {pack} was written for.', {base} and {pack} being the host's names for the base and the pack.",
       "class": "may-show"
     },
     {

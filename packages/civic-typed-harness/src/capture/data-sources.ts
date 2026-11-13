@@ -26,8 +26,9 @@ export type { DataSourceEntry };
 export interface ToolCallSummary {
   name: string;
   args: Record<string, unknown>;
-  /** Did the producer record this call as REJECTED by the source? A call
-   *  recorded as failed asserts no access: it contributes no dataset-keyed
+  /** Did the producer record this call as FAILED, returning no data (the
+   *  source answered with an error, did not answer, or was never sent it)? A
+   *  call recorded as failed asserts no access: it contributes no dataset-keyed
    *  entry and marks no aggregate source accessed (see `buildDataSources`).
    *
    *  Optional, and absent is absent: a producer that records no outcome
@@ -35,7 +36,7 @@ export interface ToolCallSummary {
    *  got before the fields existed. Absence means "not recorded as failed",
    *  never "succeeded". Added 0.4.0. */
   failed?: boolean;
-  /** The producer's own label for why the call was rejected, carried so a
+  /** The producer's own label for why the call failed, carried so a
    *  caller can hand its record through unchanged. An open string with no
    *  normative vocabulary: the harness never interprets it, and this module
    *  never reads it. `failed` is the assertion and `failureKind` only a label

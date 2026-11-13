@@ -312,12 +312,19 @@ export const GUIDANCE_ORIGINS: readonly GuidanceOrigin[] = ['endpoint', 'inline'
 /** One `components` entry as a caller passes it. `id` is the manifest
  *  entry's id (or the composing package's name); `version` is omitted when
  *  unknown; `guidanceHash` (lowercase hex SHA-256 of the component's guidance
- *  as composed) and `guidanceOrigin` are present together or not at all. */
+ *  as composed) and `guidanceOrigin` are present together or not at all.
+ *  `reportedName` and `reportedVersion` (ADR-0033 amendment 4) are the
+ *  `serverInfo.name` and `serverInfo.version` a remote server stated to the
+ *  producer, each omitted when the producer did not read it; the
+ *  harness states them as passed and does not compare them with `id` or
+ *  `version`. */
 export interface CompositionComponentInput {
   id: string;
   version?: string;
   guidanceHash?: string;
   guidanceOrigin?: string;
+  reportedName?: string;
+  reportedVersion?: string;
 }
 
 /** The instance's flows statement, by reference (ADR-0033 §E as amended
@@ -514,10 +521,20 @@ export function buildCompositionExtension(
       if (hasOrigin && !(GUIDANCE_ORIGINS as readonly string[]).includes(entry.guidanceOrigin as string)) {
         throw new RecordFieldError('components', `entry ${i} (${entry.id}): guidanceOrigin ${JSON.stringify(entry.guidanceOrigin)} is not one of ${GUIDANCE_ORIGINS.join(', ')}`);
       }
+      // ADR-0033 amendment 4: the server's own report, each key only when
+      // given, after the keys before it, so an entry built without them keeps
+      // its bytes. Refused, never dropped, when not a non-empty string.
+      for (const key of ['reportedName', 'reportedVersion'] as const) {
+        if (entry[key] !== undefined && !nonEmptyString(entry[key])) {
+          throw new RecordFieldError('components', `entry ${i} (${entry.id}): ${key}, when given, is a non-empty string — omit it when the server's report was not read`);
+        }
+      }
       return {
         id: entry.id,
         ...(entry.version !== undefined ? { version: entry.version } : {}),
         ...(hasHash ? { guidanceHash: entry.guidanceHash, guidanceOrigin: entry.guidanceOrigin } : {}),
+        ...(entry.reportedName !== undefined ? { reportedName: entry.reportedName } : {}),
+        ...(entry.reportedVersion !== undefined ? { reportedVersion: entry.reportedVersion } : {}),
       };
     });
   }

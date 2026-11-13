@@ -66,10 +66,13 @@ export const PRIOR_ERA_CIVIC_URN_PREFIX = 'urn:civic-evidence';
 // added in the same phase measure that rather than assume it.
 
 /**
- * `civic:failed` — a tool-call activity whose call the SOURCE REFUSED.
+ * `civic:failed` — a tool-call activity whose call FAILED, returning no
+ * data: the source answered with an error or with a reply the producer could
+ * not read, did not answer, or was never sent the call (the guidance bundle's
+ * revision 4, `civic.failed`).
  *
  * Emitted with the boolean `true` and only when the producer stated the
- * rejection; never emitted as `false`. A literal `false` would assert an
+ * failure; never emitted as `false`. A literal `false` would assert an
  * outcome, and "recorded as not-failed" must stay indistinguishable from
  * "nothing recorded" — the same absent-is-absent posture `ToolCallSummary`
  * takes for `failed`. A reader that finds no key learns that the record
@@ -79,15 +82,19 @@ export const CIVIC_TERM_FAILED = 'civic:failed';
 
 /**
  * `civic:failureKind` — the producer's own classified label for WHY a call
- * carrying {@link CIVIC_TERM_FAILED} was refused.
+ * carrying {@link CIVIC_TERM_FAILED} returned no data.
  *
  * An open string with no normative vocabulary here: the harness states the
  * label verbatim and never interprets or re-derives it. It is a label on an
  * assertion, not the assertion — a record that carries a kind and no failure
- * is not a rejection, and the term is emitted only alongside
- * {@link CIVIC_TERM_FAILED}. The reference producer's four values are
- * `timeout`, `unavailable`, `not_configured` and `unknown`; a producer with a
- * wider vocabulary widens this field rather than putting prose in it.
+ * states no failure, and the term is emitted only alongside
+ * {@link CIVIC_TERM_FAILED}. The reference producer's six values are
+ * `timeout`, `unavailable`, `not_configured`, `not_offered`, `unknown` and
+ * `base_changed` (the guidance bundle's revision 4, `civic.failureKind`):
+ * `not_configured`, `not_offered` and `base_changed` mark a call the producer
+ * did not send, and `unknown` and `unavailable` each cover calls sent and
+ * unsent alike. A producer with a wider vocabulary widens this field rather
+ * than putting prose in it.
  */
 export const CIVIC_TERM_FAILURE_KIND = 'civic:failureKind';
 
@@ -176,8 +183,9 @@ export const CIVIC_TERM_RESPONSE_ROWS = 'civic:responseRows';
 /**
  * `civic:durationMs` — the elapsed the producer measured for one tool call.
  * Emitted whenever the span carried it, on a call that answered and on one
- * the source REFUSED alike: since civic-ai-tools-website#413 the reference
- * producer records the elapsed on its rejection path too, so this term and
+ * that failed alike, a call the producer did not send included (the time
+ * until its own refusal): since civic-ai-tools-website#413 the reference
+ * producer records the elapsed on its failure path too, so this term and
  * {@link CIVIC_TERM_FAILED} appear together on the same activity.
  */
 export const CIVIC_TERM_DURATION_MS = 'civic:durationMs';

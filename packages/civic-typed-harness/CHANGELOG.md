@@ -3,6 +3,44 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## 0.13.0 — 2026-11-12
+
+- **`reportedName` and `reportedVersion`**, two optional keys of a
+  composition `components[]` entry
+  ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
+  amendment 4): the `serverInfo.name` and `serverInfo.version` a remote
+  server stated to the producer, each written only when passed, after
+  `guidanceOrigin`, so an entry built without them keeps its bytes. Input
+  `components[].reportedName` and `.reportedVersion`
+  (`CompositionComponentInput`), or the same keys on an
+  `analysis.components` entry. A key that is given and is not a non-empty
+  string is refused with `RecordFieldError('components', …)`; an
+  `analysis.components` entry whose key is present and not a string with
+  `RunAttributeError`. The keys are outside the router's definition hash,
+  which reads `id`, `version` and `guidanceHash` only.
+- **`reported-keys-golden.json`**, a new golden: an all-sources record
+  whose base server's entry states both keys, with a pack call the
+  producer did not send recorded under the label `base_changed`. Every
+  record built without the keys keeps its bytes: no existing golden
+  fixture moves.
+- **The comments on a failed call** state it as the guidance bundle's
+  revision 4 does. `CIVIC_TERM_FAILURE_KIND`'s (`format/vocabulary.ts`)
+  names the reference producer's six labels, `timeout`, `unavailable`,
+  `not_configured`, `not_offered`, `unknown` and `base_changed`, three of
+  which mark a call the producer did not send, and no longer says the call
+  was refused; the failure branch's in `capture/provenance.ts` says a failed
+  call returned no data: the source answered with an error or with a reply
+  the producer could not read, did not answer, or was never sent the call.
+- **`CIVIC_TERM_FAILED`'s, `CIVIC_TERM_DURATION_MS`'s, `getBoolAttr`'s and
+  `ToolCallSummary.failed` and `.failureKind`'s comments** say "failed" in
+  place of "refused" or "rejected by the source". Comment only, as is the
+  entry above: the code and every golden fixture are unchanged.
+- **`buildEvaluationPrompt`** tells the evaluator `FAILED: no data was
+  returned, and no row count is claimed` for every failed call, in place of
+  `REJECTED by the source — …`; the website re-exports it from the harness
+  (`src/lib/evidence/adversarial-eval-core.ts`), so its publication gate
+  sends the new words once it takes 0.13.0.
+
 ## 0.12.0 — 2026-11-07
 
 - **`LoadOutcome`'s comment** (`format/vocabulary.ts`) states `declined` and

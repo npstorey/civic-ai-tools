@@ -2,9 +2,9 @@
 // hub file `docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`,
 // read from this repository, against the revision it states.
 //
-// WHAT IT PINS (civic-ai-tools#293; sprint anchors civic-ai-tools#294, P1, and
-// civic-ai-tools#309, S2-A P1).
-//   - The header: revision 3, the day its bytes were written, and its URL at
+// WHAT IT PINS (civic-ai-tools#293; sprint anchors civic-ai-tools#294, P1,
+// civic-ai-tools#309, S2-A P1, and civic-ai-tools#317, S2-C P2).
+//   - The header: revision 4, the day its bytes were written, and its URL at
 //     the spec tag the merge kit sets.
 //   - The words a host derives where reached sources are shown: the chooser
 //     sentence and the per-load reasons, which state no question put or
@@ -34,10 +34,17 @@
 //     its base, the shown count, and whether a question was put, stated only
 //     from `tool.load_asked`. The words are the research check's, as the owner
 //     ruled them (civic-ai-tools#309 comment 6706653107: R1, Q1, Q2 and A3 = A).
-//   - The field set: the 38 field ids and the 7 never-carried ids. A revision
-//     that adds or removes a field moves this list: revision 3 added four,
-//     each with an absence rule (ADR-0038 section 2); the assertion fails on
-//     one fewer and on one more.
+//   - Revision 4 (ADR-0033 amendment 4; ADR-0038's amendment of 2026-11-12):
+//     the two reported keys' entries; for each of the reference producer's six
+//     failure labels, for no label and for a label not among the six, the
+//     words both failure entries give, none of them "refused" (G0-C5 = C,
+//     civic-ai-tools#317); the three texts that said every failed call was
+//     refused, corrected; the refusal rule tied to basePins and the route to a
+//     pack's entry for a record without considered, in civic.packId.
+//   - The field set: the 40 field ids and the 7 never-carried ids. A revision
+//     that adds or removes a field moves this list: revision 3 added four and
+//     revision 4 two, each with an absence rule (ADR-0038 section 2); the
+//     assertion fails on one fewer and on one more.
 //   - The digest: `bundle.md`'s SHA-256 row and the ADR-0038 text name the
 //     file's own SHA-256, and `bundle.md`'s URL row names the file's URL.
 //
@@ -73,12 +80,12 @@ const ADR_0038_PATH = join(REPO_ROOT, 'docs', 'adr', '0038-civicaitools-v1-produ
 
 // --- The revision -------------------------------------------------------------------------
 
-const REVISION = 3;
+const REVISION = 4;
 /** ADR-0038 §5: the day the revision's bytes were written. */
-const REVISION_DATE = '2026-11-07';
+const REVISION_DATE = '2026-11-12';
 /** The raw address at the tag the merge kit sets on this revision's merge commit. */
 const REVISION_URL =
-  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.15-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
+  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.16-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
 
 // --- The words ----------------------------------------------------------------------------
 
@@ -131,7 +138,7 @@ const TOOL_DEFINITIONS_ABSENT =
   'Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 ' +
   'carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere ' +
   "(this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, " +
-  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:662-676); that ' +
+  'because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:679-693); that ' +
   'absence states nothing about the tools.';
 
 /** Website `SYSTEM_PROMPT_TEXT` (`src/lib/sources/copy.ts:587-615` at 4777b79). */
@@ -179,11 +186,19 @@ const CONSIDERED_ABSENT =
   'every record whose producer did not state the inventory it routed against. Absent reads as not recorded: never ' +
   "as every source shown, and never as the hub's current inventory.";
 const PACK_ID_SENTENCE =
-  "'{the host's name for the pack}, a pack by {author}, using {the host's name for the base}', beside the call. The " +
-  "host resolves the pack's name and author only from the inventory composition.considered names, at its tag with " +
-  'its hash checked, by the entry of that id; when the record carries no considered, or that inventory cannot be ' +
-  "resolved or holds no entry of that id, the host says 'a pack recorded as {packId}, using {the host's name for the " +
-  "base}' and names no author. The record never spells the pack's name or author.";
+  "'{the host's name for the pack}, a pack by {author}, using {the host's name for the base}', beside the call. " +
+  "The host resolves the pack's name and author only from the pack's inventory entry: in the inventory " +
+  "composition.considered names, at its tag with its hash checked, by the entry of that id; or, on a record that " +
+  "carries no considered, in the hub's inventory versions, each read at its tag civic-inventory/<version> with " +
+  "its hash checked, or in a copy of them, by the entry of that id whose hash begins with the twelve characters " +
+  "after the + in the version of the pack's composition.components entry (ADR-0039, " +
+  "docs/adr/0039-route-identity-conventions.md). Every fact " +
+  "the host reads from the entry is inside that hash, so any version holding the entry gives the same facts. " +
+  "When it finds no such entry, the host says 'a pack recorded as {packId}, using {the host's name for the " +
+  "base}' and names no author. The record never spells the pack's name or author. When the entry states " +
+  "basePins, beside a call that carries no civic:failed a host MAY say 'The site that ran this question checked " +
+  "{base} before sending this call. {base} reported the name, version and tool inputs that {pack} was written " +
+  "for.', {base} and {pack} being the host's names for the base and the pack.";
 const LOAD_ASKED_SENTENCE =
   "Whether the site that ran the question asked the person running it whether to use this load's source, in this " +
   "run. Only when the value is true MAY a host say, on the source's line in the chooser sentence, 'The site that ran " +
@@ -202,10 +217,61 @@ const CONSENT_WHO_RULE =
   'for, how it ended, and, where it carries trace.loadSpan.loadAsked, whether a question was put; never who ' +
   'answered it.';
 
+/** Revision 4's failure words (G0-C5 = C): one per label of the reference producer, following the reference
+ *  host's FAILURE_REASON (website `src/lib/notebook-author/tool-to-cell.ts:795-803` at f0c1eca), and for
+ *  base_changed that the site did not send the call (C9 = A). */
+const FAILURE_WORDS: Record<string, string> = {
+  timeout: '{source} did not respond in time, so this call returned no data.',
+  unavailable: '{source} could not be reached or could not answer, so this call returned no data.',
+  not_configured: 'No live data source was configured for this call, so it returned no data.',
+  not_offered: 'This question was not using this data source at the time, so nothing was sent to it.',
+  unknown: 'The request could not be completed, so it returned no data.',
+  base_changed: 'The site that ran this question did not send this call: {source} did not match what {pack} was written for.',
+};
+/** The reference producer's six labels, in the order the entries list them. */
+const FAILURE_LABELS = ['timeout', 'unavailable', 'not_configured', 'not_offered', 'unknown', 'base_changed'];
+/** A failed call with no label reads as unknown does (tool-to-cell.ts:814 at f0c1eca). */
+const NO_LABEL_WORDS = 'with no civic:failureKind, the words for unknown';
+/** A label not among the six: no cause and no refuser, the label as written. */
+const UNLISTED_WORDS = 'This call returned no data. It was recorded as {failureKind}.';
+/** civic.failureKind's sentence points to civic.failed's words: one copy, not two (the research check's row 17). */
+const FAILURE_KIND_SENTENCE =
+  "The words civic.failed's sentence gives for the label, for a failed call with no label and for a label not among " +
+  "the six. A host never switches on the value exhaustively or treats an unknown one as invalid.";
+/** Q2 = (a): the answered-by sentences are given only on a call that carries no civic:failed. */
+const SOURCE_ID_SENTENCE =
+  "'{the host's name for sourceId} answered this call.', only on a call that carries no civic:failed; civic.failed's words say how a failed call ended. The host resolves the id against its own manifest; the record never spells the reader-facing name.";
+const SERVER_ID_SENTENCE =
+  "'Answered by {serverId}', only on a call that carries no civic:failed, joined to the component of the same id for its version and guidance hash.";
+/** Q2 = (a), the seat's third sentence (#317 comment 6825615082): the agent-level answered-by sentence. */
+const SERVER_URL_SENTENCE =
+  "'Answered by {source} at {serverUrl host}.', only when at least one activity associated with that agent " +
+  "(prov:wasAssociatedWith) carries no civic:failed; when every one carries civic:failed, the host gives no " +
+  "answered-by sentence for the agent, and civic.failed's words say how each of its calls ended.";
+/** Revision 3's words, which said every failed call was refused (bundle.json:160, :169 at revision 3). */
+const REVISION_3_FAILED_SENTENCE = "'{source} refused this call.' Nothing when absent.";
+const REVISION_3_FAILURE_KIND_SENTENCE =
+  "'{source} refused this call ({failureKind}).' A host never switches on the value exhaustively or treats an unknown one as invalid.";
+
+/** The words a failure entry's sentence gives for `label`, or undefined when it gives none of its own. */
+function wordsFor(sentence: string, label: string): string | undefined {
+  const match = new RegExp(`(?:^|[:;] )${label} '([^']*(?:'[^';]*)*?)'(?=; |$)`).exec(sentence);
+  return match?.[1];
+}
+
+/** The refusal rule (C9 = A item 1), in civic.packId's values. */
+const REFUSAL_RULE =
+  "When the pack's inventory entry states basePins, this producer sent the pack's calls only after the base's " +
+  'reported name and version and the argument schemas of the base tools the pin names equalled one of those pins';
+
+/** The two entries revision 4 added (ADR-0033 amendment 4). */
+const REVISION_4_ADDED = ['composition.components.reportedName', 'composition.components.reportedVersion'];
+
 // --- The field set ------------------------------------------------------------------------
 
 const FIELD_IDS = [
-  'composition.assertedDate', 'composition.sourcesOffered', 'composition.components', 'composition.flowsStatement',
+  'composition.assertedDate', 'composition.sourcesOffered', 'composition.components',
+  'composition.components.reportedName', 'composition.components.reportedVersion', 'composition.flowsStatement',
   'composition.routing', 'composition.definitionHash', 'composition.considered', 'environment.toolDefinitions',
   'notebook.execution', 'notebook.summary', 'notebook.provenance', 'trace.loadSpan.operationType',
   'trace.loadSpan.loadOutcome', 'trace.loadSpan.loadAsked', 'civic.failed', 'civic.failureKind', 'civic.contentHash',
@@ -266,7 +332,7 @@ function bundleMdRow(label: string): string {
 
 // --- Criterion 1: the header --------------------------------------------------------------
 
-test('civicaitools-v1 bundle: the header states revision 3, the day its bytes were written, and its URL at the v0.1.15 spec tag', () => {
+test('civicaitools-v1 bundle: the header states revision 4, the day its bytes were written, and its URL at the v0.1.16 spec tag', () => {
   const bundle = readBundle();
   assert.equal(bundle.revision, REVISION);
   assert.equal(bundle.date, REVISION_DATE);
@@ -343,8 +409,8 @@ test('civicaitools-v1 bundle: the pack is credited beside its base, in component
   assert.equal(packId.sentence, PACK_ID_SENTENCE);
   assert.ok(packId.values.includes("verbatim from the span's mcp.pack_id"));
   assert.ok(packId.values.includes('The key follows civic:serverId.'));
-  // A3 = A: the name and author come only from the cited inventory; otherwise the id, and no author.
-  assert.ok(packId.sentence.includes('only from the inventory composition.considered names, at its tag with its hash checked'));
+  // A3 = A, as C9 = A widens it: the name and author come only from the pack's inventory entry; otherwise the id, and no author.
+  assert.ok(packId.sentence.includes("only from the pack's inventory entry: in the inventory composition.considered names, at its tag with its hash checked"));
   assert.ok(components.sentence.includes('resolves the pack\'s name and author only from that inventory'));
 });
 
@@ -362,6 +428,97 @@ test('civicaitools-v1 bundle: whether a question was put is stated only from too
   assert.equal(field('trace.loadSpan.loadOutcome').sentence, LOAD_OUTCOME_SENTENCE);
   const consentWho = readBundle().neverCarried.find((n) => n.id === 'consent.who');
   assert.equal(consentWho?.rule, CONSENT_WHO_RULE);
+});
+
+// --- Revision 4: the reported keys, the failure words, the refusal rule and the route -----
+
+test('civicaitools-v1 bundle: civic.failed gives words for each of the six labels, civic.failureKind points to them, and none says refused', () => {
+  // civic.failed's sentence carries the words; civic.failureKind's points to them.
+  const sentence = field('civic.failed').sentence;
+  for (const label of FAILURE_LABELS) {
+    assert.equal(wordsFor(sentence, label), FAILURE_WORDS[label], `civic.failed: the words for ${label}`);
+  }
+  assert.ok(sentence.includes(NO_LABEL_WORDS), 'civic.failed: an absent label reads as unknown');
+  assert.ok(sentence.includes(`a label not among these six, '${UNLISTED_WORDS}', the label as written`), 'civic.failed: the unlisted label');
+  // Six labels with words of their own, and no seventh.
+  assert.deepEqual(FAILURE_LABELS.filter((label) => wordsFor(sentence, label) !== undefined), FAILURE_LABELS);
+  assert.ok(sentence.includes('the host gives the words for unknown'), 'a {source} with no name reads as unknown');
+  const kindSentence = field('civic.failureKind').sentence;
+  assert.equal(kindSentence, FAILURE_KIND_SENTENCE);
+  for (const each of [sentence, kindSentence]) {
+    assert.doesNotMatch(each, /refused this call/i, "revision 3's words are gone");
+  }
+  for (const words of [...Object.values(FAILURE_WORDS), UNLISTED_WORDS]) {
+    assert.doesNotMatch(words, /refus/i, words);
+  }
+  // base_changed says the site did not send the call; unknown says the request could not be completed.
+  assert.match(FAILURE_WORDS.base_changed!, /^The site that ran this question did not send this call/);
+  assert.match(FAILURE_WORDS.unknown!, /^The request could not be completed/);
+  // The unlisted label's words name no cause and no refuser.
+  assert.doesNotMatch(UNLISTED_WORDS, /source|site|server|refus|reject|sent/i);
+});
+
+test('civicaitools-v1 bundle: revision 3\'s two sentences give no label words of their own, only the refused words (decoy)', () => {
+  for (const sentence of [REVISION_3_FAILED_SENTENCE, REVISION_3_FAILURE_KIND_SENTENCE]) {
+    assert.deepEqual(FAILURE_LABELS.filter((label) => wordsFor(sentence, label) !== undefined), []);
+    assert.match(sentence, /^'\{source\} refused this call/);
+  }
+});
+
+test('civicaitools-v1 bundle: the three texts that said every failed call was refused, and the three answered-by sentences, are corrected', () => {
+  const failed = field('civic.failed').values;
+  assert.ok(!failed.includes('the source refused the call;'), 'civic.failed values');
+  assert.ok(failed.includes('or was never sent the call'));
+  assert.ok(failed.includes('this producer also marks failed a call the source did not answer and one the producer did not send'));
+  assert.ok(failed.includes('Spec section 8.1.8 defines a failed call as one rejected by the source'));
+  const kind = field('civic.failureKind');
+  assert.ok(!kind.absent.includes('is not a rejection'), 'civic.failureKind absent');
+  assert.ok(kind.absent.includes('A failed call with no kind reads as unknown does.'));
+  assert.ok(kind.values.includes("the reference producer's six values are timeout, unavailable, not_configured, not_offered, unknown and base_changed"));
+  assert.ok(!kind.values.includes('four values'));
+  const duration = field('civic.durationMs').values;
+  assert.ok(!duration.includes('the source refused'), 'civic.durationMs values');
+  assert.ok(duration.includes('on a call the producer did not send, the time until its own refusal'));
+  // Q2 = (a): the answered-by sentences are not given on a failed call.
+  assert.equal(field('civic.sourceId').sentence, SOURCE_ID_SENTENCE);
+  assert.equal(field('civic.serverId').sentence, SERVER_ID_SENTENCE);
+  for (const id of ['civic.sourceId', 'civic.serverId']) {
+    assert.ok(field(id).sentence.includes('only on a call that carries no civic:failed'), id);
+  }
+  assert.equal(field('civic.serverUrl').sentence, SERVER_URL_SENTENCE);
+  assert.ok(field('civic.serverUrl').sentence.includes('only when at least one activity associated with that agent'));
+});
+
+test('civicaitools-v1 bundle: civic.packId states the refusal rule, tied to basePins, and the route for a record without considered', () => {
+  const packId = field('civic.packId');
+  assert.ok(packId.values.includes(REFUSAL_RULE), 'the refusal rule');
+  assert.ok(packId.values.includes('labelled base_changed'));
+  assert.equal(packId.sentence, PACK_ID_SENTENCE);
+  assert.ok(packId.sentence.includes('on a record that carries no considered'));
+  assert.ok(packId.sentence.includes('civic-inventory/<version> with its hash checked, or in a copy of them'));
+  assert.ok(packId.sentence.includes('the twelve characters after the + in the version'));
+  assert.ok(field('composition.components').sentence.includes("from the inventory entry it finds as civic.packId says"));
+});
+
+test('civicaitools-v1 bundle: the reported keys are entries of their own, after composition.components, on a remote server\'s entry only', () => {
+  const ids = readBundle().fields.map((f) => f.id);
+  assert.deepEqual(ids.slice(ids.indexOf('composition.components'), ids.indexOf('composition.components') + 3), ['composition.components', ...REVISION_4_ADDED]);
+  for (const id of REVISION_4_ADDED) {
+    const entry = field(id);
+    const key = id.split('.').pop()!;
+    assert.equal(entry.class, 'may-show', id);
+    assert.equal(entry.path, `extensions["org.civicaitools.composition"].components[].${key}`, id);
+    assert.ok(entry.values.includes("On a remote server's entry only"), id);
+    assert.ok(entry.absent.includes('Key omitted when this producer held no report from the server when it wrote the entry'), id);
+    assert.ok(!(entry.values + entry.absent).includes('for this run') && !entry.absent.includes('for the run'), `${id}: no per-run claim`);
+    assert.ok(entry.absent.includes('on every record before harness 0.13.0'), id);
+    assert.ok(entry.carriedBy.includes('reported-keys-golden.json'), id);
+    assert.deepEqual(Object.keys(entry), ['id', 'path', 'values', 'absent', 'carriedBy', 'sentence', 'class'], id);
+  }
+  assert.ok(field('composition.components.reportedName').sentence.includes("'The server for {name} reported itself as {reportedName} {reportedVersion}.'"));
+  assert.ok(field('composition.components.reportedName').values.includes('which may have been made for an earlier run'));
+  assert.ok(field('composition.components.reportedName').sentence.includes('nothing in the record checks it against the entry\'s id'));
+  assert.ok(field('composition.components').values.includes('{ id, version?, guidanceHash?, guidanceOrigin?, reportedName?, reportedVersion? }'));
 });
 
 test('civicaitools-v1 bundle: each entry revision 3 added carries the seven members and an absence rule', () => {
@@ -500,18 +657,18 @@ function assertFieldSet(bundle: Bundle): void {
   }
 }
 
-test('civicaitools-v1 bundle: the 38 field ids and the 7 never-carried ids', () => {
-  assert.equal(FIELD_IDS.length, 38);
+test('civicaitools-v1 bundle: the 40 field ids and the 7 never-carried ids', () => {
+  assert.equal(FIELD_IDS.length, 40);
   assert.equal(NEVER_CARRIED_IDS.length, 7);
   assertFieldSet(readBundle());
 });
 
-test('civicaitools-v1 bundle: the field-set assertion fails on 37 fields and on 39 (decoy)', () => {
+test('civicaitools-v1 bundle: the field-set assertion fails on 39 fields and on 41 (decoy)', () => {
   const bundle = readBundle();
   const fewer = { ...bundle, fields: bundle.fields.filter((f) => f.id !== 'civic.packId') };
   const more = { ...bundle, fields: [...bundle.fields, { ...bundle.fields[0]!, id: 'composition.extra' }] };
-  assert.equal(fewer.fields.length, 37);
-  assert.equal(more.fields.length, 39);
+  assert.equal(fewer.fields.length, 39);
+  assert.equal(more.fields.length, 41);
   assert.throws(() => assertFieldSet(fewer), assert.AssertionError);
   assert.throws(() => assertFieldSet(more), assert.AssertionError);
 });

@@ -41,7 +41,7 @@ export interface ExtractedRunAttributes {
   runMcpServers?: RunMcpServer[];
   toolDefinitions?: Array<Record<string, unknown>>;
   sourcesOffered?: Array<{ sourceId: string; alias: string; reason: string }>;
-  components?: Array<{ id: string; version?: string; guidanceHash?: string; guidanceOrigin?: string }>;
+  components?: Array<{ id: string; version?: string; guidanceHash?: string; guidanceOrigin?: string; reportedName?: string; reportedVersion?: string }>;
   flowsStatement?: { url: string; hash: string; date: string };
   routing?: { method: string; version: string };
   definitionHash?: string;
@@ -249,7 +249,7 @@ export function extractRunAttributes(
 
   const components = stringAttr(root, 'analysis.components');
   if (components !== undefined) {
-    out.components = objectArray('analysis.components', components, ['id'], ['version', 'guidanceHash', 'guidanceOrigin']) as unknown as ExtractedRunAttributes['components'];
+    out.components = objectArray('analysis.components', components, ['id'], ['version', 'guidanceHash', 'guidanceOrigin', 'reportedName', 'reportedVersion']) as unknown as ExtractedRunAttributes['components'];
   }
 
   const flows = stringAttr(root, 'analysis.flows_statement');
