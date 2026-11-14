@@ -47,6 +47,10 @@ export const NYC_CHARTER_HOSTING_VARIABLE = 'NYC_CHARTER_HOSTING';
 export const NYC_CHECKBOOK_HOSTING_VARIABLE = 'NYC_CHECKBOOK_HOSTING';
 /** The switch that offers NYS Open Legislation (since 0.6.0). */
 export const NYS_LEGISLATION_HOSTING_VARIABLE = 'NYS_LEGISLATION_HOSTING';
+/** The hosted CKAN server's address (since 0.11.0): it offers the server
+ *  entry and every pack over it. A stub of the red tree: nothing reads it
+ *  yet. */
+export const CKAN_ADDRESS_VARIABLE = 'CKAN_MCP_URL';
 
 /** The one value of a hosted source's switch that turns it on: the instance
  *  runs the pinned package in a sandbox it creates. Compared after trimming,
@@ -84,6 +88,9 @@ export interface McpRegistryEnv {
   /** Present only when `NYS_LEGISLATION_HOSTING` is `sandbox` after trimming
    *  (since 0.6.0). */
   nysLegislationHosting?: typeof HOSTING_SANDBOX;
+  /** The hosted CKAN server's address (since 0.11.0). A stub of the red
+   *  tree: `readMcpEnv` never sets it yet. */
+  ckanUrl?: string;
   /** The one Socrata portal the instance is locked to, set by the consumer
    *  (since 0.10.0); the value it passes as `lockedPortal` to
    *  `withPortalLockGuidance` and `mcpToolsFor`. `readMcpEnv` never sets it.

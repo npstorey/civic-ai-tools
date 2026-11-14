@@ -141,3 +141,36 @@ test('routesByApi refuses an entry with no api, or a dataset with no host, namin
   assert.throws(() => routesByApi({ entries: [entry('x', { platform: 'socrata', dataset: 'd' })] }), /routesByApi: x: api\.dataset: /);
   assert.throws(() => routesByApi({ entries: [entry('x', { platform: '' })] }), /routesByApi: x: api: /);
 });
+
+// A13 (CKAN-1 P2, hub issue 314): a malformed observation is a difference,
+// never a throw. A pinned member the live base does not state counts as a
+// difference (base-pins.ts; ADR-0039).
+
+/** `checkBasePins` over `observed`, held to throw nothing. */
+const checkedWithoutThrow = (given: unknown) => {
+  let result: ReturnType<typeof checkBasePins> | undefined;
+  assert.doesNotThrow(() => {
+    result = checkBasePins([PIN], given as ObservedBase);
+  }, 'checkBasePins throws nothing for a malformed observation');
+  return result!;
+};
+
+test('A13: a listed tool with no inputSchema is a difference naming the member, observed as unhashable; mcpToolSchemaSha256 still throws for it', () => {
+  const malformed = observed((o) => {
+    o.tools = o.tools.map((t) => (t.name === 'get_data' ? ({ name: 'get_data' } as McpListedTool) : t));
+  });
+  assert.deepEqual(checkedWithoutThrow(malformed), {
+    ok: false,
+    differences: [{ pin: 0, member: 'tools.get_data', pinned: PIN.tools.get_data, observed: 'unhashable' }],
+  });
+  assert.throws(() => mcpToolSchemaSha256({ name: 'get_data' } as McpListedTool), /the tool "get_data" has no inputSchema/);
+});
+
+test('A13: an observation with no tools array, or a null one, lists no tool: a difference naming the first pinned tool, with nothing observed; an entry that is not a named object is no listed tool', () => {
+  const expected = { ok: false, differences: [{ pin: 0, member: 'tools.get_data', pinned: PIN.tools.get_data }] };
+  const { tools: _tools, ...noTools } = observed();
+  assert.deepEqual(checkedWithoutThrow(noTools), expected);
+  assert.deepEqual(checkedWithoutThrow({ ...noTools, tools: null }), expected);
+  // A stray entry in the list is skipped: the rest still match.
+  assert.deepEqual(checkedWithoutThrow({ ...noTools, tools: [null, 7, { name: 3 }, ...observed().tools] }), { ok: true, pin: 0 });
+});

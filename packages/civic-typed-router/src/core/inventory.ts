@@ -138,6 +138,10 @@ export type EntryCode<E extends ManifestEntry<never>> = Omit<E, InventoryDataFie
 export interface PackCode<E extends ManifestEntry<never>> {
   readonly code: EntryCode<E>;
   readonly toolNames: readonly string[];
+  /** The base server's own tool names, stated by the kind where the base's
+   *  entry declares none (since 0.11.0). A stub of the red tree: the loader
+   *  does not read it yet. */
+  readonly baseToolNames?: readonly string[];
 }
 
 /** One kind: the code for a server entry of its `serverType`, and for a pack
