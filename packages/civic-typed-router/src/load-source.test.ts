@@ -64,7 +64,7 @@ test('load_source: the fixture is R5\'s frozen tool, with its eleven aliases', (
 
 test('load_source: with every source configured it is R5\'s tool with the seven aliases in manifest order, byte for byte', () => {
   const tool = civicRouter.aliasedLoadSourceTool({ configured: EVERY_SOURCE });
-  const expected = r5With(['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']);
+  const expected = r5With(['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']);
   assert.deepEqual(tool, expected);
   assert.equal(JSON.stringify(tool), JSON.stringify(expected), 'key order too');
   assert.equal(tool.function.description, R5.loadSourceTool.function.description, 'the description is R5\'s');
@@ -88,7 +88,7 @@ test('load_source: each call returns a new object, so a consumer\'s change to on
   const aliasedLoadSourceTool = civicRouter.aliasedLoadSourceTool;
   const first = aliasedLoadSourceTool({ configured: EVERY_SOURCE });
   (first.function.parameters as { properties: { alias: { enum: string[] } } }).properties.alias.enum.push('changed');
-  assert.deepEqual(aliasedLoadSourceTool({ configured: EVERY_SOURCE }), r5With(['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']));
+  assert.deepEqual(aliasedLoadSourceTool({ configured: EVERY_SOURCE }), r5With(['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation']));
 });
 
 test('load_source: the package exports the reserved name', () => {

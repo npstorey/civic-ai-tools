@@ -16,7 +16,7 @@ export {
   type SearchSourcesInput,
   type SourceHit,
 } from './router.ts';
-export { CIVIC_INVENTORY, CIVIC_KINDS, civicKinds, type CivicKindsOptions } from './inventory.ts';
+export { CIVIC_INVENTORY, CIVIC_KINDS, civicKinds, ckanPack, type CivicKindsOptions } from './inventory.ts';
 export type {
   CivicGuidanceContext,
   CivicManifest,

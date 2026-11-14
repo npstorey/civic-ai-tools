@@ -139,8 +139,9 @@ export interface PackCode<E extends ManifestEntry<never>> {
   readonly code: EntryCode<E>;
   readonly toolNames: readonly string[];
   /** The base server's own tool names, stated by the kind where the base's
-   *  entry declares none (since 0.11.0). A stub of the red tree: the loader
-   *  does not read it yet. */
+   *  entry declares none (its tools are offered only through packs; since
+   *  0.11.0): what a pin's tools are held to in place of the base entry's
+   *  `toolNames`. Absent, the base entry's are. */
   readonly baseToolNames?: readonly string[];
 }
 
@@ -301,7 +302,8 @@ function checkBasePinsOf(alias: string, pack: InventoryPackEntry, toolNames: rea
  * whose `base` names no server entry's `id`, names a pack, or names a server
  * whose kind takes no pack, and a pack with no `basePins`, a malformed pin,
  * a pin that leaves out a tool the pack calls, or one naming a tool the
- * base does not have. A manifest it
+ * base does not have (the base's own names as its kind states them, where
+ * the base entry declares none: `PackCode.baseToolNames`). A manifest it
  * returns still goes through the router's own startup checks when a router
  * is built over it.
  */
@@ -373,7 +375,7 @@ export function manifestFromInventory<E extends ManifestEntry<never>>(inventory:
     else if (!sameNames(code.toolNames, tools.map((tool) => tool.function.name))) {
       throw new InventoryLoadError(alias, 'toolNames', "the pack's routing list is not its schemas' set");
     }
-    checkBasePinsOf(alias, pack, code.toolNames, (base.entry as { toolNames: readonly string[] }).toolNames);
+    checkBasePinsOf(alias, pack, code.toolNames, code.baseToolNames ?? (base.entry as { toolNames: readonly string[] }).toolNames);
     return packManifestEntry(pack, base.entry, code);
   });
 }

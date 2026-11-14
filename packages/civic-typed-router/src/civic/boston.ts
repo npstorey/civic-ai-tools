@@ -314,7 +314,9 @@ export async function bostonGuidanceText(ctx: CivicGuidanceContext, view: Source
  */
 export const BOSTON_OPENCONTEXT_ENTRY: CivicManifestEntry = {
   id: 'opencontext@https://data-mcp.boston.gov/mcp',
-  alias: 'boston',
+  // `boston` through 0.10.0; since 0.11.0 the Boston pack over the hosted
+  // CKAN server holds that alias (D2 = A).
+  alias: 'boston_opencontext',
   sourceId: 'boston-opencontext',
   displayName: 'Boston OpenContext MCP Server',
   description:

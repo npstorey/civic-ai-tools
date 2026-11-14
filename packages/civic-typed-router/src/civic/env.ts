@@ -31,6 +31,13 @@
 // other than a Socrata pack's own (its `filter.portal`, compared trimmed and
 // lower-cased) leaves the pack unconfigured (G0-6 on hub #318): it has no
 // address here, and the router offers, lists and finds it nowhere.
+//
+// Since 0.11.0 it reads one more address, `CKAN_MCP_URL`, the hosted CKAN
+// server's (`./ckan.ts`). Its key, `ckanUrl`, is in the result only when the
+// address is non-empty after trimming, so with it unset every reading is
+// 0.10.0's, key for key. The server entry and every pack over it (the
+// Boston pack, `./boston-ckan.ts`) are keyed by that address. The one-portal
+// lock names a Socrata portal and leaves a CKAN pack configured.
 
 import type { ConfiguredAddresses } from '../core/types.ts';
 
@@ -48,8 +55,7 @@ export const NYC_CHECKBOOK_HOSTING_VARIABLE = 'NYC_CHECKBOOK_HOSTING';
 /** The switch that offers NYS Open Legislation (since 0.6.0). */
 export const NYS_LEGISLATION_HOSTING_VARIABLE = 'NYS_LEGISLATION_HOSTING';
 /** The hosted CKAN server's address (since 0.11.0): it offers the server
- *  entry and every pack over it. A stub of the red tree: nothing reads it
- *  yet. */
+ *  entry and every pack over it. */
 export const CKAN_ADDRESS_VARIABLE = 'CKAN_MCP_URL';
 
 /** The one value of a hosted source's switch that turns it on: the instance
@@ -88,8 +94,9 @@ export interface McpRegistryEnv {
   /** Present only when `NYS_LEGISLATION_HOSTING` is `sandbox` after trimming
    *  (since 0.6.0). */
   nysLegislationHosting?: typeof HOSTING_SANDBOX;
-  /** The hosted CKAN server's address (since 0.11.0). A stub of the red
-   *  tree: `readMcpEnv` never sets it yet. */
+  /** The hosted CKAN server's address (since 0.11.0). Present only when
+   *  `CKAN_MCP_URL` is non-empty after trimming; absent otherwise, so a
+   *  reading with it unset is 0.10.0's, key for key. */
   ckanUrl?: string;
   /** The one Socrata portal the instance is locked to, set by the consumer
    *  (since 0.10.0); the value it passes as `lockedPortal` to
@@ -118,8 +125,11 @@ function hostingSwitchOn(raw: string | undefined): boolean {
  *  key fields are always present, in this order, with `undefined` for an
  *  absent value. Each switch's key follows them only when that switch is on,
  *  in manifest order (`nycCharterHosting`, `nycCheckbookHosting`,
- *  `nysLegislationHosting`); otherwise the result has no such key. */
+ *  `nysLegislationHosting`); otherwise the result has no such key. Then
+ *  `ckanUrl` (since 0.11.0), only when its address is non-empty after
+ *  trimming. */
 export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
+  const ckanUrl = presentOrUndefined(source[CKAN_ADDRESS_VARIABLE]);
   return {
     socrataUrl: presentOrUndefined(source[SOCRATA_ADDRESS_VARIABLE]),
     dataCommonsUrl: source[DATA_COMMONS_ADDRESS_VARIABLE] || DATA_COMMONS_DEFAULT_ADDRESS,
@@ -128,12 +138,14 @@ export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
     ...(hostingSwitchOn(source[NYC_CHARTER_HOSTING_VARIABLE]) ? { nycCharterHosting: NYC_CHARTER_HOSTING_SANDBOX } : {}),
     ...(hostingSwitchOn(source[NYC_CHECKBOOK_HOSTING_VARIABLE]) ? { nycCheckbookHosting: HOSTING_SANDBOX } : {}),
     ...(hostingSwitchOn(source[NYS_LEGISLATION_HOSTING_VARIABLE]) ? { nysLegislationHosting: HOSTING_SANDBOX } : {}),
+    ...(ckanUrl !== undefined ? { ckanUrl } : {}),
   };
 }
 
 /** Each civic pack's base, by the pack's source id (since 0.8.0): City
- *  Record over the Socrata server. A pack takes no address of its own. */
-const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata' });
+ *  Record over the Socrata server; since 0.11.0, the Boston pack over the
+ *  hosted CKAN server. A pack takes no address of its own. */
+const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata', 'boston-ckan': 'ckan-server' });
 
 /** Each civic Socrata pack's portal, its `filter.portal`, by the pack's
  *  source id (since 0.10.0): City Record's, `data.cityofnewyork.us`
@@ -163,12 +175,15 @@ export function socrataPacksOutsideLock(lockedPortal: string | undefined): strin
  *  on or off. Since 0.8.0 a pack is keyed by its base's address: it has a key
  *  when its base has an address, with that address as its value, and none
  *  otherwise. Since 0.10.0 a Socrata pack outside the configuration's
- *  `lockedPortal` (`socrataPacksOutsideLock`) has no key. */
+ *  `lockedPortal` (`socrataPacksOutsideLock`) has no key. Since 0.11.0 the
+ *  hosted CKAN server (`ckan-server`) has a key only when `ckanUrl` is
+ *  present, so with it absent every reading is 0.10.0's, key for key. */
 export function configuredAddresses(configured: McpRegistryEnv): ConfiguredAddresses {
   const addresses: Record<string, string | undefined> = {
     socrata: configured.socrataUrl,
     'data-commons': configured.dataCommonsUrl,
     'boston-opencontext': configured.bostonOpencontextUrl,
+    ...(configured.ckanUrl !== undefined ? { 'ckan-server': configured.ckanUrl } : {}),
   };
   const outsideLock = socrataPacksOutsideLock(configured.lockedPortal);
   for (const [pack, base] of Object.entries(PACK_BASES)) {

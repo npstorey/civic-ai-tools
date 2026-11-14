@@ -1,8 +1,8 @@
 {
   "schema": "civic-inventory/3",
   "id": "civic",
-  "version": "2026-11-12.1",
-  "note": "The router's seven sources, in CIVIC_MANIFEST's order: six server entries and City Record as a pack over the Socrata server; the router keeps CIVIC_MANIFEST as code, held equal to this file by its tests (G0-5 A).",
+  "version": "2026-11-13.1",
+  "note": "The router's nine sources, in CIVIC_MANIFEST's order: seven server entries, City Record as a pack over the Socrata server, and Analyze Boston as a pack over the hosted CKAN server, which offers no tools of its own; the router keeps CIVIC_MANIFEST as code, held equal to this file by its tests (G0-5 A).",
   "entries": [
     {
       "kind": "server",
@@ -156,7 +156,7 @@
     {
       "kind": "server",
       "id": "opencontext@https://data-mcp.boston.gov/mcp",
-      "alias": "boston",
+      "alias": "boston_opencontext",
       "sourceId": "boston-opencontext",
       "displayName": "Boston OpenContext MCP Server",
       "description": "Boston OpenContext: the City of Boston's open data on data.boston.gov, from its CKAN data store: 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. Boston's city data is here, not on Socrata. Covers the City of Boston only, and holds no census statistics.",
@@ -572,6 +572,149 @@
       },
       "guidanceRef": {
         "kind": "none"
+      }
+    },
+    {
+      "kind": "server",
+      "id": "@aborruso/ckan-mcp-server@https://github.com/npstorey/ckan-mcp-server",
+      "alias": "ckan",
+      "sourceId": "ckan-server",
+      "displayName": "CKAN MCP Server",
+      "description": "A server for CKAN open data portals, run from a pinned copy of the open-source ckan-mcp-server. It reads a portal's public API with no sign-in, and only the portals its operator lists. None of its tools are offered on their own: each portal is a separate source that uses some of them (Analyze Boston is the first). Its portal finder tool, which no source in this inventory offers, reaches one host outside that list: datashades.info, for a public directory of CKAN portals.",
+      "freshness": "It has no data of its own. Each source that uses it states how current its data is.",
+      "configuration": {
+        "addressVariable": "CKAN_MCP_URL",
+        "requirement": "optional"
+      },
+      "hostings": [
+        {
+          "variant": "remote",
+          "kind": "remote",
+          "runsAt": "other",
+          "logging": [
+            {
+              "statedBy": "instance",
+              "role": "server-operator"
+            },
+            {
+              "statedBy": "instance",
+              "role": "portal-operator"
+            }
+          ]
+        }
+      ],
+      "consentDefault": "on",
+      "publisher": "onData",
+      "serverType": "ckan",
+      "api": {
+        "platform": "ckan"
+      },
+      "place": {
+        "country": "multiple",
+        "level": "multiple",
+        "names": []
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "property-land",
+        "elections",
+        "education"
+      ],
+      "provenance": {
+        "addedOn": "2026-11-13",
+        "from": "hand",
+        "by": "CKAN-1 P2 (hub issue 314, inventory version 4): the hosted CKAN server, a fork of the open-source ckan-mcp-server at github.com/npstorey/ckan-mcp-server, pinned at 7b0ac8a (upstream 0.4.139). Its id is ADR-0039's form for a server run from published source: the upstream's package name and the fork's repository. It declares no tools (D7 = D): its packs call them. Its tools/list, read over stdio with an empty environment, is the fixture its toolsRef names; its initialize result carries no instructions, so its guidance is none. api is the curator's statement: any CKAN portal.",
+        "sourceUrl": "https://github.com/npstorey/ckan-mcp-server"
+      },
+      "toolsRef": {
+        "toolNames": [],
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "fixture": "packages/civic-typed-router/src/__fixtures__/ckan-tools.json"
+      },
+      "guidanceRef": {
+        "kind": "none"
+      }
+    },
+    {
+      "kind": "pack",
+      "id": "boston-ckan@https://data.boston.gov",
+      "alias": "boston",
+      "sourceId": "boston-ckan",
+      "displayName": "Analyze Boston",
+      "description": "Analyze Boston, the City of Boston's open data portal (data.boston.gov): 311 requests, permits, crime, inspections, property, elections, schools, parcels and neighborhoods. This source reads the portal's public API through a hosted CKAN server, with no sign-in. Boston's city data is here, not on Socrata. Covers the City of Boston only, and is not the source for census statistics.",
+      "freshness": "Live: queries reach data.boston.gov when they are made. The hosted server may reuse an earlier answer to the same query. A dataset's data may be reused for up to a minute, and a dataset search or a dataset's details for up to five minutes. Each dataset updates on the City's schedule.",
+      "freshnessSource": "github.com/npstorey/ckan-mcp-server at 7b0ac8a (upstream 0.4.139), the hosted CKAN server: before each CKAN request it looks in its memory for an answer to the same request (src/utils/http.ts, makeCkanRequest). It keeps an answer up to 60 seconds for datastore queries, and up to 300 seconds for package searches, package descriptions and every other request this source's tools send to data.boston.gov (src/utils/cache.ts, getTtlForAction). The memory is on unless CKAN_CACHE_ENABLED is false (getCacheConfig); the variables the fork's PIN.md lists for its deployment set no CKAN_CACHE_ variable.",
+      "base": "@aborruso/ckan-mcp-server@https://github.com/npstorey/ckan-mcp-server",
+      "basePins": [
+        {
+          "serverName": "ckan-mcp-server",
+          "serverVersion": "0.4.139",
+          "tools": {
+            "ckan_package_search": "f4a766bc17325feb4099b790cd849e126a537af50fbca68f458cbb8549b10145",
+            "ckan_find_relevant_datasets": "41e36171a4f110c1d89964335e86fa2dd32e6cc92a2935f506fd0c0d188eb028",
+            "ckan_package_show": "ff022c49c7263ba72ab649568e78ceac64de909e5bfeb930ef63b0a11005c3c5",
+            "ckan_list_resources": "0a5048a337b3e239e0bf71e84aab593712f181224aef0c656bca66fe343c5dbf",
+            "ckan_datastore_search": "a89056ee57437ebafb4bdb3d7aaaa83fc8829f3279d3970b2a78e40f9f3a1701",
+            "ckan_datastore_search_sql": "ee15e13fa342ca280d51dbaf7a9db8a48fef6d0a4bc2e008e24e414cc4d30fe7"
+          }
+        }
+      ],
+      "filter": {
+        "server_url": "https://data.boston.gov"
+      },
+      "api": {
+        "platform": "ckan",
+        "host": "data.boston.gov"
+      },
+      "author": "Civic AI Tools",
+      "publisher": "Civic AI Tools",
+      "version": "1.0",
+      "hash": "2b051803dc13c9a8b44e69838274400e547a810840ab7bf1dbb5918843965b04",
+      "prompt": {
+        "citation": "the resource ID + dataset title (for Analyze Boston)",
+        "lockMention": "Analyze Boston for Boston"
+      },
+      "place": {
+        "country": "US",
+        "level": "local",
+        "names": [
+          "Boston",
+          "City of Boston"
+        ]
+      },
+      "categories": [
+        "311-service-requests",
+        "permits-licensing",
+        "inspections",
+        "public-safety",
+        "property-land",
+        "elections",
+        "education"
+      ],
+      "guidance": {
+        "kind": "inline",
+        "text": "# Analyze Boston: guidance for the CKAN tools\n\nGuidance for querying Boston civic open data on Analyze Boston (`data.boston.gov`), the City of Boston's CKAN portal, through six tools of a hosted CKAN server. Every call of these tools reads `https://data.boston.gov` and no other portal: pass it as `server_url`.\n\n## Purpose and when to use\n\n- **Use these tools** for Boston civic data on `data.boston.gov`: 311 requests, permits, crime, inspections, property records, elections, schools, parcels, parking, neighborhoods.\n- **Use Socrata** for other cities (NYC, Chicago, SF, Seattle, LA). Boston is not on Socrata.\n- **Use Data Commons for Boston demographics**: ACS, Census and BLS figures for Boston, Suffolk County (`geoId/25025`), Boston city (`geoId/2507000`), or tracts. Analyze Boston is not where demographic tables are.\n\nWhen a question mixes operational and demographic data (\"311 noise per capita by neighborhood\"), plan a multi-source analysis: operational counts from Analyze Boston, the population denominator from Data Commons at tract level. State the geography caveat: neighborhoods and council districts are not standard census geographies.\n\n## CKAN and Socrata, side by side\n\nBoston runs CKAN, not Socrata. On CKAN a dataset is a package holding one or more resources; a resource whose rows are loaded into the portal's DataStore is the table you query, by its resource id.\n\n| Concern | Socrata | CKAN (Analyze Boston) |\n|---------|---------|-----------------------|\n| Query language | SoQL | PostgreSQL `SELECT`, through `ckan_datastore_search_sql` |\n| Table identity | 4x4 dataset code (`erm2-nwe9`) | resource id, a UUID (`8048697b-ad64-4bfc-b090-ee00169f2323`) |\n| Identifier quoting in SQL | not required | the resource id **must** be double-quoted: `FROM \"uuid-here\"` |\n| Column discovery | `get_data` with `LIMIT 1` | `ckan_datastore_search` with `\"limit\": 0` |\n| Writes | not exposed | not exposed: one `SELECT` or `WITH` statement per call |\n\n## Typical workflow chain\n\n1. **`ckan_find_relevant_datasets`**: a keyword search, ranked. A good first step when you do not know the dataset.\n2. **`ckan_package_search`**: the catalogue search in Solr syntax, for filters (`fq`), facets, sorting and paging.\n3. **`ckan_package_show`**: one dataset's full metadata, with its resources; pick the resource whose `datastore_active` is true.\n4. **`ckan_list_resources`**: a short table of a dataset's resources (format, size, whether each is in the DataStore), when a dataset bundles several.\n5. **`ckan_datastore_search`**: rows of one resource by its resource id, with exact-match `filters`, `q`, `sort`, `limit` and `offset`. Call it with `\"limit\": 0` first: the answer lists the resource's column names and types and no rows. Boston uses its own column names, not the NYC or Chicago names a model may have memorized.\n6. **`ckan_datastore_search_sql`**: one `SELECT` or `WITH` statement over a resource, for `GROUP BY`, counts, sums, joins, window functions and percentiles. The table name is the resource id, double-quoted.\n\nDo not skip steps 1 to 3 and the column check on an unfamiliar dataset: a guessed column name against a wide CKAN resource returns zero rows or a SQL error.\n\n## Boston-specific geographies\n\n- **Neighborhoods**: not Census tracts. About 20 city-maintained names (Dorchester, Roxbury, Jamaica Plain, South Boston, ...).\n- **BPD districts**: 12 police districts (A1, A7, B2, B3, C6, C11, D4, D14, E5, E13, E18). Different from neighborhoods.\n- **BPS school zones**: Boston Public Schools has its own geography; present on school datasets only.\n- **Parcel IDs**: 10-digit strings. Assessor data is keyed on parcel, not address; to go from an address to a parcel, query the parcels dataset first.\n- **ZIP codes**: the `021xx` range. Boston crosses multiple ZIPs; take care when comparing against ACS ZCTAs.\n\nNeighborhoods do **not** map cleanly to Census tracts. When joining Boston operational data with Data Commons tract-level demographics, state the geography mismatch rather than silently imputing.\n\n## Caveats\n\n- **Update cadence varies by dataset.** Surface `metadata_modified`, or a resource's `last_modified`, when the question is time-sensitive.\n- **The hosted server may reuse an answer.** A repeated query can return an answer up to a minute old for a resource's rows, and up to five minutes old for a dataset search or a dataset's details.\n- **Coverage gaps.** Some city agencies (BPD, BPS, BPL) publish partial data. If a natural query returns empty, the data genuinely may not be there: say so rather than fishing.\n- **Resource ids change** when a dataset gets a new resource. Look the id up again with `ckan_package_show` in each session; do not carry ids across runs.\n- **Hot-spotting risk.** Crime and 311 point-level data can be re-identifying when filtered narrowly. Honor aggregation thresholds: do not report a single address.\n\n## Attribution\n\nCite Analyze Boston analyses with the dataset title, the resource id, the `data.boston.gov` portal URL, and the SQL or the search arguments that produced the number. The record captures tool calls and their arguments automatically; your job in the text is to make the citation human-readable.",
+        "blockSha256": "66adf3d015c209b25c3de47db8496547c8e136b70943508b4c36c7e351df6073"
+      },
+      "provenance": {
+        "addedOn": "2026-11-13",
+        "from": "hand",
+        "by": "CKAN-1 P2 (hub issue 314, inventory version 4): Analyze Boston as a pack over the hosted CKAN server, its six tools (D2) with server_url fixed to https://data.boston.gov. Its base pins are read from the capture the server entry's toolsRef.fixture names (serverInfo ckan-mcp-server 0.4.139). Its guidance is the hub's Boston guidance (docs/skills/boston.md, this project's text) rewritten for the six tools, kept at docs/skills/boston-ckan.md; no sentence is drawn from the server's tool descriptions or its packaged skill, so it states no derivedFrom. Its alias is boston (D2 = A; the City's OpenContext entry's becomes boston_opencontext); its api is read from its filter.",
+        "sourceUrl": "https://data.boston.gov"
+      },
+      "toolsRef": {
+        "toolNames": [
+          "ckan_package_search",
+          "ckan_find_relevant_datasets",
+          "ckan_package_show",
+          "ckan_list_resources",
+          "ckan_datastore_search",
+          "ckan_datastore_search_sql"
+        ],
+        "sha256": "fc784942187b7d1988c552d8d5b7ff3a5a4f1ede7b5a89e873d194dc40490091"
       }
     }
   ]

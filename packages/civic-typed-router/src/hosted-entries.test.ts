@@ -177,13 +177,13 @@ const PACK = 'nyc-record';
 
 // --- Criterion 1: the entries -------------------------------------------------------------
 
-test('hosted entries: the manifest holds seven entries, the three of 0.6.0 after NYC Charter in D7\'s order', () => {
+test('hosted entries: the manifest holds nine entries, the three of 0.6.0 after NYC Charter in D7\'s order, then the two of 0.11.0', () => {
   assert.deepEqual(
     CIVIC_MANIFEST.map((entry) => entry.sourceId),
-    ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation'],
+    ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation', 'ckan-server', 'boston-ckan'],
   );
   assert.deepEqual(
-    CIVIC_MANIFEST.slice(4).map((entry) => [entry.alias, entry.displayName, entry.configuration.requirement]),
+    CIVIC_MANIFEST.slice(4, 7).map((entry) => [entry.alias, entry.displayName, entry.configuration.requirement]),
     [
       ['nyc_checkbook', 'NYC Checkbook MCP Server', 'optional'],
       // A pack over the Socrata server since 0.8.0, required as its base is;
@@ -371,7 +371,7 @@ function recording(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptI
 
 test('switches unset: every offered output is the manifest\'s without the two hosted sources of 0.6.0, byte for byte', async () => {
   const four = createCivicRouter(CIVIC_MANIFEST.filter((entry) => !SERVERS.some((server) => server.sourceId === entry.sourceId)) as CivicManifest);
-  assert.deepEqual(four.manifest.map((entry) => entry.sourceId), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', PACK]);
+  assert.deepEqual(four.manifest.map((entry) => entry.sourceId), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', PACK, 'ckan-server', 'boston-ckan']);
   const envs = [
     {},
     { SOCRATA_MCP_URL: SOCRATA },
@@ -551,7 +551,7 @@ test('directory: over all seven offered it lists seven lines in D7\'s order', ()
   const lines = directory.split('\n').filter((line) => line.startsWith('- `'));
   assert.deepEqual(
     lines.map((line) => line.split('`')[1]),
-    ['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation'],
+    ['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation'],
   );
   for (const server of SERVERS) {
     const entry = entryOf(server);

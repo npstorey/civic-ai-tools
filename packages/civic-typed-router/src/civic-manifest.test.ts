@@ -22,26 +22,32 @@ import {
   type CivicManifest,
 } from './index.ts';
 
-test('manifest: seven entries, each carrying identity, alias, configuration, schemas and guidance', () => {
+test('manifest: nine entries, each carrying identity, alias, configuration, schemas and guidance', () => {
   // 0.3.0 adds NYC Charter, Laws and Rules after the three of 0.2.0; 0.6.0
   // adds NYC Checkbook, NYC City Record and NYS Open Legislation after it, in
   // that order. Since 0.8.0 City Record is a pack over the Socrata server,
-  // with the Socrata entry's configuration: required.
+  // with the Socrata entry's configuration: required. 0.11.0 adds the hosted
+  // CKAN server and the Boston pack over it, both with the server's
+  // configuration (optional), and Boston OpenContext's alias moves to
+  // `boston_opencontext`.
   assert.deepEqual(
     CIVIC_MANIFEST.map((e) => [e.sourceId, e.alias, e.configuration.requirement]),
     [
       ['socrata', 'socrata', 'required'],
       ['data-commons', 'data_commons', 'required'],
-      ['boston-opencontext', 'boston', 'optional'],
+      ['boston-opencontext', 'boston_opencontext', 'optional'],
       ['nyc-charter', 'nyc_charter', 'optional'],
       ['nyc-checkbook', 'nyc_checkbook', 'optional'],
       ['nyc-record', 'nyc_record', 'required'],
       ['nys-legislation', 'nys_legislation', 'optional'],
+      ['ckan-server', 'ckan', 'optional'],
+      ['boston-ckan', 'boston', 'optional'],
     ],
   );
   for (const entry of CIVIC_MANIFEST) {
     assert.ok(entry.id.length > 0 && entry.displayName.length > 0, `${entry.sourceId}: id and display name`);
-    assert.ok(entry.tools.length > 0, `${entry.sourceId}: tool schemas`);
+    // The hosted CKAN server declares none of its own: its packs call them.
+    assert.ok(entry.sourceId === 'ckan-server' ? entry.tools.length === 0 : entry.tools.length > 0, `${entry.sourceId}: tool schemas`);
     assert.equal(typeof entry.guidance.fetchText, 'function', `${entry.sourceId}: guidance entry`);
     assert.ok(toolNamesMatchSchemas(entry), `${entry.sourceId}: routing list and schemas name the same tools`);
   }
@@ -86,9 +92,9 @@ test('manifest: each entry\'s configuration variable is the one the configuratio
   }
 });
 
-test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-two', () => {
+test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-eight', () => {
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
-  assert.equal(civicRouter.dispatchMap.size, 52);
+  assert.equal(civicRouter.dispatchMap.size, 58);
   assert.deepEqual(
     [...civicRouter.dispatchMap.values()].map((t) => [t.exposedName, t.upstreamName]),
     civicRouter.mcpTools.map((t) => [`${CIVIC_MANIFEST.find((e) => e.tools.includes(t))!.alias}__${t.function.name}`, t.function.name]),
@@ -116,13 +122,14 @@ test('views: each civic entry\'s tools are its toolsFor in the bare view, byte f
   assert.equal(JSON.stringify(bostonTools(BARE_VIEW)), JSON.stringify(boston!.tools));
   // The three hosted sources' schemas are their servers' text, not the
   // package's: no toolsFor. The City Record pack's are the Socrata kind's,
-  // so it has one, and its tools are its toolsFor in the bare view.
-  assert.equal(hosted.length, 4, 'four entries after the three');
+  // so it has one, and its tools are its toolsFor in the bare view. The
+  // Boston pack's (since 0.11.0) are the CKAN server's text: no toolsFor.
+  assert.equal(hosted.length, 6, 'six entries after the three');
   for (const entry of hosted) {
-    if (entry.base === undefined) assert.equal(entry.toolsFor, undefined, `${entry.sourceId} has no toolsFor`);
+    if (entry.base !== 'socrata') assert.equal(entry.toolsFor, undefined, `${entry.sourceId} has no toolsFor`);
     else assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools), `${entry.sourceId}: toolsFor in the bare view`);
   }
-  assert.deepEqual(hosted.filter((entry) => entry.base !== undefined).map((entry) => entry.sourceId), ['nyc-record']);
+  assert.deepEqual(hosted.filter((entry) => entry.base !== undefined).map((entry) => entry.sourceId), ['nyc-record', 'boston-ckan']);
   for (const entry of CIVIC_MANIFEST.slice(0, 3)) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
 });
 

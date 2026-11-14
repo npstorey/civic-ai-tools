@@ -161,6 +161,9 @@ const API = {
   'nyc-checkbook': { platform: 'custom-api', host: 'www.checkbooknyc.com' },
   'nyc-record': { platform: 'socrata', host: 'data.cityofnewyork.us', dataset: 'dg92-zbpx' },
   'nys-legislation': { platform: 'custom-api', host: 'legislation.nysenate.gov' },
+  // Since version 4 (CKAN-1 P2, hub issue 314).
+  'ckan-server': { platform: 'ckan' },
+  'boston-ckan': { platform: 'ckan', host: 'data.boston.gov' },
 };
 const CAPTURE = JSON.parse(readFileSync(join(REPO, 'packages/civic-typed-router/src/__fixtures__/socrata-tools.json'), 'utf8'));
 const captured = (name) => CAPTURE.tools.find((t) => t.name === name);
@@ -173,10 +176,10 @@ const withPack = (given, change) => {
   pack.hash = router.packHash(pack);
 };
 
-test('A1.1: the repository inventory is civic-inventory/3: seven entries, each with its api; the pack over the Socrata entry by id, pinned, derived from the dedicated server, with the owed names', () => {
+test('A1.1: the repository inventory is civic-inventory/3: nine entries since version 4, each with its api; the pack over the Socrata entry by id, pinned, derived from the dedicated server, with the owed names', () => {
   const { inventory } = inputs();
   assert.equal(inventory.schema, 'civic-inventory/3');
-  assert.equal(inventory.entries.length, 7);
+  assert.equal(inventory.entries.length, 9);
   assert.deepEqual(Object.fromEntries(inventory.entries.map((e) => [e.sourceId, e.api])), API);
   const pack = inventory.entries[PACK()];
   assert.equal(inventory.entries[0].id, SOCRATA_ID);
@@ -215,7 +218,7 @@ test('decoy (A1.1): a duplicate id, a duplicate sourceId and a duplicate alias e
   const id = problemsWith((given) => (given.inventory.entries[4].id = given.inventory.entries[3].id));
   assert.ok(id.includes(`unique: id "${inputs().inventory.entries[3].id}" is stated by entries[3] (nyc_charter) and entries[4] (nyc_checkbook)`), id.join('\n'));
   const sourceId = problemsWith((given) => (given.inventory.entries[2].sourceId = 'data-commons'));
-  assert.ok(sourceId.includes('unique: sourceId "data-commons" is stated by entries[1] (data_commons) and entries[2] (boston)'), sourceId.join('\n'));
+  assert.ok(sourceId.includes('unique: sourceId "data-commons" is stated by entries[1] (data_commons) and entries[2] (boston_opencontext)'), sourceId.join('\n'));
   const alias = problemsWith((given) => (given.inventory.entries[6].alias = 'nyc_checkbook'));
   assert.ok(alias.includes('unique: alias "nyc_checkbook" is stated by entries[4] (nyc_checkbook) and entries[6] (nyc_checkbook)'), alias.join('\n'));
 });

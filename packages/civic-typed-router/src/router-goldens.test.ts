@@ -50,6 +50,13 @@
 //     `offeredIsMcpTools` are false in every capture, where the goldens have
 //     them true with Boston OpenContext configured.
 //
+// Since 0.11.0 the hosted CKAN server and the Boston pack over it follow,
+// both optional and offered only with a CKAN address, which no capture
+// sets: the server declares no tools, and the pack's six are a stated delta
+// of their own (`CKAN_PACK`), appended to the vocabulary, new to the
+// tool-to-source facts and withheld in every configuration, as a hosted
+// source's are.
+//
 // The fixture is read, never written: its two files' blobs are pinned at the
 // gate, and the capture script beside it is how they are regenerated.
 
@@ -63,6 +70,7 @@ import {
   CIVIC_MANIFEST,
   civicRouter,
   createCivicRouter,
+  BOSTON_CKAN_ENTRY,
   NYC_RECORD_ENTRY,
   readMcpEnv,
   type CivicManifest,
@@ -152,13 +160,24 @@ const PACK = {
   tools: NYC_RECORD_ENTRY.tools as unknown[],
 };
 
+/** The Boston pack over the hosted CKAN server (0.11.0): offered in no
+ *  capture's configuration (none sets a CKAN address), so its six are
+ *  withheld as a hosted source's are. The server before it declares no
+ *  tools, so it moves nothing here. */
+const CKAN_PACK = {
+  sourceId: 'boston-ckan',
+  toolNames: [...BOSTON_CKAN_ENTRY.toolNames],
+  tools: BOSTON_CKAN_ENTRY.tools as unknown[],
+};
+
 /** The four entries after the goldens' three, in manifest order: the three
- *  hosted sources and the pack. */
+ *  hosted sources and the pack; and, since 0.11.0, the Boston CKAN pack. */
 const HOSTED_SOURCES = [
   hostedSource('nyc-charter', 'nyc-charter-tools.json'),
   hostedSource('nyc-checkbook', 'nyc-checkbook-tools.json'),
   PACK,
   hostedSource('nys-legislation', 'nys-legislation-tools.json'),
+  CKAN_PACK,
 ];
 
 /** The goldens' delta, over all four. */
@@ -372,8 +391,8 @@ function checkFacts(router: CivicRouter): void {
   const newNames = hostedNewNames(goldenNames);
   // Every hosted name but `search` (which Charter and NYS Open Legislation
   // share with Socrata) is new, and none of the pack's (Socrata's `get_data`
-  // and `fetch`): 4 + 10 + 0 + 23.
-  assert.equal(newNames.length, 37);
+  // and `fetch`): 4 + 10 + 0 + 23; and the Boston CKAN pack's six (0.11.0).
+  assert.equal(newNames.length, 43);
   for (const [tool, sourceId] of newNames) {
     assert.ok(!facts.sourceIdForToolName.some((f) => f.tool === tool), `fact: "${tool}" is a name no golden source has`);
     assert.equal(router.sourceIdForToolName(tool), sourceId, `fact: the source of tool "${tool}", ${sourceId}'s`);
