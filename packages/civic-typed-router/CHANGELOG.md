@@ -2,6 +2,83 @@
 
 Factual record of what changed per published version.
 
+## 0.11.0 — 2026-11-14
+
+The hosted CKAN server and Analyze Boston, a pack over it (CKAN-1 P2, hub
+issue 314); the inventory moves to version 4 (`2026-11-13.1`, schema
+`civic-inventory/3`). With `CKAN_MCP_URL` unset the two new entries are
+offered nowhere: every prompt, directory and offered tools array is
+0.10.0's but for Boston OpenContext's alias, and the vocabulary
+(`mcpTools`) and the withheld tool names gain the pack's six tools.
+
+- **A `ckan` kind** in `CIVIC_KINDS` and `civicKinds(options)`: the hosted
+  CKAN server (`serverType` `ckan`), whose entry declares no tools of its
+  own and has no guidance, and packs over it. Its pack builder,
+  **`ckanPack(entry, base)`**, fixes `server_url` only, an `https` URL
+  (another filter key is refused, `a ckan pack fixes only server_url`),
+  holds the pack's `api` to `{ platform: 'ckan', host: <the host of its
+  server_url> }`, reads the pack's guidance inline by its hash, and builds
+  six tools: the server's own schemas with `server_url` an `enum` of the
+  one value and a last paragraph naming the refusal, and
+  `ckan_datastore_search_sql`'s `sql` stating the SELECT-only rule. From
+  each description it removes the passages that name a base tool no pack
+  carries, exactly as the server writes them
+  (**`CKAN_PACK_DESCRIPTION_CUTS`**: `ckan_package_search`'s locale
+  sentence and its workflow's first step, both naming `ckan_status_show`),
+  and nothing else; a passage not found exactly once stops the build by
+  name.
+- **`CKAN_SERVER_ENTRY`** (`sourceId` `ckan-server`, alias `ckan`, `id`
+  `@aborruso/ckan-mcp-server@https://github.com/npstorey/ckan-mcp-server`)
+  and **`BOSTON_CKAN_ENTRY`** (`sourceId` `boston-ckan`, alias `boston`,
+  `id` `boston-ckan@https://data.boston.gov`, pack `version` `1.0`, one pin:
+  `ckan-mcp-server` `0.4.139` and the six tools' `mcpToolSchemaSha256`),
+  last in `CIVIC_MANIFEST`, which now holds nine entries; with them
+  **`CKAN_SERVER_SOURCE_ID`**, **`CKAN_SERVER_TOOL_NAMES`** (the server's
+  20 tool names, in its `tools/list` order), **`CKAN_PACK_TOOL_NAMES`** and
+  **`CKAN_PACK_BASE_TOOLS`** (the six schemas a pack calls, the server's
+  own at the pinned commit), **`BOSTON_CKAN_GUIDANCE`** (the hub's Boston
+  guidance rewritten for the six tools), and the two entries' words,
+  **`CKAN_SERVER_WORDS`**, **`BOSTON_CKAN_WORDS`** and
+  **`BOSTON_CKAN_RULE`**. Both entries are optional: offered only when
+  `CKAN_MCP_URL` is set.
+- **The offer path:** **`CKAN_ADDRESS_VARIABLE`** (`'CKAN_MCP_URL'`);
+  `McpRegistryEnv` gains **`ckanUrl`**, which `readMcpEnv` sets only when
+  the address is non-empty after trimming, after every other key, so with
+  it unset every reading is 0.10.0's, key for key; `configuredAddresses`
+  keys `ckan-server` by it, only when it is present, and the Boston pack by
+  its base's address. A Socrata one-portal lock leaves the pack offered.
+- **A pack's base with no tool names is in no list the model reads**:
+  the preamble (its entries and its count), the outro, the guidance blocks,
+  the directory, the in-loop prompt, `load_source`'s choices, the lock
+  text's other sources and the search's hits leave out an entry with no
+  tool names that a pack of the manifest names as its base. It stays in
+  `sourcesOffered`, `isSourceOffered`, `offeredSkillSources` and the
+  harness definition's `sources`. The search's index still covers it, so
+  no score moves. An entry with no tool names that no pack names is listed
+  as before.
+- **`PackCode.baseToolNames`**, optional: the base's own tool names, which
+  a kind states where the base entry declares none. `manifestFromInventory`
+  holds a pack's `basePins` to them when stated, and to the base entry's
+  `toolNames` otherwise (ADR-0039 §D), so the CKAN server's six pins load
+  and a pin naming a tool its capture does not list is refused by name.
+- **`checkBasePins` returns a difference for a malformed observation**,
+  where it threw: an observation with no `tools` array, or a `null` one,
+  lists no tool, so the first pinned tool is a difference with nothing
+  observed; an entry of `tools` that is not an object with a string `name`
+  is skipped; a listed tool whose schema cannot be hashed (no
+  `inputSchema`) is a difference observed as `'unhashable'`.
+  `mcpToolSchemaSha256` still throws for such a tool.
+- **The preamble's Boston rule** routes to the Boston pack when it is
+  offered (`BOSTON_CKAN_RULE`), and Boston OpenContext's rule is stated
+  only when the pack is not offered. With neither CKAN entry offered, every
+  rule line is 0.10.0's.
+- **Changed: Boston OpenContext's alias is `boston_opencontext`** (it was
+  `boston`), so its exposed tool names are
+  `boston_opencontext__ckan__search_datasets` and the rest; the Boston pack
+  takes `boston`. Its `sourceId` (`boston-opencontext`), `id` and every
+  other field are unchanged.
+- **`CIVIC_INVENTORY`** names version `2026-11-13.1` and its hash.
+
 ## 0.10.0 — 2026-11-13
 
 The search, its tool and the routing configuration, and the one-portal lock
