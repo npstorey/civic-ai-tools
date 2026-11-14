@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { inventoryProblems, nonStrings, PATHS, readInputs, REPO } from './check-inventory.mjs';
@@ -161,6 +161,9 @@ const API = {
   'nyc-checkbook': { platform: 'custom-api', host: 'www.checkbooknyc.com' },
   'nyc-record': { platform: 'socrata', host: 'data.cityofnewyork.us', dataset: 'dg92-zbpx' },
   'nys-legislation': { platform: 'custom-api', host: 'legislation.nysenate.gov' },
+  // Since version 4 (CKAN-1 P2, hub issue 314).
+  'ckan-server': { platform: 'ckan' },
+  'boston-ckan': { platform: 'ckan', host: 'data.boston.gov' },
 };
 const CAPTURE = JSON.parse(readFileSync(join(REPO, 'packages/civic-typed-router/src/__fixtures__/socrata-tools.json'), 'utf8'));
 const captured = (name) => CAPTURE.tools.find((t) => t.name === name);
@@ -173,10 +176,10 @@ const withPack = (given, change) => {
   pack.hash = router.packHash(pack);
 };
 
-test('A1.1: the repository inventory is civic-inventory/3: seven entries, each with its api; the pack over the Socrata entry by id, pinned, derived from the dedicated server, with the owed names', () => {
+test('A1.1: the repository inventory is civic-inventory/3: nine entries since version 4, each with its api; the pack over the Socrata entry by id, pinned, derived from the dedicated server, with the owed names', () => {
   const { inventory } = inputs();
   assert.equal(inventory.schema, 'civic-inventory/3');
-  assert.equal(inventory.entries.length, 7);
+  assert.equal(inventory.entries.length, 9);
   assert.deepEqual(Object.fromEntries(inventory.entries.map((e) => [e.sourceId, e.api])), API);
   const pack = inventory.entries[PACK()];
   assert.equal(inventory.entries[0].id, SOCRATA_ID);
@@ -215,7 +218,7 @@ test('decoy (A1.1): a duplicate id, a duplicate sourceId and a duplicate alias e
   const id = problemsWith((given) => (given.inventory.entries[4].id = given.inventory.entries[3].id));
   assert.ok(id.includes(`unique: id "${inputs().inventory.entries[3].id}" is stated by entries[3] (nyc_charter) and entries[4] (nyc_checkbook)`), id.join('\n'));
   const sourceId = problemsWith((given) => (given.inventory.entries[2].sourceId = 'data-commons'));
-  assert.ok(sourceId.includes('unique: sourceId "data-commons" is stated by entries[1] (data_commons) and entries[2] (boston)'), sourceId.join('\n'));
+  assert.ok(sourceId.includes('unique: sourceId "data-commons" is stated by entries[1] (data_commons) and entries[2] (boston_opencontext)'), sourceId.join('\n'));
   const alias = problemsWith((given) => (given.inventory.entries[6].alias = 'nyc_checkbook'));
   assert.ok(alias.includes('unique: alias "nyc_checkbook" is stated by entries[4] (nyc_checkbook) and entries[6] (nyc_checkbook)'), alias.join('\n'));
 });
@@ -261,4 +264,96 @@ test('decoy (A1.1): a version-2 file fails schema 3 by name', () => {
   ]) {
     assert.ok(problems.some((p) => p.startsWith('schema: ') && p.replace('schema: .', '/').startsWith(expected)), `${expected}:\n${problems.join('\n')}`);
   }
+});
+
+
+// CKAN-1 P2 (hub issue 314): inventory version 4, the hosted CKAN server and
+// the Boston pack over it (A8). Each decoy fails by its rule's name.
+
+const CKAN_SERVER_ID = '@aborruso/ckan-mcp-server@https://github.com/npstorey/ckan-mcp-server';
+const CKAN_CAPTURE_PATH = join(REPO, 'packages/civic-typed-router/src/__fixtures__/ckan-tools.json');
+/** The CKAN server's capture, read when a test needs it: a missing file fails that test's assertion. */
+const ckanCapture = () => {
+  assert.ok(existsSync(CKAN_CAPTURE_PATH), 'the CKAN capture is committed');
+  return JSON.parse(readFileSync(CKAN_CAPTURE_PATH, 'utf8'));
+};
+const SIX = ['ckan_package_search', 'ckan_find_relevant_datasets', 'ckan_package_show', 'ckan_list_resources', 'ckan_datastore_search', 'ckan_datastore_search_sql'];
+/** The Boston pack's position in the file. */
+const BOSTON_PACK = () => inputs().inventory.entries.findIndex((entry) => entry.sourceId === 'boston-ckan');
+/** The file with the Boston pack changed by `change`, its hash restated. */
+const withBostonPack = (given, change) => {
+  assert.ok(BOSTON_PACK() >= 0, 'the inventory holds the Boston pack');
+  const pack = given.inventory.entries[BOSTON_PACK()];
+  change(pack, given.inventory);
+  pack.hash = router.packHash(pack);
+};
+const bostonLoad = (problems, rest) => problems.some((p) => p.startsWith(`load: manifestFromInventory: boston: ${rest}`));
+
+test('A8: version 4 holds the CKAN server (no tools, its capture named) and the Boston pack over it (base by id, one pin of six, server_url fixed, api, version 1.0, inline guidance), last and in that order', () => {
+  const { inventory } = inputs();
+  assert.match(inventory.version, /^\d{4}-\d{2}-\d{2}\.1$/);
+  const [server, pack] = inventory.entries.slice(-2);
+  assert.deepEqual([server.kind, server.sourceId, server.serverType, server.alias], ['server', 'ckan-server', 'ckan', 'ckan']);
+  assert.equal(server.id, CKAN_SERVER_ID);
+  assert.deepEqual(server.toolsRef, {
+    toolNames: [],
+    sha256: '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945',
+    fixture: 'packages/civic-typed-router/src/__fixtures__/ckan-tools.json',
+  });
+  assert.deepEqual([pack.kind, pack.sourceId, pack.alias, pack.id, pack.base, pack.version], ['pack', 'boston-ckan', 'boston', 'boston-ckan@https://data.boston.gov', CKAN_SERVER_ID, '1.0']);
+  assert.deepEqual(pack.filter, { server_url: 'https://data.boston.gov' });
+  assert.equal(pack.basePins.length, 1);
+  const capture = ckanCapture();
+  assert.deepEqual(pack.basePins[0], {
+    serverName: capture.initialize.serverInfo.name,
+    serverVersion: capture.initialize.serverInfo.version,
+    tools: Object.fromEntries(SIX.map((name) => [name, router.mcpToolSchemaSha256(capture.tools.find((t) => t.name === name))])),
+  });
+  assert.equal(pack.guidance.kind, 'inline');
+  assert.equal(pack.guidance.blockSha256, router.sha256Hex(pack.guidance.text));
+  assert.equal(Object.hasOwn(pack, 'derivedFrom'), false);
+});
+
+test("decoy (A8): a Boston pack whose filter fixes portal fails the load by the rule's name", () => {
+  const problems = problemsWith((given) => withBostonPack(given, (pack) => (pack.filter = { ...pack.filter, portal: 'data.boston.gov' })));
+  assert.ok(bostonLoad(problems, 'filter.portal: a ckan pack fixes only server_url'), problems.join('\n'));
+});
+
+test('decoy (A8): a Boston pack whose blockSha256 is off by one hex digit fails the load by name', () => {
+  const problems = problemsWith((given) =>
+    withBostonPack(given, (pack) => {
+      const hash = pack.guidance.blockSha256;
+      pack.guidance.blockSha256 = `${hash.slice(0, -1)}${hash.endsWith('0') ? '1' : '0'}`;
+    }),
+  );
+  assert.ok(bostonLoad(problems, 'guidance.blockSha256: the text hashes to '), problems.join('\n'));
+});
+
+test("decoy (A8): a Boston pack whose base is the CKAN server's sourceId fails the load by name, naming the id to use", () => {
+  const problems = problemsWith((given) => withBostonPack(given, (pack) => (pack.base = 'ckan-server')));
+  assert.ok(bostonLoad(problems, `base: "ckan-server" is a sourceId; a pack names its base by the server entry's id ("${CKAN_SERVER_ID}")`), problems.join('\n'));
+});
+
+test("decoy (A8): a Boston pack whose api.host is not the host of its filter.server_url fails the load by name", () => {
+  const problems = problemsWith((given) => withBostonPack(given, (pack) => (pack.api = { ...pack.api, host: 'data.cityofboston.gov' })));
+  assert.ok(bostonLoad(problems, 'api.host: is "data.cityofboston.gov"; a ckan pack\'s host is the host of its filter.server_url, "data.boston.gov"'), problems.join('\n'));
+});
+
+test('decoy (A8): a Boston pin missing one of the six, or naming a tool the capture lacks, fails the load by name', () => {
+  const missing = problemsWith((given) =>
+    withBostonPack(given, (pack) => {
+      delete pack.basePins[0].tools.ckan_list_resources;
+    }),
+  );
+  assert.ok(bostonLoad(missing, 'basePins[0].tools: '), missing.join('\n'));
+  assert.ok(missing.some((p) => p.endsWith('the pack calls "ckan_list_resources", which no member pins')), missing.join('\n'));
+  const foreign = problemsWith((given) => withBostonPack(given, (pack) => (pack.basePins[0].tools.ckan_create_dataset = 'a'.repeat(64))));
+  assert.ok(bostonLoad(foreign, 'basePins[0].tools.ckan_create_dataset: is not a tool of the base'), foreign.join('\n'));
+});
+
+test('decoy (A8): the CKAN server entry with no pack naming it fails the empty-tools rule (rule 8) by name', () => {
+  const problems = problemsWith((given) => {
+    given.inventory.entries = given.inventory.entries.filter((entry) => entry.sourceId !== 'boston-ckan');
+  });
+  assert.ok(problems.includes('tools: ckan: toolsRef.toolNames is empty, and no pack names this entry as its base'), problems.join('\n'));
 });

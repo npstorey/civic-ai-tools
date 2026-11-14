@@ -87,11 +87,17 @@ function entryFromCopy(copy) {
   };
 }
 
-/** The one live entry whose data may differ from its frozen copy, and the
+/** The live entries whose data may differ from their frozen copies, and the
  *  fields that may (hub #317, S2-C P1; H18): inventory version 3 moved the
  *  Data Commons entry's `id` to the endpoint form and corrected its
- *  `freshnessSource` (G0-C1 = A, ADR-0039 §B). */
-const MOVED_SINCE_COPY = Object.freeze({ 'data-commons': Object.freeze(['id', 'freshnessSource']) });
+ *  `freshnessSource` (G0-C1 = A, ADR-0039 §B); version 4 (CKAN-1 P2, hub
+ *  issue 314) moved the Boston OpenContext entry's `alias` to
+ *  `boston_opencontext` (D2 = A), the Boston pack over the hosted CKAN server
+ *  taking `boston`. */
+const MOVED_SINCE_COPY = Object.freeze({
+  'data-commons': Object.freeze(['id', 'freshnessSource']),
+  'boston-opencontext': Object.freeze(['alias']),
+});
 
 /** Whether `live` differs from `expected` (both `routerDataFields`) in the
  *  fields `MOVED_SINCE_COPY` admits for `sourceId` only, and in at least one. */
@@ -128,10 +134,11 @@ function routerEntry(item, bySourceId, seven) {
   const liveFields = routerDataFields(live);
   const sameCode = JSON.stringify(live.toolNames) === JSON.stringify(copy.toolNames) && toolsSha256(live.tools) === toolsSha256(copy.tools);
   if (sameCode && JSON.stringify(liveFields) === JSON.stringify(expected)) return live;
-  // Data Commons since inventory version 3: its id and freshnessSource moved,
-  // and nothing else may. The live entry's code (tools, guidance, preamble
-  // entry) with the frozen copy's data fields, so the composition and its
-  // components (the frozen id among them) are the copy's.
+  // Data Commons since inventory version 3: its id and freshnessSource moved;
+  // Boston OpenContext since version 4: its alias. Nothing else may. The
+  // live entry's code (tools, guidance, preamble entry) with the frozen
+  // copy's data fields, so the composition and its components (the frozen
+  // id and alias among them) are the copy's.
   if (sameCode && differsOnlyInMoved(copy.sourceId, liveFields, expected)) {
     const { [copy.sourceId]: moved } = MOVED_SINCE_COPY;
     const out = { ...live };
@@ -165,9 +172,10 @@ function builtEntry(item, tools) {
 
 /** The manifest entries of `inventory`, in its order. Throws on an entry this
  *  loader does not build, or one that disagrees with the router or its
- *  fixture. */
-export function toManifest(inventory) {
-  const bySourceId = new Map(CIVIC_MANIFEST.map((entry) => [entry.sourceId, entry]));
+ *  fixture. `live` is the router's manifest the inventory is held to:
+ *  `CIVIC_MANIFEST`, or a decoy of it in a test. */
+export function toManifest(inventory, live = CIVIC_MANIFEST) {
+  const bySourceId = new Map(live.map((entry) => [entry.sourceId, entry]));
   const seven = new Map(readSeven().entries.map((entry) => [entry.sourceId, entry]));
   const cache = new Map();
   return inventory.entries.map((item) => {

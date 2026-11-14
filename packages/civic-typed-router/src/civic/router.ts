@@ -68,6 +68,19 @@
 // arrives only as `portalLockGuidance`'s argument. With no lock, or a lock to
 // the pack's own portal, selection reads the manifest itself, and every
 // output is 0.9.0's.
+//
+// A pack's base with no tool names (0.11.0; Q2 on hub issue 314): the hosted
+// CKAN server declares no tools of its own, and is offered, with its packs,
+// when its address is set. An entry with no tool names that a pack of the
+// manifest names as its base is left out of every list the model reads: the
+// preamble (its entries and its count), the outro, the guidance blocks, the
+// directory, the in-loop prompt, `load_source`'s choices, the lock text's
+// other sources and the search's hits (`modelReads`). It stays in every list
+// a record states: `sourcesOffered`, `isSourceOffered`, `offeredSkillSources`
+// and the harness definition's `sources`. The search's index still covers
+// the whole manifest, so no score moves. An entry with no tool names that no
+// pack names as its base (a fork's, or the benchmark's registry entries) is
+// listed as before.
 
 import {
   aliasedTools,
@@ -108,6 +121,8 @@ import type {
   ToolLike,
 } from '../core/types.ts';
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
+import { BOSTON_CKAN_ENTRY } from './boston-ckan.ts';
+import { CKAN_SERVER_ENTRY } from './ckan.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { configuredSources, socrataPacksOutsideLock, type McpRegistryEnv } from './env.ts';
@@ -125,7 +140,10 @@ import { SOCRATA_ENTRY } from './socrata.ts';
  *  order: NYC Checkbook, NYC City Record, NYS Open Legislation. Checkbook and
  *  NYS Open Legislation are hosted, optional and off unless their own switch
  *  is on. City Record is a pack over the Socrata server since 0.8.0, required
- *  as Socrata is, so it is offered in every configuration. */
+ *  as Socrata is, so it is offered in every configuration. Since 0.11.0 the
+ *  hosted CKAN server and the Boston pack over it come last, both optional
+ *  and offered only when `CKAN_MCP_URL` is set, so with it unset every
+ *  output of the seven before them is 0.10.0's. */
 export const CIVIC_MANIFEST: CivicManifest = [
   SOCRATA_ENTRY,
   DATA_COMMONS_ENTRY,
@@ -134,7 +152,19 @@ export const CIVIC_MANIFEST: CivicManifest = [
   NYC_CHECKBOOK_ENTRY,
   NYC_RECORD_ENTRY,
   NYS_LEGISLATION_ENTRY,
+  CKAN_SERVER_ENTRY,
+  BOSTON_CKAN_ENTRY,
 ];
+
+/** Whether the model reads `entry` in any list, in a manifest whose packs
+ *  name `packBases` as their bases (since 0.11.0): a pack's base with no
+ *  tool names, such as the hosted CKAN server, is left out of every list the
+ *  model reads and kept in every list a record states (Q2). Every other
+ *  entry is read. */
+const modelReadsIn =
+  (packBases: ReadonlySet<string>) =>
+  (entry: CivicManifestEntry): boolean =>
+    entry.toolNames.length > 0 || !packBases.has(entry.sourceId);
 
 /** The domain a civic router's harness definition states. */
 export const CIVIC_DOMAIN = 'civic';
@@ -363,6 +393,8 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   assertUniqueToolNames(manifest.map((entry) => ({ sourceId: entry.sourceId, tools: entryToolsInView(entry, aliased) })));
 
   const mcpTools: FunctionToolSchema[] = manifest.flatMap((entry) => entry.tools);
+  /** Q2 (0.11.0): a pack's base with no tool names is in no list the model reads. */
+  const modelReads = modelReadsIn(new Set(manifest.flatMap((entry) => (entry.base === undefined ? [] : [entry.base]))));
   const index = toolSourceIndex(manifest);
   const lockEntry = manifest.find((entry) => entry.portalLock !== undefined);
 
@@ -419,7 +451,7 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
     // `offeredEntries` keeps manifest entries as they are: these are civic ones.
     const { entries, addresses } = offerInputs(configured, lockedPortal);
     const others = (offeredEntries(entries, addresses, selection) as CivicManifestEntry[])
-      .filter((entry) => entry !== lockEntry)
+      .filter((entry) => entry !== lockEntry && modelReads(entry))
       .map((entry) => entry.prompt?.lockMention ?? entry.displayName);
     return lockEntry.portalLock.section(lockedPortal, others, view);
   };
@@ -438,7 +470,7 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   // after it (the civic preamble is never empty).
   const compose = (view: SourceView, input: BuildSystemPromptInput, withIntro = true): Promise<string> => {
     const offer = offerInputs(input.configured);
-    const entries = offeredEntries(offer.entries, offer.addresses, input.selection) as CivicManifestEntry[];
+    const entries = (offeredEntries(offer.entries, offer.addresses, input.selection) as CivicManifestEntry[]).filter(modelReads);
     const sources = entries.map((entry) => ({
       sourceId: entry.sourceId,
       preambleEntry: preambleEntryOf(entry, view),
@@ -491,10 +523,11 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
   /** The search's index: the whole manifest, in its order (0.10.0). */
   const searchIndex = createSearchIndex(manifest);
 
-  /** The directory set: the sources `selection` offers, in manifest order. */
+  /** The directory set: the sources `selection` offers that the model reads
+   *  (an entry with tool names), in manifest order. */
   const directoryEntries = (configured: McpRegistryEnv, selection?: SourceSelection): CivicManifestEntry[] => {
     const { entries, addresses } = offerInputs(configured);
-    return offeredEntries(entries, addresses, selection) as CivicManifestEntry[];
+    return (offeredEntries(entries, addresses, selection) as CivicManifestEntry[]).filter(modelReads);
   };
 
   return {
@@ -619,10 +652,11 @@ export function createCivicRouter(manifest: CivicManifest = CIVIC_MANIFEST): Civ
         space === undefined
           ? undefined
           : new Set(entries.filter((entry) => space.includes(entry.sourceId) && isEntryOffered(entry, addresses)).map((entry) => entry.sourceId));
-      // A pack the lock removes is never a hit (F2 on hub #318): with no
-      // space, every other entry may be.
+      // A pack the lock removes is never a hit (F2 on hub #318), nor is an
+      // entry with no tool names (0.11.0): with no space, every other entry
+      // may be.
       const within = (entry: CivicManifestEntry): boolean =>
-        !removed.has(entry.sourceId) && (inSpace === undefined || inSpace.has(entry.sourceId));
+        modelReads(entry) && !removed.has(entry.sourceId) && (inSpace === undefined || inSpace.has(entry.sourceId));
       return searchIndex.search(input.query, { top: input.top, within }).map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
     },
 

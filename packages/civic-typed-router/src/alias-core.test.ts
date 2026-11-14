@@ -149,7 +149,7 @@ test('names (c): each refusal also happens at construction', () => {
   }
 });
 
-// --- (d) The fifty-two names in view ----------------------------------------------
+// --- (d) The fifty-eight names in view --------------------------------------------
 
 /** The upstream names a committed capture lists, in its order. */
 const capturedNames = (fixture: string): string[] =>
@@ -157,13 +157,16 @@ const capturedNames = (fixture: string): string[] =>
     (t) => t.name,
   );
 
-test('names (d): the fifty-two names in view are unchanged by normalization', () => {
+test('names (d): the fifty-eight names in view are unchanged by normalization', () => {
   // Since 0.3.0 the civic manifest holds the fifth source's five itself
   // (alias `nyc_charter`); through 0.2.0 this test added a stub for them.
   // Since 0.6.0 it holds the three hosted sources' after them, named from
   // their committed captures: Checkbook's 10 and NYS Open Legislation's 24.
   // Since 0.8.0 City Record is a pack over the Socrata server with two,
   // `get_data` and `fetch` (0.6.0 and 0.7.0 held its server's seven).
+  // Since 0.11.0 Boston OpenContext's alias is `boston_opencontext`, and the
+  // Boston pack over the hosted CKAN server (alias `boston`) follows NYS Open
+  // Legislation with six; the CKAN server itself declares none.
   const map = dispatchMap(CIVIC_MANIFEST);
   const expected = [
     'socrata__get_data',
@@ -171,12 +174,12 @@ test('names (d): the fifty-two names in view are unchanged by normalization', ()
     'socrata__fetch',
     'data_commons__search_indicators',
     'data_commons__get_observations',
-    'boston__ckan__search_datasets',
-    'boston__ckan__get_dataset',
-    'boston__ckan__get_schema',
-    'boston__ckan__query_data',
-    'boston__ckan__aggregate_data',
-    'boston__ckan__execute_sql',
+    'boston_opencontext__ckan__search_datasets',
+    'boston_opencontext__ckan__get_dataset',
+    'boston_opencontext__ckan__get_schema',
+    'boston_opencontext__ckan__query_data',
+    'boston_opencontext__ckan__aggregate_data',
+    'boston_opencontext__ckan__execute_sql',
     'nyc_charter__search',
     'nyc_charter__get_section',
     'nyc_charter__list_titles',
@@ -186,8 +189,14 @@ test('names (d): the fifty-two names in view are unchanged by normalization', ()
     'nyc_record__get_data',
     'nyc_record__fetch',
     ...capturedNames('nys-legislation-tools.json').map((name) => `nys_legislation__${name}`),
+    'boston__ckan_package_search',
+    'boston__ckan_find_relevant_datasets',
+    'boston__ckan_package_show',
+    'boston__ckan_list_resources',
+    'boston__ckan_datastore_search',
+    'boston__ckan_datastore_search_sql',
   ];
-  assert.equal(expected.length, 52);
+  assert.equal(expected.length, 58);
   assert.deepEqual([...map.keys()], expected);
   assert.deepEqual([...map.values()].filter((t) => t.sourceId === 'nyc-charter').map((t) => t.upstreamName), CHARTER_TOOLS);
   for (const target of map.values()) {
@@ -197,23 +206,26 @@ test('names (d): the fifty-two names in view are unchanged by normalization', ()
   }
   const longest = Math.max(...expected.map((n) => n.length));
   assert.equal(longest, 41, 'nys_legislation__list_hearing_transcripts');
-  assert.equal(expected.find((n) => n.length === longest), 'nys_legislation__list_hearing_transcripts');
+  assert.deepEqual(
+    expected.filter((n) => n.length === longest),
+    ['boston_opencontext__ckan__search_datasets', 'nys_legislation__list_hearing_transcripts'],
+  );
 });
 
 // --- (e) The dispatch rule ---------------------------------------------------------
 
 test('dispatch (e): an exposed name resolves by the map, never by splitting it', () => {
   const map = createCivicRouter().dispatchMap;
-  const resolved = resolveCalledName(map, undefined, 'boston__ckan__search_datasets');
+  const resolved = resolveCalledName(map, undefined, 'boston_opencontext__ckan__search_datasets');
   assert.deepEqual(resolved, {
     ok: true,
     spelling: 'aliased',
-    exposedName: 'boston__ckan__search_datasets',
+    exposedName: 'boston_opencontext__ckan__search_datasets',
     sourceId: 'boston-opencontext',
-    alias: 'boston',
+    alias: 'boston_opencontext',
     upstreamName: 'ckan__search_datasets',
   });
-  assert.equal(upstreamToolName(map, 'boston__ckan__search_datasets'), 'ckan__search_datasets');
+  assert.equal(upstreamToolName(map, 'boston_opencontext__ckan__search_datasets'), 'ckan__search_datasets');
   assert.equal(upstreamToolName(map, 'get_data'), 'get_data', 'a bare name reads as itself');
 });
 
@@ -259,10 +271,10 @@ test('dispatch (e): an unknown name is refused; a tool of a source the run is no
   const unknown = router.resolveCalledName('no_such_tool', readMcpEnv({}));
   assert.deepEqual(!unknown.ok && [unknown.reason, unknown.candidates], ['unknown', []]);
   // Boston is optional: with no address it is not offered.
-  const exposed = router.resolveCalledName('boston__ckan__query_data', readMcpEnv({}));
-  assert.deepEqual(!exposed.ok && [exposed.reason, exposed.candidates], ['not-offered', ['boston__ckan__query_data']]);
+  const exposed = router.resolveCalledName('boston_opencontext__ckan__query_data', readMcpEnv({}));
+  assert.deepEqual(!exposed.ok && [exposed.reason, exposed.candidates], ['not-offered', ['boston_opencontext__ckan__query_data']]);
   const bare = router.resolveCalledName('ckan__query_data', readMcpEnv({}));
-  assert.deepEqual(!bare.ok && [bare.reason, bare.candidates], ['not-offered', ['boston__ckan__query_data']]);
+  assert.deepEqual(!bare.ok && [bare.reason, bare.candidates], ['not-offered', ['boston_opencontext__ckan__query_data']]);
 });
 
 // --- The anchored rewrite, on its own ------------------------------------------------

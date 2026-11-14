@@ -62,10 +62,11 @@ test("A0.6: createCivicRouter over to-manifest's output passes its startup check
   assert.deepEqual(manifest.map((entry) => entry.sourceId), seven.map((entry) => entry.sourceId));
   for (const [i, entry] of manifest.entries()) {
     const own = live.get(entry.sourceId);
-    if (own !== undefined && own.base === undefined && entry.sourceId === 'data-commons') {
+    if (own !== undefined && own.base === undefined && ['data-commons', 'boston-opencontext'].includes(entry.sourceId)) {
       // Since inventory version 3 (hub #317) the router's Data Commons entry
-      // states another id and freshnessSource: to-manifest returns its code
-      // with the frozen copy's data fields.
+      // states another id and freshnessSource, and since version 4 (hub issue
+      // 314) its Boston OpenContext entry another alias: to-manifest returns
+      // its code with the frozen copy's data fields.
       assert.notEqual(entry, own, `${entry.sourceId}: a copy`);
       for (const part of ['tools', 'guidance', 'prompt', 'toolsFor', 'portalLock']) assert.equal(entry[part], own[part], `${entry.sourceId}: the router's own ${part}`);
     } else if (own !== undefined && own.base === undefined) assert.equal(entry, own, `${entry.sourceId}: the router's own entry`);
@@ -85,4 +86,13 @@ test("A0.6: createCivicRouter over to-manifest's output passes its startup check
   const twice = structuredClone(inventory);
   twice.entries.push(twice.entries[0]);
   assert.throws(() => createCivicRouter(toManifest(twice)));
+});
+
+test("AB (CKAN-1 P2, hub issue 314): to-manifest admits Boston OpenContext's moved alias and nothing else: the router's entry with its description changed still fails", () => {
+  // The router's own manifest is accepted, whatever alias it gives Boston OpenContext.
+  assert.doesNotThrow(() => toManifest(inventory, CIVIC_MANIFEST));
+  // A decoy of it whose Boston OpenContext entry states another description is refused.
+  const oc = CIVIC_MANIFEST.find((entry) => entry.sourceId === 'boston-opencontext');
+  const edited = CIVIC_MANIFEST.map((entry) => (entry === oc ? { ...oc, description: `${oc.description} (edited)` } : entry));
+  assert.throws(() => toManifest(inventory, edited), /boston: the router's manifest entry differs from its frozen copy at 0\.6\.0/);
 });

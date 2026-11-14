@@ -14,6 +14,14 @@
 // that adds a tool, or changes one the pack never calls, still matches. A
 // pinned member the live base does not state counts as a difference.
 //
+// A malformed observation is a difference, never a throw (since 0.11.0): an
+// observation with no `tools` array lists no tool, so its first pinned tool
+// is a difference with nothing observed; an entry of `tools` that is not an
+// object with a string `name` is no listed tool; and a listed tool whose
+// schema cannot be hashed (no `inputSchema`, or a value JSON cannot carry)
+// is a difference observed as `unhashable`. `mcpToolSchemaSha256` itself
+// still throws for such a tool.
+//
 // Pure: it reads nothing but its arguments.
 
 import { mcpToolSchemaSha256, type McpListedTool } from './mcp-tool-schema.ts';
@@ -43,7 +51,8 @@ export interface BasePinDifference {
   readonly pinned: string;
   /** What the base reported; absent when it stated nothing for the member
    *  (a version it did not state, a tool it did not list). For a tool
-   *  listed more than once, `listed <n> times`. */
+   *  listed more than once, `listed <n> times`; for a listed tool whose
+   *  schema cannot be hashed, `unhashable`. */
   readonly observed?: string;
 }
 
@@ -52,6 +61,10 @@ export interface BasePinDifference {
 export type BasePinCheck =
   | { readonly ok: true; readonly pin: number }
   | { readonly ok: false; readonly differences: readonly BasePinDifference[] };
+
+/** What a difference states as observed for a listed tool whose schema
+ *  cannot be hashed. */
+const UNHASHABLE = 'unhashable';
 
 function firstDifference(pin: BasePin, index: number, observed: ObservedBase, listed: ReadonlyMap<string, readonly McpListedTool[]>): BasePinDifference | undefined {
   const of = (member: string, pinned: string, seen: string | undefined): BasePinDifference => ({
@@ -66,7 +79,12 @@ function firstDifference(pin: BasePin, index: number, observed: ObservedBase, li
     const tools = listed.get(name) ?? [];
     if (tools.length === 0) return of(`tools.${name}`, pinned, undefined);
     if (tools.length > 1) return of(`tools.${name}`, pinned, `listed ${tools.length} times`);
-    const hash = mcpToolSchemaSha256(tools[0]!);
+    let hash: string;
+    try {
+      hash = mcpToolSchemaSha256(tools[0]!);
+    } catch {
+      return of(`tools.${name}`, pinned, UNHASHABLE);
+    }
     if (hash !== pinned) return of(`tools.${name}`, pinned, hash);
   }
   return undefined;
@@ -77,7 +95,12 @@ function firstDifference(pin: BasePin, index: number, observed: ObservedBase, li
 export function checkBasePins(pins: readonly BasePin[], observed: ObservedBase): BasePinCheck {
   if (!Array.isArray(pins) || pins.length === 0) throw new TypeError('checkBasePins: a pack states at least one pin');
   const listed = new Map<string, McpListedTool[]>();
-  for (const tool of observed.tools) listed.set(tool.name, [...(listed.get(tool.name) ?? []), tool]);
+  const tools: readonly unknown[] = Array.isArray(observed.tools) ? observed.tools : [];
+  for (const tool of tools) {
+    if (tool === null || typeof tool !== 'object' || typeof (tool as { name?: unknown }).name !== 'string') continue;
+    const named = tool as McpListedTool;
+    listed.set(named.name, [...(listed.get(named.name) ?? []), named]);
+  }
   const differences: BasePinDifference[] = [];
   for (const [index, pin] of pins.entries()) {
     const difference = firstDifference(pin, index, observed, listed);

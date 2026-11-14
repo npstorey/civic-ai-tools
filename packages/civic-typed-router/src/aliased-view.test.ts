@@ -129,7 +129,7 @@ function aliasedToolsText(router: CivicRouter, capture: ToolsCapture, selection?
 const lessPack = (capture: { configured: Encoded }): string[] =>
   civicRouter.offeredSkillSources(configuredOf(capture)).filter((id) => id !== 'nyc-record');
 
-const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston|nyc_charter|nyc_record)__/;
+const ALIAS_PREFIX = /(?<![A-Za-z0-9_-])(?:socrata|data_commons|boston_opencontext|nyc_charter|nyc_record)__/;
 const ELEVEN = [
   'get_data',
   'search',
@@ -188,7 +188,7 @@ const ENGLISH_USES = [
   ' from the tables below, a web search, or socrata__get_data with ty',
   " statement's own LIMIT), or a search phrase, applied as a full-tex",
   ' two-step: search first, then fetch.** Do not skip data_commons__',
-  '*boston__ckan__get_schema** — fetch field names/types. Run this b',
+  'context__ckan__get_schema** — fetch field names/types. Run this b',
   '- To search any OTHER portal, use socrata',
   '-- Text search',
   'For type=catalog: search query. For type=metadata: the',
@@ -209,7 +209,7 @@ const ENGLISH_USES = [
   "in with SELECT as a full-text search of the dataset (SoQL's $q), a",
   'ings County, New York"] }  // search scoped to Brooklyn, by name',
   'ly, data.cityofnewyork.us. To search its catalog by name, socrata_',
-  'r boston__ckan__get_schema to fetch field names for querying.',
+  'ncontext__ckan__get_schema to fetch field names for querying.',
   't of place names to scope the search to, qualified so they are una',
   'w, a curated directory, a web search — is reached with socrata__ge',
 ];

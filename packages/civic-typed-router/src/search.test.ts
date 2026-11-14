@@ -158,14 +158,19 @@ const EVERY_SOURCE = readMcpEnv({
   NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
-const NOT_OFFERED_UNDER_REQUIRED_ONLY = ['boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nys-legislation'];
+const NOT_OFFERED_UNDER_REQUIRED_ONLY = ['boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nys-legislation', 'ckan-server', 'boston-ckan'];
 
 const idsOf = (hits: readonly { sourceId: string }[]): string[] => hits.map((hit) => hit.sourceId);
 
 test('A3: the civic router\'s search over the manifest equals the core search over the manifest\'s entries, hits named by source id and alias', () => {
   const index = createSearchIndex(CIVIC_MANIFEST);
   for (const query of ['New York City budget spending', 'Boston permits', 'laws of New York State', 'population statistics', 'City Record notices']) {
-    const expected = index.search(query).map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
+    // A pack's base with no tool names (the hosted CKAN server, 0.11.0) is
+    // never a hit; the index still scores it.
+    const expected = index
+      .search(query)
+      .filter((entry) => entry.toolNames.length > 0)
+      .map((entry) => ({ sourceId: entry.sourceId, alias: entry.alias }));
     assert.ok(expected.length > 0, `${query}: some hit`);
     assert.deepEqual(civicRouter.searchSources({ configured: EVERY_SOURCE, query }), expected, query);
   }

@@ -151,12 +151,15 @@ test('selection: the default is every configured source, and its outputs are the
     [
       ['socrata', 'socrata', 'configured'],
       ['data-commons', 'data_commons', 'configured'],
-      ['boston-opencontext', 'boston', 'not-configured'],
+      ['boston-opencontext', 'boston_opencontext', 'not-configured'],
       ['nyc-charter', 'nyc_charter', 'not-configured'],
       ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
       // A pack over the Socrata server, required as its base is.
       ['nyc-record', 'nyc_record', 'configured'],
       ['nys-legislation', 'nys_legislation', 'not-configured'],
+      // The hosted CKAN server and its Boston pack (0.11.0): no CKAN address.
+      ['ckan-server', 'ckan', 'not-configured'],
+      ['boston-ckan', 'boston', 'not-configured'],
     ],
   );
   const bare = await civicRouter.buildSystemPrompt(input(configured));
@@ -172,6 +175,8 @@ test('selection: the default is every configured source, and its outputs are the
     'not-configured',
     'selected',
     'not-configured',
+    'not-configured',
+    'not-configured',
   ]);
 });
 
@@ -185,6 +190,8 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'not-configured',
     'not-selected',
     'not-configured',
+    'not-configured',
+    'not-configured',
   ]);
 
   const prompt = await civicRouter.buildSystemPrompt(input(ALL_CONFIGURED, { selection }));
@@ -195,12 +202,12 @@ test('selection: a source left out of the selection is left out of the prompt, t
   assert.deepEqual(tools.map((t) => t.function.name), ['get_data', 'search', 'fetch', 'search_indicators', 'get_observations']);
   assert.deepEqual(civicRouter.offeredSkillSources(ALL_CONFIGURED, selection), selection);
   assert.deepEqual(civicRouter.aliasedWithheldToolNames(ALL_CONFIGURED, selection), [
-    'boston__ckan__search_datasets',
-    'boston__ckan__get_dataset',
-    'boston__ckan__query_data',
-    'boston__ckan__get_schema',
-    'boston__ckan__execute_sql',
-    'boston__ckan__aggregate_data',
+    'boston_opencontext__ckan__search_datasets',
+    'boston_opencontext__ckan__get_dataset',
+    'boston_opencontext__ckan__query_data',
+    'boston_opencontext__ckan__get_schema',
+    'boston_opencontext__ckan__execute_sql',
+    'boston_opencontext__ckan__aggregate_data',
     // NYC Charter's switch is off in ALL_CONFIGURED: withheld whatever the selection.
     'nyc_charter__search',
     'nyc_charter__get_section',
@@ -213,12 +220,15 @@ test('selection: a source left out of the selection is left out of the prompt, t
     'nyc_record__get_data',
     'nyc_record__fetch',
     ...exposedOf('nys-legislation'),
+    // The Boston pack over the hosted CKAN server (0.11.0): no CKAN address.
+    ...exposedOf('boston-ckan'),
   ]);
   assert.equal(HOSTED_OF_06.flatMap(exposedOf).length, 34);
+  assert.equal(exposedOf('boston-ckan').length, 6);
   assert.match(civicRouter.portalLockGuidance('data.cityofnewyork.us', ALL_CONFIGURED, selection), /\(Data Commons\) is separate/);
 
   // Not selected, the source is not offered at dispatch either.
-  const resolved = civicRouter.resolveCalledName('boston__ckan__query_data', ALL_CONFIGURED, selection);
+  const resolved = civicRouter.resolveCalledName('boston_opencontext__ckan__query_data', ALL_CONFIGURED, selection);
   assert.deepEqual(!resolved.ok && resolved.reason, 'not-offered');
 });
 
@@ -233,6 +243,8 @@ test('selection: a source the configuration does not offer is not-configured wha
     'not-configured',
     'not-selected',
     'not-configured',
+    'not-configured',
+    'not-configured',
   ]);
   assert.deepEqual(civicRouter.offeredSkillSources(configured, selection), ['socrata']);
 });
@@ -242,6 +254,9 @@ test('selection: a source the configuration does not offer is not-configured wha
 test('fields: each civic entry carries a description and a freshness line, one line each, and a citation for the freshness', () => {
   for (const entry of CIVIC_MANIFEST) {
     for (const field of ['description', 'freshness', 'freshnessSource'] as const) {
+      // The hosted CKAN server (0.11.0) has no data of its own, and its
+      // freshness says so: it cites no source for it.
+      if (field === 'freshnessSource' && entry.sourceId === 'ckan-server') continue;
       const value = entry[field];
       assert.ok(typeof value === 'string' && value.length > 0, `${entry.sourceId}.${field} is set`);
       assert.doesNotMatch(value!, /\n/, `${entry.sourceId}.${field} is one line`);
@@ -250,7 +265,7 @@ test('fields: each civic entry carries a description and a freshness line, one l
     for (const field of ['description', 'freshness'] as const) {
       assert.doesNotMatch(entry[field], /https?:|\.example\.|src\//, `${entry.sourceId}.${field} carries no address or citation`);
     }
-    assert.doesNotMatch(entry.freshnessSource!, /https?:/, `${entry.sourceId}.freshnessSource names no deployment address`);
+    assert.doesNotMatch(entry.freshnessSource ?? '', /https?:/, `${entry.sourceId}.freshnessSource names no deployment address`);
   }
 });
 

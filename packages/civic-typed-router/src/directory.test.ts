@@ -48,14 +48,20 @@ const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8
 const TODAY = '2026-01-15';
 /** Every source on: both optional addresses, and all three hosted sources'
  *  switches (since 0.6.0, the two after Charter's too). City Record, a pack
- *  over the Socrata server since 0.8.0, is offered with Socrata. */
+ *  over the Socrata server since 0.8.0, is offered with Socrata. Since
+ *  0.11.0 the hosted CKAN server's address too, which offers it and the
+ *  Boston pack over it. */
 const EVERY_SOURCE = readMcpEnv({
   SOCRATA_MCP_URL: 'https://socrata-mcp.example.org',
   BOSTON_OPENCONTEXT_MCP_URL: 'https://boston-mcp.example.org/mcp',
   NYC_CHARTER_HOSTING: 'sandbox',
   NYC_CHECKBOOK_HOSTING: 'sandbox',
   NYS_LEGISLATION_HOSTING: 'sandbox',
+  CKAN_MCP_URL: 'https://ckan-mcp.example.org/mcp',
 });
+/** The entries the directory lists when each is offered: every entry but
+ *  one with no tool names (the hosted CKAN server, since 0.11.0). */
+const LISTED = CIVIC_MANIFEST.filter((entry) => entry.toolNames.length > 0);
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
 
 /** The line rule, written out here from the entry's fields. */
@@ -100,19 +106,20 @@ test('directory: a description without closing punctuation gains a period, and o
   );
 });
 
-// --- The seven current entries ---------------------------------------------------------------
+// --- The current entries ---------------------------------------------------------------------
 
-test('directory: for the seven current entries each line is the rule over the entry\'s alias, description and freshness, in manifest order', () => {
+test('directory: for the eight current entries the model reads each line is the rule over the entry\'s alias, description and freshness, in manifest order', () => {
   const directory = civicRouter.directoryPrompt({ configured: EVERY_SOURCE, today: TODAY });
-  assert.equal(directory, expectedDirectory(TODAY, CIVIC_MANIFEST));
-  assert.deepEqual(entryLines(directory), CIVIC_MANIFEST.map(lineOf));
+  assert.equal(LISTED.length, 8);
+  assert.equal(directory, expectedDirectory(TODAY, LISTED));
+  assert.deepEqual(entryLines(directory), LISTED.map(lineOf));
 });
 
-test('directory: with every source configured it has seven lines; with Boston OpenContext and the three hosted sources unconfigured, three (the City Record pack is offered with Socrata)', () => {
+test('directory: with every source configured it has eight lines, the CKAN server left out; with Boston OpenContext, the three hosted sources and the CKAN server unconfigured, three (the City Record pack is offered with Socrata)', () => {
   const directoryPrompt = civicRouter.directoryPrompt;
   assert.deepEqual(
     entryLines(directoryPrompt({ configured: EVERY_SOURCE, today: TODAY })).map((line) => line.split('`')[1]),
-    ['socrata', 'data_commons', 'boston', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation'],
+    ['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation', 'boston'],
   );
   const three = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY });
   assert.deepEqual(entryLines(three).map((line) => line.split('`')[1]), ['socrata', 'data_commons', 'nyc_record']);
@@ -185,7 +192,7 @@ const EXAMPLE_ENTRY: CivicManifestEntry = {
 test('directory: createCivicRouter(fork) gives a fork the same function over its own manifest', () => {
   const fork: CivicManifest = [...CIVIC_MANIFEST, EXAMPLE_ENTRY];
   const directory = createCivicRouter(fork).directoryPrompt({ configured: EVERY_SOURCE, today: TODAY });
-  assert.equal(directory, expectedDirectory(TODAY, fork));
+  assert.equal(directory, expectedDirectory(TODAY, [...LISTED, EXAMPLE_ENTRY]));
   assert.equal(
     entryLines(directory).at(-1),
     '- `example`: Example records: synthetic test records for one fictional town. Freshness: Static: a fixed test set.',

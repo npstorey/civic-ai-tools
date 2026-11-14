@@ -16,7 +16,7 @@ export {
   type SearchSourcesInput,
   type SourceHit,
 } from './router.ts';
-export { CIVIC_INVENTORY, CIVIC_KINDS, civicKinds, type CivicKindsOptions } from './inventory.ts';
+export { CIVIC_INVENTORY, CIVIC_KINDS, civicKinds, ckanPack, type CivicKindsOptions } from './inventory.ts';
 export type {
   CivicGuidanceContext,
   CivicManifest,
@@ -28,6 +28,7 @@ export type {
 } from './context.ts';
 export {
   BOSTON_OPENCONTEXT_ADDRESS_VARIABLE,
+  CKAN_ADDRESS_VARIABLE,
   configuredAddresses,
   configuredSources,
   DATA_COMMONS_ADDRESS_VARIABLE,
@@ -85,6 +86,9 @@ export {
   NYC_CHECKBOOK_TOOLS,
 } from './nyc-checkbook.ts';
 export { NYC_RECORD_ENTRY } from './nyc-record.ts';
+export { CKAN_PACK_BASE_TOOLS, CKAN_PACK_DESCRIPTION_CUTS, CKAN_PACK_TOOL_NAMES, CKAN_SERVER_ENTRY, CKAN_SERVER_SOURCE_ID, CKAN_SERVER_TOOL_NAMES } from './ckan.ts';
+export { BOSTON_CKAN_ENTRY, BOSTON_CKAN_GUIDANCE } from './boston-ckan.ts';
+export { BOSTON_CKAN_RULE, BOSTON_CKAN_WORDS, CKAN_SERVER_WORDS } from './ckan-words.ts';
 export {
   NYS_LEGISLATION_ENTRY,
   NYS_LEGISLATION_HOSTING,

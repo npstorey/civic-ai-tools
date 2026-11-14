@@ -33,7 +33,10 @@ const enumOf = (tool: ReturnType<typeof civicRouter.aliasedLoadSourceTool>): str
   (tool.function.parameters as { properties: { alias: { enum: string[] } } }).properties.alias.enum;
 
 test('A4 (pin, holds on 0.9.0): over a selection extended by a hit, the directory and the enum list the found entry at its manifest position', () => {
-  const ids = CIVIC_MANIFEST.map((entry) => entry.sourceId);
+  // The entries the configuration offers: since 0.11.0 the hosted CKAN
+  // server and its Boston pack follow, offered only with a CKAN address.
+  const ids = CIVIC_MANIFEST.filter((entry) => civicRouter.isSourceOffered(EVERY_SOURCE, entry.sourceId)).map((entry) => entry.sourceId);
+  assert.equal(ids.length, 7);
   const aliasOf = new Map(CIVIC_MANIFEST.map((entry) => [entry.sourceId, entry.alias]));
   const selections: string[][] = [[], ['socrata'], ['nys-legislation', 'data-commons'], ['boston-opencontext', 'nyc-checkbook', 'socrata']];
   let cases = 0;
