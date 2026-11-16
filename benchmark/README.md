@@ -679,6 +679,12 @@ data.
   - **Step 5's first start stopped at `op`**, which was not signed in, before any model call; no run directory was made
     and nothing was spent. Its output is kept as `g3/step-5.op-not-signed-in.out`, and step 5 was run again with the
     same three values (the seat's ruling, comment 6666737354).
+  - **S3-C moved the inputs' hash once** (hub #318, M1; `preregistration/s3c.md`, "The hash and the tag"):
+    `3d4b5271…` → `79a30392…`, with the stub transport, `builder+search-N`, the round's scorers and its plan file
+    (`runner/plans/s3c.json`). S1's run is reproduced from the tag `benchmark/s1-inputs-3d4b5271`, set at M1's merge
+    on the merge's first parent, the last commit whose tree hashes to S1's value. The router and
+    `inventories/to-manifest.mjs` are outside the hash, so `test/s1-rebuild.test.mjs` holds S1's requests byte for
+    byte at each later commit.
 - **The money.** Recorded spend is at list price, the larger of the computed and the reported cost of each request.
   Through the BYOK route above, Haiku requests billed the owner's Anthropic account or, where they fell back,
   OpenRouter's credits, so OpenRouter's balance fell by less than the recorded figure. The calibrated bound and the
