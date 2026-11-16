@@ -24,6 +24,10 @@
 //                       at low, once per question), no search;
 //   rule-N              BM25 over the inventory with the question as the
 //                       query; no model, no request.
+//   builder+search-N    (S3-C, design §1.4's E) shortlist+search-N's row over
+//                       the builder's selection: `find_source` beside
+//                       `load_source`, the hits widening the next request's
+//                       directory and enum, as S1 simulated it.
 // In every configuration but baseline-7 every entry is configured; the
 // directory set is the row's selection over them.
 
@@ -54,16 +58,20 @@ export function resolveConfig(name, inventory) {
     sized('flat', m[1]);
     return { name, kind: 'flat', rule: 'flat directory, every entry configured', routingRule: { id: 'flat', version: '1' }, cap: 'none', search: 'none', unconfigured: [], requestsPerRow: 2 };
   }
-  m = /^(shortlist|shortlist\+search|builder|rule)-(\d+)$/.exec(name ?? '');
+  m = /^(shortlist|shortlist\+search|builder\+search|builder|rule)-(\d+)$/.exec(name ?? '');
   if (m) {
     sized(m[1], m[2]);
     const cap = String(SHORTLIST_CAP);
     if (m[1] === 'shortlist') return { name, kind: 'shortlist', rule: `place filter (${SHORTLIST_RULE.id} ${SHORTLIST_RULE.version}), cap ${cap}, no search`, routingRule: { ...SHORTLIST_RULE }, cap, search: 'none', unconfigured: [], requestsPerRow: 2 };
     if (m[1] === 'shortlist+search') return { name, kind: 'search', rule: `place filter (${SHORTLIST_RULE.id} ${SHORTLIST_RULE.version}), cap ${cap}, find_source (${SEARCH_METHOD.method} ${SEARCH_METHOD.version})`, routingRule: { ...SHORTLIST_RULE }, cap, search: { ...SEARCH_METHOD }, unconfigured: [], requestsPerRow: 4 };
+    // S3-C (benchmark/preregistration/s3c.md, "`builder+search-N` (E)"): a
+    // shortlist+search-N row over the builder's selection; builder-N's rule
+    // and cap with shortlist+search-N's search.
+    if (m[1] === 'builder+search') return { name, kind: 'builder+search', rule: `builder selection (Haiku 5.5 at low, once per question), cap ${cap}, find_source (${SEARCH_METHOD.method} ${SEARCH_METHOD.version})`, routingRule: { id: 'builder', version: '1' }, cap, search: { ...SEARCH_METHOD }, unconfigured: [], requestsPerRow: 4 };
     if (m[1] === 'builder') return { name, kind: 'builder', rule: `builder selection (Haiku 5.5 at low, once per question), cap ${cap}, no search`, routingRule: { id: 'builder', version: '1' }, cap, search: 'none', unconfigured: [], requestsPerRow: 2, builderRequestsPerQuestion: 1 };
     return { name, kind: 'rule', rule: `${SEARCH_METHOD.method} ${SEARCH_METHOD.version} over the inventory, the question as the query, no model`, routingRule: { id: 'none', version: 'none' }, cap: 'none', search: { ...SEARCH_METHOD }, unconfigured: [], requestsPerRow: 0 };
   }
-  throw new Error(`unknown configuration ${name}: baseline-7, flat-N, shortlist-N, shortlist+search-N, builder-N or rule-N`);
+  throw new Error(`unknown configuration ${name}: baseline-7, flat-N, shortlist-N, shortlist+search-N, builder-N, builder+search-N or rule-N`);
 }
 
 /** The configuration variables that offer every manifest entry but the

@@ -24,6 +24,11 @@
 //
 // A key that appears more than once (a row redone after a cap stop) counts
 // once: its last line.
+//
+// S3-C: a run whose rows ran under the stub transport also gets the round's
+// section, `round` (round.mjs), from its rows and, once committed, the
+// labelling records under `labels/`. A run with no stub row gets none, so
+// S1's summaries keep their bytes.
 
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -31,6 +36,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CORRECT } from './score.mjs';
 import { summarizeS1 } from './s1.mjs';
+import { summarizeRound } from './round.mjs';
 import { jsonDocument } from '../runner/writer.mjs';
 
 const sha256 = (text) => createHash('sha256').update(text).digest('hex');
@@ -41,7 +47,7 @@ export const costOf = (value) => (value === null || value === undefined ? 0 : Nu
 
 /** The summary of one run, from the three files' texts. Pure: no clock, no
  *  path, no I/O. */
-export function summarize({ metaText, rowsText, baseText }) {
+export function summarize({ metaText, rowsText, baseText, labelTexts = null }) {
   const meta = JSON.parse(metaText);
   const lastByKey = (text) => {
     const m = new Map();
@@ -57,7 +63,9 @@ export function summarize({ metaText, rowsText, baseText }) {
   // step and model (s1.mjs); R5's runs keep R5's summary, below.
   if (Array.isArray(meta.steps)) {
     const files = { 'rows.jsonl': sha256(rowsText), 'baseline.jsonl': sha256(baseText), 'meta.json': sha256(metaText) };
-    return summarizeS1({ meta, rows, base, files, rowLines: rowsText.split('\n').filter(Boolean).length });
+    const summary = summarizeS1({ meta, rows, base, files, rowLines: rowsText.split('\n').filter(Boolean).length });
+    const round = summarizeRound({ meta, rows, labels: labelTexts });
+    return round ? { ...summary, round } : summary;
   }
 
   const pct = (n, d) => (d ? Number((n / d).toFixed(4)) : null);
@@ -218,10 +226,13 @@ export function summarize({ metaText, rowsText, baseText }) {
   };
 }
 
-/** The three files of a run directory, as texts; an absent file reads as ''. */
+/** The three files of a run directory, as texts; an absent file reads as ''.
+ *  And the labelling records under `labels/` (S3-C), each null when absent. */
 export function readRunFiles(dir) {
   const read = (f) => (existsSync(join(dir, f)) ? readFileSync(join(dir, f), 'utf8') : '');
-  return { metaText: read('meta.json'), rowsText: read('rows.jsonl'), baseText: read('baseline.jsonl') };
+  const label = (f) => (existsSync(join(dir, 'labels', f)) ? readFileSync(join(dir, 'labels', f), 'utf8') : null);
+  const labelTexts = { sheet: label('sheet.jsonl'), saltSha256: label('salt.sha256'), batches: label('batches.json'), a: label('a.jsonl'), b: label('b.jsonl'), salt: label('salt.txt') };
+  return { metaText: read('meta.json'), rowsText: read('rows.jsonl'), baseText: read('baseline.jsonl'), labelTexts };
 }
 
 /** The summary's text under the digit-run convention. */
@@ -255,6 +266,12 @@ function main() {
     for (const g of summary.groups) {
       const acc = g.offered ? ` acc1 offered ${g.offered.firstRequest} raw ${g.raw.firstRequest} filter ${g.filterRecall.rate} search@10 ${g.searchRecall.at10.rate} notice ${g.notice.rate} err ${g.errors}` : g.searchRecall ? ` search@5 ${g.searchRecall.at5.rate} search@10 ${g.searchRecall.at10.rate}` : ` empty ${g.emptySelections} dropped ${g.droppedAliases}`;
       console.log(`  ${g.step.padEnd(24)} ${String(g.model ?? g.role).padEnd(36)}${acc}${g.costUsd !== undefined ? ` $${g.costUsd}` : ''}`);
+    }
+    if (summary.round) {
+      for (const g of summary.round.groups) {
+        const u = g.unnoticedMiss.rule.all;
+        console.log(`  stub ${g.step.padEnd(19)} ${g.model.padEnd(36)} ended ${JSON.stringify(g.endedBy)} misses ${u.missesAtEnd.hits}/${u.missesAtEnd.n} unnoticed (rule) ${u.unnoticed.hits}/${u.unnoticed.n} S1's requests $${g.s1CostUsd} whole $${g.costUsd}`);
+      }
     }
     return;
   }
