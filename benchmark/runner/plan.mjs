@@ -23,6 +23,16 @@
 // selection, unknown before the run: the bounds take the 25 entries whose
 // directory lines are longest. Each token baseline (single-configuration runs
 // only) counts its whole ladder.
+//
+// S3-C (benchmark/preregistration/s3c.md, "The calibrated bound"): a step
+// whose rows read a recorded selection (`directoryOf`) is counted over that
+// selection, and a question whose selection is empty sends nothing; a
+// `builder+search-N` row is a search row over it. A stub step (`stub`) counts
+// every one of the stub's slots for each row that sends a request: each such
+// request carries the row's planned request after a load, every earlier
+// response at the completion allowance and one stub result per response
+// after S1's last, with its own completion at the allowance. `stubCeiling` is
+// that share of the ceiling, and its slots are in `calls` and `reserved`.
 
 import { MAX_TOKENS } from './app-texts.mjs';
 import { estimateTokens, TIER_MARGIN, worstCostOver } from './pricing.mjs';
@@ -30,6 +40,11 @@ import { reservationOf, slotBounds } from './bounds.mjs';
 import { baselineBody, baselineLadder, builderBody, plannedSecondBody, selectionBody } from './requests.mjs';
 import { BM25 } from './search.mjs';
 import { FIND_SOURCE_LIMIT } from './texts.mjs';
+import { STUB_RESULT_TEXT, STUB_SLOTS } from './stub.mjs';
+import { stubSlotBounds } from './bounds.mjs';
+
+/** Characters a tool-result message adds beyond its text (bounds.mjs). */
+const TOOL_MESSAGE_FRAME = 64;
 
 const FLOOR_CHARS_PER_TOKEN = 5;
 
@@ -70,10 +85,10 @@ export async function rowDirectory({ session, kind, q, shortlister }) {
  *  `pricings` the ceiling is priced at those; with `ceilingOnly` the floor
  *  and the reservations are not computed. The three are how "the calibrated
  *  bound" is computed (run.mjs). */
-export async function stepBounds({ session, kind, mi, questions, repeats, shortlister, baselines = null, completion = MAX_TOKENS, pricings = null, ceilingOnly = false }) {
+export async function stepBounds({ session, kind, mi, questions, repeats, shortlister, baselines = null, completion = MAX_TOKENS, pricings = null, ceilingOnly = false, directoryOf = null, stub = false }) {
   const p = pricings ?? mi.reservationPricings;
   const cpt = mi.cpt;
-  const out = { calls: 0, floor: 0, ceiling: 0, completions: 0, reserved: 0, largestRow: 0 };
+  const out = { calls: 0, floor: 0, ceiling: 0, completions: 0, reserved: 0, largestRow: 0, stubCeiling: 0 };
   // A request's worst cost; `rep` times its completion share is added to
   // `out.completions`, so the ceiling can be read as prompts plus completions.
   let rep = 1;
@@ -98,9 +113,9 @@ export async function stepBounds({ session, kind, mi, questions, repeats, shortl
       out.largestRow = Math.max(out.largestRow, res.usd);
       continue;
     }
-    const search = kind === 'search';
-    const dir = await rowDirectory({ session, kind, q, shortlister });
-    if (!dir.ids.length) continue;
+    const search = kind === 'search' || kind === 'builder+search';
+    const dir = directoryOf ? directoryOf(q) : await rowDirectory({ session, kind, q, shortlister });
+    if (!dir || !dir.ids.length) continue;
     const body1 = selectionBody(dir, mi.m, q, { search });
     const labels = q.acceptable.map((set) => set.filter((a) => dir.has(a))).filter((s) => s.length);
     const largestSingle = r.byAdds.find((id) => dir.ids.includes(id));
@@ -125,9 +140,19 @@ export async function stepBounds({ session, kind, mi, questions, repeats, shortl
     }
     if (candidates.length) ceiling += worst(Math.ceil(largest / cpt) + rounds * completion);
     out.calls += repeats * (search ? 2 + FIND_SOURCE_LIMIT : 2);
+    if (stub) {
+      const after = Math.ceil((candidates.length ? largest : JSON.stringify(body1).length) / cpt);
+      const stubResult = Math.ceil((STUB_RESULT_TEXT.length + TOOL_MESSAGE_FRAME) / cpt);
+      let stubRow = 0;
+      for (let k = 1; k <= STUB_SLOTS; k++) stubRow += worst(after + (rounds + k) * completion + k * stubResult);
+      ceiling += stubRow;
+      out.stubCeiling += repeats * stubRow;
+      out.calls += repeats * STUB_SLOTS;
+    }
     out.ceiling += repeats * ceiling;
     if (ceilingOnly) continue;
-    const res = reservationOf(await slotBounds({ session, kind: search ? 'search' : 'main', dir, m: mi.m, q, cpt, contextLength: mi.contextLength }), p, TIER_MARGIN);
+    const s1Bounds = await slotBounds({ session, kind: search ? 'search' : 'main', dir, m: mi.m, q, cpt, contextLength: mi.contextLength });
+    const res = reservationOf(stub ? [...s1Bounds, ...stubSlotBounds({ cpt, contextLength: mi.contextLength })] : s1Bounds, p, TIER_MARGIN);
     out.floor += repeats * (worstCostOver(p, estimateTokens(body1, FLOOR_CHARS_PER_TOKEN), 0, 0) + (smallest === null ? 0 : worstCostOver(p, Math.floor(smallest / FLOOR_CHARS_PER_TOKEN), 0, 0)));
     out.reserved += repeats * res.usd;
     out.largestRow = Math.max(out.largestRow, res.usd);

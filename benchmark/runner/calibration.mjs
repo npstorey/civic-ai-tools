@@ -22,12 +22,26 @@
 //
 // which reads R5's committed rows from benchmark/runs/2026-10-11-r5/rows.jsonl
 // and writes schema civic-calibration/2 (its fields: `CALIBRATION_FIELDS`).
+//
+// S3-C's MODE (benchmark/preregistration/s3c.md, "The calibration"), schema
+// civic-calibration/3, selected by `--stub-probe`:
+//
+//   node benchmark/runner/calibration.mjs --stub-probe <the stub probe's run dir>
+//     --s1-run <S1's committed evaluations run dir> --out <file>
+//
+// It differs from S1's mode in three stated ways: it reads every request of a
+// row that returned usage, the requests under `stub` among them; it reads no
+// R5 rows and no open-weight probe; and the completion allowance is twice the
+// largest billed completion, at most the 4,000-token limit. Per model it takes
+// the fewer characters per token and the larger completion of its two
+// sources. S1's mode, above, is unchanged.
 
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { jsonDocument } from './writer.mjs';
+import { MAX_TOKENS } from './app-texts.mjs';
 
 /** The calibration's rule, as the file states it. */
 export const CALIBRATION_RULE =
@@ -175,12 +189,99 @@ export function combine({ probe, openWeightProbe, r5 }) {
   };
 }
 
+// --- S3-C's mode: civic-calibration/3 ---------------------------------------
+
+/** Every request of a row that returned usage, the requests under `stub`
+ *  among them (and a probe row's forced answering request): `{ chars,
+ *  promptTokens, usage }`. */
+export function stubRowRequests(row) {
+  const out = [];
+  const add = (r) => {
+    if (r && typeof r.promptChars === 'number' && r.usage) out.push({ chars: r.promptChars, promptTokens: r.usage.prompt_tokens, usage: r.usage });
+  };
+  if (Array.isArray(row.requests) && row.requests.length) row.requests.forEach(add);
+  else add(row.first);
+  add(row.second);
+  add(row.request);
+  if (row.stub) {
+    (row.stub.requests ?? []).forEach(add);
+    if (row.stub.shapeCheck?.sent && row.stub.shapeCheck.usage) add(row.stub.shapeCheck);
+  }
+  return out;
+}
+
+/** One source's figures, per model slug: the fewest characters per billed
+ *  prompt token less 10%, floored to four places as S1's rule floors it, and
+ *  the largest billed completion. */
+export function sourceFigures(rows) {
+  const byModel = {};
+  for (const row of rows) {
+    if (!row.model) continue;
+    for (const r of stubRowRequests(row)) {
+      const m = (byModel[row.model] ??= { requests: 0, fewest: Infinity, at: null, completionRequests: 0, largestCompletion: 0 });
+      m.completionRequests++;
+      m.largestCompletion = Math.max(m.largestCompletion, billedCompletion(r.usage));
+      if (!(r.promptTokens > 0)) continue;
+      m.requests++;
+      const ratio = r.chars / r.promptTokens;
+      if (ratio < m.fewest) {
+        m.fewest = ratio;
+        m.at = { key: row.key, chars: r.chars, promptTokens: r.promptTokens };
+      }
+    }
+  }
+  const floor4 = (x) => Math.floor(x * 1e4) / 1e4;
+  return Object.fromEntries(
+    Object.entries(byModel).map(([slug, m]) => [
+      slug,
+      { charsPerToken: floor4(m.fewest * (1 - CALIBRATION_MARGIN)), fewestCharsPerToken: floor4(m.fewest), requests: m.requests, fewestAt: m.at, completions: { requests: m.completionRequests, largest: m.largestCompletion } },
+    ]),
+  );
+}
+
+/** The rules of civic-calibration/3, as the file states them. */
+export const STUB_CALIBRATION_RULE =
+  "per model, the fewest characters of a request body's JSON per billed prompt token, less 10%, rounded down to four places, over every request of a row that returned usage (the requests under stub among them), in the stub probe's rows and S1's committed run; the fewer of the two sources";
+export const STUB_COMPLETION_RULE =
+  'per model, the most completion tokens one request billed (completion_tokens, which carries reasoning tokens; the reasoning tokens where reported larger), over the same requests; the larger of the two sources. The allowance is twice it, at most the 4,000-token limit';
+
+/** The civic-calibration/3 file from its two sources: the stub probe's run
+ *  and S1's committed evaluations. Each is `{ meta, rows, rowsSha256 }`. */
+export function combineStub({ stubProbe, s1Run }) {
+  const probeModels = [...new Set(stubProbe.rows.map((r) => r.model).filter(Boolean))].sort();
+  const HAIKU = 'anthropic/claude-haiku-5.5';
+  if (probeModels.length !== 2 || !probeModels.includes(HAIKU)) throw new Error(`the stub probe ran ${probeModels.join(', ') || 'no model'}; it must run Haiku 5.5 and the open-weight model`);
+  const fromProbe = sourceFigures(stubProbe.rows);
+  const fromS1 = sourceFigures(s1Run.rows);
+  const models = {};
+  for (const slug of probeModels) {
+    const a = fromProbe[slug];
+    const b = fromS1[slug];
+    if (!b) throw new Error(`${slug}: S1's run has no request of this model`);
+    const charsPerToken = Math.min(...[a, b].filter((x) => x.requests > 0).map((x) => x.charsPerToken));
+    const largest = Math.max(a.completions.largest, b.completions.largest);
+    if (!(charsPerToken > 0) || !(largest > 0)) throw new Error(`${slug}: the two sources give no figure`);
+    models[slug] = { charsPerToken, largestCompletion: largest, completionAllowance: Math.min(2 * largest, MAX_TOKENS), from: { stubProbe: a, s1Run: b } };
+  }
+  return {
+    schema: 'civic-calibration/3',
+    rule: STUB_CALIBRATION_RULE,
+    completionRule: STUB_COMPLETION_RULE,
+    sources: {
+      stubProbe: { runId: stubProbe.meta.runId, rowsSha256: stubProbe.rowsSha256 },
+      s1Run: { runId: s1Run.meta.runId, rowsSha256: s1Run.rowsSha256 },
+    },
+    models,
+  };
+}
+
 export const R5_ROWS = 'benchmark/runs/2026-10-11-r5/rows.jsonl';
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 
 function main() {
   const args = process.argv.slice(2);
   const arg = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+  if (args.includes('--stub-probe')) return mainStub(arg);
   const probeDir = arg('--probe');
   const owDir = arg('--open-weight-probe');
   const out = arg('--out');
@@ -206,6 +307,34 @@ function main() {
   writeFileSync(out, jsonDocument(cal));
   for (const [slug, m] of Object.entries(cal.models)) console.log(`${slug.padEnd(36)} ${m.charsPerToken} characters a token; largest completion ${m.largestCompletion} tokens, counted at ${m.completionAllowance}`);
   console.log(`wrote ${out}`);
+}
+
+/** S3-C's mode: --stub-probe <run dir> --s1-run <run dir> --out <file>. */
+function mainStub(arg) {
+  const probeDir = arg('--stub-probe');
+  const s1Dir = arg('--s1-run');
+  const out = arg('--out');
+  if (!probeDir || !s1Dir || !out) {
+    console.error('usage: node benchmark/runner/calibration.mjs --stub-probe <run dir> --s1-run <run dir> --out <file>');
+    process.exit(2);
+  }
+  const run = (dir) => {
+    const text = readFileSync(join(dir, 'rows.jsonl'), 'utf8');
+    return { meta: JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')), rows: text.split('\n').filter(Boolean).map((l) => JSON.parse(l)), rowsSha256: sha256(text) };
+  };
+  const stubProbe = run(probeDir);
+  const s1Run = run(s1Dir);
+  if (stubProbe.meta.mode !== 'probe') throw new Error(`${probeDir} is not a probe's run (mode ${stubProbe.meta.mode})`);
+  if (!stubProbe.rows.some((r) => r.transport === 'stub')) throw new Error(`${probeDir}: no row ran under the stub transport`);
+  if (s1Run.meta.mode !== 'evaluations') throw new Error(`${s1Dir} is not an evaluations run (mode ${s1Run.meta.mode})`);
+  if (existsSync(out)) {
+    console.error(`${out} exists; give another --out`);
+    process.exit(1);
+  }
+  const cal = combineStub({ stubProbe, s1Run });
+  writeFileSync(out, jsonDocument(cal));
+  for (const [slug, m] of Object.entries(cal.models)) console.log(`${slug.padEnd(36)} ${m.charsPerToken} characters a token (stub probe ${m.from.stubProbe.charsPerToken}, S1's run ${m.from.s1Run.charsPerToken}); largest completion ${m.largestCompletion} tokens, counted at ${m.completionAllowance}`);
+  console.log(`wrote ${out} (civic-calibration/3)`);
 }
 
 const invokedDirectly = process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));

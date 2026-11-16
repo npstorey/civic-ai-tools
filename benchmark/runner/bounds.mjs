@@ -40,6 +40,7 @@ import { builderBody, plannedSecondBody, selectionBody } from './requests.mjs';
 import { FIND_SOURCE_TEXT, FIND_SOURCE_TOOL } from './texts.mjs';
 import { BM25 } from './search.mjs';
 import { FIND_SOURCE_LIMIT } from './texts.mjs';
+import { STUB_BODY_LIMIT, STUB_SLOTS } from './stub.mjs';
 
 /** A tool call is taken to cost at least this many completion tokens. */
 export const TOOL_CALL_MIN_TOKENS = 8;
@@ -51,7 +52,7 @@ export const MAX_CALLS = Math.floor(MAX_TOKENS / TOOL_CALL_MIN_TOKENS);
 const TOOL_MESSAGE_FRAME = 64;
 
 /** The requests a row of each kind may send. */
-export const REQUESTS_PER_ROW = Object.freeze({ baseline: 2, flat: 2, shortlist: 2, builder: 2, search: 2 + FIND_SOURCE_LIMIT, rule: 0, 'builder-read': 1 });
+export const REQUESTS_PER_ROW = Object.freeze({ baseline: 2, flat: 2, shortlist: 2, builder: 2, search: 2 + FIND_SOURCE_LIMIT, 'builder+search': 2 + FIND_SOURCE_LIMIT, rule: 0, 'builder-read': 1 });
 
 /** The largest single entries of a session, for the bounds: per entry, its
  *  directory over it alone and its state after loading it alone. */
@@ -113,6 +114,18 @@ export async function slotBounds({ session, kind, dir, m, q, cpt, contextLength 
   const after = await plannedSecondBody(loadedWide, m, q, loadedWide.aliases, { search });
   const echo = echoTokens(session, cpt);
   return [cap(first), cap(est(wideBody) + echo), cap(est(wideBody) + 2 * echo), cap(est(after) + 3 * echo)];
+}
+
+/** The prompt bounds, in tokens, of a stub row's slots (S3-C; the
+ *  preregistration's "The reservation of a stub row"): one for each request
+ *  the stub transport may send after S1's last, each at a prompt of
+ *  `STUB_BODY_LIMIT` characters at the model's characters per token. The slot
+ *  and the size limit are one rule: the slot holds because the runner refuses
+ *  a longer body (engine.mjs). Each is priced, as S1 prices a request, with
+ *  its completion at the full limit. */
+export function stubSlotBounds({ cpt, contextLength }) {
+  const tokens = Math.min(Math.ceil(STUB_BODY_LIMIT / cpt), contextLength ?? Infinity);
+  return Array.from({ length: STUB_SLOTS }, () => tokens);
 }
 
 /** A row's reservation: the worst case of each of its requests, summed. */

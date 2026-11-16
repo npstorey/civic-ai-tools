@@ -2,6 +2,11 @@
 // accounting and the cap (A3.2), the rows' states. run.mjs reads the
 // arguments and the inputs, builds the steps and hands them here.
 //
+// THE STUB TRANSPORT (S3-C, stub.mjs). A row of a step whose `transport` is
+// `stub` is S1's row through S1's last request, then goes on to an answer
+// (`stubOn`). It reserves S1's slots and the stub's seven, carries
+// `transport` and `stub`, and records each response's `provider`.
+//
 // ROW STATES. A row is complete, error, or not started; never cut by the cap.
 //   - complete: every request it sent returned;
 //   - error: a request failed after its attempts (three for a status that
@@ -20,12 +25,13 @@
 // its worst case. So the spend recorded plus every worst case in flight never
 // passes the cap.
 
-import { MAX_TOKENS, UNKNOWN_TOOL_TEXT } from './app-texts.mjs';
+import { announcesWork, MAX_TOKENS, UNKNOWN_TOOL_TEXT, UNRUN_TOOL_CALL_NOTE } from './app-texts.mjs';
 import { scoreLoad } from '../scoring/score.mjs';
 import { chargeOf, estimateTokens, TIER_MARGIN, worstCostOver } from './pricing.mjs';
-import { reservationOf, slotBounds } from './bounds.mjs';
+import { reservationOf, slotBounds, stubSlotBounds } from './bounds.mjs';
 import { baselineBody, baselineLadder, builderBody, secondBody, selectionBody } from './requests.mjs';
-import { FIND_SOURCE_LIMIT, FIND_SOURCE_TEXT } from './texts.mjs';
+import { FIND_SOURCE_LIMIT, FIND_SOURCE_TEXT, FIND_SOURCE_TOOL } from './texts.mjs';
+import { answeringBody, STUB_BODY_LIMIT, STUB_MAX_REQUESTS, STUB_RESULT_TEXT, STUB_TRANSPORT, stubBody, textOf, toolMessage } from './stub.mjs';
 
 const REQUEST_TIMEOUT_MS = 180_000;
 const RETRYABLE = (s) => s === null || s === 408 || s === 429 || s >= 500;
@@ -141,7 +147,9 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
     return { status: 'error', error: { status: null, message: 'unreachable' }, attempts };
   }
 
-  const requestRecord = (c, body, kind, extra = {}) => ({
+  // `withProvider` (a stub row's requests, S3-C): the response's `provider`
+  // field, after S1's fields.
+  const requestRecord = (c, body, kind, extra = {}, withProvider = false) => ({
     kind,
     promptChars: JSON.stringify(body).length,
     latencyMs: c.latencyMs,
@@ -152,11 +160,14 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
     respondedModel: c.res.model ?? null,
     ...summarizeMessage(c.res.choices?.[0]?.message),
     ...extra,
+    ...(withProvider ? { provider: c.res.provider ?? null } : {}),
   });
 
-  /** Reserve a row's worst case; null when the cap cannot hold it. */
-  async function reserveRow({ session, kind, dir, mi, q }, key) {
-    const bounds = await slotBounds({ session, kind, dir, m: mi.m, q, cpt: mi.cpt, contextLength: mi.contextLength });
+  /** Reserve a row's worst case; null when the cap cannot hold it. A stub
+   *  row reserves S1's slots, then the stub's (bounds.mjs). */
+  async function reserveRow({ session, kind, dir, mi, q }, key, stub = false) {
+    const s1 = await slotBounds({ session, kind, dir, m: mi.m, q, cpt: mi.cpt, contextLength: mi.contextLength });
+    const bounds = stub ? [...s1, ...stubSlotBounds({ cpt: mi.cpt, contextLength: mi.contextLength })] : s1;
     const r = reservationOf(bounds, mi.reservationPricings, TIER_MARGIN);
     if (!reserve(r.usd, key)) return null;
     return { boundsTokens: bounds, usd: r.usd, perRequest: [...r.perRequest], slots: r.perRequest.map((usd) => ({ usd })) };
@@ -170,7 +181,7 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
   const reservationRecord = (resv) => ({ reservedUsd: resv.usd, perRequestUsd: resv.perRequest, requests: resv.slots.length, promptBoundTokens: resv.boundsTokens, toppedUpUsd: resv.slots.reduce((s, x) => s + (x.toppedUp ?? 0), 0) });
 
   /** The second request after loads, scored as P0 scored it. */
-  async function postLoad({ session, mi, dir, body, msg, toolMessages, loaded, slot, search }) {
+  async function postLoad({ session, mi, dir, body, msg, toolMessages, loaded, slot, search, withProvider = false }) {
     const state = await dir.afterLoads(loaded.map((a) => session.entry(a).sourceId));
     const body2 = secondBody(mi.m, body, msg, toolMessages, state, { search });
     const c2 = await call(mi, body2, slot);
@@ -210,9 +221,11 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
     else if (evaluated.length) outcome = 'loaded_more_only';
     else outcome = 'no_tool_call';
     return {
-      second: { ...requestRecord(c2, body2, 'after-load'), evaluated, outcome, offeredToolCount: state.tools.length, definitionHash: state.definitionHash },
+      second: { ...requestRecord(c2, body2, 'after-load', {}, withProvider), evaluated, outcome, offeredToolCount: state.tools.length, definitionHash: state.definitionHash },
       loaded2,
       cost: c2.cost.charged,
+      body2,
+      msg2,
     };
   }
 
@@ -227,14 +240,214 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
 
   const picksOf = (session, loaded) => loaded.map((alias) => ({ alias, ...session.kindOf(alias) }));
 
+  /** S3-C: a stub row goes on from the response to S1's last request
+   *  (stub.mjs; the preregistration's "The stub transport"). `done` is the
+   *  row as S1's runner finished it. `ctx`: S1's last body and its response;
+   *  the tool messages S1's runner computed for that response, or null where
+   *  it left its calls unanswered (the request after the loads); the row's
+   *  first directory (`baseIds`), the entries its searches found, the
+   *  searches run and the aliases loaded so far; whether the configuration
+   *  has search; S1's slot count. Returns the row with `stub` and its whole
+   *  cost. */
+  async function stubOn(t, resv, done, ctx) {
+    const { session, mi, index } = t;
+    const { s1Slots, lastBody, lastMsg, search } = ctx;
+    const loaded = [...ctx.loaded];
+    const found = [...ctx.found];
+    let searchesRun = ctx.searchesRun;
+    const dirNow = () => session.directoryFor([...ctx.baseIds, ...found.map((a) => session.entry(a).sourceId)]);
+    let cur = dirNow();
+    const conversation = [...lastBody.messages.slice(1), lastMsg];
+    const requests = [];
+    const searches = [];
+    let cost = 0;
+    let offered = lastBody.tools ?? [];
+    let lastSystem = lastBody.messages[0].content;
+    let lastDefinitionHash = ctx.lastDefinitionHash;
+    const stub = { requests, endedBy: null, answeringReason: null, searches, directoryEnd: null, loadedEnd: null, answer: null, costUsd: 0, s1CostUsd: done.costUsd, s1LastAnswered: null };
+    const sizeOf = (body) => JSON.stringify(body).length;
+
+    /** The calls of `msg`, answered by the table: S1's load step and texts,
+     *  S1's search rule and texts, the stub's result for a tool the last
+     *  request offered for a loaded source, S1's unknown-tool text for any
+     *  other name. */
+    function answerCalls(msg, afterRequest) {
+      const byName = new Map(offered.map((tool) => [tool.function.name, tool]));
+      const messages = [];
+      const answered = [];
+      for (const tc of msg.tool_calls ?? []) {
+        const name = tc.function?.name;
+        const raw = tc.function?.arguments ?? '';
+        let content;
+        let entry;
+        if (name === 'load_source') {
+          const alias = parseArgs(raw)?.alias;
+          const res = loadResult(session, cur, alias, loaded);
+          if (res.fresh) loaded.push(alias);
+          content = res.content;
+          entry = { name, by: 'load', alias: typeof alias === 'string' ? alias : null, loaded: Boolean(res.fresh) };
+        } else if (name === 'find_source' && search) {
+          if (searchesRun < FIND_SOURCE_LIMIT) {
+            searchesRun++;
+            const query = parseArgs(raw)?.query;
+            const hits = index.search(typeof query === 'string' ? query : '');
+            searches.push({ query: typeof query === 'string' ? query : '', hits, afterRequest });
+            for (const h of hits) if (!found.includes(h)) found.push(h);
+            content = hits.length ? FIND_SOURCE_TEXT.found(hits) : FIND_SOURCE_TEXT.none;
+            entry = { name, by: 'search' };
+          } else {
+            content = FIND_SOURCE_TEXT.limit;
+            entry = { name, by: 'limit' };
+          }
+        } else if (name !== 'load_source' && name !== 'find_source' && byName.has(name)) {
+          content = STUB_RESULT_TEXT;
+          const args = parseArgs(raw);
+          let classing;
+          if (args === null) classing = { validName: true, argsParse: false, schemaValid: false };
+          else {
+            const v = mi.validatorFor(byName.get(name));
+            classing = v.compileError ? { validName: true, argsParse: true, schemaValid: null } : { validName: true, argsParse: true, schemaValid: Boolean(v(args)) };
+          }
+          entry = { name, by: 'stub', ...classing };
+        } else {
+          let nearMiss = null;
+          for (const a of loaded) if (!nearMiss && byName.has(`${a}__${name}`)) nearMiss = `bare upstream name of ${a}__${name}`;
+          const target = nearMiss ? null : session.router.sourceForAliasedName(name);
+          if (target) nearMiss = `a tool of ${session.aliasOf(target.sourceId)}, which was not loaded`;
+          content = UNKNOWN_TOOL_TEXT(name);
+          entry = { name, by: 'unknown', validName: false, nearMiss };
+        }
+        messages.push(toolMessage(tc.id, content));
+        answered.push(entry);
+      }
+      cur = dirNow();
+      return { messages, answered };
+    }
+
+    let latest = lastMsg;
+    let latestRecord = null;
+    let alreadyAnswered = false;
+    if (ctx.answered) {
+      conversation.push(...ctx.answered);
+      stub.s1LastAnswered = { answeredBy: 's1' };
+      alreadyAnswered = true;
+    }
+    let answering = null;
+    for (;;) {
+      const calls = latest.tool_calls ?? [];
+      if (calls.length) {
+        if (requests.length >= STUB_MAX_REQUESTS) {
+          answering = 'bound';
+          break;
+        }
+        if (!alreadyAnswered) {
+          const a = answerCalls(latest, latestRecord ? requests.indexOf(latestRecord) : -1);
+          conversation.push(...a.messages);
+          if (latestRecord) latestRecord.answered = a.answered;
+          else stub.s1LastAnswered = { answeredBy: 'stub', calls: a.answered };
+        }
+        const state = loaded.length ? await cur.afterLoads(loaded.map((a) => session.entry(a).sourceId)) : null;
+        const tools = [...(state ? state.tools : [cur.loadTool]), ...(search ? [FIND_SOURCE_TOOL] : [])];
+        const body = stubBody(mi.m, state ? state.systemPrompt : cur.system, conversation, tools);
+        const definitionHash = state ? state.definitionHash : session.hashes().firstRequestDefinitionHash;
+        if (sizeOf(body) > STUB_BODY_LIMIT) {
+          stub.endedBy = 'size';
+          stub.notSent = { kind: 'stub', promptChars: sizeOf(body), definitionHash };
+          break;
+        }
+        const c = await call(mi, body, resv.slots[s1Slots + requests.length]);
+        if (c.status !== 'ok') {
+          stub.endedBy = 'error';
+          stub.failedRequest = { kind: 'stub', promptChars: sizeOf(body), error: c.error, attempts: c.attempts ?? null };
+          break;
+        }
+        cost += c.cost.charged;
+        latest = c.res.choices?.[0]?.message ?? {};
+        latestRecord = { ...requestRecord(c, body, 'stub', {}, true), answered: [], definitionHash };
+        requests.push(latestRecord);
+        conversation.push(latest);
+        offered = tools;
+        lastSystem = body.messages[0].content;
+        lastDefinitionHash = definitionHash;
+        alreadyAnswered = false;
+        continue;
+      }
+      const text = textOf(latest);
+      if (!text.trim()) answering = 'empty';
+      else if (announcesWork(text)) answering = 'announcement';
+      else {
+        stub.endedBy = 'answer';
+        stub.answer = text;
+      }
+      break;
+    }
+
+    // The answering turn: the row's messages (the last response among them
+    // when it has text or tool calls), then the final-answer request.
+    if (answering) {
+      stub.answeringReason = answering;
+      const conv = [...conversation];
+      let foundPending = [];
+      if (answering === 'empty') conv.pop();
+      if (answering === 'bound') {
+        for (const tc of latest.tool_calls) conv.push(toolMessage(tc.id, UNRUN_TOOL_CALL_NOTE));
+        foundPending = latest.tool_calls.map((tc) => ({ name: tc.function?.name, by: 'unrun' }));
+        if (latestRecord) latestRecord.answered = foundPending;
+      }
+      const body = answeringBody(mi.m, lastSystem, conv);
+      if (sizeOf(body) > STUB_BODY_LIMIT) {
+        stub.endedBy = 'size';
+        stub.notSent = { kind: 'answering', promptChars: sizeOf(body), definitionHash: lastDefinitionHash };
+      } else {
+        const c = await call(mi, body, resv.slots[s1Slots + requests.length]);
+        if (c.status !== 'ok') {
+          stub.endedBy = 'error';
+          stub.failedRequest = { kind: 'answering', promptChars: sizeOf(body), error: c.error, attempts: c.attempts ?? null };
+        } else {
+          cost += c.cost.charged;
+          const msg = c.res.choices?.[0]?.message ?? {};
+          requests.push({ ...requestRecord(c, body, 'answering', {}, true), foundPending, definitionHash: lastDefinitionHash });
+          stub.endedBy = 'answering-turn';
+          stub.answer = textOf(msg);
+        }
+      }
+    }
+
+    // A probe row (the preregistration's "The calibration") sends the
+    // answering request once its loop ends, whatever ended it, so the request
+    // with tool results and no `tools` meets both models before the run. The
+    // row's answer is its loop's.
+    if (t.probe) {
+      if (stub.endedBy === 'answering-turn') stub.shapeCheck = { sent: true, sameAs: 'the row\'s answering request (stub.requests, kind "answering")' };
+      else {
+        const body = answeringBody(mi.m, lastSystem, [...conversation]);
+        if (sizeOf(body) > STUB_BODY_LIMIT) stub.shapeCheck = { sent: false, reason: 'size', promptChars: sizeOf(body) };
+        else {
+          const c = await call(mi, body, resv.slots[s1Slots + requests.length]);
+          if (c.status !== 'ok') stub.shapeCheck = { sent: false, reason: 'error', promptChars: sizeOf(body), error: c.error, attempts: c.attempts ?? null };
+          else {
+            cost += c.cost.charged;
+            stub.shapeCheck = { sent: true, ...requestRecord(c, body, 'answering', {}, true), definitionHash: lastDefinitionHash };
+          }
+        }
+      }
+    }
+
+    stub.directoryEnd = [...cur.aliases];
+    stub.loadedEnd = [...loaded];
+    stub.costUsd = cost;
+    return { ...done, costUsd: done.costUsd + cost, stub, reservation: reservationRecord(resv) };
+  }
+
   /** A main row: baseline-7, flat-N, shortlist-N, builder-N. */
   async function mainRow(t) {
     const { session, dir, mi, q, r, step } = t;
-    const row = { key: t.key, step: step.id, config: session.config.name, role: 'main', model: mi.m.slug, spec: mi.m.spec, control: mi.m.control, qid: q.id, kind: q.kind, repeat: r, acceptable: q.acceptable, shortlist: [...dir.aliases] };
+    const stub = t.transport === STUB_TRANSPORT;
+    const row = { key: t.key, step: step.id, config: session.config.name, role: 'main', model: mi.m.slug, spec: mi.m.spec, control: mi.m.control, qid: q.id, kind: q.kind, repeat: r, acceptable: q.acceptable, shortlist: [...dir.aliases], ...(stub ? { transport: STUB_TRANSPORT } : {}) };
     if (!dir.ids.length) {
-      return { ...row, status: 'complete', noRequest: 'empty shortlist: nothing offered, nothing can be loaded', requests: [], loaded1: [], score1: scoreLoad([], q.acceptable), second: null, loaded2: [], score2: scoreLoad([], q.acceptable), picks: [], offered: [], costUsd: 0, reservation: null };
+      return { ...row, status: 'complete', noRequest: 'empty shortlist: nothing offered, nothing can be loaded', requests: [], loaded1: [], score1: scoreLoad([], q.acceptable), second: null, loaded2: [], score2: scoreLoad([], q.acceptable), picks: [], offered: [], costUsd: 0, reservation: null, ...(stub ? { stub: null } : {}) };
     }
-    const resv = await reserveRow({ session, kind: 'main', dir, mi, q }, row.key);
+    const resv = await reserveRow({ session, kind: 'main', dir, mi, q }, row.key, stub);
     if (!resv) return null;
     try {
       const body1 = selectionBody(dir, mi.m, q);
@@ -261,7 +474,7 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
         toolMessages.push({ role: 'tool', tool_call_id: tc.id, content });
       }
       row.first = {
-        ...requestRecord(c1, body1, 'selection', { directoryChars: dir.system.length }),
+        ...requestRecord(c1, body1, 'selection', { directoryChars: dir.system.length }, stub),
         firstCallName: calls1[0]?.function?.name ?? null,
         loadCalls: calls1.filter((tc) => tc.function?.name === 'load_source').length,
         invalidAliases,
@@ -273,10 +486,17 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
       row.score1 = scoreLoad(loaded, q.acceptable);
       row.picks = picksOf(session, loaded);
       row.offered = [...dir.aliases];
-      if (!loaded.length) return { ...row, status: 'complete', second: null, loaded2: [], score2: row.score1, costUsd: c1.cost.charged, reservation: reservationRecord(resv) };
-      const p = await postLoad({ session, mi, dir, body: body1, msg: msg1, toolMessages, loaded, slot: resv.slots[1], search: false });
+      const firstHash = session.hashes().firstRequestDefinitionHash;
+      if (!loaded.length) {
+        const done = { ...row, status: 'complete', second: null, loaded2: [], score2: row.score1, costUsd: c1.cost.charged };
+        if (stub) return await stubOn(t, resv, done, { s1Slots: 2, lastBody: body1, lastMsg: msg1, answered: toolMessages, lastDefinitionHash: firstHash, baseIds: dir.ids, found: [], searchesRun: 0, loaded: [], search: false });
+        return { ...done, reservation: reservationRecord(resv) };
+      }
+      const p = await postLoad({ session, mi, dir, body: body1, msg: msg1, toolMessages, loaded, slot: resv.slots[1], search: false, withProvider: stub });
       if (p.failed) return { ...row, status: 'error', second: { error: p.failed.error, attempts: p.failed.attempts, promptChars: JSON.stringify(p.body2).length }, loaded2: [...loaded], score2: row.score1, costUsd: c1.cost.charged, reservation: reservationRecord(resv) };
-      return { ...row, status: 'complete', second: p.second, loaded2: p.loaded2, score2: scoreLoad(p.loaded2, q.acceptable), costUsd: c1.cost.charged + p.cost, reservation: reservationRecord(resv) };
+      const done = { ...row, status: 'complete', second: p.second, loaded2: p.loaded2, score2: scoreLoad(p.loaded2, q.acceptable), costUsd: c1.cost.charged + p.cost };
+      if (stub) return await stubOn(t, resv, done, { s1Slots: 2, lastBody: p.body2, lastMsg: p.msg2, answered: null, lastDefinitionHash: p.second.definitionHash, baseIds: dir.ids, found: [], searchesRun: 0, loaded, search: false });
+      return { ...done, reservation: reservationRecord(resv) };
     } finally {
       releaseRow(resv);
     }
@@ -287,8 +507,14 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
    *  request after the loads. */
   async function searchRow(t) {
     const { session, dir, mi, q, r, step, index } = t;
-    const row = { key: t.key, step: step.id, config: session.config.name, role: 'main', model: mi.m.slug, spec: mi.m.spec, control: mi.m.control, qid: q.id, kind: q.kind, repeat: r, acceptable: q.acceptable, shortlist: [...dir.aliases], searches: [] };
-    const resv = await reserveRow({ session, kind: 'search', dir, mi, q }, row.key);
+    const stub = t.transport === STUB_TRANSPORT;
+    const row = { key: t.key, step: step.id, config: session.config.name, role: 'main', model: mi.m.slug, spec: mi.m.spec, control: mi.m.control, qid: q.id, kind: q.kind, repeat: r, acceptable: q.acceptable, shortlist: [...dir.aliases], searches: [], ...(stub ? { transport: STUB_TRANSPORT } : {}) };
+    // builder+search-N (S3-C): an empty selection sends no request, by the
+    // builder's output rule; the row is complete with no load and no search.
+    if (session.config.kind === 'builder+search' && !dir.ids.length) {
+      return { ...row, status: 'complete', noRequest: 'empty selection: nothing offered, nothing can be loaded', requests: [], loadRound: null, loaded1: [], score1: scoreLoad([], q.acceptable), picks: [], offered: [], second: null, loaded2: [], score2: scoreLoad([], q.acceptable), limitTexts: 0, costUsd: 0, reservation: null, ...(stub ? { stub: null } : {}) };
+    }
+    const resv = await reserveRow({ session, kind: 'search', dir, mi, q }, row.key, stub);
     if (!resv) return null;
     const requests = [];
     let cost = 0;
@@ -296,6 +522,7 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
     const history = [];
     let searchesRun = 0;
     let limitTexts = 0;
+    let last = null;
     try {
       for (let round = 1; round <= 1 + FIND_SOURCE_LIMIT; round++) {
         const cur = session.directoryFor([...dir.ids, ...found.map((a) => session.entry(a).sourceId)]);
@@ -338,7 +565,8 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
           }
           toolMessages.push({ role: 'tool', tool_call_id: tc.id, content });
         }
-        requests.push({ ...requestRecord(c, body, 'selection', { round, directory: cur.aliases.length, directoryChars: cur.system.length, invalidAliases, otherCalls }), definitionHash: session.hashes().firstRequestDefinitionHash });
+        requests.push({ ...requestRecord(c, body, 'selection', { round, directory: cur.aliases.length, directoryChars: cur.system.length, invalidAliases, otherCalls }, stub), definitionHash: session.hashes().firstRequestDefinitionHash });
+        last = { body, msg, toolMessages };
         if (loaded.length) {
           // The load step: the loads of this response are the row's first loads.
           row.first = { ...requests.at(-1), firstCallName: calls[0]?.function?.name ?? null, loadCalls: calls.filter((x) => x.function?.name === 'load_source').length };
@@ -349,17 +577,21 @@ export function createEngine({ ledger, apiKey, baseUrl, cap, writeRow, log = () 
           row.picks = picksOf(session, loaded);
           const after = session.directoryFor([...dir.ids, ...found.map((a) => session.entry(a).sourceId)]);
           row.offered = after.aliases;
-          const p = await postLoad({ session, mi, dir: after, body, msg, toolMessages, loaded, slot: resv.slots[1 + FIND_SOURCE_LIMIT], search: true });
+          const p = await postLoad({ session, mi, dir: after, body, msg, toolMessages, loaded, slot: resv.slots[1 + FIND_SOURCE_LIMIT], search: true, withProvider: stub });
           if (p.failed) return { ...row, status: 'error', requests, second: { error: p.failed.error, attempts: p.failed.attempts }, loaded2: [...loaded], score2: row.score1, limitTexts, costUsd: cost, reservation: reservationRecord(resv) };
-          return { ...row, status: 'complete', requests, second: p.second, loaded2: p.loaded2, score2: scoreLoad(p.loaded2, q.acceptable), limitTexts, costUsd: cost + p.cost, reservation: reservationRecord(resv) };
+          const done = { ...row, status: 'complete', requests, second: p.second, loaded2: p.loaded2, score2: scoreLoad(p.loaded2, q.acceptable), limitTexts, costUsd: cost + p.cost };
+          if (stub) return await stubOn(t, resv, done, { s1Slots: 2 + FIND_SOURCE_LIMIT, lastBody: p.body2, lastMsg: p.msg2, answered: null, lastDefinitionHash: p.second.definitionHash, baseIds: dir.ids, found, searchesRun, loaded, search: true });
+          return { ...done, reservation: reservationRecord(resv) };
         }
         history.push(msg, ...toolMessages);
         if (!searched) break;
       }
-      const last = session.directoryFor([...dir.ids, ...found.map((a) => session.entry(a).sourceId)]);
+      const lastDir = session.directoryFor([...dir.ids, ...found.map((a) => session.entry(a).sourceId)]);
       row.first = { ...requests.at(-1), firstCallName: requests.at(-1)?.toolCalls?.[0]?.name ?? null, loadCalls: 0 };
       row.firstCallIsLoad = false;
-      return { ...row, status: 'complete', requests, loadRound: null, loaded1: [], score1: scoreLoad([], q.acceptable), picks: [], offered: last.aliases, second: null, loaded2: [], score2: scoreLoad([], q.acceptable), limitTexts, costUsd: cost, reservation: reservationRecord(resv) };
+      const done = { ...row, status: 'complete', requests, loadRound: null, loaded1: [], score1: scoreLoad([], q.acceptable), picks: [], offered: lastDir.aliases, second: null, loaded2: [], score2: scoreLoad([], q.acceptable), limitTexts, costUsd: cost };
+      if (stub) return await stubOn(t, resv, done, { s1Slots: 2 + FIND_SOURCE_LIMIT, lastBody: last.body, lastMsg: last.msg, answered: last.toolMessages, lastDefinitionHash: session.hashes().firstRequestDefinitionHash, baseIds: dir.ids, found, searchesRun, loaded: [], search: true });
+      return { ...done, reservation: reservationRecord(resv) };
     } finally {
       releaseRow(resv);
     }

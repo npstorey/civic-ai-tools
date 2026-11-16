@@ -23,6 +23,20 @@
 //     node benchmark/runner/run.mjs --plan <file> --probe --open-weight <slug> --cap <usd>
 //     node benchmark/runner/run.mjs --plan <file> --open-weight <slug> --calibration <file> --cap <usd> [--option A|B]
 //
+//   S3-C's plan (benchmark/runner/plans/s3c.json, schema civic-run-plan/2;
+//   benchmark/preregistration/s3c.md, "The run"):
+//     node benchmark/runner/run.mjs --plan <file> --probe --open-weight <slug> --cap <usd>
+//     node benchmark/runner/run.mjs --plan <file> --open-weight <slug> --calibration <file> --cap <usd> [--option A|B]
+//   A civic-run-plan/2 file fixes the date (`today`) and the open-weight
+//   model (`models.openWeight`): the runner refuses a --today or an
+//   --open-weight that is not the plan's. A step may run under the stub
+//   transport (`"transport": "stub"`, stub.mjs) and read the builder's
+//   selections recorded in a committed run (`selectionsFrom`: the rows file,
+//   its sha256 and the reads step), which the runner hashes before any
+//   request and refuses on a mismatch. The dry run of such a plan, under a
+//   calibration file, prints the bound for S1's requests and for the stub's
+//   and the plan's start rule (`startRule`, `capLimitUsd`).
+//
 //   Common: [--dry-run] [--concurrency 6] [--today YYYY-MM-DD]
 //     [--chars-per-token 2 | --calibration <file>] [--out-dir benchmark/_local/runs] [--resume <run-id>]
 //
@@ -80,6 +94,7 @@ import { createShortlister } from './shortlist.mjs';
 import { HAIKU_SLUG, OPEN_WEIGHT_CANDIDATES, reservationPricings, resolveModel, routingCeilings } from './models.mjs';
 import { BASE_URL, endpointRow, endpointsUrl, MODEL_LIST_URL, modelRow } from './openrouter.mjs';
 import { calibrate, CAP_LIMIT_USD, capDecision } from './calibration.mjs';
+import { STUB_SLOTS, STUB_TRANSPORT } from './stub.mjs';
 import { INPUT_HASH_RECIPE, inputHash } from './input-hash.mjs';
 
 const REQUEST_TIMEOUT_MS = 180_000;
@@ -137,7 +152,21 @@ const bad = (why) => {
 const CAP = opts.cap === undefined ? null : Number(opts.cap);
 const CONCURRENCY = Number(opts.concurrency);
 const CHARS_PER_TOKEN = Number(opts['chars-per-token'] ?? CHARS_PER_TOKEN_DEFAULT);
-const TODAY = opts.today ?? new Date().toISOString().split('T')[0];
+// A civic-run-plan/2 file (S3-C) states the date every request states and
+// the open-weight model; the runner refuses another.
+const plan = PLAN ? JSON.parse(readFileSync(PLAN, 'utf8')) : null;
+const V2 = plan?.schema === 'civic-run-plan/2';
+if (V2) {
+  if (opts.today !== undefined && opts.today !== plan.today) bad(`--today ${opts.today} is not the plan's date (${plan.today}); a civic-run-plan/2 file fixes it`);
+  if (opts['open-weight'] !== undefined && opts['open-weight'] !== plan.models?.openWeight) bad(`--open-weight ${opts['open-weight']} is not the plan's (${plan.models?.openWeight})`);
+  if (OW_PROBE) bad('--open-weight-probe: a civic-run-plan/2 file fixes the open-weight model and runs no open-weight probe');
+}
+if (plan) {
+  for (const s of [...(plan.steps ?? []), ...(plan.probe?.steps ?? [])]) {
+    if (s.selectionsFrom && s.selectionFrom) bad(`step ${s.id}: both selectionsFrom and selectionFrom; a step reads its selections from one`);
+  }
+}
+const TODAY = opts.today ?? (V2 ? plan.today : new Date().toISOString().split('T')[0]);
 if (PLAN && (opts.inventory || opts.questions || opts.config)) bad('--plan takes no --inventory, --questions or --config');
 if (!PLAN && (!opts.inventory || !opts.questions || !opts.config)) bad('--inventory, --questions and --config are required (or --plan)');
 if (!PLAN && (OW_PROBE || opts['open-weight'])) bad('--open-weight-probe and --open-weight need --plan');
@@ -169,7 +198,6 @@ const input = (role, path, extra = {}) => {
 const here = (rel) => new URL(rel, import.meta.url).pathname;
 const atRoot = (p) => (resolve(p) === p ? p : join(REPO_ROOT, p));
 
-const plan = PLAN ? JSON.parse(readFileSync(PLAN, 'utf8')) : null;
 if (PLAN) input('plan', PLAN, { id: plan.id, option: opts.option });
 
 const inventories = new Map();
@@ -220,7 +248,7 @@ function pickQuestions(file, ids) {
 // --- The steps ---
 const ROLE_MODELS = (role) => {
   if (role === 'main' || role === 'builder') return [HAIKU_SLUG];
-  if (role === 'openWeight') return opts['open-weight'] ? [opts['open-weight']] : DRY ? [...OPEN_WEIGHT_CANDIDATES] : [];
+  if (role === 'openWeight') return opts['open-weight'] ? [opts['open-weight']] : V2 ? [plan.models.openWeight] : DRY ? [...OPEN_WEIGHT_CANDIDATES] : [];
   return [role];
 };
 let steps;
@@ -235,7 +263,7 @@ if (!PLAN) {
   const specs = opts.models ? opts.models.split(',').map((s) => s.trim()) : p.models;
   steps = [{ id: 'open-weight-probe', config: p.config, inventory: atRoot(p.inventory), questions: pickQuestions(loadQuestions(atRoot(p.questions)), p.questionIds), models: specs, repeats: p.repeats, role: 'main' }];
 } else if (PROBE) {
-  steps = plan.probe.steps.map((s) => ({ id: s.id, config: s.config, inventory: atRoot(s.inventory), questions: pickQuestions(loadQuestions(atRoot(s.questions)), plan.probe.questionIds), models: plan.probe.models.flatMap(ROLE_MODELS), repeats: plan.probe.repeats, role: 'main' }));
+  steps = plan.probe.steps.map((s) => ({ id: s.id, config: s.config, inventory: atRoot(s.inventory), questions: pickQuestions(loadQuestions(atRoot(s.questions)), plan.probe.questionIds), models: plan.probe.models.flatMap(ROLE_MODELS), repeats: plan.probe.repeats, role: 'main', ...(V2 ? { transport: s.transport ?? null, selectionsFrom: s.selectionsFrom ?? null, probe: true } : {}) }));
 } else {
   const b = plan.options[opts.option];
   steps = plan.steps.map((s) => ({
@@ -247,13 +275,16 @@ if (!PLAN) {
     repeats: b.repeats && s.repeats === 3 ? b.repeats : s.repeats,
     role: s.role ?? 'main',
     selectionFrom: s.selectionFrom ?? null,
+    ...(V2 ? { transport: s.transport ?? null, selectionsFrom: s.selectionsFrom ?? null } : {}),
   }));
 }
 for (const s of steps) loadInventory(s.inventory);
+for (const s of steps) if (s.transport && s.transport !== STUB_TRANSPORT) bad(`step ${s.id}: transport ${s.transport}; the one transport is "${STUB_TRANSPORT}"`);
 
 input('catalog excerpt', here('./catalog.mjs'), { pins: `${CATALOG_SOURCE.repository} ${CATALOG_SOURCE.path} sha256 ${CATALOG_SOURCE.sha256}` });
 input('app texts', here('./app-texts.mjs'), { pins: `${APP_SOURCE.repository} ${APP_SOURCE.routingMode.path} sha256 ${APP_SOURCE.routingMode.sha256}` });
 input('benchmark texts', here('./texts.mjs'));
+if (V2) input('stub texts', here('./stub.mjs'));
 input('socrata guidance', join(REPO_ROOT, SOCRATA_GUIDANCE_PATH));
 if (fileSha256(join(REPO_ROOT, SOCRATA_GUIDANCE_PATH)) !== SOCRATA_GUIDANCE_FILE_SHA256) throw new Error('the socrata guidance pin changed under the run');
 const ROUTER_PACKAGE = JSON.parse(readFileSync(join(REPO_ROOT, 'packages/civic-typed-router/package.json'), 'utf8'));
@@ -262,6 +293,40 @@ if (opts.calibration) {
   calibration = JSON.parse(readFileSync(opts.calibration, 'utf8'));
   input('calibration', opts.calibration, { models: Object.entries(calibration.models ?? {}).map(([s, m]) => `${s} ${m.charsPerToken}`).join(', ') });
 }
+// The builder's recorded selections (S3-C, `selectionsFrom`): the rows file
+// is hashed before any request and refused when its sha256 is not the
+// plan's; for each question, the row of the named reads step whose role is
+// `builder`. Read once per file.
+const selectionFiles = new Map();
+function recordedSelections(sf) {
+  const path = atRoot(sf.rows);
+  const key = repoPath(path);
+  if (!selectionFiles.has(key)) {
+    const text = readFileSync(path, 'utf8');
+    const sha = createHash('sha256').update(text).digest('hex');
+    if (sha !== sf.sha256) {
+      console.error(`${key}: its sha256 ${sha} is not the plan's (${sf.sha256}); the builder's selections are not read`);
+      process.exit(1);
+    }
+    input('builder selections', path);
+    const bySteps = new Map();
+    for (const line of text.split('\n')) {
+      if (!line.includes('"role":"builder"')) continue;
+      const r = JSON.parse(line);
+      if (r.role !== 'builder') continue;
+      if (!bySteps.has(r.step)) bySteps.set(r.step, new Map());
+      bySteps.get(r.step).set(r.qid, r);
+    }
+    selectionFiles.set(key, bySteps);
+  }
+  const step = selectionFiles.get(key).get(sf.step);
+  if (!step) {
+    console.error(`${key}: no builder row of step ${sf.step}`);
+    process.exit(1);
+  }
+  return step;
+}
+for (const s of steps) if (s.selectionsFrom) s.selections = recordedSelections(s.selectionsFrom);
 const INPUT_HASH = inputHash(REPO_ROOT);
 
 // --- Models ---
@@ -341,13 +406,22 @@ for (const s of steps) {
   s.index = ss.index;
   s.shortlister = ss.shortlister;
   s.kind = s.role === 'builder' ? 'builder-read' : s.session.config.kind;
+  if (s.kind === 'builder+search' && !s.selections) bad(`step ${s.id}: a builder+search step reads its directory from selectionsFrom`);
+  // A recorded selection's directory, for the bounds; null when the
+  // question has no complete builder row (its rows are not started).
+  if (s.selections) {
+    s.directoryOf = (q) => {
+      const b = s.selections.get(q.id);
+      return b && b.status === 'complete' ? s.session.directoryFor(b.selection.map((a) => s.session.entry(a).sourceId)) : null;
+    };
+  }
 }
 const configurations = {};
 for (const s of steps) {
   const name = s.session.config.name;
   if (configurations[name]) continue;
   const h = s.session.hashes();
-  configurations[name] = { rule: s.session.config.rule, requestsPerRow: s.session.config.requestsPerRow, routingConfiguration: h.routingConfiguration, routingConfigurationHash: h.routingConfigurationHash, firstRequestDefinition: h.firstRequestDefinition, firstRequestDefinitionHash: h.firstRequestDefinitionHash };
+  configurations[name] = { rule: s.session.config.rule, requestsPerRow: s.session.config.requestsPerRow + (s.transport === STUB_TRANSPORT ? STUB_SLOTS : 0), routingConfiguration: h.routingConfiguration, routingConfigurationHash: h.routingConfigurationHash, firstRequestDefinition: h.firstRequestDefinition, firstRequestDefinitionHash: h.firstRequestDefinitionHash };
 }
 
 const fmt = (n) => `$${n.toFixed(2)}`;
@@ -375,6 +449,13 @@ function printHeader() {
     console.log('configurations (G0-9): routing-configuration hash; harness-definition hash of the first request');
     for (const [name, c] of Object.entries(configurations)) console.log(`  ${name.padEnd(22)} ${c.routingConfigurationHash}  ${c.firstRequestDefinitionHash}`);
     console.log(`steps: ${steps.length}; concurrency ${CONCURRENCY}; cap ${CAP === null ? 'none given' : `$${CAP.toFixed(2)}`}`);
+    if (V2) {
+      for (const s of steps) {
+        const qs = s.questions.length <= 5 ? s.questions.map((q) => q.id).join(', ') : `${s.questions.length} questions`;
+        const sf = s.selectionsFrom ? `; selectionsFrom ${s.selectionsFrom.step} in ${s.selectionsFrom.rows} (sha256 ${s.selectionsFrom.sha256})` : '';
+        console.log(`  ${s.id.padEnd(22)} transport ${s.transport ?? 'none (S1\'s requests only)'}; ${qs}; repeats ${s.repeats}${sf}`);
+      }
+    }
   }
   console.log(`prices: ${lists.source}`);
   if (rosterProblems.length) {
@@ -394,7 +475,7 @@ async function printPlan() {
     // candidates', per step.
     const groups = new Map();
     for (const spec of s.models) {
-      const group = PLAN && OPEN_WEIGHT_CANDIDATES.includes(spec) && !opts['open-weight'] && !OW_PROBE ? 'open-weight (highest of the three)' : spec;
+      const group = PLAN && !V2 && OPEN_WEIGHT_CANDIDATES.includes(spec) && !opts['open-weight'] && !OW_PROBE ? 'open-weight (highest of the three)' : spec;
       if (!groups.has(group)) groups.set(group, []);
       groups.get(group).push(spec);
     }
@@ -404,7 +485,7 @@ async function printPlan() {
       for (const spec of members) {
         const mi = modelInfo.get(spec);
         if (!mi) continue;
-        const b = await stepBounds({ session: s.session, kind: s.kind, mi, questions: s.questions, repeats: s.repeats, shortlister: s.shortlister, baselines });
+        const b = await stepBounds({ session: s.session, kind: s.kind, mi, questions: s.questions, repeats: s.repeats, shortlister: s.shortlister, baselines, ...(s.directoryOf ? { directoryOf: s.directoryOf } : {}), ...(s.transport === STUB_TRANSPORT ? { stub: true } : {}) });
         if (!best || b.ceiling > best.b.ceiling) best = { spec, b };
       }
       if (!best) {
@@ -443,6 +524,7 @@ async function printPlan() {
  *  run prices it. For option A and option B, and the option and `--cap` it
  *  implies. Only the evaluations' plan, with --calibration and --open-weight. */
 async function calibratedBound() {
+  if (V2) return calibratedBoundV2();
   const missing = [];
   if (!opts['open-weight']) missing.push('--open-weight <slug>');
   for (const spec of new Set(steps.flatMap((s) => s.models))) {
@@ -484,9 +566,58 @@ async function calibratedBound() {
   return { optionA: bound.A, optionB: bound.B, applies: d.option, cap: d.cap };
 }
 
+/** S3-C's calibrated bound (benchmark/preregistration/s3c.md, "The
+ *  calibrated bound"): S1's, with two additions. A row whose directory is a
+ *  recorded selection is counted over that selection; each stub row that
+ *  sends a request is counted with every one of the stub's slots (plan.mjs).
+ *  Each completion at the calibration's allowance (twice the largest billed
+ *  completion, at most the limit). Printed for S1's requests and for the
+ *  stub's, at each of the plan's options; then the plan's start rule. */
+async function calibratedBoundV2() {
+  const missing = [];
+  for (const spec of new Set(steps.flatMap((s) => s.models))) {
+    const slug = resolved.get(spec).slug;
+    if (!(calibration.models?.[slug]?.largestCompletion > 0)) missing.push(`a largest billed completion for ${slug}`);
+  }
+  console.log(`the calibrated bound (benchmark/preregistration/s3c.md, "The calibrated bound"):`);
+  if (missing.length) {
+    console.log(`  not computed: it needs ${missing.join(' and ')} (node benchmark/runner/calibration.mjs --stub-probe <run dir> --s1-run <run dir> --out <file>)`);
+    return null;
+  }
+  const options = Object.keys(plan.options);
+  const repeatsOf = (id, option) => {
+    const s = plan.steps.find((x) => x.id === id) ?? plan.probe?.steps?.find((x) => x.id === id);
+    const o = plan.options[option];
+    return PROBE ? plan.probe.repeats : o.repeats && s.repeats === 3 ? o.repeats : s.repeats;
+  };
+  const bound = Object.fromEntries(options.map((o) => [o, { s1: 0, stub: 0 }]));
+  const perModel = {};
+  for (const s of steps) {
+    for (const spec of s.models) {
+      const mi = modelInfo.get(spec);
+      const cal = calibration.models[mi.m.slug];
+      const ceilings = routingCeilings(mi.m);
+      const b = await stepBounds({ session: s.session, kind: s.kind, mi, questions: s.questions, repeats: 1, shortlister: s.shortlister, completion: cal.completionAllowance ?? Math.min(2 * cal.largestCompletion, MAX_TOKENS), pricings: ceilings ? [ceilings] : null, ceilingOnly: true, ...(s.directoryOf ? { directoryOf: s.directoryOf } : {}), ...(s.transport === STUB_TRANSPORT ? { stub: true } : {}) });
+      for (const option of options) {
+        bound[option].s1 += repeatsOf(s.id, option) * (b.ceiling - b.stubCeiling);
+        bound[option].stub += repeatsOf(s.id, option) * b.stubCeiling;
+      }
+      perModel[mi.m.slug] = (perModel[mi.m.slug] ?? 0) + repeatsOf(s.id, opts.option) * b.ceiling;
+    }
+  }
+  for (const [slug, c] of Object.entries(calibration.models).filter(([slug]) => perModel[slug] !== undefined)) {
+    const ceilings = routingCeilings(resolveModel(slug));
+    console.log(`  ${slug.padEnd(36)} ${c.charsPerToken} characters a token; each completion at ${c.completionAllowance} tokens (twice ${c.largestCompletion}, at most ${MAX_TOKENS}); ${ceilings ? `at its routing's ceilings, $${ceilings.prompt} / $${ceilings.completion} a million` : 'at its dearest endpoint'}; option ${opts.option} ${fmt(perModel[slug])}`);
+  }
+  for (const option of options) console.log(`  option ${option}: ${fmt(bound[option].s1 + bound[option].stub)} (S1's requests ${fmt(bound[option].s1)}; the stub's ${fmt(bound[option].stub)})`);
+  if (plan.startRule === 'cap') console.log(`the cap gates: --cap ${plan.capLimitUsd} (the bound is recorded and does not gate)`);
+  else console.log(`  the plan states no start rule this runner reads (startRule ${JSON.stringify(plan.startRule ?? null)})`);
+  return { v2: true, options: Object.fromEntries(options.map((o) => [o, { s1Usd: bound[o].s1, stubUsd: bound[o].stub, totalUsd: bound[o].s1 + bound[o].stub }])), startRule: plan.startRule ?? null, capLimitUsd: plan.capLimitUsd ?? null };
+}
+
 printHeader();
 const bounds = await printPlan();
-const calibrated = PLAN && !PROBE && !OW_PROBE && calibration ? await calibratedBound() : null;
+const calibrated = PLAN && !OW_PROBE && calibration && (!PROBE || V2) ? await calibratedBound() : null;
 if (DRY) {
   console.log('DRY RUN: no network call was made; nothing was written.');
   process.exit(rosterProblems.length ? 1 : 0);
@@ -551,7 +682,7 @@ const rowSpend = (r) => (r.costUsd !== undefined ? num(r.costUsd) : num(r.first?
 const priorSpend = [...priorRows, ...priorBase].reduce((s, r) => s + rowSpend(r), 0);
 
 const rowKey = (s, spec, q, r) => (s.kind === 'rule' ? `${s.id}|rule|${q.id}` : s.kind === 'builder-read' ? `${s.id}|builder|${q.id}` : PLAN ? `${s.id}|${spec}|${q.id}|${r}` : `${spec}|${q.id}|${r}`);
-const expected = steps.map((s) => ({ id: s.id, config: s.session.config.name, rows: s.kind === 'rule' ? s.questions.length : s.kind === 'builder-read' ? s.questions.length : s.models.length * s.questions.length * s.repeats }));
+const expected = steps.map((s) => ({ id: s.id, config: s.session.config.name, rows: s.kind === 'rule' ? s.questions.length : s.kind === 'builder-read' ? s.questions.length : s.models.length * s.questions.length * s.repeats, ...(V2 ? { transport: s.transport ?? null, selectionsFrom: s.selectionsFrom ?? null } : {}) }));
 
 const meta = {
   runId,
@@ -572,7 +703,7 @@ const meta = {
   concurrency: CONCURRENCY,
   inputs,
   router: `${ROUTER_PACKAGE.name}@${ROUTER_PACKAGE.version}`,
-  estimate: { charsPerToken: calibration ? 'calibrated, per model' : CHARS_PER_TOKEN, calibration: opts.calibration ? { path: repoPath(opts.calibration), sha256: fileSha256(opts.calibration) } : null, tierMargin: TIER_MARGIN, plan: { calls: bounds.calls, floorUsd: bounds.floor, ceilingUsd: bounds.ceiling, hardUsd: bounds.reserved }, calibratedBound: calibrated && { optionAUsd: calibrated.optionA, optionBUsd: calibrated.optionB, applies: calibrated.applies, capUsd: calibrated.cap } },
+  estimate: { charsPerToken: calibration ? 'calibrated, per model' : CHARS_PER_TOKEN, calibration: opts.calibration ? { path: repoPath(opts.calibration), sha256: fileSha256(opts.calibration) } : null, tierMargin: TIER_MARGIN, plan: { calls: bounds.calls, floorUsd: bounds.floor, ceilingUsd: bounds.ceiling, hardUsd: bounds.reserved }, calibratedBound: calibrated && (calibrated.v2 ? { options: calibrated.options, startRule: calibrated.startRule, capLimitUsd: calibrated.capLimitUsd } : { optionAUsd: calibrated.optionA, optionBUsd: calibrated.optionB, applies: calibrated.applies, capUsd: calibrated.cap }) },
   pricingSource: lists.source,
   modelListSha256: lists.sha256 ?? null,
   endpointSources: lists.endpointSources ?? null,
@@ -613,7 +744,7 @@ for (const s of steps) {
     const baselines = await s.session.baselines();
     for (const spec of s.models) for (const [name, b] of Object.entries(baselines)) if (!done.has(`${spec}|${name}`)) tasks.push({ type: 'baseline', key: `${spec}|${name}`, mi: modelInfo.get(spec), name, b });
   }
-  const selections = new Map();
+  const selections = s.selections ?? new Map();
   if (s.selectionFrom) for (const r of rowsByKey.values()) if (r.step === s.selectionFrom && r.role === 'builder') selections.set(r.qid, r);
   for (let r = 1; r <= (s.kind === 'rule' || s.kind === 'builder-read' ? 1 : s.repeats); r++) {
     for (const q of s.questions) {
@@ -621,19 +752,19 @@ for (const s of steps) {
       for (const spec of specsHere) {
         const key = rowKey(s, spec, q, r);
         if (done.has(key)) continue;
-        const base = { key, step: s, session: s.session, index: s.index, q, r, mi: spec ? modelInfo.get(spec) : null };
+        const base = { key, step: s, session: s.session, index: s.index, q, r, mi: spec ? modelInfo.get(spec) : null, ...(s.transport ? { transport: s.transport } : {}), ...(s.probe ? { probe: true } : {}) };
         if (s.kind === 'rule') tasks.push({ ...base, type: 'rule' });
         else if (s.kind === 'builder-read') tasks.push({ ...base, type: 'builder' });
         else if (s.kind === 'search') tasks.push({ ...base, type: 'search', dir: s.session.directoryFor(s.shortlister.shortlist(q.text).aliases.map((a) => s.session.entry(a).sourceId)) });
         else if (s.kind === 'shortlist') tasks.push({ ...base, type: 'main', dir: s.session.directoryFor(s.shortlister.shortlist(q.text).aliases.map((a) => s.session.entry(a).sourceId)) });
-        else if (s.kind === 'builder') {
+        else if (s.kind === 'builder' || s.kind === 'builder+search') {
           const b = selections.get(q.id);
           if (!b || b.status !== 'complete') {
             notStarted.push(key);
             notStartedWhy[key] = b ? 'its builder row is an error' : 'no builder row';
             continue;
           }
-          tasks.push({ ...base, type: 'main', dir: s.session.directoryFor(b.selection.map((a) => s.session.entry(a).sourceId)) });
+          tasks.push({ ...base, type: s.kind === 'builder+search' ? 'search' : 'main', dir: s.session.directoryFor(b.selection.map((a) => s.session.entry(a).sourceId)) });
         } else tasks.push({ ...base, type: 'main', dir: s.session.full });
       }
     }
@@ -672,7 +803,8 @@ if (PROBE) {
   extra.calibration = cal.models;
   console.log('calibration (calibration.json): characters a token, per model');
   for (const [slug, c] of Object.entries(cal.models)) console.log(`  ${slug.padEnd(36)} ${c.charsPerToken} (fewest ${c.fewestCharsPerToken} over ${c.requests} requests, less 10%)`);
-  console.log(`  the calibration file the bound reads: node benchmark/runner/calibration.mjs --probe ${repoPath(runDir)} --open-weight-probe <run dir> --out <file>`);
+  if (V2) console.log(`  the calibration file the bound reads: node benchmark/runner/calibration.mjs --stub-probe ${repoPath(runDir)} --s1-run <S1's run dir> --out <file>`);
+  else console.log(`  the calibration file the bound reads: node benchmark/runner/calibration.mjs --probe ${repoPath(runDir)} --open-weight-probe <run dir> --out <file>`);
   console.log(`  then the calibrated bound: node benchmark/runner/run.mjs --dry-run --plan ${PLAN ? repoPath(PLAN) : '<plan>'} --open-weight <slug> --calibration <file>`);
 }
 if (OW_PROBE) {

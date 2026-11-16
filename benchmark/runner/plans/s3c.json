@@ -1,0 +1,30 @@
+{
+  "schema": "civic-run-plan/2",
+  "id": "s3c",
+  "today": "2026-11-05",
+  "models": {"main": "anthropic/claude-haiku-5.5", "builder": "anthropic/claude-haiku-5.5", "openWeight": "z-ai/glm-5.3-flash"},
+  "capLimitUsd": 55,
+  "startRule": "cap",
+  "options": {"A": {}, "B": {"repeats": 2}},
+  "steps": [
+    {"id": "builder+search-50", "config": "builder+search-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-50-reads"}},
+    {"id": "builder+search-200", "config": "builder+search-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-200-reads"}},
+    {"id": "builder+search-1000", "config": "builder+search-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-1000-reads"}},
+    {"id": "builder-50", "config": "builder-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-50-reads"}},
+    {"id": "builder-200", "config": "builder-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-200-reads"}},
+    {"id": "builder-1000", "config": "builder-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-1000-reads"}},
+    {"id": "shortlist+search-50", "config": "shortlist+search-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub"},
+    {"id": "shortlist+search-200", "config": "shortlist+search-200", "inventory": "benchmark/inventories/200.json", "questions": "benchmark/questions/200.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub"},
+    {"id": "shortlist+search-1000", "config": "shortlist+search-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub"}
+  ],
+  "probe": {
+    "questionIds": {"probeIds": 2},
+    "repeats": 1,
+    "models": ["main", "openWeight"],
+    "capUsd": 5,
+    "steps": [
+      {"id": "probe-builder+search-50", "config": "builder+search-50", "inventory": "benchmark/inventories/50.json", "questions": "benchmark/questions/50.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-50-reads"}},
+      {"id": "probe-builder+search-1000", "config": "builder+search-1000", "inventory": "benchmark/inventories/1000.json", "questions": "benchmark/questions/1000.json", "models": ["main", "openWeight"], "repeats": 3, "transport": "stub", "selectionsFrom": {"rows": "benchmark/runs/2026-11-05/2026-11-05-run-191511/rows.jsonl", "sha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c", "step": "builder-1000-reads"}}
+    ]
+  }
+}
