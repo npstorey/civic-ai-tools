@@ -1,0 +1,87 @@
+{
+  "schema": "civic-calibration/3",
+  "rule": "per model, the fewest characters of a request body's JSON per billed prompt token, less 10%, rounded down to four places, over every request of a row that returned usage (the requests under stub among them), in the stub probe's rows and S1's committed run; the fewer of the two sources",
+  "completionRule": "per model, the most completion tokens one request billed (completion_tokens, which carries reasoning tokens; the reasoning tokens where reported larger), over the same requests; the larger of the two sources. The allowance is twice it, at most the 4,000-token limit",
+  "sources": {
+    "stubProbe": {
+      "runId": "2026-11-05-probe-130729",
+      "rowsSha256": "94c54901e9d2ac41f4270f3a53f0161c83aa3f3f81c02f6b31a966db1688e232"
+    },
+    "s1Run": {
+      "runId": "2026-11-05-run-191511",
+      "rowsSha256": "316e361ca5588fe35fd616c0cde43c59a8857557145af5516cee06914be4c18c"
+    }
+  },
+  "models": {
+    "anthropic/claude-haiku-5.5": {
+      "charsPerToken": 1.9523,
+      "largestCompletion": 2046,
+      "completionAllowance": 4000,
+      "from": {
+        "stubProbe": {
+          "charsPerToken": 2.2841,
+          "fewestCharsPerToken": 2.5379,
+          "requests": 25,
+          "fewestAt": {
+            "key": "probe-builder+search-50|anthropic/claude-haiku-5.5|q11|1",
+            "chars": 2642,
+            "promptTokens": 1041
+          },
+          "completions": {
+            "requests": 25,
+            "largest": 748
+          }
+        },
+        "s1Run": {
+          "charsPerToken": 1.9523,
+          "fewestCharsPerToken": 2.1693,
+          "requests": 10686,
+          "fewestAt": {
+            "key": "builder-1000|anthropic/claude-haiku-5.5|q131|1",
+            "chars": 1640,
+            "promptTokens": 756
+          },
+          "completions": {
+            "requests": 10686,
+            "largest": 2046
+          }
+        }
+      }
+    },
+    "z-ai/glm-5.3-flash": {
+      "charsPerToken": 3.2049,
+      "largestCompletion": 4000,
+      "completionAllowance": 4000,
+      "from": {
+        "stubProbe": {
+          "charsPerToken": 3.7025,
+          "fewestCharsPerToken": 4.1139,
+          "requests": 32,
+          "fewestAt": {
+            "key": "probe-builder+search-1000|z-ai/glm-5.3-flash|q11|1",
+            "chars": 2707,
+            "promptTokens": 658
+          },
+          "completions": {
+            "requests": 32,
+            "largest": 516
+          }
+        },
+        "s1Run": {
+          "charsPerToken": 3.2049,
+          "fewestCharsPerToken": 3.561,
+          "requests": 10132,
+          "fewestAt": {
+            "key": "builder-1000|z-ai/glm-5.3-flash|q31|1",
+            "chars": 1720,
+            "promptTokens": 483
+          },
+          "completions": {
+            "requests": 10132,
+            "largest": 4000
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "schema": "s3c-sitting/1",
+  "runCommit": "1fe76798bf3f07d5e61a5be9fa4f3c832b858f1b",
+  "inputHash": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+  "hashes": {
+    "before step 1": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 1": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 2": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 3": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 4": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 5": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf",
+    "after step 6": "79a30392bdc8169c157f90c7f9b049e8be251affa848d95a48eb2e8ec0b0dcaf"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "what": "the stub probe",
+      "exitCode": 0,
+      "spentUsd": "0.03195",
+      "runDirectory": "benchmark/_local/runs/2026-11-05-probe-130729",
+      "sha256": {
+        "meta.json": "31d02fd789939808547410f570ca5a563e8a59067d696a61b65d24f27c5d7082",
+        "rows.jsonl": "94c54901e9d2ac41f4270f3a53f0161c83aa3f3f81c02f6b31a966db1688e232"
+      },
+      "rows": {
+        "expected": 8,
+        "complete": 8,
+        "error": 0,
+        "notStarted": 0,
+        "answeringRequestRecorded": 8
+      }
+    },
+    {
+      "step": 2,
+      "what": "the calibration",
+      "exitCode": 0,
+      "spentUsd": null,
+      "path": "benchmark/_local/s3c/calibration.json",
+      "sha256": "9e59297d8542634b7718f0bb5feac1782ebc7acd4fcca4a77fbc22fdfa1a5df7",
+      "models": {
+        "anthropic/claude-haiku-5.5": {
+          "charsPerToken": 1.9523,
+          "largestCompletion": 2046,
+          "completionAllowance": 4000
+        },
+        "z-ai/glm-5.3-flash": {
+          "charsPerToken": 3.2049,
+          "largestCompletion": 4000,
+          "completionAllowance": 4000
+        }
+      }
+    },
+    {
+      "step": 3,
+      "what": "the calibrated dry run",
+      "exitCode": 0,
+      "spentUsd": null,
+      "path": "benchmark/_local/s3c/step-3.out",
+      "sha256": "2cfb04ca24b599d676957d4c3e9e5cddff5db7bc88bf9b02e80f179bdcb6cdc5",
+      "boundLines": [
+        "option A: $491.05 (S1's requests $98.01; the stub's $393.04)",
+        "option B: $327.37 (S1's requests $65.34; the stub's $262.03)"
+      ],
+      "decisionLine": "the cap gates: --cap 55 (the bound is recorded and does not gate)",
+      "cap": 55
+    },
+    {
+      "step": 4,
+      "what": "the run",
+      "exitCode": 0,
+      "spentUsd": "29.50537423",
+      "runDirectory": "benchmark/_local/runs/2026-11-05-run-130812",
+      "sha256": {
+        "meta.json": "3404c37b48f5c31ddb16acf1b767196647f878a18dacaf03ba498abd9ae667a0",
+        "rows.jsonl": "566bdf4266a2d2631bd5cb3ac86f98efaa6ec5710278a04c093a0c6b6af824dd"
+      },
+      "stopReason": null,
+      "rows": {
+        "expected": 8046,
+        "complete": 8046,
+        "error": 0,
+        "notStarted": 0
+      }
+    },
+    {
+      "step": 5,
+      "what": "the summary",
+      "exitCode": 0,
+      "spentUsd": null,
+      "path": "benchmark/_local/s3c/summary.json",
+      "sha256": "05d04fc9bc7b9319d0efd56037947cf871e1a8cc07baed3eb2b13c2c1e148753"
+    },
+    {
+      "step": 6,
+      "what": "the salt and the sheet",
+      "exitCode": 0,
+      "spentUsd": null,
+      "path": "benchmark/_local/s3c/labels/sheet.jsonl",
+      "sha256": "edc62fbc299fa8d4e2bf2ada0afa95904f5e30156f34000aed78088ab5a15706",
+      "rows": 914,
+      "saltPath": "~/.secrets/s3c/label-salt",
+      "saltSha256": "14ddf0b8c28d71e1b3d049ec44ff9c5bf98e45c51c34cc8a94e92495bd6f60e4"
+    }
+  ]
+}
