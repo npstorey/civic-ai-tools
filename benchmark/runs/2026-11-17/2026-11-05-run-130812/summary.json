@@ -2856,7 +2856,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 230,
+                  "hits": 13,
+                  "rate": 0.0565
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 13,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 230,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 11,
+                  "hits": 11,
+                  "rate": 1
+                },
+                "baseCountedBeside": 206
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 106,
+                  "hits": 3,
+                  "rate": 0.0283
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 3,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 106,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 98
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 16,
+                  "rate": 0.0476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 16,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 5,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 16,
+                  "hits": 16,
+                  "rate": 1
+                },
+                "baseCountedBeside": 304
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 230,
+                  "hits": 13,
+                  "rate": 0.0565
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 13,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 230,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 11,
+                  "hits": 11,
+                  "rate": 1
+                },
+                "baseCountedBeside": 206
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 106,
+                  "hits": 3,
+                  "rate": 0.0283
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 3,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 106,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 98
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 16,
+                  "rate": 0.0476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 16,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 5,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 16,
+                  "hits": 16,
+                  "rate": 1
+                },
+                "baseCountedBeside": 304
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3026,7 +3253,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 134,
+                  "hits": 14,
+                  "rate": 0.1045
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 134,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 5,
+                  "rate": 0.5
+                },
+                "baseCountedBeside": 110
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 202,
+                  "hits": 10,
+                  "rate": 0.0495
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 10,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 202,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 14,
+                  "rate": 1
+                },
+                "baseCountedBeside": 178
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 24,
+                  "rate": 0.0714
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 24,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 18,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 24,
+                  "hits": 19,
+                  "rate": 0.7917
+                },
+                "baseCountedBeside": 288
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 134,
+                  "hits": 14,
+                  "rate": 0.1045
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 134,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 5,
+                  "rate": 0.5
+                },
+                "baseCountedBeside": 110
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 202,
+                  "hits": 10,
+                  "rate": 0.0495
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 10,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 202,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 14,
+                  "rate": 1
+                },
+                "baseCountedBeside": 178
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 24,
+                  "rate": 0.0714
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 24,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 18,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 24,
+                  "hits": 19,
+                  "rate": 0.7917
+                },
+                "baseCountedBeside": 288
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3196,7 +3650,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 216,
+                  "hits": 5,
+                  "rate": 0.0231
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 5,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 216,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 207
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 147,
+                  "hits": 2,
+                  "rate": 0.0136
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 2,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 147,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 3,
+                  "hits": 3,
+                  "rate": 1
+                },
+                "baseCountedBeside": 142
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 7,
+                  "rate": 0.0193
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 7,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 7,
+                  "hits": 7,
+                  "rate": 1
+                },
+                "baseCountedBeside": 349
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 216,
+                  "hits": 5,
+                  "rate": 0.0231
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 5,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 216,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 207
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 147,
+                  "hits": 2,
+                  "rate": 0.0136
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 2,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 147,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 3,
+                  "hits": 3,
+                  "rate": 1
+                },
+                "baseCountedBeside": 142
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 7,
+                  "rate": 0.0193
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 7,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 7,
+                  "hits": 7,
+                  "rate": 1
+                },
+                "baseCountedBeside": 349
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3366,7 +4047,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 134,
+                  "hits": 6,
+                  "rate": 0.0448
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 6,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 134,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 1,
+                  "hits": 1,
+                  "rate": 1
+                },
+                "baseCountedBeside": 127
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 229,
+                  "hits": 4,
+                  "rate": 0.0175
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 229,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 216
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 10,
+                  "rate": 0.0275
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 10,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 7,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 10,
+                  "rate": 1
+                },
+                "baseCountedBeside": 343
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 134,
+                  "hits": 6,
+                  "rate": 0.0448
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 6,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 134,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 1,
+                  "hits": 1,
+                  "rate": 1
+                },
+                "baseCountedBeside": 127
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 229,
+                  "hits": 4,
+                  "rate": 0.0175
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 229,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 216
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 10,
+                  "rate": 0.0275
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 10,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 7,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 10,
+                  "rate": 1
+                },
+                "baseCountedBeside": 343
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3536,7 +4444,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 159,
+                  "hits": 7,
+                  "rate": 0.044
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 7,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 159,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 5,
+                  "rate": 0.8333
+                },
+                "baseCountedBeside": 146
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 231,
+                  "hits": 8,
+                  "rate": 0.0346
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 231,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 214
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 15,
+                  "rate": 0.0385
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 15,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 15,
+                  "hits": 14,
+                  "rate": 0.9333
+                },
+                "baseCountedBeside": 360
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 159,
+                  "hits": 7,
+                  "rate": 0.044
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 7,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 159,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 4,
+                  "rate": 0.6667
+                },
+                "baseCountedBeside": 146
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 231,
+                  "hits": 8,
+                  "rate": 0.0346
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 231,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 214
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 15,
+                  "rate": 0.0385
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 15,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 15,
+                  "hits": 13,
+                  "rate": 0.8667
+                },
+                "baseCountedBeside": 360
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3706,7 +4841,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 236,
+                  "hits": 8,
+                  "rate": 0.0339
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 236,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 2,
+                  "hits": 2,
+                  "rate": 1
+                },
+                "baseCountedBeside": 226
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 154,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 0,
+                  "hits": 0,
+                  "rate": null
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 154,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 6,
+                  "rate": 1
+                },
+                "baseCountedBeside": 148
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 8,
+                  "rate": 0.0205
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 8,
+                  "rate": 1
+                },
+                "baseCountedBeside": 374
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 236,
+                  "hits": 8,
+                  "rate": 0.0339
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 236,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 2,
+                  "hits": 2,
+                  "rate": 1
+                },
+                "baseCountedBeside": 226
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 154,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 0,
+                  "hits": 0,
+                  "rate": null
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 154,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 6,
+                  "rate": 1
+                },
+                "baseCountedBeside": 148
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 8,
+                  "rate": 0.0205
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 8,
+                  "rate": 1
+                },
+                "baseCountedBeside": 374
+              }
+            }
+          }
         },
         "noticeBehindBuilder": {
           "noticed": {
@@ -3876,7 +5238,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 242,
+                  "hits": 12,
+                  "rate": 0.0496
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 242,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 7,
+                  "rate": 0.875
+                },
+                "baseCountedBeside": 222
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 94,
+                  "hits": 4,
+                  "rate": 0.0426
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 94,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 8,
+                  "rate": 1
+                },
+                "baseCountedBeside": 82
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 16,
+                  "rate": 0.0476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 16,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 10,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 16,
+                  "hits": 15,
+                  "rate": 0.9375
+                },
+                "baseCountedBeside": 304
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 242,
+                  "hits": 12,
+                  "rate": 0.0496
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 242,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 7,
+                  "rate": 0.875
+                },
+                "baseCountedBeside": 222
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 94,
+                  "hits": 4,
+                  "rate": 0.0426
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 94,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 8,
+                  "rate": 1
+                },
+                "baseCountedBeside": 82
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 16,
+                  "rate": 0.0476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 16,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 10,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 16,
+                  "hits": 15,
+                  "rate": 0.9375
+                },
+                "baseCountedBeside": 304
+              }
+            }
+          }
         }
       },
       {
@@ -4020,7 +5609,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 161,
+                  "hits": 12,
+                  "rate": 0.0745
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 161,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 7,
+                  "rate": 0.7
+                },
+                "baseCountedBeside": 139
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 175,
+                  "hits": 8,
+                  "rate": 0.0457
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 5,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 175,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 10,
+                  "rate": 1
+                },
+                "baseCountedBeside": 157
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 20,
+                  "rate": 0.0595
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 20,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 20,
+                  "hits": 17,
+                  "rate": 0.85
+                },
+                "baseCountedBeside": 296
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 161,
+                  "hits": 12,
+                  "rate": 0.0745
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 161,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 7,
+                  "rate": 0.7
+                },
+                "baseCountedBeside": 139
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 175,
+                  "hits": 8,
+                  "rate": 0.0457
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 5,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 175,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 10,
+                  "hits": 10,
+                  "rate": 1
+                },
+                "baseCountedBeside": 157
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 336,
+                  "hits": 20,
+                  "rate": 0.0595
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 20,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 336,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 20,
+                  "hits": 17,
+                  "rate": 0.85
+                },
+                "baseCountedBeside": 296
+              }
+            }
+          }
         }
       },
       {
@@ -4164,7 +5980,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 166,
+                  "hits": 12,
+                  "rate": 0.0723
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 166,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 5,
+                  "rate": 0.625
+                },
+                "baseCountedBeside": 146
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 197,
+                  "hits": 2,
+                  "rate": 0.0102
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 2,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 197,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 6,
+                  "rate": 1
+                },
+                "baseCountedBeside": 189
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 14,
+                  "rate": 0.0386
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 11,
+                  "rate": 0.7857
+                },
+                "baseCountedBeside": 335
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 166,
+                  "hits": 12,
+                  "rate": 0.0723
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 12,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 166,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 8,
+                  "hits": 5,
+                  "rate": 0.625
+                },
+                "baseCountedBeside": 146
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 197,
+                  "hits": 2,
+                  "rate": 0.0102
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 2,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 197,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 6,
+                  "hits": 6,
+                  "rate": 1
+                },
+                "baseCountedBeside": 189
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 14,
+                  "rate": 0.0386
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 11,
+                  "rate": 0.7857
+                },
+                "baseCountedBeside": 335
+              }
+            }
+          }
         }
       },
       {
@@ -4308,7 +6351,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 238,
+                  "hits": 4,
+                  "rate": 0.0168
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 238,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 2,
+                  "hits": 2,
+                  "rate": 1
+                },
+                "baseCountedBeside": 232
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 125,
+                  "hits": 1,
+                  "rate": 0.008
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 1,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 125,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 3,
+                  "hits": 3,
+                  "rate": 1
+                },
+                "baseCountedBeside": 121
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 5,
+                  "rate": 0.0138
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 5,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 353
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 238,
+                  "hits": 4,
+                  "rate": 0.0168
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 4,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 238,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 2,
+                  "hits": 2,
+                  "rate": 1
+                },
+                "baseCountedBeside": 232
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 125,
+                  "hits": 1,
+                  "rate": 0.008
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 1,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 125,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 3,
+                  "hits": 3,
+                  "rate": 1
+                },
+                "baseCountedBeside": 121
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 5,
+                  "rate": 0.0138
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 5,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 353
+              }
+            }
+          }
         }
       },
       {
@@ -4452,7 +6722,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 187,
+                  "hits": 9,
+                  "rate": 0.0481
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 9,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 187,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 174
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 203,
+                  "hits": 8,
+                  "rate": 0.0394
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 203,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 13,
+                  "hits": 13,
+                  "rate": 1
+                },
+                "baseCountedBeside": 182
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 17,
+                  "rate": 0.0436
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 17,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 17,
+                  "hits": 17,
+                  "rate": 1
+                },
+                "baseCountedBeside": 356
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 187,
+                  "hits": 9,
+                  "rate": 0.0481
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 9,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 187,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 174
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 203,
+                  "hits": 8,
+                  "rate": 0.0394
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 203,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 13,
+                  "hits": 13,
+                  "rate": 1
+                },
+                "baseCountedBeside": 182
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 17,
+                  "rate": 0.0436
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 17,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 11,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 17,
+                  "hits": 17,
+                  "rate": 1
+                },
+                "baseCountedBeside": 356
+              }
+            }
+          }
         }
       },
       {
@@ -4596,7 +7093,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 253,
+                  "hits": 8,
+                  "rate": 0.0316
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 253,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 241
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 137,
+                  "hits": 1,
+                  "rate": 0.0073
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 1,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 137,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 131
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 9,
+                  "rate": 0.0231
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 9,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 372
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 253,
+                  "hits": 8,
+                  "rate": 0.0316
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 2,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 253,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 4,
+                  "hits": 4,
+                  "rate": 1
+                },
+                "baseCountedBeside": 241
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 137,
+                  "hits": 1,
+                  "rate": 0.0073
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 1,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 1,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 137,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 5,
+                  "hits": 5,
+                  "rate": 1
+                },
+                "baseCountedBeside": 131
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 390,
+                  "hits": 9,
+                  "rate": 0.0231
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 9,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 390,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 9,
+                  "hits": 9,
+                  "rate": 1
+                },
+                "baseCountedBeside": 372
+              }
+            }
+          }
         }
       },
       {
@@ -4740,7 +7464,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 229,
+                  "hits": 36,
+                  "rate": 0.1572
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 35,
+                  "hits": 1,
+                  "rate": 0.0286
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 23,
+                    "hits": 1,
+                    "rate": 0.0435
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 229,
+                  "hits": 1,
+                  "rate": 0.0044
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 25,
+                  "rate": 1
+                },
+                "baseCountedBeside": 168
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 110,
+                  "hits": 8,
+                  "rate": 0.0727
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 110,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 19,
+                  "hits": 19,
+                  "rate": 1
+                },
+                "baseCountedBeside": 83
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 339,
+                  "hits": 44,
+                  "rate": 0.1298
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 43,
+                  "hits": 1,
+                  "rate": 0.0233
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 16,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 27,
+                    "hits": 1,
+                    "rate": 0.037
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 339,
+                  "hits": 1,
+                  "rate": 0.0029
+                },
+                "baseRate": {
+                  "n": 44,
+                  "hits": 44,
+                  "rate": 1
+                },
+                "baseCountedBeside": 251
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 229,
+                  "hits": 36,
+                  "rate": 0.1572
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 35,
+                  "hits": 1,
+                  "rate": 0.0286
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 23,
+                    "hits": 1,
+                    "rate": 0.0435
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 229,
+                  "hits": 1,
+                  "rate": 0.0044
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 24,
+                  "rate": 0.96
+                },
+                "baseCountedBeside": 168
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 110,
+                  "hits": 8,
+                  "rate": 0.0727
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 8,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 110,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 19,
+                  "hits": 19,
+                  "rate": 1
+                },
+                "baseCountedBeside": 83
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 339,
+                  "hits": 44,
+                  "rate": 0.1298
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 43,
+                  "hits": 1,
+                  "rate": 0.0233
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 16,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 27,
+                    "hits": 1,
+                    "rate": 0.037
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 339,
+                  "hits": 1,
+                  "rate": 0.0029
+                },
+                "baseRate": {
+                  "n": 44,
+                  "hits": 43,
+                  "rate": 0.9773
+                },
+                "baseCountedBeside": 251
+              }
+            }
+          }
         }
       },
       {
@@ -4884,7 +7835,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 129,
+                  "hits": 25,
+                  "rate": 0.1938
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 24,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 20,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 129,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 24,
+                  "hits": 20,
+                  "rate": 0.8333
+                },
+                "baseCountedBeside": 80
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 210,
+                  "hits": 31,
+                  "rate": 0.1476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 31,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 22,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 210,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 32,
+                  "hits": 32,
+                  "rate": 1
+                },
+                "baseCountedBeside": 147
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 339,
+                  "hits": 56,
+                  "rate": 0.1652
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 55,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 29,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 26,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 339,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 56,
+                  "hits": 52,
+                  "rate": 0.9286
+                },
+                "baseCountedBeside": 227
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 129,
+                  "hits": 25,
+                  "rate": 0.1938
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 24,
+                  "hits": 1,
+                  "rate": 0.0417
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 20,
+                    "hits": 1,
+                    "rate": 0.05
+                  },
+                  "directoryMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 129,
+                  "hits": 1,
+                  "rate": 0.0078
+                },
+                "baseRate": {
+                  "n": 24,
+                  "hits": 20,
+                  "rate": 0.8333
+                },
+                "baseCountedBeside": 80
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 210,
+                  "hits": 31,
+                  "rate": 0.1476
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 31,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 9,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 22,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 210,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 32,
+                  "hits": 32,
+                  "rate": 1
+                },
+                "baseCountedBeside": 147
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 339,
+                  "hits": 56,
+                  "rate": 0.1652
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 55,
+                  "hits": 1,
+                  "rate": 0.0182
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 29,
+                    "hits": 1,
+                    "rate": 0.0345
+                  },
+                  "directoryMiss": {
+                    "n": 26,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 339,
+                  "hits": 1,
+                  "rate": 0.0029
+                },
+                "baseRate": {
+                  "n": 56,
+                  "hits": 52,
+                  "rate": 0.9286
+                },
+                "baseCountedBeside": 227
+              }
+            }
+          }
         }
       },
       {
@@ -5028,7 +8206,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 136,
+                  "hits": 11,
+                  "rate": 0.0809
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 11,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 136,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 12,
+                  "hits": 11,
+                  "rate": 0.9167
+                },
+                "baseCountedBeside": 113
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 227,
+                  "hits": 22,
+                  "rate": 0.0969
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 22,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 18,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 227,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 21,
+                  "hits": 21,
+                  "rate": 1
+                },
+                "baseCountedBeside": 184
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 33,
+                  "rate": 0.0909
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 33,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 21,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 33,
+                  "hits": 32,
+                  "rate": 0.9697
+                },
+                "baseCountedBeside": 297
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 136,
+                  "hits": 11,
+                  "rate": 0.0809
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 11,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 3,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 136,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 12,
+                  "hits": 11,
+                  "rate": 0.9167
+                },
+                "baseCountedBeside": 113
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 227,
+                  "hits": 22,
+                  "rate": 0.0969
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 22,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 18,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 227,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 21,
+                  "hits": 21,
+                  "rate": 1
+                },
+                "baseCountedBeside": 184
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 33,
+                  "rate": 0.0909
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 33,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 21,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 33,
+                  "hits": 32,
+                  "rate": 0.9697
+                },
+                "baseCountedBeside": 297
+              }
+            }
+          }
         }
       },
       {
@@ -5172,7 +8577,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 243,
+                  "hits": 28,
+                  "rate": 0.1152
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 28,
+                  "hits": 2,
+                  "rate": 0.0714
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 2,
+                    "rate": 0.5
+                  },
+                  "directoryMiss": {
+                    "n": 24,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 243,
+                  "hits": 2,
+                  "rate": 0.0082
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 25,
+                  "rate": 1
+                },
+                "baseCountedBeside": 190
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 120,
+                  "hits": 11,
+                  "rate": 0.0917
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 11,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 7,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 120,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 14,
+                  "rate": 1
+                },
+                "baseCountedBeside": 95
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 39,
+                  "rate": 0.1074
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 39,
+                  "hits": 2,
+                  "rate": 0.0513
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 2,
+                    "rate": 0.25
+                  },
+                  "directoryMiss": {
+                    "n": 31,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 2,
+                  "rate": 0.0055
+                },
+                "baseRate": {
+                  "n": 39,
+                  "hits": 39,
+                  "rate": 1
+                },
+                "baseCountedBeside": 285
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 243,
+                  "hits": 28,
+                  "rate": 0.1152
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 28,
+                  "hits": 2,
+                  "rate": 0.0714
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 2,
+                    "rate": 0.5
+                  },
+                  "directoryMiss": {
+                    "n": 24,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 243,
+                  "hits": 2,
+                  "rate": 0.0082
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 25,
+                  "rate": 1
+                },
+                "baseCountedBeside": 190
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 120,
+                  "hits": 11,
+                  "rate": 0.0917
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 11,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 4,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 7,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 120,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 14,
+                  "hits": 14,
+                  "rate": 1
+                },
+                "baseCountedBeside": 95
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 363,
+                  "hits": 39,
+                  "rate": 0.1074
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 39,
+                  "hits": 2,
+                  "rate": 0.0513
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 2,
+                    "rate": 0.25
+                  },
+                  "directoryMiss": {
+                    "n": 31,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 363,
+                  "hits": 2,
+                  "rate": 0.0055
+                },
+                "baseRate": {
+                  "n": 39,
+                  "hits": 39,
+                  "rate": 1
+                },
+                "baseCountedBeside": 285
+              }
+            }
+          }
         }
       },
       {
@@ -5316,7 +8948,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 144,
+                  "hits": 30,
+                  "rate": 0.2083
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 30,
+                  "hits": 6,
+                  "rate": 0.2
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 1,
+                    "rate": 0.0833
+                  },
+                  "directoryMiss": {
+                    "n": 18,
+                    "hits": 5,
+                    "rate": 0.2778
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 144,
+                  "hits": 6,
+                  "rate": 0.0417
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 22,
+                  "rate": 0.88
+                },
+                "baseCountedBeside": 89
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 249,
+                  "hits": 37,
+                  "rate": 0.1486
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 37,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 23,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 249,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 41,
+                  "hits": 41,
+                  "rate": 1
+                },
+                "baseCountedBeside": 171
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 393,
+                  "hits": 67,
+                  "rate": 0.1705
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 67,
+                  "hits": 6,
+                  "rate": 0.0896
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 26,
+                    "hits": 1,
+                    "rate": 0.0385
+                  },
+                  "directoryMiss": {
+                    "n": 41,
+                    "hits": 5,
+                    "rate": 0.122
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 393,
+                  "hits": 6,
+                  "rate": 0.0153
+                },
+                "baseRate": {
+                  "n": 66,
+                  "hits": 63,
+                  "rate": 0.9545
+                },
+                "baseCountedBeside": 260
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 144,
+                  "hits": 30,
+                  "rate": 0.2083
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 30,
+                  "hits": 6,
+                  "rate": 0.2
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 12,
+                    "hits": 1,
+                    "rate": 0.0833
+                  },
+                  "directoryMiss": {
+                    "n": 18,
+                    "hits": 5,
+                    "rate": 0.2778
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 144,
+                  "hits": 6,
+                  "rate": 0.0417
+                },
+                "baseRate": {
+                  "n": 25,
+                  "hits": 21,
+                  "rate": 0.84
+                },
+                "baseCountedBeside": 89
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 249,
+                  "hits": 37,
+                  "rate": 0.1486
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 37,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 23,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 249,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 41,
+                  "hits": 41,
+                  "rate": 1
+                },
+                "baseCountedBeside": 171
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 393,
+                  "hits": 67,
+                  "rate": 0.1705
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 67,
+                  "hits": 6,
+                  "rate": 0.0896
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 26,
+                    "hits": 1,
+                    "rate": 0.0385
+                  },
+                  "directoryMiss": {
+                    "n": 41,
+                    "hits": 5,
+                    "rate": 0.122
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 393,
+                  "hits": 6,
+                  "rate": 0.0153
+                },
+                "baseRate": {
+                  "n": 66,
+                  "hits": 62,
+                  "rate": 0.9394
+                },
+                "baseCountedBeside": 260
+              }
+            }
+          }
         }
       },
       {
@@ -5460,7 +9319,234 @@
               "baseCountedBeside": 0
             }
           },
-          "labels": null
+          "labels": {
+            "bothSayNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 275,
+                  "hits": 43,
+                  "rate": 0.1564
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 42,
+                  "hits": 3,
+                  "rate": 0.0714
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 36,
+                    "hits": 3,
+                    "rate": 0.0833
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 275,
+                  "hits": 3,
+                  "rate": 0.0109
+                },
+                "baseRate": {
+                  "n": 40,
+                  "hits": 39,
+                  "rate": 0.975
+                },
+                "baseCountedBeside": 192
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 118,
+                  "hits": 14,
+                  "rate": 0.1186
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 118,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 17,
+                  "hits": 17,
+                  "rate": 1
+                },
+                "baseCountedBeside": 87
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 393,
+                  "hits": 57,
+                  "rate": 0.145
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 56,
+                  "hits": 3,
+                  "rate": 0.0536
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 42,
+                    "hits": 3,
+                    "rate": 0.0714
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 393,
+                  "hits": 3,
+                  "rate": 0.0076
+                },
+                "baseRate": {
+                  "n": 57,
+                  "hits": 56,
+                  "rate": 0.9825
+                },
+                "baseCountedBeside": 279
+              }
+            },
+            "eitherSaysNot": {
+              "answer": {
+                "missesAtEnd": {
+                  "n": 275,
+                  "hits": 43,
+                  "rate": 0.1564
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 42,
+                  "hits": 6,
+                  "rate": 0.1429
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 36,
+                    "hits": 6,
+                    "rate": 0.1667
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 275,
+                  "hits": 6,
+                  "rate": 0.0218
+                },
+                "baseRate": {
+                  "n": 40,
+                  "hits": 39,
+                  "rate": 0.975
+                },
+                "baseCountedBeside": 192
+              },
+              "answeringTurn": {
+                "missesAtEnd": {
+                  "n": 118,
+                  "hits": 14,
+                  "rate": 0.1186
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 14,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "countedBeside": 0,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 8,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 6,
+                    "hits": 0,
+                    "rate": 0
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 118,
+                  "hits": 0,
+                  "rate": 0
+                },
+                "baseRate": {
+                  "n": 17,
+                  "hits": 17,
+                  "rate": 1
+                },
+                "baseCountedBeside": 87
+              },
+              "all": {
+                "missesAtEnd": {
+                  "n": 393,
+                  "hits": 57,
+                  "rate": 0.145
+                },
+                "endedBySizeOrError": 0,
+                "unnoticed": {
+                  "n": 56,
+                  "hits": 6,
+                  "rate": 0.1071
+                },
+                "countedBeside": 1,
+                "byDirectory": {
+                  "modelMiss": {
+                    "n": 14,
+                    "hits": 0,
+                    "rate": 0
+                  },
+                  "directoryMiss": {
+                    "n": 42,
+                    "hits": 6,
+                    "rate": 0.1429
+                  }
+                },
+                "unnoticedOfDenominator": {
+                  "n": 393,
+                  "hits": 6,
+                  "rate": 0.0153
+                },
+                "baseRate": {
+                  "n": 57,
+                  "hits": 56,
+                  "rate": 0.9825
+                },
+                "baseCountedBeside": 279
+              }
+            }
+          }
         }
       }
     ],
@@ -5624,9 +9710,42 @@
         "labels/salt.sha256": "5149d6f211ca9f8dc3348a46269266b4c3fa23b2223e6877f8a4fea3a4f3b41a",
         "labels/batches.json": "3900dae9e31c5b6f67564882ebd09e490c8e383fe8c257d8d4917e0dc587f11b",
         "labels/a.jsonl": "993365d21871cf92426e150845d015782343f5677eca5c61f2b88c4f5452a5bb",
-        "labels/b.jsonl": "f1fef93f7a1532acf8eb954410a7bde948339a33f9dfbfec4e5283799a718154"
+        "labels/b.jsonl": "f1fef93f7a1532acf8eb954410a7bde948339a33f9dfbfec4e5283799a718154",
+        "labels/salt.txt": "9ffc2b77ebfafc715e387bc411fc4bfc475f3a4f42d577564f5391486f741888"
       },
-      "status": "labels not yet read"
+      "status": "read",
+      "sheetRows": 914,
+      "misses": 457,
+      "labels": {
+        "a": {
+          "does-not-say": 34,
+          "no-answer": 2,
+          "says": 876,
+          "unparsed": 2
+        },
+        "b": {
+          "does-not-say": 41,
+          "no-answer": 2,
+          "says": 871
+        }
+      },
+      "agreement": {
+        "sheet": {
+          "n": 912,
+          "alike": 905,
+          "share": 0.9923,
+          "kappa": 0.9076,
+          "unparsed": 2
+        },
+        "misses": {
+          "n": 456,
+          "alike": 452,
+          "share": 0.9912,
+          "kappa": 0.871,
+          "unparsed": 1
+        }
+      },
+      "disputed": 9
     }
   }
 }
