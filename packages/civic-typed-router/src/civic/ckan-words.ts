@@ -37,3 +37,7 @@ export const BOSTON_CKAN_WORDS = Object.freeze({
  *  (finding 1, ruled (a)); with the pack offered, the Boston OpenContext rule
  *  is not stated. */
 export const BOSTON_CKAN_RULE = '- **Boston civic questions** → Analyze Boston. Boston is not on Socrata.';
+
+/** The preamble's Boston rule for the hosted CKAN server (CKAN-2 P2, R3): a
+ *  typed stub, empty until the server offers its own tools. */
+export const CKAN_BOSTON_RULE: string = '';

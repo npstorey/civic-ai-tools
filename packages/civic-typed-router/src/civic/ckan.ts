@@ -533,3 +533,15 @@ export const CKAN_SERVER_ENTRY: CivicManifestEntry = {
   consentDefault: 'on',
   publisher: CKAN_SERVER_WORDS.publisher,
 };
+
+// --- CKAN-2 P2 (hub issue 329): typed stubs, empty until the server offers
+// its own tools (D2 = B). -------------------------------------------------------
+
+/** The seven tools the entry offers, in routing order: a typed stub. */
+export const CKAN_TOOL_NAMES: readonly string[] = [];
+
+/** The seven schemas the entry offers: a typed stub. */
+export const CKAN_TOOLS: readonly FunctionToolSchema[] = [];
+
+/** The entry's guidance (`docs/skills/ckan.md`): a typed stub. */
+export const CKAN_GUIDANCE: string = '';
