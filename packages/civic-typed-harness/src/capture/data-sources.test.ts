@@ -734,3 +734,197 @@ test('load span: a not-offered load between two data calls is skipped in place, 
   );
   assert.deepEqual(entries.map((e) => `${e.sourceId}/${e.datasetId ?? ''}`), ['socrata/erm2-nwe9', 'boston-opencontext/']);
 });
+
+// --- A per-portal source: the registry entry names the argument that carries its portal ---
+//
+// The CKAN server reads any portal its call names in `server_url`, so one run
+// can read several. Its registry entry names that argument (`portalArgument`),
+// and the walk mints one entry per distinct portal the source's accepted calls
+// named, in first-seen order, with no `datasetId`. Two values the server reads
+// as one portal are one portal: the server builds its request URL from the
+// value with one trailing slash removed (the fork's `src/utils/http.ts:951` at
+// 39ae5695), and the host it reaches is the same whatever the case of the
+// scheme and the host, or a default port, so the entry states the value as a
+// URL parser writes it, path kept, with one trailing slash removed.
+
+const PER_PORTAL_REGISTRY: CivicSourceRegistry = {
+  socrata: {
+    displayName: 'Socrata',
+    agentTitle: 'Socrata MCP Server',
+    catalogType: 'socrata',
+  },
+  'ckan-server': {
+    displayName: 'CKAN',
+    agentTitle: 'ckan-server MCP Server',
+    catalogType: 'ckan',
+    portalArgument: 'server_url',
+  },
+  'data-commons': {
+    displayName: 'Data Commons',
+    agentTitle: 'Google Data Commons MCP Server',
+    catalogType: 'data-commons',
+    aggregatePortalUrl: 'https://api.datacommons.org/mcp',
+  },
+};
+
+const perPortalResolver = (name: string): string | undefined =>
+  name.startsWith('ckan_')
+    ? 'ckan-server'
+    : name === 'get_data'
+      ? 'socrata'
+      : name === 'get_observations'
+        ? 'data-commons'
+        : undefined;
+
+function perPortal(toolCalls: ToolCallSummary[], registry: CivicSourceRegistry = PER_PORTAL_REGISTRY) {
+  return buildDataSources(toolCalls, { resourceSpans: [] }, undefined, NOW, {
+    resolver: perPortalResolver,
+    registry,
+  });
+}
+
+function portalEntry(portalUrl: string, sourceId = 'ckan-server') {
+  return { sourceId, catalogType: 'ckan', portalUrl, accessTimestamp: NOW };
+}
+
+test('per-portal (H1): calls to two portals mint two entries, each the portal its calls named, in first-seen order, with no datasetId', () => {
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { server_url: 'https://www.dati.gov.it/opendata', q: 'air quality' } },
+    { name: 'ckan_package_show', args: { server_url: 'https://data.boston.gov', id: '311-service-requests', dataset_id: '311-service-requests' } },
+    { name: 'ckan_datastore_search', args: { server_url: 'https://www.dati.gov.it/opendata', resource_id: 'abcd' } },
+  ]);
+  assert.deepEqual(entries, [
+    portalEntry('https://www.dati.gov.it/opendata'),
+    portalEntry('https://data.boston.gov'),
+  ]);
+  for (const entry of entries) {
+    assert.ok(!('datasetId' in entry), 'a per-portal entry names no dataset');
+    assert.ok(!('datasetUrl' in entry), 'a per-portal entry names no dataset URL');
+  }
+});
+
+test('per-portal (H2): a failed call to a decoy portal mints nothing; the accepted call to its portal mints one entry', () => {
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov', q: 'permits' } },
+    {
+      name: 'ckan_package_search',
+      args: { server_url: 'https://decoy.portal.example', q: 'permits' },
+      failed: true,
+      failureKind: 'unavailable',
+    },
+  ]);
+  assert.deepEqual(entries, [portalEntry('https://data.boston.gov')]);
+  assert.ok(!JSON.stringify(entries).includes('decoy'), 'the failed call’s portal is named nowhere');
+});
+
+test('per-portal (H3): server_url values the server reads as one portal mint one entry', () => {
+  // Case of the scheme and the host, a default port, and one trailing slash:
+  // the server reaches the same host at the same path for each.
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov/' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://Data.Boston.GOV' } },
+    { name: 'ckan_package_search', args: { server_url: 'HTTPS://data.boston.gov:443/' } },
+  ]);
+  assert.deepEqual(entries, [portalEntry('https://data.boston.gov')]);
+});
+
+test('per-portal (H3): a portal with a path keeps its path, with one trailing slash removed', () => {
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { server_url: 'https://www.dati.gov.it/opendata/' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://www.dati.gov.it/opendata' } },
+  ]);
+  assert.deepEqual(entries, [portalEntry('https://www.dati.gov.it/opendata')]);
+});
+
+test('per-portal: the scheme, a non-default port and the case of the path are part of the portal', () => {
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { server_url: 'https://ckan.portal.example/Data' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://ckan.portal.example/data' } },
+    { name: 'ckan_package_search', args: { server_url: 'http://ckan.portal.example/data' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://ckan.portal.example:8443/data' } },
+  ]);
+  assert.deepEqual(entries, [
+    portalEntry('https://ckan.portal.example/Data'),
+    portalEntry('https://ckan.portal.example/data'),
+    portalEntry('http://ckan.portal.example/data'),
+    portalEntry('https://ckan.portal.example:8443/data'),
+  ]);
+});
+
+test('per-portal: a call that carries no portal in the named argument mints no entry', () => {
+  const entries = perPortal([
+    { name: 'ckan_package_search', args: { q: 'permits' } },
+    { name: 'ckan_package_search', args: { portal: 'data.boston.gov', q: 'permits' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov', q: 'permits' } },
+  ]);
+  assert.deepEqual(entries, [portalEntry('https://data.boston.gov')]);
+});
+
+test('per-portal: a value that is not an http or https URL with no credentials, query or fragment mints no entry', () => {
+  const refused: unknown[] = [
+    '',
+    'data.boston.gov',
+    'ftp://data.boston.gov',
+    'https://reader@data.boston.gov',
+    'https://data.boston.gov/?q=permits',
+    'https://data.boston.gov/#datasets',
+    'https://data.boston.gov?',
+    42,
+    null,
+    ['https://data.boston.gov'],
+  ];
+  const entries = perPortal([
+    ...refused.map((server_url) => ({ name: 'ckan_package_search', args: { server_url } })),
+    { name: 'ckan_package_search', args: { server_url: 'https://www.dati.gov.it/opendata' } },
+  ]);
+  assert.deepEqual(entries, [portalEntry('https://www.dati.gov.it/opendata')]);
+  assert.ok(!JSON.stringify(entries).includes('reader'), 'a user name in the argument reaches no entry');
+});
+
+test('per-portal: an entry that names its portal argument and carries aggregatePortalUrl is per-portal; the aggregate URL is not read', () => {
+  const registry: CivicSourceRegistry = {
+    'ckan-server': {
+      displayName: 'CKAN',
+      agentTitle: 'ckan-server MCP Server',
+      catalogType: 'ckan',
+      portalArgument: 'server_url',
+      aggregatePortalUrl: 'https://static.portal.example',
+    },
+  };
+  assert.deepEqual(
+    perPortal([{ name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov' } }], registry),
+    [portalEntry('https://data.boston.gov')],
+  );
+  assert.deepEqual(
+    perPortal([{ name: 'ckan_package_search', args: { q: 'permits' } }], registry),
+    [],
+    'a call that named no portal mints nothing, and the aggregate URL stands in for none',
+  );
+});
+
+test('per-portal: entries are emitted at the source’s place in the registry, beside dataset-keyed and aggregate sources', () => {
+  const entries = perPortal([
+    { name: 'get_observations', args: { variable: 'Count_Person' } },
+    { name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov' } },
+    { name: 'get_data', args: { portal: 'data.cityofnewyork.us', dataset_id: 'erm2-nwe9' } },
+  ]);
+  assert.deepEqual(
+    entries.map((e) => `${e.sourceId} ${e.portalUrl} ${e.datasetId ?? '-'}`),
+    [
+      'socrata https://data.cityofnewyork.us erm2-nwe9',
+      'ckan-server https://data.boston.gov -',
+      'data-commons https://api.datacommons.org/mcp -',
+    ],
+  );
+});
+
+test('per-portal: a source without the field reads as before — an entry with neither field is dataset-keyed, so a server_url call mints nothing', () => {
+  const registry: CivicSourceRegistry = {
+    'ckan-server': { displayName: 'CKAN', agentTitle: 'ckan-server MCP Server', catalogType: 'ckan' },
+  };
+  assert.deepEqual(
+    perPortal([{ name: 'ckan_package_search', args: { server_url: 'https://data.boston.gov' } }], registry),
+    [],
+  );
+});

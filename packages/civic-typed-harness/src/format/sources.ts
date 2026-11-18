@@ -43,6 +43,17 @@ export interface CivicSourceInfo {
    * this field is what routes a source down the aggregate path.
    */
   aggregatePortalUrl?: string;
+  /**
+   * The name of the call argument that carries the portal a call read, for a
+   * source whose calls each name their own portal (the CKAN server's
+   * `server_url`). An entry that names one is a PER-PORTAL source: it emits
+   * one `dataSources` entry per distinct portal its accepted calls named, in
+   * first-seen order, each with `portalUrl` that portal and no `datasetId`.
+   * It is neither dataset-keyed nor aggregate: `isDatasetKeyedSource` is
+   * false for it, and its `aggregatePortalUrl`, if it carries one, is not
+   * read. A call that carries no portal in that argument mints no entry.
+   */
+  portalArgument?: string;
 }
 
 /** A source registry: source id → coordinates. Insertion order is emission

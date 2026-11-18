@@ -77,8 +77,10 @@ export interface DataSourceBuildConfig {
    *  `mcp.source` attribute). */
   resolver: (toolName: string) => string | undefined;
   /** Source id → catalog type and, for an aggregate source, the portal URL of
-   *  its single entry. Insertion order is emission order. */
-  registry: Record<string, { catalogType: string; aggregatePortalUrl?: string }>;
+   *  its single entry; for a per-portal source, the name of the call argument
+   *  that carries the portal each call read. Insertion order is emission
+   *  order. */
+  registry: Record<string, { catalogType: string; aggregatePortalUrl?: string; portalArgument?: string }>;
   /** Source id for calls neither the trace nor the resolver can identify. */
   fallbackSourceId: string;
   /** Is this source dataset-keyed (one entry per dataset)? Supplied by the

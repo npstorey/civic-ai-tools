@@ -2012,3 +2012,53 @@ test('ADR-0033 amendment 2: the LoadOutcome type admits not-offered', () => {
   const fifth: LoadOutcome = 'not-offered';
   assert.equal(fifth, 'not-offered');
 });
+
+// --- A per-portal source reads on the graph as an aggregate source does ---
+//
+// A registry entry that names its portal argument (`portalArgument`) is not
+// dataset-keyed, so the graph mints no dataset id, portal or dataset URL for
+// its data response, even when the span carries `tool.dataset_id`, and
+// describes the response by the agent that answered it. The graph does not
+// parse arguments, so the portal the call named is stated in `dataSources[]`
+// and in the call's own arguments, not here.
+
+test('per-portal: a per-portal source’s data response is described by its agent and states no dataset', () => {
+  const config: ProvenanceConfig = {
+    ...CIVICAITOOLS_PROVENANCE_CONFIG,
+    sourceRegistry: {
+      ...CIVIC_SOURCE_REGISTRY,
+      'ckan-server': {
+        displayName: 'CKAN',
+        agentTitle: 'ckan-server MCP Server',
+        catalogType: 'ckan',
+        portalArgument: 'server_url',
+      },
+    },
+  };
+  const span: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-per-portal',
+    startTimeUnixNano: '1000000000',
+    endTimeUnixNano: '2000000000',
+    attributes: attrs({
+      'tool.name': 'ckan_package_show',
+      'tool.operation_type': 'metadata',
+      'tool.arguments': '{"server_url":"https://data.boston.gov","id":"311-service-requests"}',
+      'mcp.source': 'ckan-server',
+      'tool.dataset_id': '311-service-requests',
+      'tool.response_hash': 'a0b1c2',
+    }),
+  };
+  const graph = buildProvenanceGraph(traceOf([span]), BASE_INPUT, config);
+  const derived = nodesDerivedFromToolSpan(graph['@graph'], BASE_INPUT.packageId, 'span-per-portal');
+  const response = derived.find((n) => n['@id'].includes(':data:'));
+  assert.ok(response, 'data-response entity expected');
+  assert.equal(response!['dcterms:description'], 'Data response from ckan-server MCP Server');
+  assert.equal(response!['civic:sourceId'], 'ckan-server');
+  for (const key of ['civic:datasetId', 'civic:portalDomain', 'civic:datasetUrl', 'civic:croissantMetadataUrl']) {
+    assert.ok(
+      !Object.prototype.hasOwnProperty.call(response, key),
+      `${key} must be absent — a per-portal source is not dataset-keyed`,
+    );
+  }
+});

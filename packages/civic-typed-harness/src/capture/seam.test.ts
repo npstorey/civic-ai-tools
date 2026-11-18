@@ -238,3 +238,25 @@ test('seam: data-source population runs on a caller registry, resolver and datas
   });
   assert.deepEqual(notKeyed.map((e) => e.sourceId), ['aggregate']);
 });
+
+test('seam: data-source population reads a per-portal source from its registry entry, whatever the dataset-keyed predicate says', () => {
+  const registry = {
+    portals: { catalogType: 'ckan', portalArgument: 'endpoint' },
+  };
+  const calls = [
+    { name: 'lookup', args: { endpoint: 'https://one.portal.example/api', dataset_id: 'ds-1', portal: 'portal.example' } },
+    { name: 'lookup', args: { endpoint: 'https://two.portal.example' } },
+  ];
+  for (const isDatasetKeyed of [() => true, () => false]) {
+    const entries = buildDataSourcesWith(calls, {}, 'now', {
+      resolver: () => 'portals',
+      registry,
+      fallbackSourceId: 'portals',
+      isDatasetKeyed,
+    });
+    assert.deepEqual(entries, [
+      { sourceId: 'portals', catalogType: 'ckan', portalUrl: 'https://one.portal.example/api', accessTimestamp: 'now' },
+      { sourceId: 'portals', catalogType: 'ckan', portalUrl: 'https://two.portal.example', accessTimestamp: 'now' },
+    ]);
+  }
+});
