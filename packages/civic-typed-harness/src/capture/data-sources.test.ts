@@ -737,15 +737,16 @@ test('load span: a not-offered load between two data calls is skipped in place, 
 
 // --- A per-portal source: the registry entry names the argument that carries its portal ---
 //
-// The CKAN server reads any portal its call names in `server_url`, so one run
-// can read several. Its registry entry names that argument (`portalArgument`),
+// A call to the CKAN server names its portal in `server_url`, so one run can
+// name several. Its registry entry names that argument (`portalArgument`),
 // and the walk mints one entry per distinct portal the source's accepted calls
-// named, in first-seen order, with no `datasetId`. Two values the server reads
-// as one portal are one portal: the server builds its request URL from the
-// value with one trailing slash removed (the fork's `src/utils/http.ts:951` at
-// 39ae5695), and the host it reaches is the same whatever the case of the
-// scheme and the host, or a default port, so the entry states the value as a
-// URL parser writes it, path kept, with one trailing slash removed.
+// named, in first-seen order, with no `datasetId`. Two values a URL parser
+// writes the same, one trailing slash removed, name one portal: the server
+// builds its request URL from the value with one trailing slash removed (the
+// fork's `src/utils/http.ts:951` at 39ae5695), and the host it reaches is the
+// same whatever the case of the scheme and the host, or a default port, so the
+// entry states the value as a URL parser writes it, path kept, with one
+// trailing slash removed.
 
 const PER_PORTAL_REGISTRY: CivicSourceRegistry = {
   socrata: {
@@ -817,7 +818,7 @@ test('per-portal (H2): a failed call to a decoy portal mints nothing; the accept
   assert.ok(!JSON.stringify(entries).includes('decoy'), 'the failed call’s portal is named nowhere');
 });
 
-test('per-portal (H3): server_url values the server reads as one portal mint one entry', () => {
+test('per-portal (H3): server_url values that name one portal mint one entry', () => {
   // Case of the scheme and the host, a default port, and one trailing slash:
   // the server reaches the same host at the same path for each.
   const entries = perPortal([

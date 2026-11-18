@@ -149,7 +149,7 @@ test('names (c): each refusal also happens at construction', () => {
   }
 });
 
-// --- (d) The fifty-eight names in view --------------------------------------------
+// --- (d) The fifty-nine names in view ---------------------------------------------
 
 /** The upstream names a committed capture lists, in its order. */
 const capturedNames = (fixture: string): string[] =>
@@ -157,16 +157,17 @@ const capturedNames = (fixture: string): string[] =>
     (t) => t.name,
   );
 
-test('names (d): the fifty-eight names in view are unchanged by normalization', () => {
+test('names (d): the fifty-nine names in view are unchanged by normalization', () => {
   // Since 0.3.0 the civic manifest holds the fifth source's five itself
   // (alias `nyc_charter`); through 0.2.0 this test added a stub for them.
   // Since 0.6.0 it holds the three hosted sources' after them, named from
   // their committed captures: Checkbook's 10 and NYS Open Legislation's 24.
   // Since 0.8.0 City Record is a pack over the Socrata server with two,
   // `get_data` and `fetch` (0.6.0 and 0.7.0 held its server's seven).
-  // Since 0.11.0 Boston OpenContext's alias is `boston_opencontext`, and the
-  // Boston pack over the hosted CKAN server (alias `boston`) follows NYS Open
-  // Legislation with six; the CKAN server itself declares none.
+  // Since 0.11.0 Boston OpenContext's alias is `boston_opencontext`. Since
+  // 0.12.0 the hosted CKAN server (alias `ckan`) follows NYS Open
+  // Legislation with seven of its own tools; in 0.11.0 it declared none, and
+  // the Boston pack over it (alias `boston`, retired in 0.12.0) held six.
   const map = dispatchMap(CIVIC_MANIFEST);
   const expected = [
     'socrata__get_data',
@@ -189,14 +190,15 @@ test('names (d): the fifty-eight names in view are unchanged by normalization', 
     'nyc_record__get_data',
     'nyc_record__fetch',
     ...capturedNames('nys-legislation-tools.json').map((name) => `nys_legislation__${name}`),
-    'boston__ckan_package_search',
-    'boston__ckan_find_relevant_datasets',
-    'boston__ckan_package_show',
-    'boston__ckan_list_resources',
-    'boston__ckan_datastore_search',
-    'boston__ckan_datastore_search_sql',
+    'ckan__ckan_package_search',
+    'ckan__ckan_find_relevant_datasets',
+    'ckan__ckan_package_show',
+    'ckan__ckan_list_resources',
+    'ckan__ckan_datastore_search',
+    'ckan__ckan_datastore_search_sql',
+    'ckan__ckan_status_show',
   ];
-  assert.equal(expected.length, 58);
+  assert.equal(expected.length, 59);
   assert.deepEqual([...map.keys()], expected);
   assert.deepEqual([...map.values()].filter((t) => t.sourceId === 'nyc-charter').map((t) => t.upstreamName), CHARTER_TOOLS);
   for (const target of map.values()) {

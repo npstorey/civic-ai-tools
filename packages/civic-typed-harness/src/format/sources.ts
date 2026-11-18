@@ -46,7 +46,7 @@ export interface CivicSourceInfo {
    */
   aggregatePortalUrl?: string;
   /**
-   * The name of the call argument that carries the portal a call read, for a
+   * The name of the call argument that carries the portal a call named, for a
    * source whose calls each name their own portal (the CKAN server's
    * `server_url`). An entry that names one is a PER-PORTAL source: it emits
    * one `dataSources` entry per distinct portal its accepted calls named, in

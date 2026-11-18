@@ -69,12 +69,13 @@
 // the pack's own portal, selection reads the manifest itself, and every
 // output is 0.9.0's.
 //
-// A pack's base with no tool names (0.11.0; Q2 on hub issue 314): the hosted
-// CKAN server declares no tools of its own, and is offered, with its packs,
-// when its address is set. An entry with no tool names that a pack of the
-// manifest names as its base is left out of every list the model reads: the
-// preamble (its entries and its count), the outro, the guidance blocks, the
-// directory, the in-loop prompt, `load_source`'s choices, the lock text's
+// A pack's base with no tool names (0.11.0; Q2 on hub issue 314): in 0.11.0
+// the hosted CKAN server declared no tools of its own and was offered, with
+// its pack, when its address was set; since 0.12.0 it offers its own tools,
+// and no civic entry is such a base. An entry with no tool names that a pack
+// of the manifest names as its base is left out of every list the model
+// reads: the preamble (its entries and its count), the outro, the guidance
+// blocks, the directory, the in-loop prompt, `load_source`'s choices, the lock text's
 // other sources and the search's hits (`modelReads`). It stays in every list
 // a record states: `sourcesOffered`, `isSourceOffered`, `offeredSkillSources`
 // and the harness definition's `sources`. The search's index still covers
@@ -121,7 +122,6 @@ import type {
   ToolLike,
 } from '../core/types.ts';
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
-import { BOSTON_CKAN_ENTRY } from './boston-ckan.ts';
 import { CKAN_SERVER_ENTRY } from './ckan.ts';
 import type { CivicManifest, CivicManifestEntry, InstructionsFetcher, PromptFetcher } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
@@ -141,9 +141,10 @@ import { SOCRATA_ENTRY } from './socrata.ts';
  *  NYS Open Legislation are hosted, optional and off unless their own switch
  *  is on. City Record is a pack over the Socrata server since 0.8.0, required
  *  as Socrata is, so it is offered in every configuration. Since 0.11.0 the
- *  hosted CKAN server and the Boston pack over it come last, both optional
- *  and offered only when `CKAN_MCP_URL` is set, so with it unset every
- *  output of the seven before them is 0.10.0's. */
+ *  hosted CKAN server comes last, optional and offered only when
+ *  `CKAN_MCP_URL` is set, so with it unset every output of the seven before
+ *  it is 0.10.0's. In 0.11.0 the Boston pack over it followed it; the pack
+ *  is retired since 0.12.0 (`RETIRED_PACKS`, `./retired.ts`). */
 export const CIVIC_MANIFEST: CivicManifest = [
   SOCRATA_ENTRY,
   DATA_COMMONS_ENTRY,
@@ -153,12 +154,11 @@ export const CIVIC_MANIFEST: CivicManifest = [
   NYC_RECORD_ENTRY,
   NYS_LEGISLATION_ENTRY,
   CKAN_SERVER_ENTRY,
-  BOSTON_CKAN_ENTRY,
 ];
 
 /** Whether the model reads `entry` in any list, in a manifest whose packs
  *  name `packBases` as their bases (since 0.11.0): a pack's base with no
- *  tool names, such as the hosted CKAN server, is left out of every list the
+ *  tool names (in 0.11.0, the hosted CKAN server) is left out of every list the
  *  model reads and kept in every list a record states (Q2). Every other
  *  entry is read. */
 const modelReadsIn =

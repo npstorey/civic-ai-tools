@@ -12,6 +12,7 @@ This directory contains the companion skill guidance for the MCP servers the civ
 | `local.md` | Socrata local overlay: relaxed date defaults, full capabilities, cross-portal comparisons encouraged, extended analysis OK |
 | `data-commons.md` | Google Data Commons skill: two-tool workflow, DCID patterns, small-area coverage, aggregation-semantics risks, cross-source decision logic, attribution |
 | `boston.md` | Boston OpenContext skill: CKAN-vs-Socrata cheat sheet, Boston geographies (neighborhoods ≠ Census tracts, BPD districts, parcel IDs), resource-UUID citation. No embedded server copy — not drift-checked. |
+| `ckan.md` | Hosted CKAN server skill, for any CKAN portal: `server_url` on every call, `https://data.boston.gov` for Boston, the seven-tool workflow, CKAN-vs-Socrata, Boston geographies, the server's answer reuse, citation. The civic router embeds it verbatim (`CKAN_GUIDANCE`) and its tests hold the two equal; no server copy — not drift-checked. |
 
 ## How overlays work
 

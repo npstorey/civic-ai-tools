@@ -22,7 +22,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BOSTON_CKAN_WORDS, CIVIC_MANIFEST, CKAN_SERVER_WORDS, configuredSources, NYC_CHARTER_HOSTING_SANDBOX, readMcpEnv, type CivicManifestEntry } from './index.ts';
+import { CIVIC_MANIFEST, CKAN_SERVER_WORDS, configuredSources, NYC_CHARTER_HOSTING_SANDBOX, readMcpEnv, type CivicManifestEntry } from './index.ts';
 
 /** The UTC date 0.4.0's phase read every statement it cites. */
 const READ_ON = '2026-10-18';
@@ -96,9 +96,8 @@ test('hosting variants: every entry lists one variant, states its consent defaul
       // A pack: Socrata's variant and consent default.
       ['nyc-record', 1, 'on', false],
       ['nys-legislation', 1, 'ask-first', false],
-      // The hosted CKAN server (0.11.0), and its Boston pack: the server's.
+      // The hosted CKAN server (0.11.0; its Boston pack is retired in 0.12.0).
       ['ckan-server', 1, 'on', false],
-      ['boston-ckan', 1, 'on', false],
     ],
   );
 });
@@ -116,7 +115,6 @@ test('hosting variants: each entry names its publisher, as the source\'s own pag
       'nys-legislation': 'BetaNYC',
       // Since 0.11.0; the words are the router's words module's.
       'ckan-server': CKAN_SERVER_WORDS.publisher,
-      'boston-ckan': BOSTON_CKAN_WORDS.publisher,
     },
   );
 });
@@ -233,14 +231,8 @@ test('logging posture: each variant\'s holders, in the order the data flows, sta
         ],
       ],
       // The hosted CKAN server (0.11.0): as the Socrata server's, the
-      // instance decides who holds its logs; and the Boston pack, its base's.
+      // instance decides who holds its logs.
       'ckan-server': [
-        [
-          { statedBy: 'instance', role: 'server-operator' },
-          { statedBy: 'instance', role: 'portal-operator' },
-        ],
-      ],
-      'boston-ckan': [
         [
           { statedBy: 'instance', role: 'server-operator' },
           { statedBy: 'instance', role: 'portal-operator' },

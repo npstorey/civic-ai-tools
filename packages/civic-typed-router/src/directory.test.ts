@@ -115,11 +115,11 @@ test('directory: for the eight current entries the model reads each line is the 
   assert.deepEqual(entryLines(directory), LISTED.map(lineOf));
 });
 
-test('directory: with every source configured it has eight lines, the CKAN server left out; with Boston OpenContext, the three hosted sources and the CKAN server unconfigured, three (the City Record pack is offered with Socrata)', () => {
+test('directory: with every source configured it has eight lines, the CKAN server last; with Boston OpenContext, the three hosted sources and the CKAN server unconfigured, three (the City Record pack is offered with Socrata)', () => {
   const directoryPrompt = civicRouter.directoryPrompt;
   assert.deepEqual(
     entryLines(directoryPrompt({ configured: EVERY_SOURCE, today: TODAY })).map((line) => line.split('`')[1]),
-    ['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation', 'boston'],
+    ['socrata', 'data_commons', 'boston_opencontext', 'nyc_charter', 'nyc_checkbook', 'nyc_record', 'nys_legislation', 'ckan'],
   );
   const three = directoryPrompt({ configured: REQUIRED_ONLY, today: TODAY });
   assert.deepEqual(entryLines(three).map((line) => line.split('`')[1]), ['socrata', 'data_commons', 'nyc_record']);

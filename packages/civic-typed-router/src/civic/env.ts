@@ -35,9 +35,10 @@
 // Since 0.11.0 it reads one more address, `CKAN_MCP_URL`, the hosted CKAN
 // server's (`./ckan.ts`). Its key, `ckanUrl`, is in the result only when the
 // address is non-empty after trimming, so with it unset every reading is
-// 0.10.0's, key for key. The server entry and every pack over it (the
-// Boston pack, `./boston-ckan.ts`) are keyed by that address. The one-portal
-// lock names a Socrata portal and leaves a CKAN pack configured.
+// 0.10.0's, key for key. The server entry is keyed by that address (in
+// 0.11.0 the Boston pack over it was too; it is retired since 0.12.0). The
+// one-portal lock names a Socrata portal and leaves the CKAN server
+// configured.
 
 import type { ConfiguredAddresses } from '../core/types.ts';
 
@@ -55,7 +56,7 @@ export const NYC_CHECKBOOK_HOSTING_VARIABLE = 'NYC_CHECKBOOK_HOSTING';
 /** The switch that offers NYS Open Legislation (since 0.6.0). */
 export const NYS_LEGISLATION_HOSTING_VARIABLE = 'NYS_LEGISLATION_HOSTING';
 /** The hosted CKAN server's address (since 0.11.0): it offers the server
- *  entry and every pack over it. */
+ *  entry. */
 export const CKAN_ADDRESS_VARIABLE = 'CKAN_MCP_URL';
 
 /** The one value of a hosted source's switch that turns it on: the instance
@@ -143,9 +144,10 @@ export function readMcpEnv(source: ConfigurationSource): McpRegistryEnv {
 }
 
 /** Each civic pack's base, by the pack's source id (since 0.8.0): City
- *  Record over the Socrata server; since 0.11.0, the Boston pack over the
- *  hosted CKAN server. A pack takes no address of its own. */
-const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata', 'boston-ckan': 'ckan-server' });
+ *  Record over the Socrata server (in 0.11.0, also the Boston pack over the
+ *  hosted CKAN server, retired since 0.12.0). A pack takes no address of its
+ *  own. */
+const PACK_BASES: Readonly<Record<string, string>> = Object.freeze({ 'nyc-record': 'socrata' });
 
 /** Each civic Socrata pack's portal, its `filter.portal`, by the pack's
  *  source id (since 0.10.0): City Record's, `data.cityofnewyork.us`

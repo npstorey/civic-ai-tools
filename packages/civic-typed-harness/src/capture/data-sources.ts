@@ -78,7 +78,7 @@ export interface DataSourceBuildConfig {
   resolver: (toolName: string) => string | undefined;
   /** Source id → catalog type and, for an aggregate source, the portal URL of
    *  its single entry; for a per-portal source, the name of the call argument
-   *  that carries the portal each call read. Insertion order is emission
+   *  that carries the portal each call named. Insertion order is emission
    *  order. */
   registry: Record<string, { catalogType: string; aggregatePortalUrl?: string; portalArgument?: string }>;
   /** Source id for calls neither the trace nor the resolver can identify. */
@@ -89,19 +89,18 @@ export interface DataSourceBuildConfig {
 }
 
 /**
- * The portal a per-portal source's call named, as the source's server reads
- * it, or `undefined` when the value names none this function can state.
+ * The portal a per-portal source's call named, as a URL parser writes the
+ * value, or `undefined` when the value names none this function can state.
  *
- * Measured against the CKAN server the reference instance hosts (the fork
- * `npstorey/ckan-mcp-server` at 39ae5695, `src/utils/http.ts`): the server
- * refuses a value that does not parse as an `http:` or `https:` URL
- * (`validateServerUrl`, `:584-594`), and builds its request URL from the value
- * with one trailing slash removed, followed by its API path (`:950-953`). The
- * host that request reaches is the same whatever the case of the scheme and
- * the host, and with or without the scheme's default port; the path is kept as
- * written. So the portal is the value as a URL parser writes it (scheme and
- * host lowercased, a default port dropped), with its path and one trailing
- * slash removed, and two values that give the same string are one portal.
+ * The entry records the value the call named, as a URL parser writes it:
+ * scheme and host lowercased, a default port dropped, the path kept, one
+ * trailing slash removed. Two values that give the same string are one portal.
+ * The CKAN server the reference instance hosts (the fork
+ * `npstorey/ckan-mcp-server` at 39ae5695, `src/utils/http.ts`) refuses a value
+ * that does not parse as an `http:` or `https:` URL (`validateServerUrl`,
+ * `:584-594`), and may send the call to a configured API address instead of
+ * the value (`:939-948`); the entry states what the call named, not where the
+ * server sent it.
  *
  * A value with a user name or password, a query or a fragment states nothing:
  * a credential is not part of a portal and must not reach signed bytes, and the
@@ -219,7 +218,7 @@ export function buildDataSourcesWith(
     const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
     const portalArgument = registry[source]?.portalArgument;
     if (portalArgument !== undefined) {
-      // A per-portal source: the call states the portal it read in the
+      // A per-portal source: the call states the portal it named in the
       // argument its registry entry names. A call that names none there mints
       // no entry, and nothing stands in for it — not the run's portal, not
       // the entry's `aggregatePortalUrl`.

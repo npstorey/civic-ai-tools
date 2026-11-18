@@ -4,8 +4,10 @@
 // The hub's `inventory/civic-inventory.json` (`civic-inventory/3` since
 // version 3, router 0.9.0) is the source of truth for the sources' data
 // (G0-5 A on hub #309): six servers and, since version 2 (router 0.8.0), City
-// Record as a pack over the Socrata server; since version 4 (router 0.11.0),
-// nine, with the hosted CKAN server and the Boston pack over it.
+// Record as a pack over the Socrata server; in version 4 (router 0.11.0),
+// nine, with the hosted CKAN server and the Boston pack over it; since
+// version 5 (router 0.12.0), eight: the Boston pack is retired
+// (`./retired.ts`) and the hosted CKAN server offers its own tools.
 // `CIVIC_MANIFEST` stays code and is held equal to the file by
 // `src/inventory.test.ts`; `CIVIC_INVENTORY` names the file it equals. This
 // module reads no file: a consumer reads the inventory and passes the parsed
@@ -22,9 +24,11 @@
 //   - `mcp-remote`: Google Data Commons and Boston OpenContext;
 //   - `npm-package`: the three sources an instance runs from a pinned
 //     package, with no guidance (none of the three servers sends any);
-//   - `ckan` (since 0.11.0): the hosted CKAN server, which declares no tools
-//     of its own, and packs over it (Boston), each a portal: the six tools a
-//     pack calls with `server_url` fixed.
+//   - `ckan` (since 0.11.0): the hosted CKAN server. Through 0.11.0 it
+//     declared no tools and took packs (Boston), each a portal with
+//     `server_url` fixed; since 0.12.0 it offers seven of its own tools,
+//     `server_url` open in each, with this package's guidance, and takes no
+//     pack.
 //
 // Each kind holds code for the sources it knows, by `sourceId`, and refuses
 // any other: a new server is code until its tools and guidance are data.
@@ -34,7 +38,7 @@ import { InventoryLoadError, type EntryCode, type EntryKind, type EntryKinds, ty
 import { sha256Hex } from '../core/sha256.ts';
 import type { FunctionToolSchema, GuidanceEntry, JsonSchema, SourceView } from '../core/types.ts';
 import { BOSTON_OPENCONTEXT_ENTRY } from './boston.ts';
-import { CKAN_PACK_BASE_TOOLS, CKAN_PACK_DESCRIPTION_CUTS, CKAN_PACK_TOOL_NAMES, CKAN_SERVER_ENTRY, CKAN_SERVER_SOURCE_ID, CKAN_SERVER_TOOL_NAMES } from './ckan.ts';
+import { CKAN_SERVER_ENTRY, CKAN_SERVER_SOURCE_ID } from './ckan.ts';
 import type { CivicGuidanceContext, CivicManifestEntry, CivicPromptParts } from './context.ts';
 import { DATA_COMMONS_ENTRY } from './data-commons.ts';
 import { NYC_CHARTER_ENTRY } from './nyc-charter.ts';
@@ -49,8 +53,8 @@ import { SOCRATA_ENTRY, SOCRATA_TOOL_NAMES, socrataTools } from './socrata.ts';
  *  it). Released raw at the hub tag `civic-inventory/<version>`. */
 export const CIVIC_INVENTORY = Object.freeze({
   id: 'civic',
-  version: '2026-11-13.1',
-  hash: '02448c54cfe448da1c6536738c0fd9ee5b749a3267a7826d1a33012489d3e7a3',
+  version: '2026-11-18.1',
+  hash: '17b320f22b2ff430787f9e9cb641747b7d40e283a77a01fd1ed2852401e2c982',
 });
 
 /** What the civic inventory's entries carry for the prompt frame: strings
@@ -280,107 +284,6 @@ function packGuidance(entry: InventoryPackEntry): GuidanceEntry<CivicGuidanceCon
   };
 }
 
-// --- Packs over the hosted CKAN server (since 0.11.0) -----------------------------------
-
-/** What a CKAN pack's filter may fix. */
-const CKAN_FILTER_ARGUMENTS = ['server_url'];
-
-/** The host name of a CKAN pack's `filter.server_url`, an `https:` URL. */
-function ckanHostOf(entry: InventoryPackEntry, serverUrl: string): string {
-  let url: URL;
-  try {
-    url = new URL(serverUrl);
-  } catch {
-    throw new InventoryLoadError(entry.alias, 'filter.server_url', `${JSON.stringify(serverUrl)} is not a URL`);
-  }
-  if (url.protocol !== 'https:' || url.hostname === '') throw new InventoryLoadError(entry.alias, 'filter.server_url', `${JSON.stringify(serverUrl)} is not an https URL`);
-  return url.hostname;
-}
-
-/** Hold a CKAN pack's `api` to its filter: the platform `ckan`, `host` the
- *  host of its `filter.server_url`, and no dataset (a CKAN pack reads a
- *  portal). */
-function checkCkanPackApi(entry: InventoryPackEntry, host: string): void {
-  const stated = (value: unknown): string => (value === undefined ? 'absent' : `${JSON.stringify(value)}`);
-  const api = entry.api as { platform?: unknown; host?: unknown; [member: string]: unknown } | undefined;
-  if (api === null || typeof api !== 'object' || Array.isArray(api)) throw new InventoryLoadError(entry.alias, 'api', 'is missing; a pack states the API it reads');
-  const extra = Object.keys(api).filter((member) => !['platform', 'host'].includes(member));
-  if (extra.length > 0) throw new InventoryLoadError(entry.alias, `api.${extra[0]}`, "a ckan pack's api states platform and host only");
-  if (api.platform !== 'ckan') throw new InventoryLoadError(entry.alias, 'api.platform', `is ${stated(api.platform)}; a ckan pack's platform is "ckan"`);
-  if (api.host !== host) throw new InventoryLoadError(entry.alias, 'api.host', `is ${stated(api.host)}; a ckan pack's host is the host of its filter.server_url, "${host}"`);
-}
-
-/** A pack tool's description: the server's, less each passage
- *  `CKAN_PACK_DESCRIPTION_CUTS` names for the tool (a passage that names a
- *  base tool no pack carries). Throws `InventoryLoadError`, naming the tool
- *  and the passage, when a passage is not found exactly once. */
-function ckanPackDescription(alias: string, name: string, description: string): string {
-  let text = description;
-  for (const passage of CKAN_PACK_DESCRIPTION_CUTS[name] ?? []) {
-    const found = text.split(passage).length - 1;
-    if (found !== 1) throw new InventoryLoadError(alias, `tools.${name}`, `the passage ${JSON.stringify(passage)} is found ${found} times in the server's description; the pack removes it once`);
-    text = text.replace(passage, '');
-  }
-  return text;
-}
-
-/** One of the six base schemas as a pack calls it: `server_url` fixed to the
- *  pack's portal as a one-value `enum`, the description less the passages
- *  that name a tool no pack carries, a last paragraph naming the refusal,
- *  and, for `ckan_datastore_search_sql`, the `sql` argument stating the
- *  SELECT-only rule (D3). Every other member is the server's. */
-function ckanPackTool(alias: string, tool: FunctionToolSchema, serverUrl: string): FunctionToolSchema {
-  const parameters = tool.function.parameters as Properties;
-  let fixed = withProperty(tool, 'server_url', {
-    type: 'string',
-    enum: [serverUrl],
-    description: `The one CKAN portal this source reads, ${serverUrl}. Any other value is refused.`,
-  });
-  if (tool.function.name === 'ckan_datastore_search_sql') {
-    const sql = parameters.properties.sql as { description?: string } & Record<string, unknown>;
-    fixed = withProperty(fixed, 'sql', {
-      ...sql,
-      description: `${sql.description ?? 'SQL query'}. One statement only: it begins, after any whitespace and SQL comments, with SELECT or WITH, and no second statement follows a semicolon outside a quoted literal. Any other statement is refused before it is sent.`,
-    });
-  }
-  return {
-    ...fixed,
-    function: {
-      ...fixed.function,
-      description: `${ckanPackDescription(alias, tool.function.name, tool.function.description ?? '')}\n\nThis source reads one CKAN portal only, ${serverUrl}: pass it as "server_url". A call naming any other portal is refused and returns no data.`,
-    },
-  };
-}
-
-/** The CKAN kind's pack builder: a pack's six tools over the hosted CKAN
- *  server, with `server_url` fixed to its filter's, its guidance and its
- *  prompt strings; and the base's own tool names, which the loader holds the
- *  pack's pins to (the base entry declares none). `./boston-ckan.ts` builds
- *  the Boston pack's mirror with it. The tools carry no `toolsFor`: their
- *  text is the server's, so the aliased view renames them and gives their
- *  descriptions the anchored rewrite. */
-export function ckanPack(entry: InventoryPackEntry, base: CivicManifestEntry): PackCode<CivicManifestEntry> {
-  if (base.sourceId !== CKAN_SERVER_SOURCE_ID) throw new InventoryLoadError(entry.alias, 'base', `the ckan kind has pack code for "${CKAN_SERVER_SOURCE_ID}" only`);
-  const filter = entry.filter;
-  if (filter === null || typeof filter !== 'object' || Array.isArray(filter)) throw new InventoryLoadError(entry.alias, 'filter', 'is not an object');
-  for (const [key, value] of Object.entries(filter)) {
-    if (!CKAN_FILTER_ARGUMENTS.includes(key)) throw new InventoryLoadError(entry.alias, `filter.${key}`, `a ckan pack fixes only ${CKAN_FILTER_ARGUMENTS.join(' and ')}`);
-    if (typeof value !== 'string' || value === '') throw new InventoryLoadError(entry.alias, `filter.${key}`, 'is not a non-empty string');
-  }
-  const serverUrl = filter.server_url;
-  if (serverUrl === undefined) throw new InventoryLoadError(entry.alias, 'filter.server_url', 'a ckan pack fixes its server_url');
-  checkCkanPackApi(entry, ckanHostOf(entry, serverUrl));
-  return {
-    toolNames: CKAN_PACK_TOOL_NAMES,
-    baseToolNames: CKAN_SERVER_TOOL_NAMES,
-    code: {
-      tools: CKAN_PACK_BASE_TOOLS.map((tool) => ckanPackTool(entry.alias, tool, serverUrl)),
-      guidance: packGuidance(entry),
-      ...promptOf(undefined, promptStringsOf(entry)),
-    },
-  };
-}
-
 // --- The kinds --------------------------------------------------------------------------
 
 const SOCRATA_SOURCES: Readonly<Record<string, CivicManifestEntry>> = Object.freeze({ socrata: SOCRATA_ENTRY });
@@ -423,14 +326,14 @@ const remoteKind: EntryKind<CivicManifestEntry> = {
 
 const CKAN_SOURCES: Readonly<Record<string, CivicManifestEntry>> = Object.freeze({ [CKAN_SERVER_SOURCE_ID]: CKAN_SERVER_ENTRY });
 
-/** The hosted CKAN server: no tools of its own (its entry's `toolsRef`
- *  names none, and the loader holds it to that), no guidance; packs over it
- *  (since 0.11.0). */
+/** The hosted CKAN server (since 0.11.0): since 0.12.0 its seven tools and
+ *  this package's guidance (`embedded`), and no pack. Through 0.11.0 it
+ *  declared no tools, had no guidance and took packs (`ckanPack`, removed
+ *  with the Boston pack). */
 const ckanKind: EntryKind<CivicManifestEntry> = {
   server(entry) {
-    return codeFrom(knownSource(CKAN_SOURCES, 'ckan', entry), entry, 'none');
+    return codeFrom(knownSource(CKAN_SOURCES, 'ckan', entry), entry, 'embedded');
   },
-  pack: ckanPack,
 };
 
 /** The civic kinds, for an instance that knows `options` of its servers. */
