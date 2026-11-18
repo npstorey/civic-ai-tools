@@ -40,9 +40,22 @@ export interface CivicSourceInfo {
    * source's query surface is not dataset-keyed (Data Commons's knowledge
    * graph, Boston OpenContext's CKAN DataStore). ABSENT for dataset-keyed
    * sources (Socrata), which emit one entry per dataset instead — presence of
-   * this field is what routes a source down the aggregate path.
+   * this field is what routes a source down the aggregate path, unless the
+   * entry also names `portalArgument`, which makes it per-portal and leaves
+   * this field unread.
    */
   aggregatePortalUrl?: string;
+  /**
+   * The name of the call argument that carries the portal a call named, for a
+   * source whose calls each name their own portal (the CKAN server's
+   * `server_url`). An entry that names one is a PER-PORTAL source: it emits
+   * one `dataSources` entry per distinct portal its accepted calls named, in
+   * first-seen order, each with `portalUrl` that portal and no `datasetId`.
+   * It is neither dataset-keyed nor aggregate: `isDatasetKeyedSource` is
+   * false for it, and its `aggregatePortalUrl`, if it carries one, is not
+   * read. A call that carries no portal in that argument mints no entry.
+   */
+  portalArgument?: string;
 }
 
 /** A source registry: source id → coordinates. Insertion order is emission
@@ -97,13 +110,17 @@ export const FALLBACK_SOURCE_ID = 'socrata';
 export const UNKNOWN_SOURCE_ID = 'unknown';
 
 /** Is this source dataset-keyed (one `dataSources` entry per dataset) rather
- *  than aggregate? Unknown ids are neither — they contribute no entry. */
+ *  than aggregate or per-portal? Unknown ids are none of these — they
+ *  contribute no entry. An entry naming `portalArgument` is per-portal, so it
+ *  is not dataset-keyed, and the provenance graph reads its calls as it reads
+ *  an aggregate source's: a data response described by the agent that
+ *  answered it, with no dataset id, portal or dataset URL. */
 export function isDatasetKeyedSource(
   sourceId: string,
   registry: CivicSourceRegistry,
 ): boolean {
   const info = registry[sourceId];
-  return info !== undefined && info.aggregatePortalUrl === undefined;
+  return info !== undefined && info.aggregatePortalUrl === undefined && info.portalArgument === undefined;
 }
 
 /**

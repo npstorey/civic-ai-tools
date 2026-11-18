@@ -239,9 +239,9 @@ test('switch: sourcesOffered gives nyc-charter not-configured with the switch of
     ['nyc-checkbook', 'nyc_checkbook', 'not-configured'],
     ['nyc-record', 'nyc_record', 'configured'],
     ['nys-legislation', 'nys_legislation', 'not-configured'],
-    // The hosted CKAN server and its Boston pack (0.11.0): no CKAN address.
+    // The hosted CKAN server (0.11.0): no CKAN address. Its Boston pack
+    // (0.11.0) is retired in 0.12.0.
     ['ckan-server', 'ckan', 'not-configured'],
-    ['boston-ckan', 'boston', 'not-configured'],
   ];
   assert.deepEqual(rows(env(undefined)), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
   assert.deepEqual(rows(env('hosted')), [...three, ['nyc-charter', 'nyc_charter', 'not-configured'], ...after]);
@@ -256,7 +256,6 @@ test('switch: sourcesOffered gives nyc-charter not-configured with the switch of
     'not-selected',
     'not-configured',
     'not-selected',
-    'not-configured',
     'not-configured',
     'not-configured',
   ]);
@@ -419,14 +418,15 @@ test('bare view, switch on: it cannot tell the two "search" tools apart by name,
     list.filter((t) => t.function.name === 'search').map((t) => civicRouter.manifest.find((e) => e.tools.includes(t))!.sourceId);
   assert.deepEqual(searchSources(tools), ['socrata', 'nyc-charter']);
   // Only the two hosted sources of 0.6.0, whose switches are unset, and the
-  // Boston CKAN pack (0.11.0), with no CKAN address, are withheld, by their
-  // own schema objects: Socrata's, Charter's and the City Record pack's
-  // tools are the vocabulary's, in order.
+  // hosted CKAN server's own tools (0.12.0; in 0.11.0 the Boston CKAN
+  // pack's), with no CKAN address, are withheld, by their own schema
+  // objects: Socrata's, Charter's and the City Record pack's tools are the
+  // vocabulary's, in order.
   const hostedOf06 = new Set(civicRouter.manifest.filter((e) => ['nyc-checkbook', 'nys-legislation'].includes(e.sourceId)).flatMap((e) => e.tools));
   assert.equal(hostedOf06.size, 34);
-  const ckanPack = new Set(civicRouter.manifest.filter((e) => e.sourceId === 'boston-ckan').flatMap((e) => e.tools));
-  assert.equal(ckanPack.size, 6);
-  assert.deepEqual(tools, civicRouter.mcpTools.filter((t) => !hostedOf06.has(t) && !ckanPack.has(t)));
+  const ckanServer = new Set(civicRouter.manifest.filter((e) => e.sourceId === 'ckan-server').flatMap((e) => e.tools));
+  assert.equal(ckanServer.size, 7);
+  assert.deepEqual(tools, civicRouter.mcpTools.filter((t) => !hostedOf06.has(t) && !ckanServer.has(t)));
   // With every switch on, nothing is withheld: the vocabulary itself.
   const everySwitch = readMcpEnv({
     SOCRATA_MCP_URL: SOCRATA,

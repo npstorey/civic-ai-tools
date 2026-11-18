@@ -158,7 +158,7 @@ const EVERY_SOURCE = readMcpEnv({
   NYS_LEGISLATION_HOSTING: 'sandbox',
 });
 const REQUIRED_ONLY = readMcpEnv({ SOCRATA_MCP_URL: 'https://socrata-mcp.example.org' });
-const NOT_OFFERED_UNDER_REQUIRED_ONLY = ['boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nys-legislation', 'ckan-server', 'boston-ckan'];
+const NOT_OFFERED_UNDER_REQUIRED_ONLY = ['boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nys-legislation', 'ckan-server'];
 
 const idsOf = (hits: readonly { sourceId: string }[]): string[] => hits.map((hit) => hit.sourceId);
 

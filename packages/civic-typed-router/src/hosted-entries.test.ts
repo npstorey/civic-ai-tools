@@ -177,10 +177,10 @@ const PACK = 'nyc-record';
 
 // --- Criterion 1: the entries -------------------------------------------------------------
 
-test('hosted entries: the manifest holds nine entries, the three of 0.6.0 after NYC Charter in D7\'s order, then the two of 0.11.0', () => {
+test('hosted entries: the manifest holds eight entries, the three of 0.6.0 after NYC Charter in D7\'s order, then the hosted CKAN server of 0.11.0', () => {
   assert.deepEqual(
     CIVIC_MANIFEST.map((entry) => entry.sourceId),
-    ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation', 'ckan-server', 'boston-ckan'],
+    ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', 'nyc-checkbook', 'nyc-record', 'nys-legislation', 'ckan-server'],
   );
   assert.deepEqual(
     CIVIC_MANIFEST.slice(4, 7).map((entry) => [entry.alias, entry.displayName, entry.configuration.requirement]),
@@ -371,7 +371,7 @@ function recording(configured: McpRegistryEnv, extra: Partial<BuildSystemPromptI
 
 test('switches unset: every offered output is the manifest\'s without the two hosted sources of 0.6.0, byte for byte', async () => {
   const four = createCivicRouter(CIVIC_MANIFEST.filter((entry) => !SERVERS.some((server) => server.sourceId === entry.sourceId)) as CivicManifest);
-  assert.deepEqual(four.manifest.map((entry) => entry.sourceId), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', PACK, 'ckan-server', 'boston-ckan']);
+  assert.deepEqual(four.manifest.map((entry) => entry.sourceId), ['socrata', 'data-commons', 'boston-opencontext', 'nyc-charter', PACK, 'ckan-server']);
   const envs = [
     {},
     { SOCRATA_MCP_URL: SOCRATA },

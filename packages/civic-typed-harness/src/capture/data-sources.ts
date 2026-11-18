@@ -77,13 +77,51 @@ export interface DataSourceBuildConfig {
    *  `mcp.source` attribute). */
   resolver: (toolName: string) => string | undefined;
   /** Source id → catalog type and, for an aggregate source, the portal URL of
-   *  its single entry. Insertion order is emission order. */
-  registry: Record<string, { catalogType: string; aggregatePortalUrl?: string }>;
+   *  its single entry; for a per-portal source, the name of the call argument
+   *  that carries the portal each call named. Insertion order is emission
+   *  order. */
+  registry: Record<string, { catalogType: string; aggregatePortalUrl?: string; portalArgument?: string }>;
   /** Source id for calls neither the trace nor the resolver can identify. */
   fallbackSourceId: string;
   /** Is this source dataset-keyed (one entry per dataset)? Supplied by the
    *  caller, consistent with `registry`. */
   isDatasetKeyed: (sourceId: string) => boolean;
+}
+
+/**
+ * The portal a per-portal source's call named, as a URL parser writes the
+ * value, or `undefined` when the value names none this function can state.
+ *
+ * The entry records the value the call named, as a URL parser writes it:
+ * scheme and host lowercased, a default port dropped, the path kept, one
+ * trailing slash removed. Two values that give the same string are one portal.
+ * The CKAN server the reference instance hosts (the fork
+ * `npstorey/ckan-mcp-server` at 39ae5695, `src/utils/http.ts`) refuses a value
+ * that does not parse as an `http:` or `https:` URL (`validateServerUrl`,
+ * `:584-594`), and may send the call to a configured API address instead of
+ * the value (`:939-948`); the entry states what the call named, not where the
+ * server sent it.
+ *
+ * A value with a user name or password, a query or a fragment states nothing:
+ * a credential is not part of a portal and must not reach signed bytes, and the
+ * server would put its API path inside the query or fragment rather than after
+ * the portal's path. Nor does a value that is not a string. The server's own
+ * table of known portals, which redirects a configured host to the address the
+ * table gives it (`:939-948`), is the server's configuration and is not read
+ * here: the entry states the portal the call named.
+ */
+function portalNamedBy(value: unknown): string | undefined {
+  if (typeof value !== 'string' || /[?#]/.test(value)) return undefined;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined;
+  if (url.username !== '' || url.password !== '') return undefined;
+  const path = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
+  return `${url.origin}${path}`;
 }
 
 /**
@@ -116,11 +154,19 @@ export function resolveToolSourceWith(
  * argument; a dataset-keyed call that carried no portal contributes NO
  * entry (the loop body says why). Aggregate sources (Data Commons,
  * Boston OpenContext — registry entries carrying `aggregatePortalUrl`)
- * contribute a single entry when any of their tool calls was made. Unknown
- * source ids contribute no entry. Each entry is tagged with `sourceId` so
- * downstream consumers can distinguish provenance. Emission order: the
- * dataset-keyed entries (first-seen order), then aggregate sources in
- * registry insertion order — matching the reference implementation.
+ * contribute a single entry when any of their tool calls was made. Per-portal
+ * sources (registry entries naming `portalArgument`, the call argument that
+ * carries the portal: the CKAN server's `server_url`) contribute one entry per
+ * distinct portal their calls named, in first-seen order, with no
+ * `datasetId`; a call that names no portal there contributes none
+ * (`portalNamedBy` says what names one). An entry naming `portalArgument` is
+ * per-portal whatever else it carries: its `aggregatePortalUrl` is not read,
+ * and the walk takes the fact from the registry entry, not from
+ * `isDatasetKeyed`. Unknown source ids contribute no entry. Each entry is
+ * tagged with `sourceId` so downstream consumers can distinguish provenance.
+ * Emission order: sources in registry insertion order, each source's entries
+ * in first-seen order — for the dataset-keyed and aggregate sources alone,
+ * the reference implementation's order.
  *
  * A call the producer recorded as FAILED (`ToolCallSummary.failed`) asserts
  * no access and contributes nothing on either branch: no dataset-keyed entry
@@ -151,6 +197,8 @@ export function buildDataSourcesWith(
   const toolSpans = getToolSpans(trace);
   const datasetKeyed = new Map<string, Map<string, { portalUrl: string; datasetId: string }>>();
   const aggregateAccessed = new Set<string>();
+  // Per-portal source id → the portals its calls named, in first-seen order.
+  const portalsNamed = new Map<string, Set<string>>();
 
   for (let i = 0; i < toolCalls.length; i++) {
     const tc = toolCalls[i];
@@ -168,7 +216,22 @@ export function buildDataSourcesWith(
     // so it mints no entry either. Skipped in place, for the same reason.
     if (isSearchSpan(toolSpans[i]?.attributes)) continue;
     const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
-    if (config.isDatasetKeyed(source)) {
+    const portalArgument = registry[source]?.portalArgument;
+    if (portalArgument !== undefined) {
+      // A per-portal source: the call states the portal it named in the
+      // argument its registry entry names. A call that names none there mints
+      // no entry, and nothing stands in for it — not the run's portal, not
+      // the entry's `aggregatePortalUrl`.
+      const portalUrl = portalNamedBy(tc.args[portalArgument]);
+      if (portalUrl !== undefined) {
+        let portals = portalsNamed.get(source);
+        if (!portals) {
+          portals = new Set();
+          portalsNamed.set(source, portals);
+        }
+        portals.add(portalUrl);
+      }
+    } else if (config.isDatasetKeyed(source)) {
       const datasetId = tc.args.dataset_id as string | undefined;
       const portal = tc.args.portal as string | undefined;
       // An entry is minted only from what the call carried: a dataset id AND
@@ -202,7 +265,16 @@ export function buildDataSourcesWith(
 
   const entries: DataSourceEntry[] = [];
   for (const [sourceId, info] of Object.entries(registry)) {
-    if (info.aggregatePortalUrl === undefined) {
+    if (info.portalArgument !== undefined) {
+      for (const portalUrl of portalsNamed.get(sourceId) ?? []) {
+        entries.push({
+          sourceId,
+          catalogType: info.catalogType,
+          portalUrl,
+          accessTimestamp: now,
+        });
+      }
+    } else if (info.aggregatePortalUrl === undefined) {
       const byDataset = datasetKeyed.get(sourceId);
       if (!byDataset) continue;
       for (const { portalUrl, datasetId } of byDataset.values()) {

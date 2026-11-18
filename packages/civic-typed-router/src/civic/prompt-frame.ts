@@ -14,7 +14,7 @@
 import { BARE_VIEW } from '../core/alias.ts';
 import type { DirectoryFrame, FindSourceResultText, FindSourceToolText, LoadSourceToolText } from '../core/directory.ts';
 import type { SourceView } from '../core/types.ts';
-import { BOSTON_CKAN_RULE } from './ckan-words.ts';
+import { CKAN_BOSTON_RULE } from './ckan-words.ts';
 
 /** The civic source ids, as the website's registry keys them. */
 export type SourceId = 'socrata' | 'data-commons' | 'boston-opencontext';
@@ -56,19 +56,19 @@ export function civicPreambleEntry(sourceId: SourceId, view: SourceView = BARE_V
   return lookUp(PREAMBLE_ENTRIES, sourceId, "civicPreambleEntry has the three code sources' entries only", "another source's entry is its manifest entry's")(view);
 }
 
-/** The ids a preamble rule routes to: the three code sources, and the Boston
- *  pack over the hosted CKAN server (since 0.11.0). */
-type RuleSourceId = SourceId | 'boston-ckan';
+/** The ids a preamble rule routes to: the three code sources, and the hosted
+ *  CKAN server (since 0.12.0; in 0.11.0, the Boston pack over it). */
+type RuleSourceId = SourceId | 'ckan-server';
 
 /** The preamble's source-selection rules, in order; a rule that routes to a
  *  source is stated only when that source is offered, and a rule with
- *  `unless` is not stated when that source is offered too. Since 0.11.0 the
- *  Boston pack's rule leads, and Boston OpenContext's is stated only when
- *  the pack is not offered: with neither CKAN entry offered every rule line
- *  is 0.10.0's. */
+ *  `unless` is not stated when that source is offered too. Since 0.12.0 the
+ *  CKAN server's Boston rule leads (in 0.11.0, the Boston pack's), and Boston
+ *  OpenContext's is stated only when the server is not offered: with the
+ *  server not offered every rule line is 0.10.0's. */
 const PREAMBLE_RULES: ReadonlyArray<{ routesTo?: RuleSourceId; unless?: RuleSourceId; text: string }> = [
-  { routesTo: 'boston-ckan', text: BOSTON_CKAN_RULE },
-  { routesTo: 'boston-opencontext', unless: 'boston-ckan', text: '- **Boston civic questions** → Boston OpenContext. Boston is not on Socrata.' },
+  { routesTo: 'ckan-server', text: CKAN_BOSTON_RULE },
+  { routesTo: 'boston-opencontext', unless: 'ckan-server', text: '- **Boston civic questions** → Boston OpenContext. Boston is not on Socrata.' },
   { routesTo: 'socrata', text: '- **Other-city civic questions** (NYC, Chicago, SF, Seattle, LA, ...) → Socrata.' },
   { routesTo: 'data-commons', text: '- **Demographics, poverty, income, education, health, labor, environment** for any geography → Data Commons.' },
   { text: '- **Multi-source equity questions** that join operational data against demographic context → plan a multi-step analysis, attribute each figure to its source, and mind geography alignment (Boston neighborhoods and city council districts are not standard census geographies — state the mismatch rather than silently imputing).' },

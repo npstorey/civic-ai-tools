@@ -72,11 +72,13 @@ export function resolveToolSource(
  * argument; a dataset-keyed call that carried no portal contributes NO
  * entry. Aggregate sources (Data Commons, Boston OpenContext — registry
  * entries carrying `aggregatePortalUrl`) contribute a single entry when any
- * of their tool calls was made. Unknown source ids contribute no entry. Each
- * entry is tagged with `sourceId` so downstream consumers can distinguish
- * provenance. Emission order: the dataset-keyed entries (first-seen order),
- * then aggregate sources in registry insertion order — matching the
- * reference implementation.
+ * of their tool calls was made. Per-portal sources (registry entries naming
+ * `portalArgument`, the call argument that carries the portal) contribute one
+ * entry per distinct portal their calls named, in first-seen order, with no
+ * `datasetId`. Unknown source ids contribute no entry. Each entry is tagged
+ * with `sourceId` so downstream consumers can distinguish provenance.
+ * Emission order: sources in registry insertion order, each source's entries
+ * in first-seen order.
  *
  * A call the producer recorded as FAILED (`ToolCallSummary.failed`) asserts
  * no access and contributes nothing on either branch; it keeps its position

@@ -43,6 +43,20 @@ test('dataset-keyed split: socrata is dataset-keyed; DC and Boston are aggregate
   assert.equal(isDatasetKeyedSource('eurostat', CIVIC_SOURCE_REGISTRY), false);
 });
 
+test('dataset-keyed split: a per-portal entry (it names its portal argument) is not dataset-keyed', () => {
+  const registry = {
+    ...CIVIC_SOURCE_REGISTRY,
+    'ckan-server': {
+      displayName: 'CKAN',
+      agentTitle: 'ckan-server MCP Server',
+      catalogType: 'ckan',
+      portalArgument: 'server_url',
+    },
+  };
+  assert.equal(isDatasetKeyedSource('ckan-server', registry), false);
+  assert.equal(isDatasetKeyedSource('socrata', registry), true, 'an entry without the field reads as before');
+});
+
 test('default resolver mirrors the demo MCP tool names', () => {
   assert.equal(civicToolSourceResolver('get_data'), 'socrata');
   assert.equal(civicToolSourceResolver('search'), 'socrata');

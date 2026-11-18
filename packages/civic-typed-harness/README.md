@@ -46,6 +46,20 @@ const graph = buildProvenanceGraph(trace, input, CIVICAITOOLS_PROVENANCE_CONFIG)
 
 Likewise: `buildDatHereEnvironment` / `deriveDatHereEnvelopeFields` take `CIVICAITOOLS_ENVIRONMENT_CONFIG`, `new TraceBuilder(...)` takes `CIVICAITOOLS_TRACE_CONFIG`, and `isDatasetKeyedSource` / `displayNameForSource` / `formatDataSourcesSummary` take `CIVIC_SOURCE_REGISTRY`. The acceptance condition is encoded in `src/required-config.assert.ts`: reintroducing any of the removed defaults fails `npm run typecheck`.
 
+## The source registry: dataset-keyed, aggregate and per-portal sources
+
+A `CivicSourceRegistry` entry decides, by the fields it carries, how its source's accepted calls become `dataSources[]` entries:
+
+| The entry carries | The source is | Its `dataSources[]` entries |
+|---|---|---|
+| neither `aggregatePortalUrl` nor `portalArgument` | dataset-keyed (Socrata) | one per distinct `dataset_id` among its calls that also carried `portal`: `portalUrl` `https://<portal>`, `datasetId`, `datasetUrl` |
+| `aggregatePortalUrl` | aggregate (Data Commons, Boston OpenContext) | one, with `portalUrl` `aggregatePortalUrl`, when any of its calls was made |
+| `portalArgument` | per-portal (the CKAN server, `portalArgument: 'server_url'`) | one per distinct portal its calls named in that argument, in first-seen order: `portalUrl` that portal, no `datasetId` |
+
+Sources are emitted in registry order, each source's entries in first-seen order. A call recorded as failed, a load call and a search call mint nothing, whatever their source.
+
+**A per-portal source.** The entry records the portal each call named: the argument's value as a URL parser writes it (scheme and host lowercased, a default port dropped), with its path kept and one trailing slash removed. `https://Data.Boston.gov/` and `https://data.boston.gov` are one portal, `https://data.boston.gov`; `https://www.dati.gov.it/opendata/` is `https://www.dati.gov.it/opendata`. A value that is not an `http:` or `https:` URL, or that carries a user name, a password, a query or a fragment, names no portal, and a call that names none mints no entry: nothing stands in for the portal, neither the run's nor the entry's `aggregatePortalUrl`, which is not read for an entry naming `portalArgument`. The entry states the portal the call named; a server that sends a call for a host it knows to another address (the CKAN server's table of known portals) is configured outside the record, so a portal named by two addresses appears under each. `isDatasetKeyedSource` is false for a per-portal entry, so the provenance graph reads its calls as it reads an aggregate source's: a data response described by the agent that answered it, with no dataset id, portal or dataset URL. `formatDataSourcesSummary` names the source once, however many portals its calls named. An entry without `portalArgument` reads as it did before the field existed.
+
 ## What a record states about its run (0.7.0, 0.9.0 and 0.10.0, [ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md))
 
 **Every call is attributed to its own source.** A tool span's source is its `mcp.source` tag; an untagged span resolves by its tool name through the resolver (`ProvenanceConfig.resolver`, default `civicToolSourceResolver`); a span neither identifies is attributed to `UNKNOWN_SOURCE_ID` (`'unknown'`), never to Socrata. The same order holds in `dataSources[]`, where an unknown call mints no entry. A caller may still pass `fallbackSourceId` explicitly, for example `'socrata'` to reproduce an earlier record of an untagged span.

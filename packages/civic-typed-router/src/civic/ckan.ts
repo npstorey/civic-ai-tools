@@ -1,27 +1,27 @@
-// The hosted CKAN server (CKAN-1 P2, hub issue 314): the base the Boston
-// pack is built over, and the six tool schemas a CKAN pack calls.
+// The hosted CKAN server (CKAN-1 P2, hub issue 314; since 0.12.0, CKAN-2
+// P2, hub issue 329): a source that offers seven of its own tools.
 //
 // The server is a pinned fork of the open-source ckan-mcp-server
-// (github.com/npstorey/ckan-mcp-server, at the commit its fixture names),
-// which the project hosts at an address the instance configures
-// (`CKAN_MCP_URL`). Its server entry declares no tools (`toolsRef.toolNames`
-// is empty in the inventory, D7 = D): none of its 20 tools is offered on its
-// own, and a portal is a pack over it that calls some of them with
-// `server_url` fixed. Its `initialize` result carries no `instructions` and
-// the entry's guidance is none.
+// (github.com/npstorey/ckan-mcp-server), which the project hosts at an
+// address the instance configures (`CKAN_MCP_URL`). Through 0.11.0 its entry
+// declared no tools and a portal was a pack over it (Analyze Boston, retired
+// in 0.12.0: `./retired.ts`). Since 0.12.0 the entry offers seven of its 20
+// tools (D2 = B): the six a pack called and `ckan_status_show`, each with
+// `server_url` open, so each call names its portal. Its
+// `initialize` result carries no `instructions`; its guidance is this
+// package's text (`docs/skills/ckan.md`), written for any portal.
 //
-// Since the entry declares no tools, the base's own tool names are stated
-// here (`CKAN_SERVER_TOOL_NAMES`, in its `tools/list` order): the kind's pack
-// builder hands them to the loader, which holds a pack's `basePins` to them
-// (Q1). The six schemas a pack calls (`CKAN_PACK_BASE_TOOLS`) are the
-// server's own, as its `tools/list` returns them at the pinned commit:
-// captured by `src/__fixtures__/pin-ckan-tools.mjs` into
-// `src/__fixtures__/ckan-tools.json`, and held equal to it by
+// The seven schemas are the server's own, as its `tools/list` returns them
+// at the captured commit: captured by `src/__fixtures__/pin-ckan-tools.mjs`
+// into `src/__fixtures__/ckan-tools.json`, and held equal to it by
 // `src/ckan.test.ts`. They are code because the build reads no JSON, and
 // text the router does not own: the aliased view gives their descriptions
-// the anchored rewrite.
+// the anchored rewrite. Each description is the server's whole text; the
+// one change is the statement rule on `ckan_datastore_search_sql`'s `sql`
+// argument (CKAN-1's D3 = A).
 
-import type { FunctionToolSchema, GuidanceEntry } from '../core/types.ts';
+import { BARE_VIEW } from '../core/alias.ts';
+import type { FunctionToolSchema, GuidanceEntry, JsonSchema, SourceView } from '../core/types.ts';
 import { CKAN_SERVER_WORDS } from './ckan-words.ts';
 import type { CivicGuidanceContext, CivicManifestEntry } from './context.ts';
 import { CKAN_ADDRESS_VARIABLE } from './env.ts';
@@ -30,7 +30,7 @@ import { CKAN_ADDRESS_VARIABLE } from './env.ts';
 export const CKAN_SERVER_SOURCE_ID = 'ckan-server';
 
 /** The server's 20 tool names, in the order its `tools/list` returns them
- *  at the pinned commit: what a CKAN pack's `basePins` are held to. */
+ *  at the captured commit. */
 export const CKAN_SERVER_TOOL_NAMES: readonly string[] = [
   "ckan_package_search",
   "ckan_find_relevant_datasets",
@@ -54,37 +54,24 @@ export const CKAN_SERVER_TOOL_NAMES: readonly string[] = [
   "ckan_find_portals"
 ];
 
-/** The six tools a CKAN pack calls, in routing order (D2). */
-export const CKAN_PACK_TOOL_NAMES: readonly string[] = [
+/** The seven tools the entry offers, in routing order (D2 = B, since
+ *  0.12.0): the six a CKAN pack called through 0.11.0, then
+ *  `ckan_status_show`. */
+export const CKAN_TOOL_NAMES: readonly string[] = [
   'ckan_package_search',
   'ckan_find_relevant_datasets',
   'ckan_package_show',
   'ckan_list_resources',
   'ckan_datastore_search',
   'ckan_datastore_search_sql',
+  'ckan_status_show',
 ];
 
-/** The passages of a pack tool's description, exactly as the server writes
- *  them at the pinned commit, that name a base tool no CKAN pack carries:
- *  the pack builder removes each, and nothing else (finding 2 = (b)). Two,
- *  both in `ckan_package_search`'s description and both naming
- *  `ckan_status_show`: the locale sentence of its "Query language" block
- *  (the sentences after it stay true without it), and the first step of its
- *  workflow line (the three steps after it are the pack's). A passage not
- *  found exactly once in the server's text stops the build of the pack by
- *  name, so a changed capture cannot keep or lose one silently. */
-export const CKAN_PACK_DESCRIPTION_CUTS: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  ckan_package_search: Object.freeze([
-    '  Before searching a portal, check its locale via ckan_status_show (field: "Portal Locale" / locale_default).\n',
-    'ckan_status_show (check locale) → ',
-  ]),
-});
-
-/** The six schemas at the pinned commit, as function tools, in
- *  `CKAN_PACK_TOOL_NAMES`' order: each `inputSchema` is the tool's
- *  `parameters`, unchanged, and `server_url` is still open (a pack fixes
- *  it). */
-export const CKAN_PACK_BASE_TOOLS: readonly FunctionToolSchema[] = [
+/** The seven schemas as the server lists them at the captured commit, as
+ *  function tools, in `CKAN_TOOL_NAMES`' order: each `parameters` is the
+ *  tool's `inputSchema`, unchanged, and each description is the server's
+ *  whole text. `server_url` is open in each. */
+const LISTED_TOOLS: readonly FunctionToolSchema[] = [
   {
     "type": "function",
     "function": {
@@ -483,23 +470,141 @@ export const CKAN_PACK_BASE_TOOLS: readonly FunctionToolSchema[] = [
         "$schema": "http://json-schema.org/draft-07/schema#"
       }
     }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "ckan_status_show",
+      "description": "Check if a CKAN server is available and get version information.\n\nUseful to verify server accessibility before making other requests.\nAlso shows the count of High-Value Datasets (HVD) when the portal supports it.\n\nArgs:\n  - server_url (string): Base URL of CKAN server\n\nReturns:\n  Server status, version information, and HVD dataset count (if available)\n\nTypical workflow: ckan_status_show (verify server is up) → ckan_package_search (discover datasets)",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "server_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL of the CKAN server"
+          }
+        },
+        "required": [
+          "server_url"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
   }
 ];
 
-/** The guidance of a server that sends none. */
-const NO_GUIDANCE: GuidanceEntry<CivicGuidanceContext> = Object.freeze({
-  async fetchText() {
-    return '';
+/** What `ckan_datastore_search_sql`'s `sql` argument adds to the server's
+ *  own description (CKAN-1's D3 = A): the statement rule the instance holds a
+ *  call to before it is sent. */
+const SQL_STATEMENT_RULE =
+  'One statement only: it begins, after any whitespace and SQL comments, with SELECT or WITH, and no second statement follows a semicolon outside a quoted literal. Any other statement is refused before it is sent.';
+
+type Properties = { properties: Record<string, unknown> } & Record<string, unknown>;
+
+/** `ckan_datastore_search_sql` with its `sql` argument stating the
+ *  statement rule; every other member is the server's. */
+function withStatementRule(tool: FunctionToolSchema): FunctionToolSchema {
+  const parameters = tool.function.parameters as Properties;
+  const sql = parameters.properties.sql as { description?: string } & Record<string, unknown>;
+  return {
+    ...tool,
+    function: {
+      ...tool.function,
+      parameters: {
+        ...parameters,
+        properties: { ...parameters.properties, sql: { ...sql, description: `${sql.description ?? 'SQL query'}. ${SQL_STATEMENT_RULE}` } },
+      } as JsonSchema,
+    },
+  };
+}
+
+/** The seven tools the entry offers (since 0.12.0): the server's schemas,
+ *  `server_url` open in each, with `ckan_datastore_search_sql`'s `sql`
+ *  argument stating the statement rule. Text the router does not own: the
+ *  aliased view renames them and gives their descriptions the anchored
+ *  rewrite. */
+export const CKAN_TOOLS: readonly FunctionToolSchema[] = LISTED_TOOLS.map((tool) =>
+  tool.function.name === 'ckan_datastore_search_sql' ? withStatementRule(tool) : tool,
+);
+
+/** The entry's guidance: the hub's CKAN guidance for the seven tools
+ *  (`docs/skills/ckan.md`, less its final newline), written for any portal
+ *  and naming `https://data.boston.gov` for Boston. It names each tool in
+ *  backticks or bold, so the aliased view gives it the anchored rewrite. */
+export const CKAN_GUIDANCE = `# CKAN portals: guidance for the CKAN tools
+
+Guidance for querying open data on CKAN portals through seven tools of a hosted CKAN server. Every call names the portal it reads in \`server_url\`: the portal's base URL, such as \`https://data.boston.gov\`. The server reads only the portals its operator lists; a call naming any other portal is refused and returns no data.
+
+## Which portal
+
+- **Boston**: Analyze Boston, the City of Boston's portal, is \`https://data.boston.gov\`. Boston's city data is there, not on Socrata: 311 requests, permits, crime, inspections, property records, elections, schools, parcels, parking, neighborhoods.
+- **Another place**: pass the base URL of the CKAN portal that publishes its data. Do not guess an address: if you do not know a place's portal, say so. \`ckan_status_show\` tells you whether an address answers as a CKAN portal.
+- **Use Socrata** for cities whose portals run Socrata (NYC, Chicago, SF, Seattle, LA).
+- **Use Data Commons for demographics**: ACS, Census and BLS figures. A CKAN portal is not where demographic tables are. For Boston: Suffolk County (\`geoId/25025\`), Boston city (\`geoId/2507000\`), or tracts.
+
+When a question mixes operational and demographic data ("311 noise per capita by neighborhood"), plan a multi-source analysis: operational counts from the portal, the population denominator from Data Commons. State the geography caveat when the portal's areas are not standard census geographies.
+
+## CKAN and Socrata, side by side
+
+On CKAN a dataset is a package holding one or more resources; a resource whose rows are loaded into the portal's DataStore is the table you query, by its resource id.
+
+| Concern | Socrata | CKAN |
+|---------|---------|------|
+| Portal | the \`portal\` argument or the server's own portal | \`server_url\`, on every call |
+| Query language | SoQL | PostgreSQL \`SELECT\`, through \`ckan_datastore_search_sql\` |
+| Table identity | 4x4 dataset code (\`erm2-nwe9\`) | resource id, a UUID (\`8048697b-ad64-4bfc-b090-ee00169f2323\`) |
+| Identifier quoting in SQL | not required | the resource id **must** be double-quoted: \`FROM "uuid-here"\` |
+| Column discovery | \`get_data\` with \`LIMIT 1\` | \`ckan_datastore_search\` with \`"limit": 0\` |
+| Writes | not exposed | not exposed: one \`SELECT\` or \`WITH\` statement per call |
+
+## Typical workflow chain
+
+1. **\`ckan_status_show\`**: whether the portal answers, its CKAN version, and its locale where the portal states one. Search in the portal's language: a search in English on a portal in another language can return nothing.
+2. **\`ckan_find_relevant_datasets\`**: a keyword search, ranked. A good first step when you do not know the dataset.
+3. **\`ckan_package_search\`**: the catalogue search in Solr syntax, for filters (\`fq\`), facets, sorting and paging.
+4. **\`ckan_package_show\`**: one dataset's full metadata, with its resources; pick the resource whose \`datastore_active\` is true.
+5. **\`ckan_list_resources\`**: a short table of a dataset's resources (format, size, whether each is in the DataStore), when a dataset bundles several.
+6. **\`ckan_datastore_search\`**: rows of one resource by its resource id, with exact-match \`filters\`, \`q\`, \`sort\`, \`limit\` and \`offset\`. Call it with \`"limit": 0\` first: the answer lists the resource's column names and types and no rows. Each portal uses its own column names, not the ones a model may have memorized from another city.
+7. **\`ckan_datastore_search_sql\`**: one \`SELECT\` or \`WITH\` statement over a resource, for \`GROUP BY\`, counts, sums, joins, window functions and percentiles. The table name is the resource id, double-quoted.
+
+Do not skip the search, the dataset's details and the column check on an unfamiliar dataset: a guessed column name against a wide CKAN resource returns zero rows or a SQL error. A resource whose \`datastore_active\` is false has no rows the DataStore tools can read: say so, and give its download URL instead.
+
+## Boston-specific geographies
+
+- **Neighborhoods**: not Census tracts. About 20 city-maintained names (Dorchester, Roxbury, Jamaica Plain, South Boston, ...).
+- **BPD districts**: 12 police districts (A1, A7, B2, B3, C6, C11, D4, D14, E5, E13, E18). Different from neighborhoods.
+- **BPS school zones**: Boston Public Schools has its own geography; present on school datasets only.
+- **Parcel IDs**: 10-digit strings. Assessor data is keyed on parcel, not address; to go from an address to a parcel, query the parcels dataset first.
+- **ZIP codes**: the \`021xx\` range. Boston crosses multiple ZIPs; take care when comparing against ACS ZCTAs.
+
+Neighborhoods do **not** map cleanly to Census tracts. When joining Boston operational data with Data Commons tract-level demographics, state the geography mismatch rather than silently imputing.
+
+## Caveats
+
+- **Update cadence varies by portal and by dataset.** Surface \`metadata_modified\`, or a resource's \`last_modified\`, when the question is time-sensitive.
+- **The hosted server may reuse an answer.** A repeated request can return an answer up to a minute old for a resource's rows, up to five minutes old for a dataset search or a dataset's details, and up to an hour old for a portal's status.
+- **Coverage gaps.** A portal may publish only part of an agency's data. If a natural query returns empty, the data genuinely may not be there: say so rather than fishing.
+- **Resource ids change** when a dataset gets a new resource. Look the id up again with \`ckan_package_show\` in each session; do not carry ids across runs.
+- **Hot-spotting risk.** Crime and 311 point-level data can be re-identifying when filtered narrowly. Honor aggregation thresholds: do not report a single address.
+
+## Attribution
+
+Cite each figure with the portal's URL, the dataset title, the resource id, and the SQL or the search arguments that produced it. The record captures tool calls and their arguments automatically; your job in the text is to make the citation human-readable.`;
+
+/** The entry's guidance in `view`. */
+const GUIDANCE: GuidanceEntry<CivicGuidanceContext> = Object.freeze({
+  async fetchText(_context: CivicGuidanceContext, view: SourceView = BARE_VIEW) {
+    return view.sourceText(CKAN_SERVER_SOURCE_ID, CKAN_GUIDANCE);
   },
 });
 
 /**
  * The hosted CKAN server's manifest entry: the mirror of its inventory
- * entry. It declares no tools, so it is never in a list the model reads (the
- * router leaves an entry with no tool names out of the preamble, the outro,
- * the directory, `load_source`'s choices, the lock text and the search's
- * hits); it is in every list a record states. Optional, with no default
- * address: offered, with its packs, only when `CKAN_MCP_URL` is set.
+ * entry. Optional, with no default address: offered only when
+ * `CKAN_MCP_URL` is set. Since 0.12.0 it offers seven of its own tools, each
+ * naming its portal in `server_url`, and its own guidance.
  *
  * One variant: the hosted server, run by whoever operates it, reaching the
  * portals its operator lists. As with the Socrata server, the instance
@@ -512,13 +617,18 @@ export const CKAN_SERVER_ENTRY: CivicManifestEntry = {
   displayName: CKAN_SERVER_WORDS.displayName,
   description: CKAN_SERVER_WORDS.description,
   freshness: CKAN_SERVER_WORDS.freshness,
+  freshnessSource: CKAN_SERVER_WORDS.freshnessSource,
   configuration: {
     addressVariable: CKAN_ADDRESS_VARIABLE,
     requirement: 'optional',
   },
-  tools: [],
-  toolNames: [],
-  guidance: NO_GUIDANCE,
+  tools: CKAN_TOOLS,
+  toolNames: CKAN_TOOL_NAMES,
+  guidance: GUIDANCE,
+  prompt: {
+    citation: CKAN_SERVER_WORDS.citation,
+    lockMention: CKAN_SERVER_WORDS.lockMention,
+  },
   hostings: [
     {
       variant: 'remote',

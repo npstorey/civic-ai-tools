@@ -2,6 +2,68 @@
 
 Factual record of what changed per published version.
 
+## 0.12.0 — 2026-11-18
+
+The hosted CKAN server offers seven of its own tools, and Analyze Boston,
+the pack over it, is retired (CKAN-2 P2, hub issue 329); the inventory
+moves to version 5 (`2026-11-18.1`, schema `civic-inventory/3`).
+`CIVIC_MANIFEST` holds eight entries. With `CKAN_MCP_URL` unset the server
+is offered nowhere: every prompt, directory, in-loop prompt, offered tools
+array, `load_source` tool and lock text is 0.11.0's. What moves with it
+unset: `sourcesOffered` loses the `boston-ckan` row; the vocabulary
+(`mcpTools`, `aliasedMcpTools`, the dispatch map) and the withheld tool
+names lose the pack's six (`boston__ckan_*`) and gain the server's seven
+(`ckan__ckan_*`); `searchSources` with no space can list `ckan-server`
+where it listed `boston-ckan`; `CIVIC_INVENTORY` states version 5. No
+consumer offers the server's tools until it moves to this release.
+
+- **The hosted CKAN server's own tools** (D2 = B): `CKAN_SERVER_ENTRY`
+  offers `ckan_package_search`, `ckan_find_relevant_datasets`,
+  `ckan_package_show`, `ckan_list_resources`, `ckan_datastore_search`,
+  `ckan_datastore_search_sql` and `ckan_status_show`
+  (**`CKAN_TOOL_NAMES`**; **`CKAN_TOOLS`** the seven schemas), as
+  `ckan__<name>` in the aliased view. Each is the schema the capture
+  (`src/__fixtures__/ckan-tools.json`, the fork's commit `7b0ac8a`) lists,
+  with the server's whole description and `server_url` required and open:
+  each call names its portal. The two passages 0.11.0 cut from
+  `ckan_package_search`'s description, both naming `ckan_status_show`, stay,
+  since the entry offers that tool. `ckan_datastore_search_sql`'s `sql`
+  argument adds the statement rule (CKAN-1's D3 = A): one statement,
+  beginning with `SELECT` or `WITH`, any other refused before it is sent.
+  The schemas are text this package does not own: the aliased view renames
+  them and gives their descriptions the anchored rewrite.
+- **Its guidance** (**`CKAN_GUIDANCE`**; the inventory's
+  `guidanceRef.kind` `embedded`): the hub's CKAN guidance,
+  `docs/skills/ckan.md`, written for any portal and naming
+  `https://data.boston.gov` for Boston, in the composed prompt when the
+  server is offered.
+- **Its words, rewritten as facts** (D8 = A): its `description` no longer
+  says none of its tools is offered on its own, its `freshness` no longer
+  says it has no data, and both name no portal list; it gains a
+  `freshnessSource` (the server's cache, read at the fork's pin `39ae5695`)
+  and `prompt` strings (a citation and a lock mention).
+- **The preamble's Boston rule** (**`CKAN_BOSTON_RULE`**) routes Boston
+  questions to the CKAN server with `server_url` `https://data.boston.gov`
+  when it is offered; Boston OpenContext's rule is stated when the server
+  is not.
+- **Analyze Boston is retired.** `CIVIC_MANIFEST` and the inventory no
+  longer hold the pack (`boston-ckan`, alias `boston`); no entry holds
+  `boston`, and Boston OpenContext keeps `boston_opencontext` (D7 = A).
+  **`RETIRED_PACKS`** (`RetiredPack`) and **`retiredPack(key)`** resolve a
+  record's `mcp.pack_id` `boston-ckan@https://data.boston.gov` and its
+  `sourcesOffered` source id `boston-ckan` to the name "Analyze Boston", the
+  base `ckan-server` and the portal `https://data.boston.gov`; an alias is
+  not a key.
+- **The `ckan` kind takes no pack**, and holds the server entry's
+  `guidanceRef.kind` to `embedded`. The loader's `PackCode.baseToolNames`
+  stays, used by no civic kind.
+- **Removed public exports:** `BOSTON_CKAN_ENTRY`, `BOSTON_CKAN_GUIDANCE`,
+  `BOSTON_CKAN_RULE`, `BOSTON_CKAN_WORDS`, `CKAN_PACK_BASE_TOOLS`,
+  `CKAN_PACK_DESCRIPTION_CUTS`, `CKAN_PACK_TOOL_NAMES` and `ckanPack`.
+- **The inventory**, version 5 (`2026-11-18.1`): the server entry's
+  `toolsRef.toolNames` names the seven, with their hash; its guidance is
+  embedded; the pack's entry is gone. `CIVIC_INVENTORY` names it.
+
 ## 0.11.0 — 2026-11-14
 
 The hosted CKAN server and Analyze Boston, a pack over it (CKAN-1 P2, hub

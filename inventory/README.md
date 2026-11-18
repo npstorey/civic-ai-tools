@@ -4,12 +4,13 @@
 entries, each a source's identity, routing lines, configuration, hosting variants with their logging postures, and its
 tools by name and hash. The router builds a manifest from it by entry kind (`manifestFromInventory(inventory, kinds)`
 in `@typedstandards/civic-typed-router`); the router's own `CIVIC_MANIFEST` stays code and is held equal to this file
-by the router's tests (hub #309, G0-5 A). Version `2026-11-13.1` (version 4, router 0.11.0, schema `civic-inventory/3`)
-holds the router's nine sources in `CIVIC_MANIFEST`'s order: seven `server` entries, City Record (`nyc-record`) as a
-`pack` over the Socrata server, and Analyze Boston (`boston-ckan`) as a `pack` over the hosted CKAN server
-(`ckan-server`), whose entry declares no tools of its own; each pack is named by its base's `id` and pinned (CKAN-1
-P2, hub issue 314). Version 3, `2026-11-12.1`, introduced schema 3; version 2, `2026-11-09.1`, introduced the pack;
-version 1, `2026-11-06.1`, held the seven as `server` entries.
+by the router's tests (hub #309, G0-5 A). Version `2026-11-18.1` (version 5, router 0.12.0, schema `civic-inventory/3`)
+holds the router's eight sources in `CIVIC_MANIFEST`'s order: seven `server` entries, among them the hosted CKAN server
+(`ckan-server`), which offers seven of its own tools, and City Record (`nyc-record`) as a `pack` over the Socrata
+server, named by its base's `id` and pinned (CKAN-2 P2, hub issue 329). Version 4, `2026-11-13.1`, added the hosted
+CKAN server with no tools of its own and Analyze Boston (`boston-ckan`) as a pack over it, which version 5 retires (the
+router's `RETIRED_PACKS`); version 3, `2026-11-12.1`, introduced schema 3; version 2, `2026-11-09.1`, introduced the
+pack; version 1, `2026-11-06.1`, held the seven as `server` entries.
 
 | File | What it is |
 |---|---|
@@ -22,7 +23,7 @@ version 1, `2026-11-06.1`, held the seven as `server` entries.
 
 `{ schema, id, version, note?, entries }`, each entry a `server` or a `pack` (`schema.json`; the sources-at-scale
 design §3.2). Every value is a string, an array or an object: the router's `canonicalJson`, which hashes the file,
-refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of versions 1 to 4 has a value of
+refuses numbers, booleans and null, so a field with nothing to say is left out. No entry of versions 1 to 5 has a value of
 another type (each was checked: the router's entries carry none in the fields the file states, and the tool schemas,
 which do hold booleans and numbers, are referenced by hash, never carried).
 
@@ -36,8 +37,8 @@ which do hold booleans and numbers, are referenced by hash, never carried).
 - **The release.** Each version is served raw at the hub tag `civic-inventory/<version>`, its own tag family (the
   bundle's pattern, ADR-0038 §5), so a reader resolves a cited version by its tag and checks its hash.
 - **Curation.** One editor merges; an entry arrives by pull request with its `provenance`. Every column of versions 1
-  to 4 is curated (a person read and dated it): no entry is a portal pack (City Record and Analyze Boston are packs
-  written by hand), so
+  to 5 is curated (a person read and dated it): no entry is a portal pack (City Record, and Analyze Boston in version
+  4, are packs written by hand), so
   no column is generated from a catalog, and the refresh script for generated columns lands with the first portal packs
   (S6).
 - **Logging postures** keep ADR-0036's rule: a posture is stated by the manifest (`statedBy: manifest`) only where a
@@ -68,7 +69,7 @@ built over. The loader resolves the `id` and sets the manifest entry's `base` to
 `serverInfo` `name` and `version` and `mcpToolSchemaSha256` of each base tool the pack calls. One pin normally, two while
 a base release is staged. The capture the values were read from is named once, in the base entry's `toolsRef.fixture`.
 Every pinned tool is one of the base's: its entry's `toolNames`, or, where the entry declares none (the hosted CKAN
-server), the names its kind states from that capture.
+server in version 4), the names its kind states from that capture.
 The router carries the pins on the pack's manifest entry, and a consumer compares the live base with them
 (`checkBasePins`) before it sends a pack's call.
 
@@ -102,8 +103,9 @@ and a call of one of its tools goes to the base's server and is recorded under t
 `id` beside it (`mcp.pack_id`). Over the Socrata server a filter fixes `portal` and optionally `dataset_id`; the pack's
 `get_data` and `fetch` are rewritten for them as the one-portal lock rewrites a portal, and its `search` exists only
 for a portal-only pack over the portal the server is configured for (`search` takes one argument and covers that portal
-alone). Over the hosted CKAN server a filter fixes `server_url` only, an `https` URL: the pack calls six of the
-server's tools, each with `server_url` an `enum` of that one value. A pack's own text is its **`guidance`** member (a `guidanceRef` object of kind `inline`, or `none`), held to its
+alone). In version 4, over the hosted CKAN server, a filter fixed `server_url` only, an `https` URL: the Boston pack
+called six of the server's tools, each with `server_url` an `enum` of that one value; since version 5 the server
+offers its own tools, `server_url` open in each, and its kind takes no pack. A pack's own text is its **`guidance`** member (a `guidanceRef` object of kind `inline`, or `none`), held to its
 `blockSha256`. Its **`version`** is the pack's own, and its **`hash`** is required: the SHA-256 of the router's
 `canonicalJson` of the entry with `hash`, `provenance` and `toolsRef` removed (the router's `packHash`), so it moves
 when the pack's identity, filter, routing lines, prompt strings, place, categories or guidance move, and not when its
@@ -114,7 +116,8 @@ credits the pack as `<version>+<the hash's first twelve characters>`. The hash c
 keys it by its base's address. Version 1 holds no pack; versions 2 and 3 hold City Record, `get_data` and `fetch` over
 the dataset `dg92-zbpx` on `data.cityofnewyork.us`, with seven query recipes as its guidance (version 3: version `1.1`,
 named "NYC City Record"). Version 4 adds the Boston pack over the hosted CKAN server, version `1.0`: six tools with
-`server_url` fixed to `https://data.boston.gov`, the hub's Boston guidance rewritten for them as its guidance.
+`server_url` fixed to `https://data.boston.gov`, the hub's Boston guidance rewritten for them as its guidance. Version
+5 retires it: a record that names it reads through the router's `retiredPack`, by the pack's `id` or `sourceId`.
 
 ## Against civic-inventory/2
 
@@ -127,7 +130,8 @@ named "NYC City Record"). Version 4 adds the Boston pack over the hosted CKAN se
 **Changed:**
 - A pack's `base` is the base server entry's full `id` (in `/2`, its `sourceId`).
 - `toolsRef.toolNames` may be empty, on a server entry only when some pack names that entry as its base
-  (`check:inventory`; hub #314). The loader still holds a server's tools to its kind's schemas.
+  (`check:inventory`; hub #314; the hosted CKAN server's, in version 4 only). The loader still holds a server's
+  tools to its kind's schemas.
 - `toolsRef.fixture` also names the capture a pack's `basePins` over the server were read from.
 
 **Dropped:**

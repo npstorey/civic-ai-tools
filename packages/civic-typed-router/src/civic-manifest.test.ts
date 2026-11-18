@@ -22,14 +22,15 @@ import {
   type CivicManifest,
 } from './index.ts';
 
-test('manifest: nine entries, each carrying identity, alias, configuration, schemas and guidance', () => {
+test('manifest: eight entries, each carrying identity, alias, configuration, schemas and guidance', () => {
   // 0.3.0 adds NYC Charter, Laws and Rules after the three of 0.2.0; 0.6.0
   // adds NYC Checkbook, NYC City Record and NYS Open Legislation after it, in
   // that order. Since 0.8.0 City Record is a pack over the Socrata server,
   // with the Socrata entry's configuration: required. 0.11.0 adds the hosted
   // CKAN server and the Boston pack over it, both with the server's
   // configuration (optional), and Boston OpenContext's alias moves to
-  // `boston_opencontext`.
+  // `boston_opencontext`. 0.12.0 retires the pack; the server offers its
+  // own tools.
   assert.deepEqual(
     CIVIC_MANIFEST.map((e) => [e.sourceId, e.alias, e.configuration.requirement]),
     [
@@ -41,13 +42,12 @@ test('manifest: nine entries, each carrying identity, alias, configuration, sche
       ['nyc-record', 'nyc_record', 'required'],
       ['nys-legislation', 'nys_legislation', 'optional'],
       ['ckan-server', 'ckan', 'optional'],
-      ['boston-ckan', 'boston', 'optional'],
     ],
   );
   for (const entry of CIVIC_MANIFEST) {
     assert.ok(entry.id.length > 0 && entry.displayName.length > 0, `${entry.sourceId}: id and display name`);
-    // The hosted CKAN server declares none of its own: its packs call them.
-    assert.ok(entry.sourceId === 'ckan-server' ? entry.tools.length === 0 : entry.tools.length > 0, `${entry.sourceId}: tool schemas`);
+    // Since 0.12.0 every entry, the hosted CKAN server among them, has tools (in 0.11.0 the server declared none).
+    assert.ok(entry.tools.length > 0, `${entry.sourceId}: tool schemas`);
     assert.equal(typeof entry.guidance.fetchText, 'function', `${entry.sourceId}: guidance entry`);
     assert.ok(toolNamesMatchSchemas(entry), `${entry.sourceId}: routing list and schemas name the same tools`);
   }
@@ -92,9 +92,9 @@ test('manifest: each entry\'s configuration variable is the one the configuratio
   }
 });
 
-test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-eight', () => {
+test('startup checks: the civic manifest passes them, and its dispatch map holds the fifty-nine', () => {
   assert.doesNotThrow(() => createCivicRouter(CIVIC_MANIFEST));
-  assert.equal(civicRouter.dispatchMap.size, 58);
+  assert.equal(civicRouter.dispatchMap.size, 59);
   assert.deepEqual(
     [...civicRouter.dispatchMap.values()].map((t) => [t.exposedName, t.upstreamName]),
     civicRouter.mcpTools.map((t) => [`${CIVIC_MANIFEST.find((e) => e.tools.includes(t))!.alias}__${t.function.name}`, t.function.name]),
@@ -123,13 +123,14 @@ test('views: each civic entry\'s tools are its toolsFor in the bare view, byte f
   // The three hosted sources' schemas are their servers' text, not the
   // package's: no toolsFor. The City Record pack's are the Socrata kind's,
   // so it has one, and its tools are its toolsFor in the bare view. The
-  // Boston pack's (since 0.11.0) are the CKAN server's text: no toolsFor.
-  assert.equal(hosted.length, 6, 'six entries after the three');
+  // hosted CKAN server's (since 0.12.0; in 0.11.0, the Boston pack's) are
+  // the server's text: no toolsFor.
+  assert.equal(hosted.length, 5, 'five entries after the three');
   for (const entry of hosted) {
     if (entry.base !== 'socrata') assert.equal(entry.toolsFor, undefined, `${entry.sourceId} has no toolsFor`);
     else assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools), `${entry.sourceId}: toolsFor in the bare view`);
   }
-  assert.deepEqual(hosted.filter((entry) => entry.base !== undefined).map((entry) => entry.sourceId), ['nyc-record', 'boston-ckan']);
+  assert.deepEqual(hosted.filter((entry) => entry.base !== undefined).map((entry) => entry.sourceId), ['nyc-record']);
   for (const entry of CIVIC_MANIFEST.slice(0, 3)) assert.equal(JSON.stringify(entry.toolsFor!(BARE_VIEW)), JSON.stringify(entry.tools));
 });
 

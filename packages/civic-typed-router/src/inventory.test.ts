@@ -42,6 +42,7 @@ import {
   canonicalJson,
   CIVIC_INVENTORY,
   CIVIC_KINDS,
+  CKAN_SERVER_ENTRY,
   CIVIC_MANIFEST,
   civicKinds,
   civicRouter,
@@ -50,7 +51,6 @@ import {
   configuredAddresses,
   configuredSources,
   manifestFromInventory,
-  BOSTON_CKAN_ENTRY,
   NYC_RECORD_ENTRY,
   packHash,
   readMcpEnv,
@@ -148,29 +148,28 @@ async function packGuidance(manifest: CivicManifest): Promise<Record<string, str
 }
 
 test('A0.3: the loaded entries are CIVIC_MANIFEST, field for field, in its order', () => {
-  assert.equal(LOADED.length, 9);
+  assert.equal(LOADED.length, 8);
   assert.deepEqual(mirrorDifferences(LOADED), []);
   // The file's order is the manifest's.
   assert.deepEqual(
     FILE.entries.map((e) => e.sourceId),
     CIVIC_MANIFEST.map((e) => e.sourceId),
   );
-  // Every entry is a server but City Record, a pack over the Socrata server, and
-  // (since version 4) the Boston pack over the hosted CKAN server, each named by its base's id.
+  // Every entry is a server but City Record, a pack over the Socrata server,
+  // named by its base's id (version 4's Boston pack over the hosted CKAN
+  // server is retired in version 5).
   assert.equal(SOCRATA_ID, 'socrata-mcp-server@https://github.com/npstorey/socrata-mcp-server');
-  const CKAN_ID = '@aborruso/ckan-mcp-server@https://github.com/npstorey/ckan-mcp-server';
   assert.deepEqual(
     FILE.entries.map((e) => (e.kind === 'pack' ? `${e.sourceId} pack over ${e.base}` : e.kind)),
-    ['server', 'server', 'server', 'server', 'server', `nyc-record pack over ${SOCRATA_ID}`, 'server', 'server', `boston-ckan pack over ${CKAN_ID}`],
+    ['server', 'server', 'server', 'server', 'server', `nyc-record pack over ${SOCRATA_ID}`, 'server', 'server'],
   );
   // The loaded pack's base is the base's sourceId, the dispatch map's key.
   assert.equal(LOADED[5]!.base, 'socrata');
-  assert.equal(LOADED[8]!.base, 'ckan-server');
 });
 
 test("B2: the pack's guidance, as the loader builds it, is the mirror's text", async () => {
   assert.deepEqual(await packGuidance(LOADED), await packGuidance(CIVIC_MANIFEST));
-  assert.deepEqual(Object.keys(await packGuidance(CIVIC_MANIFEST)), ['nyc-record', 'boston-ckan']);
+  assert.deepEqual(Object.keys(await packGuidance(CIVIC_MANIFEST)), ['nyc-record']);
 });
 
 test('B9, A1.5: the loader sets pack ({ version, hash, basePins }) on a pack from the file, equal to the mirror, and on no server entry', () => {
@@ -227,7 +226,7 @@ test('F-E decoy: manifestFromInventory refuses a pack whose stated hash is not i
   // The provenance and the tools' reference are outside the hash.
   const copy = readInventory();
   (copy.entries[5] as unknown as { provenance: { by: string } }).provenance.by += ' (edited)';
-  assert.equal(manifestFromInventory(copy, CIVIC_KINDS).length, 9);
+  assert.equal(manifestFromInventory(copy, CIVIC_KINDS).length, 8);
 });
 
 /** 0.7.0's switch for City Record, spelled so that no line of this package's
@@ -259,9 +258,9 @@ test('B3 decoy: with no Socrata address, configuredSources has no nyc-record key
 test("the router keys every pack of CIVIC_MANIFEST by its base's address, and offers it with its base's requirement", () => {
   const u = 'https://socrata-mcp.example.org';
   const packs = CIVIC_MANIFEST.filter((entry) => entry.base !== undefined);
-  assert.deepEqual(packs.map((entry) => [entry.sourceId, entry.base]), [['nyc-record', 'socrata'], ['boston-ckan', 'ckan-server']]);
+  assert.deepEqual(packs.map((entry) => [entry.sourceId, entry.base]), [['nyc-record', 'socrata']]);
   for (const pack of packs) {
-    // The base's own address variable (Socrata's; since 0.11.0 the CKAN server's too).
+    // The base's own address variable (Socrata's; in 0.11.0 the CKAN server's too).
     const variable = CIVIC_MANIFEST.find((entry) => entry.sourceId === pack.base)!.configuration.addressVariable;
     assert.equal(configuredAddresses(readMcpEnv({ [variable]: u }))[pack.sourceId], u);
     assert.equal(Object.hasOwn(configuredAddresses(readMcpEnv({})), pack.sourceId), false);
@@ -283,8 +282,8 @@ test("A0.3: the tools' hash is S1's definition: each server entry's toolsRef.sha
   );
   for (const item of FILE.entries) {
     const s1 = seven.entries.find((e) => e.sourceId === item.sourceId);
-    // The two entries of version 4 (the hosted CKAN server and its Boston pack) are newer than S1's seven.
-    if (s1 === undefined && ['ckan-server', 'boston-ckan'].includes(item.sourceId)) continue;
+    // The hosted CKAN server (version 4) is newer than S1's seven.
+    if (s1 === undefined && item.sourceId === 'ckan-server') continue;
     // City Record's 7.json entry is router 0.6.0's server (the benchmark's
     // frozen copy); the pack's tools are the Socrata kind's, hashed the same way.
     if (item.kind === 'pack') assert.notEqual(item.toolsRef!.sha256, s1?.toolsRef.sha256, `${item.sourceId}: the pack's tools are not the old server's`);
@@ -370,13 +369,13 @@ const inLoopFixture: { input: { env: Record<string, string>; today: string; publ
  *  hosted sources' routing lists and bare schemas from their committed
  *  captures, and the pack's (City Record, offered in every configuration). */
 const PACK_ID = 'nyc-record';
-/** The Boston pack over the hosted CKAN server (0.11.0): offered in no
- *  capture's configuration, so withheld as a hosted source is; the CKAN
- *  server before it declares no tools. */
-const CKAN_PACK_ID = 'boston-ckan';
-const HOSTED = ['nyc-charter', 'nyc-checkbook', PACK_ID, 'nys-legislation', CKAN_PACK_ID].map((sourceId) => {
+/** The hosted CKAN server (since 0.12.0 with its own seven tools; in
+ *  0.11.0 the Boston pack over it held this place): offered in no capture's
+ *  configuration, so withheld as a hosted source is. */
+const CKAN_SERVER_ID = 'ckan-server';
+const HOSTED = ['nyc-charter', 'nyc-checkbook', PACK_ID, 'nys-legislation', CKAN_SERVER_ID].map((sourceId) => {
   if (sourceId === PACK_ID) return { sourceId, toolNames: [...NYC_RECORD_ENTRY.toolNames], tools: NYC_RECORD_ENTRY.tools as unknown[] };
-  if (sourceId === CKAN_PACK_ID) return { sourceId, toolNames: [...BOSTON_CKAN_ENTRY.toolNames], tools: BOSTON_CKAN_ENTRY.tools as unknown[] };
+  if (sourceId === CKAN_SERVER_ID) return { sourceId, toolNames: [...CKAN_SERVER_ENTRY.toolNames], tools: CKAN_SERVER_ENTRY.tools as unknown[] };
   const capture: { tools: { name: string; description: string; inputSchema: unknown }[] } = JSON.parse(
     readFileSync(join(FIXTURES, `${sourceId}-tools.json`), 'utf8'),
   );
@@ -641,7 +640,7 @@ function packEntry(filter: Record<string, string>, extra: Partial<InventoryPackE
   return { ...entry, hash: packHash(entry) };
 }
 
-/** The file's nine, then `packs`. */
+/** The file's eight, then `packs`. */
 const withPacks = (...packs: InventoryPackEntry[]): InventoryDocument => {
   const file = readInventory();
   return { ...file, entries: [...file.entries, ...packs] };
@@ -658,25 +657,25 @@ const EVERY_SOURCE = readMcpEnv({
 type Parameters = { properties: Record<string, { enum?: string[]; pattern?: string; description?: string }> };
 const params = (tool: { function: { parameters?: unknown } }) => tool.function.parameters as Parameters;
 
-test('A0.5: the nine and a pack over socrata (a portal and a dataset fixed) load, and a router built over them passes the startup checks', () => {
+test('A0.5: the eight and a pack over socrata (a portal and a dataset fixed) load, and a router built over them passes the startup checks', () => {
   const manifest = manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS);
-  assert.equal(manifest.length, 10);
+  assert.equal(manifest.length, 9);
   const router = createCivicRouter(manifest);
-  const pack = router.manifest[9]!;
+  const pack = router.manifest[8]!;
   assert.equal(pack.sourceId, 'city-record');
   assert.equal(pack.base, 'socrata');
-  // The nine are unchanged by the pack: the mirror holds over them.
-  assert.deepEqual(mirrorDifferences(manifest.slice(0, 9)), []);
+  // The eight are unchanged by the pack: the mirror holds over them.
+  assert.deepEqual(mirrorDifferences(manifest.slice(0, 8)), []);
   assert.deepEqual(
     manifest.flatMap((entry) => (entry.base === undefined ? [] : [entry.sourceId])),
-    ['nyc-record', 'boston-ckan', 'city-record'],
+    ['nyc-record', 'city-record'],
     'a server entry carries no base; each pack does',
   );
 });
 
 test("A0.5: the pack's tools are <alias>__get_data and <alias>__fetch, each held to the pack's portal and dataset as the portal lock holds a portal", () => {
   const router = createCivicRouter(manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS));
-  const pack = router.manifest[9]!;
+  const pack = router.manifest[8]!;
   assert.deepEqual(pack.toolNames, ['get_data', 'fetch']);
   assert.deepEqual(
     pack.tools.map((t) => t.function.name),
@@ -750,20 +749,19 @@ test("A0.5: dispatch names the base's server and the pack's id: sourceForAliased
     base: 'socrata',
   });
   // A server entry's tool carries no base, in this router and in civicRouter;
-  // in CIVIC_MANIFEST only the packs' do: City Record's, and (since 0.11.0) the Boston CKAN pack's.
+  // in CIVIC_MANIFEST only the pack's do: City Record's (in 0.11.0, the Boston CKAN pack's too).
   assert.equal(Object.hasOwn(router.sourceForAliasedName('socrata__get_data')!, 'base'), false);
   assert.deepEqual(
     [...civicRouter.dispatchMap.values()].filter((target) => Object.hasOwn(target, 'base')).map((target) => `${target.exposedName} -> ${target.base}`),
     [
       'nyc_record__get_data -> socrata',
       'nyc_record__fetch -> socrata',
-      ...BOSTON_CKAN_ENTRY.toolNames.map((name) => `boston__${name} -> ckan-server`),
     ],
     "only the packs' targets carry base",
   );
   const socrataCall = civicRouter.resolveCalledName('socrata__get_data', EVERY_SOURCE);
   assert.ok(socrataCall.ok && !Object.hasOwn(socrataCall, 'base'));
-  const pack = router.manifest[9]!;
+  const pack = router.manifest[8]!;
   const socrata = router.manifest[0]!;
   assert.equal(pack.hostings, socrata.hostings);
   assert.equal(pack.consentDefault, socrata.consentDefault);
@@ -777,7 +775,7 @@ test("A0.5: dispatch names the base's server and the pack's id: sourceForAliased
 
 test("A0.5 decoy: createCivicRouter over a hand-built manifest refuses a pack whose base names no entry, with the pack's alias", () => {
   const manifest = manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS);
-  const orphan = [...manifest.slice(0, 9), { ...manifest[9]!, base: 'no-such-source' }];
+  const orphan = [...manifest.slice(0, 8), { ...manifest[8]!, base: 'no-such-source' }];
   assert.throws(
     () => createCivicRouter(orphan),
     (error: unknown) =>
@@ -792,7 +790,7 @@ test("A0.5 decoy: createCivicRouter over a hand-built manifest refuses a pack wh
 
 test("A0.5 decoy: createCivicRouter over a hand-built manifest refuses a pack whose base is a pack, with the pack's alias", () => {
   const manifest = manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS);
-  const first = manifest[9]!;
+  const first = manifest[8]!;
   const second = { ...first, alias: 'second_pack', sourceId: 'second-pack', base: 'city-record', tools: first.tools, toolsFor: undefined };
   assert.throws(
     () => createCivicRouter([...manifest, second]),
@@ -809,7 +807,7 @@ test("A0.5: the pack's guidance is its own text, as text the router does not own
   const router = createCivicRouter(
     manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET }, { guidance: { kind: 'inline', text, blockSha256: sha256Hex(text) } })), CIVIC_KINDS),
   );
-  const pack = router.manifest[9]!;
+  const pack = router.manifest[8]!;
   assert.equal(await pack.guidance.fetchText({ publicationHost: null, fetchPrompt: async () => '', fetchInstructions: async () => null }), text);
   const prompt = await router.aliasedBuildSystemPrompt({
     configured: EVERY_SOURCE,
@@ -841,9 +839,9 @@ test("A0.5 decoys: a pack whose base names no entry, a pack, or a kind with no p
   refuses(withPacks(packEntry({ portal: PORTAL, where: 'x' })), /city_record: filter\.where: a Socrata pack fixes only portal and dataset_id/);
   refuses(withPacks(packEntry({ dataset_id: DATASET })), /city_record: filter\.portal: a Socrata pack fixes its portal/);
   // A toolsRef on a pack holds the tools the loader builds.
-  const built = manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS)[9]!;
+  const built = manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET })), CIVIC_KINDS)[8]!;
   const ref = { toolNames: ['get_data', 'fetch'], sha256: toolsSha256(built.tools) };
-  assert.equal(manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET }, { toolsRef: ref })), CIVIC_KINDS).length, 10);
+  assert.equal(manifestFromInventory(withPacks(packEntry({ portal: PORTAL, dataset_id: DATASET }, { toolsRef: ref })), CIVIC_KINDS).length, 9);
   refuses(withPacks(packEntry({ portal: PORTAL }, { toolsRef: ref })), /city_record: toolsRef\.sha256: /);
 });
 
@@ -901,11 +899,11 @@ test("A1.3: basePins[0] is the capture's serverInfo and the hashes of its get_da
   assert.equal(FILE.entries[0]!.toolsRef!.fixture, 'packages/civic-typed-router/src/__fixtures__/socrata-tools.json');
 });
 
-test('A1.6: routesByApi over the file groups socrata with nyc-record, and (since version 4) the CKAN routes to Boston, and leaves the rest alone; no router code calls it', () => {
+test('A1.6: routesByApi over the file groups socrata with nyc-record, and (since version 4) Boston OpenContext with the CKAN server, and leaves the rest alone; no router code calls it', () => {
+  // Version 4 also grouped the Boston pack with both; version 5 retires it.
   assert.deepEqual(routesByApi(FILE), [
     { api: { platform: 'socrata' }, sourceIds: ['socrata', 'nyc-record'] },
-    { api: { platform: 'ckan', host: 'data.boston.gov' }, sourceIds: ['boston-opencontext', 'boston-ckan'] },
-    { api: { platform: 'ckan' }, sourceIds: ['boston-opencontext', 'ckan-server', 'boston-ckan'] },
+    { api: { platform: 'ckan' }, sourceIds: ['boston-opencontext', 'ckan-server'] },
   ]);
 });
 
@@ -967,7 +965,7 @@ test("A1.5: the Socrata kind holds a pack's api to its filter: platform socrata,
   refusedPack(packChanged((p) => ((p.api as Record<string, string>).platform = 'ckan')), 'api.platform', /is "ckan"/);
   refusedPack(packChanged((p) => delete p.api), 'api', /is missing/);
   // A portal-only pack states no dataset.
-  assert.equal(manifestFromInventory(withPacks(packEntry({ portal: PORTAL })), CIVIC_KINDS).length, 10);
+  assert.equal(manifestFromInventory(withPacks(packEntry({ portal: PORTAL })), CIVIC_KINDS).length, 9);
   assert.throws(() => manifestFromInventory(withPacks(packEntry({ portal: PORTAL }, { api: { platform: 'socrata', host: PORTAL, dataset: DATASET } })), CIVIC_KINDS), /city_record: api\.dataset: is "dg92-zbpx"; the filter fixes no dataset_id/);
 });
 
