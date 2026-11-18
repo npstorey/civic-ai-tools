@@ -3,6 +3,30 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+- **A per-portal source** (`CivicSourceInfo.portalArgument`, and the same
+  optional member on `DataSourceBuildConfig.registry`): a registry entry may
+  name the call argument that carries the portal a call read (the CKAN
+  server's `server_url`). `buildDataSources` mints one entry for such a
+  source per distinct portal its accepted calls named, in first-seen order,
+  at the source's place in the registry: `sourceId`, `catalogType`,
+  `portalUrl` that portal and `accessTimestamp`, with no `datasetId`. The
+  portal is the argument's value as a URL parser writes it (scheme and host
+  lowercased, a default port dropped), its path kept and one trailing slash
+  removed, so two values the server reads as one portal are one entry. A
+  value that is not an `http:` or `https:` URL, or that carries a user name,
+  a password, a query or a fragment, names no portal, and a call that names
+  none mints no entry. An entry naming `portalArgument` is per-portal even
+  when it carries `aggregatePortalUrl`, which is then not read.
+- **`isDatasetKeyedSource`** is false for an entry naming `portalArgument`,
+  so the provenance graph describes such a source's data response by the
+  agent that answered it and states no dataset id, portal or dataset URL.
+- A registry in which no entry names `portalArgument` gives the
+  `dataSources[]` and the graph 0.14.0 gives; no golden fixture moves.
+  `formatDataSourcesSummary` is unchanged: it names a per-portal source once,
+  however many portals it read.
+
 ## 0.14.0 — 2026-11-13
 
 - **The search span** ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
