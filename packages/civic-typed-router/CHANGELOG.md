@@ -2,7 +2,7 @@
 
 Factual record of what changed per published version.
 
-## Unreleased
+## 0.12.0 — 2026-11-18
 
 The hosted CKAN server offers seven of its own tools, and Analyze Boston,
 the pack over it, is retired (CKAN-2 P2, hub issue 329); the inventory
