@@ -1,0 +1,496 @@
+{
+  "schema": "s3c-labels-batches/1",
+  "sheet": {
+    "sha256": "edc62fbc299fa8d4e2bf2ada0afa95904f5e30156f34000aed78088ab5a15706",
+    "rows": 914
+  },
+  "sessions": {
+    "a": {
+      "model": "claude-opus-5-5",
+      "effort": "high"
+    },
+    "b": {
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    }
+  },
+  "systemPrompt": "Reply to the user's message as it asks. Call no tool.",
+  "command": "claude -p --model <id> --effort high --tools \"\" --strict-mcp-config --no-session-persistence --output-format stream-json --verbose --system-prompt <the system prompt> --safe-mode --setting-sources \"\" --disable-slash-commands --include-hook-events, from a new empty directory, the prompt on stdin, with CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 DISABLE_AUTOUPDATER=1",
+  "batches": [
+    {
+      "batch": 1,
+      "firstId": "0008a8dc68efb06c",
+      "lastId": "03fd580007444adc",
+      "rows": 100,
+      "promptSha256": "022ff7509ef650339c488180b40255793177b23b178c66ae53420cbdf8157a70",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "022ff7509ef650339c488180b40255793177b23b178c66ae53420cbdf8157a70",
+          "startedAt": "2026-11-18T03:07:05Z",
+          "endedAt": "2026-11-18T03:07:57Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "c70f257c3b037aa5ebff2336cbf23cc1028a8aa9870d364c5603c5cb7966946f"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "022ff7509ef650339c488180b40255793177b23b178c66ae53420cbdf8157a70",
+          "startedAt": "2026-11-18T03:16:17Z",
+          "endedAt": "2026-11-18T03:16:37Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "f4ae30b5f14f06063fcc64c75c429099bc23a7ff15858ceea63355740d09439a"
+        }
+      ]
+    },
+    {
+      "batch": 2,
+      "firstId": "0401b23bb833f766",
+      "lastId": "08dd6db93cb28d99",
+      "rows": 100,
+      "promptSha256": "6420252b911578b5430f58b93aac39ea11767a7a163d962b4f408bae2e938cca",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "6420252b911578b5430f58b93aac39ea11767a7a163d962b4f408bae2e938cca",
+          "startedAt": "2026-11-18T03:07:57Z",
+          "endedAt": "2026-11-18T03:08:35Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "fa2db20e3d9b52e321c6ff258628ba51c3bbfef02ad2028a6840d47a16aee22a"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "6420252b911578b5430f58b93aac39ea11767a7a163d962b4f408bae2e938cca",
+          "startedAt": "2026-11-18T03:16:37Z",
+          "endedAt": "2026-11-18T03:16:56Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "ddb9f952b5f74126e6f66997db7b2691e5844cfea4ff7c77a074f14ef729b53a"
+        }
+      ]
+    },
+    {
+      "batch": 3,
+      "firstId": "08e117a4345de596",
+      "lastId": "0eee3552394de6af",
+      "rows": 100,
+      "promptSha256": "41427bf73be2ab3d12d1f79ec3bc10ed1d163e495e20c2038785a8b5f5629919",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "41427bf73be2ab3d12d1f79ec3bc10ed1d163e495e20c2038785a8b5f5629919",
+          "startedAt": "2026-11-18T03:08:36Z",
+          "endedAt": "2026-11-18T03:09:29Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "e185f58b60e1c701c97d3cc00be5665f9b72da535f60bdfdc672f28a235eea60"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "41427bf73be2ab3d12d1f79ec3bc10ed1d163e495e20c2038785a8b5f5629919",
+          "startedAt": "2026-11-18T03:16:56Z",
+          "endedAt": "2026-11-18T03:17:17Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "a423c66f3c50311737cb960739b456d5a23ed05ccc1ba4bc11287ef3502f7799"
+        }
+      ]
+    },
+    {
+      "batch": 4,
+      "firstId": "0ef318a1c47e54fd",
+      "lastId": "16e0ed5373d3bb7c",
+      "rows": 100,
+      "promptSha256": "65fb42f181acc2e9b37e734120fa2302f7cbf2f7d5edd4f09b2299656dd589bf",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "65fb42f181acc2e9b37e734120fa2302f7cbf2f7d5edd4f09b2299656dd589bf",
+          "startedAt": "2026-11-18T03:09:29Z",
+          "endedAt": "2026-11-18T03:10:20Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "b046dec4fa2beadcbb1856208b1d2083b129209b48d0207e176add60d2deef6b"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "65fb42f181acc2e9b37e734120fa2302f7cbf2f7d5edd4f09b2299656dd589bf",
+          "startedAt": "2026-11-18T03:17:17Z",
+          "endedAt": "2026-11-18T03:17:36Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "c63aab92bb8dc7f814f1dc0a0411719137cb8ec7547343c3339be92c8a9a68ea"
+        }
+      ]
+    },
+    {
+      "batch": 5,
+      "firstId": "16e361f58759d9de",
+      "lastId": "22fb1eb5df6c0bc9",
+      "rows": 100,
+      "promptSha256": "6a711c03d445e5eb866bc67a40f905924e26a6665d9009e88a5ed8a952e316a7",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "6a711c03d445e5eb866bc67a40f905924e26a6665d9009e88a5ed8a952e316a7",
+          "startedAt": "2026-11-18T03:10:20Z",
+          "endedAt": "2026-11-18T03:11:09Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "cd0219c79daa240b7f2bbb0cd581f76b060c1557443a307f58509175d92f78a5"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "6a711c03d445e5eb866bc67a40f905924e26a6665d9009e88a5ed8a952e316a7",
+          "startedAt": "2026-11-18T03:17:36Z",
+          "endedAt": "2026-11-18T03:18:12Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "c851fcc273e2db13b41b0e6819cd630e9c41c3acd958f559bf5b25ae420cdd61"
+        }
+      ]
+    },
+    {
+      "batch": 6,
+      "firstId": "232034c088cf69e3",
+      "lastId": "4a2bd60230928908",
+      "rows": 100,
+      "promptSha256": "93a7ca1f13636fe4b477dee394098fc9c36bf91e89975c762243ac51c6966974",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "93a7ca1f13636fe4b477dee394098fc9c36bf91e89975c762243ac51c6966974",
+          "startedAt": "2026-11-18T03:11:09Z",
+          "endedAt": "2026-11-18T03:12:05Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "afa35691a7ad20f6589f992563eaf758a3f97c3de7ec084bf57486737b04828e"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "93a7ca1f13636fe4b477dee394098fc9c36bf91e89975c762243ac51c6966974",
+          "startedAt": "2026-11-18T03:18:12Z",
+          "endedAt": "2026-11-18T03:18:33Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "afa35691a7ad20f6589f992563eaf758a3f97c3de7ec084bf57486737b04828e"
+        }
+      ]
+    },
+    {
+      "batch": 7,
+      "firstId": "4adbb684447bd425",
+      "lastId": "7e1da16b1e777e47",
+      "rows": 100,
+      "promptSha256": "ccc628a6d519d5364f0a31a639a2f831f125e76513a3158bf751844c8f6ca865",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "ccc628a6d519d5364f0a31a639a2f831f125e76513a3158bf751844c8f6ca865",
+          "startedAt": "2026-11-18T03:12:06Z",
+          "endedAt": "2026-11-18T03:13:00Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "74f3f5f4556eba69d9c544caf092666acb06b2b905fe57881e56c3af779325ee"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "ccc628a6d519d5364f0a31a639a2f831f125e76513a3158bf751844c8f6ca865",
+          "startedAt": "2026-11-18T03:18:33Z",
+          "endedAt": "2026-11-18T03:19:11Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "68391167592883640d5100a6508be065dd162033c3c9f27f86e4033f84065894"
+        }
+      ]
+    },
+    {
+      "batch": 8,
+      "firstId": "7e9026a28006624e",
+      "lastId": "b8a4858271dadee0",
+      "rows": 100,
+      "promptSha256": "bf3aa0d54944794677cb2c53b95e565b125d88ea2dd797910b852c229a826743",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "bf3aa0d54944794677cb2c53b95e565b125d88ea2dd797910b852c229a826743",
+          "startedAt": "2026-11-18T03:13:01Z",
+          "endedAt": "2026-11-18T03:13:54Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "c78fe902e5e7029161a575ef3f6f4cf36c5942708bbd36b0f8c110cdf1b5b507"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "bf3aa0d54944794677cb2c53b95e565b125d88ea2dd797910b852c229a826743",
+          "startedAt": "2026-11-18T03:19:11Z",
+          "endedAt": "2026-11-18T03:19:31Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "13913fbd9efc6ea4a23fe8134b0b37b989cb348fe53c0de595f9b9243d862e29"
+        }
+      ]
+    },
+    {
+      "batch": 9,
+      "firstId": "b92a9018b375086f",
+      "lastId": "f5255a006864aa72",
+      "rows": 100,
+      "promptSha256": "7940e6c62e6410e87c89db8eb5173b852b1a1b94698c5e328c76f03a9daca0d5",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "7940e6c62e6410e87c89db8eb5173b852b1a1b94698c5e328c76f03a9daca0d5",
+          "startedAt": "2026-11-18T03:13:54Z",
+          "endedAt": "2026-11-18T03:14:29Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "33050dfd9e819e3fe73dd9afa007a5440c6504b4807817038cdc53050d43823b"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "7940e6c62e6410e87c89db8eb5173b852b1a1b94698c5e328c76f03a9daca0d5",
+          "startedAt": "2026-11-18T03:19:31Z",
+          "endedAt": "2026-11-18T03:20:13Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "0f3c04a04795b2dc2453006069bcbb9642aa6b11182b332b5d9a12fc7e7d58db"
+        }
+      ]
+    },
+    {
+      "batch": 10,
+      "firstId": "f5777af71ad94dc2",
+      "lastId": "ffffd25471cff33e",
+      "rows": 14,
+      "promptSha256": "8650c9e06d6b87e6b74341dc35abd6f6ae15433809f106b8c7ffd554501c9d7d",
+      "readings": [
+        {
+          "session": "a",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-opus-5-5",
+          "servedModels": [
+            "claude-opus-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "8650c9e06d6b87e6b74341dc35abd6f6ae15433809f106b8c7ffd554501c9d7d",
+          "startedAt": "2026-11-18T03:14:29Z",
+          "endedAt": "2026-11-18T03:14:39Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "ba3d85600ecf435d35d2d2db56d804c5828e25ee5b6b5ae0cedcb07e0386f8b8"
+        },
+        {
+          "session": "b",
+          "attempt": 1,
+          "verdict": "accepted",
+          "voidReasons": [],
+          "modelNamed": "claude-sonnet-5-5",
+          "servedModels": [
+            "claude-sonnet-5-5"
+          ],
+          "effort": "high",
+          "claudeVersion": "2.1.327",
+          "promptSha256": "8650c9e06d6b87e6b74341dc35abd6f6ae15433809f106b8c7ffd554501c9d7d",
+          "startedAt": "2026-11-18T03:20:13Z",
+          "endedAt": "2026-11-18T03:20:21Z",
+          "exitCode": 0,
+          "toolUseBlocks": 0,
+          "deviationsRuled": "a: effort: the flag accepted; its effect not recorded; a: hooks not shown; a: plugins not shown; b: effort: the flag accepted; its effect not recorded; b: claude-md not shown; b: hooks not shown; b: plugins not shown; b: the probe check is not live (the control's reply holds no line of the owner's files)",
+          "replySha256": "ba3d85600ecf435d35d2d2db56d804c5828e25ee5b6b5ae0cedcb07e0386f8b8"
+        }
+      ]
+    }
+  ],
+  "replies": "as returned, each ending in one newline, with every run of 13 or more digits inside a JSON string literal written with every ninth digit as its \\u escape (benchmark/runner/writer.mjs); replySha256 is each reply as returned",
+  "files": {
+    "labels/a.jsonl": "993365d21871cf92426e150845d015782343f5677eca5c61f2b88c4f5452a5bb",
+    "labels/b.jsonl": "f1fef93f7a1532acf8eb954410a7bde948339a33f9dfbfec4e5283799a718154"
+  }
+}

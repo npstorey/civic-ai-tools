@@ -1,0 +1,11 @@
+sheet: 914 rows in 10 batches; wrote benchmark/_local/s3c/labels/sheet.jsonl and benchmark/_local/s3c/labels/salt.sha256
+  batch 1: 0008a8dc68efb06c to 03fd580007444adc, 100 rows
+  batch 2: 0401b23bb833f766 to 08dd6db93cb28d99, 100 rows
+  batch 3: 08e117a4345de596 to 0eee3552394de6af, 100 rows
+  batch 4: 0ef318a1c47e54fd to 16e0ed5373d3bb7c, 100 rows
+  batch 5: 16e361f58759d9de to 22fb1eb5df6c0bc9, 100 rows
+  batch 6: 232034c088cf69e3 to 4a2bd60230928908, 100 rows
+  batch 7: 4adbb684447bd425 to 7e1da16b1e777e47, 100 rows
+  batch 8: 7e9026a28006624e to b8a4858271dadee0, 100 rows
+  batch 9: b92a9018b375086f to f5255a006864aa72, 100 rows
+  batch 10: f5777af71ad94dc2 to ffffd25471cff33e, 14 rows

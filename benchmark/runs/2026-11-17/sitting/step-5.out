@@ -1,0 +1,37 @@
+2026-11-05-run-130812: 8046/8046 rows complete (8046 unique keys, 8046 lines); $29.5054
+  builder+search-50        anthropic/claude-haiku-5.5           acc1 offered 0.8188 raw 0.8121 filter 0.9799 search@10 null notice 0 err 0 $1.9638
+  builder+search-50        z-ai/glm-5.3-flash                   acc1 offered 0.7875 raw 0.7808 filter 0.9799 search@10 null notice 0 err 0 $1.1386
+  builder+search-200       anthropic/claude-haiku-5.5           acc1 offered 0.8591 raw 0.8591 filter 0.9933 search@10 null notice 0 err 0 $1.8263
+  builder+search-200       z-ai/glm-5.3-flash                   acc1 offered 0.8412 raw 0.8412 filter 0.9933 search@10 null notice 0 err 0 $0.9918
+  builder+search-1000      z-ai/glm-5.3-flash                   acc1 offered 0.821 raw 0.8143 filter 0.9799 search@10 null notice 0 err 0 $1.0546
+  builder+search-1000      anthropic/claude-haiku-5.5           acc1 offered 0.8702 raw 0.8635 filter 0.9799 search@10 null notice 0 err 0 $1.8706
+  builder-50               anthropic/claude-haiku-5.5           acc1 offered 0.8054 raw 0.7987 filter 0.9799 search@10 null notice 0 err 0 $1.9449
+  builder-50               z-ai/glm-5.3-flash                   acc1 offered 0.7875 raw 0.7808 filter 0.9799 search@10 null notice 0 err 0 $0.9845
+  builder-200              z-ai/glm-5.3-flash                   acc1 offered 0.8166 raw 0.8166 filter 0.9933 search@10 null notice 0 err 0 $0.8806
+  builder-200              anthropic/claude-haiku-5.5           acc1 offered 0.8456 raw 0.8456 filter 0.9933 search@10 null notice 0 err 0 $1.7568
+  builder-1000             z-ai/glm-5.3-flash                   acc1 offered 0.8031 raw 0.7964 filter 0.9799 search@10 null notice 0 err 0 $0.9403
+  builder-1000             anthropic/claude-haiku-5.5           acc1 offered 0.8635 raw 0.8568 filter 0.9799 search@10 null notice 0 err 0 $1.8116
+  shortlist+search-50      anthropic/claude-haiku-5.5           acc1 offered 0.7763 raw 0.7718 filter 0.8993 search@10 1 notice 0.2444 err 0 $2.7096
+  shortlist+search-50      z-ai/glm-5.3-flash                   acc1 offered 0.7472 raw 0.7472 filter 0.8993 search@10 1 notice 0.4 err 0 $1.3494
+  shortlist+search-200     z-ai/glm-5.3-flash                   acc1 offered 0.7808 raw 0.7808 filter 0.8792 search@10 0.9688 notice 0.5926 err 0 $1.4178
+  shortlist+search-200     anthropic/claude-haiku-5.5           acc1 offered 0.7785 raw 0.7785 filter 0.8792 search@10 1 notice 0.2963 err 0 $2.6726
+  shortlist+search-1000    z-ai/glm-5.3-flash                   acc1 offered 0.7606 raw 0.736 filter 0.8121 search@10 0.9756 notice 0.4881 err 0 $1.4876
+  shortlist+search-1000    anthropic/claude-haiku-5.5           acc1 offered 0.7852 raw 0.7539 filter 0.8121 search@10 0.8919 notice 0.4405 err 0 $2.7042
+  stub builder+search-50   anthropic/claude-haiku-5.5           ended {"answer":279,"answering-turn":117} misses 16/336 unnoticed (rule) 0/16 S1's requests $0.3542 whole $1.9638
+  stub builder+search-50   z-ai/glm-5.3-flash                   ended {"answer":174,"answering-turn":222} misses 24/336 unnoticed (rule) 1/24 S1's requests $0.2891 whole $1.1386
+  stub builder+search-200  anthropic/claude-haiku-5.5           ended {"answer":250,"answering-turn":158} misses 7/363 unnoticed (rule) 0/7 S1's requests $0.3125 whole $1.8263
+  stub builder+search-200  z-ai/glm-5.3-flash                   ended {"answer":164,"answering-turn":244} misses 10/363 unnoticed (rule) 0/10 S1's requests $0.246 whole $0.9918
+  stub builder+search-1000 z-ai/glm-5.3-flash                   ended {"answer":177,"answering-turn":246} misses 15/390 unnoticed (rule) 0/15 S1's requests $0.2539 whole $1.0546
+  stub builder+search-1000 anthropic/claude-haiku-5.5           ended {"answer":261,"answering-turn":162} misses 8/390 unnoticed (rule) 0/8 S1's requests $0.3125 whole $1.8706
+  stub builder-50          anthropic/claude-haiku-5.5           ended {"answer":294,"answering-turn":102} misses 16/336 unnoticed (rule) 0/16 S1's requests $0.3463 whole $1.9449
+  stub builder-50          z-ai/glm-5.3-flash                   ended {"answer":190,"answering-turn":206} misses 20/336 unnoticed (rule) 0/20 S1's requests $0.2556 whole $0.9845
+  stub builder-200         z-ai/glm-5.3-flash                   ended {"answer":195,"answering-turn":213} misses 14/363 unnoticed (rule) 0/14 S1's requests $0.2224 whole $0.8806
+  stub builder-200         anthropic/claude-haiku-5.5           ended {"answer":274,"answering-turn":134} misses 5/363 unnoticed (rule) 0/5 S1's requests $0.3017 whole $1.7568
+  stub builder-1000        z-ai/glm-5.3-flash                   ended {"answer":209,"answering-turn":214} misses 17/390 unnoticed (rule) 0/17 S1's requests $0.234 whole $0.9403
+  stub builder-1000        anthropic/claude-haiku-5.5           ended {"answer":277,"answering-turn":146} misses 9/390 unnoticed (rule) 0/9 S1's requests $0.2945 whole $1.8116
+  stub shortlist+search-50 anthropic/claude-haiku-5.5           ended {"answer":327,"answering-turn":120} misses 44/339 unnoticed (rule) 2/44 S1's requests $0.5401 whole $2.7096
+  stub shortlist+search-50 z-ai/glm-5.3-flash                   ended {"answer":211,"answering-turn":236} misses 56/339 unnoticed (rule) 1/56 S1's requests $0.3894 whole $1.3494
+  stub shortlist+search-200 z-ai/glm-5.3-flash                   ended {"answer":213,"answering-turn":234} misses 33/363 unnoticed (rule) 0/33 S1's requests $0.4186 whole $1.4178
+  stub shortlist+search-200 anthropic/claude-haiku-5.5           ended {"answer":321,"answering-turn":126} misses 39/363 unnoticed (rule) 2/39 S1's requests $0.5315 whole $2.6726
+  stub shortlist+search-1000 z-ai/glm-5.3-flash                   ended {"answer":181,"answering-turn":266} misses 67/393 unnoticed (rule) 4/67 S1's requests $0.4245 whole $1.4876
+  stub shortlist+search-1000 anthropic/claude-haiku-5.5           ended {"answer":325,"answering-turn":122} misses 57/393 unnoticed (rule) 3/57 S1's requests $0.5621 whole $2.7042
