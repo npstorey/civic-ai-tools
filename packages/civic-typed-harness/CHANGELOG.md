@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.15.0 — 2026-11-18
 
 - **A per-portal source** (`CivicSourceInfo.portalArgument`, and the same
   optional member on `DataSourceBuildConfig.registry`): a registry entry may
