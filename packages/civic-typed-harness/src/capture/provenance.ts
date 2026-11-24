@@ -36,9 +36,10 @@ import { hash } from './trace.ts';
 import type { OTelTrace, OTelAttribute } from './trace.ts';
 import { isLoadSpan, LoadSpanError } from './load-span.ts';
 import { isSearchSpan, readSearchSpan, SearchSpanError } from './search-span.ts';
+import { isPresentSpan, readPresentSpan, PresentSpanError } from './present-span.ts';
 
 export type { ProvGraph, ProvNode };
-export { LoadSpanError, SearchSpanError };
+export { LoadSpanError, SearchSpanError, PresentSpanError };
 
 /** Package-level inputs to the graph build. */
 export interface ProvenanceInput {
@@ -132,6 +133,11 @@ export interface ProvenanceTerms {
   /** The source ids a `find_source` call's search returned, in rank order,
    *  stated on outcome `searched` only (ADR-0033 amendment 5). */
   readonly searchHits?: string;
+  /** Whether the producer took the result and the label a `present_result`
+   *  call named, `accepted`, or refused a value it named, `refused` (ADR-0033
+   *  amendment 6). Optional, as are the search's terms: given no name for the
+   *  term, the builder emits no key for it. */
+  readonly presentOutcome?: string;
 }
 
 /** One source the builder can name as an agent. Structural: a format-group
@@ -177,7 +183,11 @@ export interface ProvenanceBuildConfig {
    *  `limit-reached`, its query a string, its hits (on `searched` only) JSON
    *  text of an array of distinct non-empty strings, and it carries no
    *  failure and no source, server, alias, pack or wire-name attribute, or it
-   *  is refused with `SearchSpanError` (ADR-0033 amendment 5). */
+   *  is refused with `SearchSpanError` (ADR-0033 amendment 5). A present span
+   *  is checked without a config value too: its outcome is `accepted` or
+   *  `refused`, and it carries no failure and no source, server, alias, pack
+   *  or wire-name attribute, or it is refused with `PresentSpanError`
+   *  (ADR-0033 amendment 6). */
   loadOutcomes: readonly string[];
 }
 
@@ -335,8 +345,8 @@ export function buildProvenanceGraphWith(
 
   // The ONE resolution of a span's source, used for its agent node, its
   // attribution and its `civic:sourceId` alike. A load span has none
-  // (ADR-0033 amendment 2), and nor has a search span (amendment 5): no
-  // source answers either.
+  // (ADR-0033 amendment 2), nor has a search span (amendment 5), nor a
+  // present span (amendment 6): no source answers any of them.
   function sourceOfSpan(attributes: OTelAttribute[]): string {
     const tagged = getAttr(attributes, 'mcp.source');
     if (tagged) return tagged;
@@ -375,6 +385,16 @@ export function buildProvenanceGraphWith(
     // states a failure, a source, a server or a pack for it.
     if (isSearchSpan(span.attributes)) {
       readSearchSpan(span.spanId, span.attributes);
+      continue;
+    }
+    // A PRESENT SPAN (ADR-0033 amendment 6) is a tool span whose
+    // `tool.operation_type` is `present_result`: the producer's own step in a
+    // run asked in an output format, which no source saw, so it is read as a
+    // load span is. Its outcome is checked here, before any node is built, so
+    // a graph never states a present_result call without saying how it ended,
+    // and never states a failure, a source, a server or a pack for it.
+    if (isPresentSpan(span.attributes)) {
+      readPresentSpan(span.spanId, span.attributes);
       continue;
     }
     sourcesInTrace.add(sourceOfSpan(span.attributes));
@@ -514,10 +534,15 @@ export function buildProvenanceGraphWith(
     const search = isSearchSpan(span.attributes)
       ? readSearchSpan(span.spanId, span.attributes)
       : undefined;
-    // A call the instance's own loop answered (a load or a search): no source
-    // answered it, so its activity is the platform agent's and states no
-    // source, and it mints no data response.
-    const answeredByInstance = loadOutcome !== undefined || search !== undefined;
+    // A present span: the outcome, read on a present span only and checked
+    // above (ADR-0033 amendment 6).
+    const present = isPresentSpan(span.attributes)
+      ? readPresentSpan(span.spanId, span.attributes)
+      : undefined;
+    // A call the instance's own loop answered (a load, a search or a present
+    // step): no source answered it, so its activity is the platform agent's
+    // and states no source, and it mints no data response.
+    const answeredByInstance = loadOutcome !== undefined || search !== undefined || present !== undefined;
 
     // Query entity (tool arguments). Find the most recent inference span
     // before this tool call to link as generator.
@@ -540,8 +565,8 @@ export function buildProvenanceGraphWith(
       }),
     );
 
-    // Data response entity — never for a load or a search span, neither of
-    // which reached data.
+    // Data response entity — never for a load, a search or a present span,
+    // none of which reached a source's data.
     if (responseHash && !answeredByInstance) {
       const dataUrn = vocab.urn(packageId, 'data', responseHash);
       dataResponseUrns.push(dataUrn);
@@ -681,6 +706,9 @@ export function buildProvenanceGraphWith(
         ...(search !== undefined && terms.searchOutcome !== undefined ? { [terms.searchOutcome]: search.outcome } : {}),
         ...(search !== undefined && terms.searchQuery !== undefined ? { [terms.searchQuery]: search.query } : {}),
         ...(search?.hits !== undefined && terms.searchHits !== undefined ? { [terms.searchHits]: [...search.hits] } : {}),
+        // A present span's outcome (ADR-0033 amendment 6), last; no other
+        // span carries the key, so no earlier key list moves.
+        ...(present !== undefined && terms.presentOutcome !== undefined ? { [terms.presentOutcome]: present.outcome } : {}),
       }),
     );
   }

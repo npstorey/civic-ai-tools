@@ -23,7 +23,7 @@
 // THE BASE (harness 0.15.0, hub 9ab745ac). No attribute of the step is read,
 // and a `present_result` span is resolved to a source like any other tool
 // span: its `mcp.source` tag, else the resolver over its tool name, else the
-// fallback `unknown` (capture/provenance.ts:338-345, :380). So an untagged
+// fallback `unknown` (capture/provenance.ts:340-345, :380). So an untagged
 // step mints the agent `urn:civic-record:mcp-server:unknown` and its activity
 // states `civic:sourceId: "unknown"`: a statement, in signed bytes, that a
 // data source answered the site's own step. A step tagged with an aggregate
