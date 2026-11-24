@@ -402,3 +402,49 @@ Revision 5 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record
 ### What does not change
 
 No record byte moves for a record built without a search span or `analysis.routing_configuration`. The 40 entries of revision 4 keep their ids, paths and classes; the 7 never-carried entries keep their ids, facts and rules; the version rule's text in the bundle, and §9.2 checks #16 and #17, are unchanged. Every published record keeps its bytes and its verdicts.
+
+## Amendment — 2026-11-24: revision 6 of the bundle (rulings G0-1 = A, G0-3 = A and G0-5 = A; the seat's S1, S3, S4, S6 = A and S7)
+
+Ruled at gate G0 of sprint OF-1, anchor [civic-ai-tools-website#810](https://github.com/npstorey/civic-ai-tools-website/issues/810): G0-1 = A (readers see "Output format"; the record and the code say "preset"), G0-3 = A (the model only names which result to present and which labels; code builds everything drawn from that result's rows) and G0-5 = A (what a run in an output format drew is kept in the record, as a record extension). The program seat ruled the phase's questions on the anchor: [comment 7144318902](https://github.com/npstorey/civic-ai-tools-website/issues/810#issuecomment-7144318902) (S1: the entries for a picture sent to and stored from another service wait for a later revision; S3: the step's arguments are identifiers, each checked; S4: the key is `org.civicaitools.output-format`) and [comment 7144910529](https://github.com/npstorey/civic-ai-tools-website/issues/810#issuecomment-7144910529) (S6 = A: the step is read by the harness; S7: its name is `present_result` and its arguments `{ result, label }`). Written by the sprint's phase OF1 and landing in its PR, with [ADR-0033](0033-composed-harness-record-fields.md) amendment 6 and a release of `@typedstandards/civic-typed-harness` (0.16.0 as planned). §4 and §5 are not edited.
+
+**The words are drafts.** Each added entry's `sentence`, and the words the added entries give a host, were drafted by the phase in the bundle's style and under its tests' word rules, for the owner's words memo. The pull request that lands this amendment does not merge until the owner's ruled words replace the drafts; this paragraph then names the ruling and the words record, and the digest below moves with them.
+
+### What revision 6 adds
+
+Seven entries, each with the seven members and an absence rule that names a run asked in Auto:
+
+1. **`outputFormat.preset`** (class `may-show`): the format asked for, `{ id, version }`; at this revision the one format the producer lists is `plain-map`. It states what was asked for, not what was drawn. Under Auto the whole `org.civicaitools.output-format` key is absent.
+2. **`outputFormat.outcome`** (class `may-show`): `{ drawn, reason }`, whether the site that ran the question drew the format asked for from the run's own rows, and, when it drew nothing, one of four reasons: `no-result-named`, `no-location-columns`, `no-located-rows`, `result-failed`.
+3. **`outputFormat.counts`** (class `may-show`): `{ returned, drawn, withoutLocation, beyondCap }`, counted by code from the named result's rows, with `drawn + withoutLocation + beyondCap = returned`, so a row left out is stated. Absent when no result was named.
+4. **`outputFormat.map`** (class `may-show`): the map drawn, as a map spec valid against the squidmaps map spec's schema at `squidmaps-io/squidmaps-map-spec@d7cdb725`, each feature's `id` its row's id as a string. The producer guarantees the ids are unique; the schema does not require it, and the entry says so. Absent when nothing was drawn.
+5. **`trace.presentSpan.operationType`** (class `shows`): `present_result` on a present span, the step the producer answers itself, read as a load span is; the six attributes the harness refuses on it; and that a host never shows the call as a call to a source.
+6. **`trace.presentSpan.presentOutcome`** (class `may-show`): `accepted` or `refused`, how the call ended, which says nothing about what was drawn.
+7. **`civic.presentOutcome`** (class `may-show`, as `civic.loadOutcome`): the graph's statement of the span's outcome, on the present step's activity.
+
+The classes are drafted beside the words, for the seat's ruling. The entries for a picture sent to another service, its time and the stored picture's hash are not in this revision (S1).
+
+### What revision 6 revises
+
+- **`environment.toolDefinitions`**, its values: the tools array was said to be the router's output; in a run asked in an output format it also names `present_result`, which the producer adds, not the router, and which states an offer, not a call.
+- **`trace.loadSpan.operationType`**, **`civic.operationType`** and **`civic.toolName`**, their values: `present_result` is named among the operation types and the bare tool names.
+- **`civic.sourceId`**, its values and absence rule: a present span's activity, like a load span's and a search span's, states none.
+
+### The version rule's reading
+
+§2 lists "an added entry with an absence rule, a new reader sentence or a corrected citation" among the changes that stay `v1`, and names `civicaitools-v2` "when a declared field changes meaning, is removed, or a v1 reader statement (§4) would be false of the record". Each change, read against it:
+
+- **The seven added entries** are each an added entry with an absence rule, and each reads as not recorded on every earlier record; no record of the reference host carries the extension or a present span when this revision is written: `v1`.
+- **`environment.toolDefinitions`' values** said the tools array is the router's output. That is true of every earlier record, none of which offered `present_result`, and would be false of a record of a run asked in an output format; it is corrected before such a record exists, as the amendment of 2026-11-13 reads `skillMetadata.skillText`'s correction. No field changes meaning: `v1`.
+- **The four other revised members** are clarifications true of every earlier record, which holds no `present_result` call: `v1`.
+
+Revision 6 therefore stays `ai-assisted-analysis/civicaitools-v1`, and no record is re-labelled.
+
+### The URL and the digest
+
+- **URL:** `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.18-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json`.
+- **SHA-256 of `bundle.json`, revision 6 (2026-11-24):** `3008dd558043de6c2acac446fea7a0841d649331c95aea342b4cd832bd61b171`.
+- Revision 5's URL and digest (the amendment of 2026-11-13) still name revision 5's bytes, at their own tag. `@typedstandards/verify-core` 0.15.4 is published, and its table row pins revision 5. The row is to pin revision 6 in `@typedstandards/verify-core` 0.15.5, planned (§2).
+
+### What does not change
+
+No record byte moves for a record built without a present span; the producer's extension is the caller's, which the harness copies through. The 48 entries of revision 5 keep their ids, paths and classes; the 7 never-carried entries keep their ids, facts and rules; the version rule's text in the bundle, and §9.2 checks #16 and #17, are unchanged. Every published record keeps its bytes and its verdicts.
