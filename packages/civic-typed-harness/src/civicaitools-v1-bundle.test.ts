@@ -3,9 +3,9 @@
 // read from this repository, against the revision it states.
 //
 // WHAT IT PINS (civic-ai-tools#293; sprint anchors civic-ai-tools#294, P1,
-// civic-ai-tools#309, S2-A P1, civic-ai-tools#317, S2-C P2, and
-// civic-ai-tools#318, S3-A P2).
-//   - The header: revision 5, the day its bytes were written, and its URL at
+// civic-ai-tools#309, S2-A P1, civic-ai-tools#317, S2-C P2,
+// civic-ai-tools#318, S3-A P2, and civic-ai-tools-website#810, OF-1 OF1).
+//   - The header: revision 6, the day its bytes were written, and its URL at
 //     the spec tag the merge kit sets.
 //   - The words a host derives where reached sources are shown: the chooser
 //     sentence and the per-load reasons, which state no question put or
@@ -52,10 +52,20 @@
 //     and reader-picked words; that every attribute the harness refuses on a
 //     search span is named in trace.searchSpan.operationType's values, and that
 //     a call stopped at the limit is given no words of a search that ran.
-//   - The field set: the 48 field ids and the 7 never-carried ids. A revision
+//   - Revision 6 (ADR-0033 amendment 6; ADR-0038's amendment of 2026-11-24):
+//     the seven entries it adds (the output-format extension's four members,
+//     the present span's two attributes and the graph's one term), each with
+//     the seven members, an absence rule that names a run asked in Auto, and
+//     its class; the extension's reasons, counts and map as declared; that
+//     every attribute the harness refuses on a present span is named in
+//     trace.presentSpan.operationType's values; and the corrected entries
+//     that named the tools offered, the operation types, the bare tool names
+//     and the calls no source answered.
+//   - The field set: the 55 field ids and the 7 never-carried ids. A revision
 //     that adds or removes a field moves this list: revision 3 added four,
-//     revision 4 two and revision 5 eight, each with an absence rule (ADR-0038
-//     section 2); the assertion fails on one fewer and on one more.
+//     revision 4 two, revision 5 eight and revision 6 seven, each with an
+//     absence rule (ADR-0038 section 2); the assertion fails on one fewer and
+//     on one more.
 //   - The digest: `bundle.md`'s SHA-256 row and the ADR-0038 text name the
 //     file's own SHA-256, and `bundle.md`'s URL row names the file's URL.
 //
@@ -88,15 +98,17 @@ const BUNDLE_DIR = join(REPO_ROOT, 'docs', 'profiles', 'ai-assisted-analysis', '
 const BUNDLE_PATH = join(BUNDLE_DIR, 'bundle.json');
 const BUNDLE_MD_PATH = join(BUNDLE_DIR, 'bundle.md');
 const ADR_0038_PATH = join(REPO_ROOT, 'docs', 'adr', '0038-civicaitools-v1-producer-profile-subtype.md');
+const ADR_0033_PATH = join(REPO_ROOT, 'docs', 'adr', '0033-composed-harness-record-fields.md');
+const SPEC_PATH = join(REPO_ROOT, 'docs', 'architecture', 'typed-standards-specification.md');
 
 // --- The revision -------------------------------------------------------------------------
 
-const REVISION = 5;
+const REVISION = 6;
 /** ADR-0038 §5: the day the revision's bytes were written. */
-const REVISION_DATE = '2026-11-13';
+const REVISION_DATE = '2026-11-24';
 /** The raw address at the tag the merge kit sets on this revision's merge commit. */
 const REVISION_URL =
-  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.17-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
+  'https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.18-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json';
 
 // --- The words ----------------------------------------------------------------------------
 
@@ -283,14 +295,15 @@ const FIELD_IDS = [
   'composition.components.reportedName', 'composition.components.reportedVersion', 'composition.flowsStatement',
   'composition.routing', 'composition.definitionHash', 'composition.considered', 'composition.routingConfiguration',
   'environment.toolDefinitions', 'notebook.execution', 'notebook.summary', 'notebook.provenance',
+  'outputFormat.preset', 'outputFormat.outcome', 'outputFormat.counts', 'outputFormat.map',
   'trace.loadSpan.operationType', 'trace.loadSpan.loadOutcome', 'trace.loadSpan.loadAsked',
   'trace.searchSpan.operationType', 'trace.searchSpan.searchOutcome', 'trace.searchSpan.searchQuery',
-  'trace.searchSpan.searchHits', 'civic.failed', 'civic.failureKind', 'civic.contentHash', 'civic.serverUrl',
+  'trace.searchSpan.searchHits', 'trace.presentSpan.operationType', 'trace.presentSpan.presentOutcome', 'civic.failed', 'civic.failureKind', 'civic.contentHash', 'civic.serverUrl',
   'civic.sourceId', 'civic.url', 'civic.promptTokens', 'civic.completionTokens', 'civic.toolName',
   'civic.operationType', 'civic.datasetId', 'civic.portalDomain', 'civic.datasetUrl', 'civic.croissantMetadataUrl',
   'civic.responseRows', 'civic.durationMs', 'civic.upstreamToolName', 'civic.sourceAlias', 'civic.serverId',
   'civic.packId', 'civic.loadOutcome', 'civic.loadAsked', 'civic.searchOutcome', 'civic.searchQuery',
-  'civic.searchHits', 'skillMetadata.skillText', 'skillMetadata.systemPromptHash',
+  'civic.searchHits', 'civic.presentOutcome', 'skillMetadata.skillText', 'skillMetadata.systemPromptHash',
 ];
 /** The four entries revision 3 added (ADR-0033 amendment 3). */
 const REVISION_3_ADDED = ['composition.considered', 'trace.loadSpan.loadAsked', 'civic.packId', 'civic.loadAsked'];
@@ -344,7 +357,7 @@ function bundleMdRow(label: string): string {
 
 // --- Criterion 1: the header --------------------------------------------------------------
 
-test('civicaitools-v1 bundle: the header states revision 5, the day its bytes were written, and its URL at the v0.1.17 spec tag', () => {
+test('civicaitools-v1 bundle: the header states revision 6, the day its bytes were written, and its URL at the v0.1.18 spec tag', () => {
   const bundle = readBundle();
   assert.equal(bundle.revision, REVISION);
   assert.equal(bundle.date, REVISION_DATE);
@@ -669,18 +682,18 @@ function assertFieldSet(bundle: Bundle): void {
   }
 }
 
-test('civicaitools-v1 bundle: the 48 field ids and the 7 never-carried ids', () => {
-  assert.equal(FIELD_IDS.length, 48);
+test('civicaitools-v1 bundle: the 55 field ids and the 7 never-carried ids', () => {
+  assert.equal(FIELD_IDS.length, 55);
   assert.equal(NEVER_CARRIED_IDS.length, 7);
   assertFieldSet(readBundle());
 });
 
-test('civicaitools-v1 bundle: the field-set assertion fails on 47 fields and on 49 (decoy)', () => {
+test('civicaitools-v1 bundle: the field-set assertion fails on 54 fields and on 56 (decoy)', () => {
   const bundle = readBundle();
   const fewer = { ...bundle, fields: bundle.fields.filter((f) => f.id !== 'civic.packId') };
   const more = { ...bundle, fields: [...bundle.fields, { ...bundle.fields[0]!, id: 'composition.extra' }] };
-  assert.equal(fewer.fields.length, 47);
-  assert.equal(more.fields.length, 49);
+  assert.equal(fewer.fields.length, 54);
+  assert.equal(more.fields.length, 56);
   assert.throws(() => assertFieldSet(fewer), assert.AssertionError);
   assert.throws(() => assertFieldSet(more), assert.AssertionError);
 });
@@ -757,4 +770,104 @@ test('civicaitools-v1 bundle: the reader-picked words, and the composition and t
   assert.ok(field('composition.components').values.startsWith('One entry per source the run composed, in manifest order'));
   assert.ok(field('environment.toolDefinitions').values.includes('find_source when the run offered the model a search'));
   assert.ok(field('composition.routing').values.includes('never by the method picker'));
+});
+
+// --- Revision 6: the output-format extension and the present span ------------------------
+
+/** The extension key the seat ruled (S4, website #810 comment 7144318902). */
+const OUTPUT_FORMAT_KEY = 'org.civicaitools.output-format';
+
+/** The seven entries revision 6 added (ADR-0033 amendment 6), with the class each is drafted at. */
+const REVISION_6_ADDED: Record<string, BundleField['class']> = {
+  'outputFormat.preset': 'may-show',
+  'outputFormat.outcome': 'may-show',
+  'outputFormat.counts': 'may-show',
+  'outputFormat.map': 'may-show',
+  'trace.presentSpan.operationType': 'shows',
+  'trace.presentSpan.presentOutcome': 'may-show',
+  'civic.presentOutcome': 'may-show',
+};
+
+/** The four reasons a map is not drawn, in the order the extension declares them. */
+const NOT_DRAWN_REASONS = ['no-result-named', 'no-location-columns', 'no-located-rows', 'result-failed'];
+
+/** The schema the map member is valid against, pinned by commit. */
+const MAP_SPEC_PIN = 'squidmaps-io/squidmaps-map-spec@d7cdb725';
+
+test('civicaitools-v1 bundle: each entry revision 6 added carries the seven members, an absence rule naming a run asked in Auto, and its class', () => {
+  for (const [id, cls] of Object.entries(REVISION_6_ADDED)) {
+    const entry = field(id);
+    assert.deepEqual(Object.keys(entry), ['id', 'path', 'values', 'absent', 'carriedBy', 'sentence', 'class'], id);
+    assert.equal(entry.class, cls, id);
+    assert.ok(entry.absent.length > 0 && entry.carriedBy.length > 0 && entry.sentence.length > 0, id);
+    assert.ok(entry.absent.includes('Auto'), `${id}: the absence rule names a run asked in Auto`);
+  }
+  for (const member of ['preset', 'outcome', 'counts', 'map']) {
+    assert.equal(field(`outputFormat.${member}`).path, `extensions["${OUTPUT_FORMAT_KEY}"].${member}`);
+  }
+  assert.ok(field('outputFormat.preset').absent.includes(`the whole ${OUTPUT_FORMAT_KEY} key is absent`));
+  assert.ok(field('trace.presentSpan.operationType').path.endsWith('attributes[key="tool.operation_type"]'));
+  assert.ok(field('trace.presentSpan.presentOutcome').path.endsWith('attributes[key="tool.present_outcome"]'));
+  assert.ok(field('civic.presentOutcome').path.endsWith('["civic:presentOutcome"]'));
+});
+
+test('civicaitools-v1 bundle: the extension\'s preset, reasons, counts and map are as revision 6 declares them', () => {
+  assert.ok(field('outputFormat.preset').values.startsWith('{ id, version }, keys in that order'));
+  assert.ok(field('outputFormat.preset').values.includes('plain-map'));
+  const outcome = field('outputFormat.outcome');
+  assert.ok(outcome.values.startsWith('{ drawn, reason }'), outcome.values);
+  for (const reason of NOT_DRAWN_REASONS) {
+    assert.ok(outcome.values.includes(reason), reason);
+    assert.ok(outcome.sentence.includes(`${reason}: '`), `the sentence gives words for ${reason}`);
+  }
+  const counts = field('outputFormat.counts');
+  assert.ok(counts.values.startsWith('{ returned, drawn, withoutLocation, beyondCap }, keys in that order'));
+  assert.ok(counts.values.includes('drawn + withoutLocation + beyondCap = returned'));
+  const map = field('outputFormat.map');
+  assert.ok(map.values.includes(MAP_SPEC_PIN), 'the schema is pinned by commit');
+  for (const member of ['name', 'description', 'basemap', 'extent', 'view', 'legend', 'features', 'panel', 'controls']) {
+    assert.ok(map.values.includes(member), member);
+  }
+  assert.ok(map.values.includes('the schema does not require the ids to be unique'), 'the uniqueness the producer guarantees and the schema does not');
+  assert.ok(map.absent.includes('drawn is false'));
+});
+
+test('civicaitools-v1 bundle: every attribute the harness refuses on a present span is named in trace.presentSpan.operationType\'s values', () => {
+  const values = field('trace.presentSpan.operationType').values;
+  for (const words of ['present_result', 'error: true', 'mcp.source', 'mcp.server.id', 'mcp.alias', 'mcp.pack_id', 'tool.upstream_name', '(PresentSpanError)']) {
+    assert.ok(values.includes(words), words);
+  }
+  assert.ok(field('trace.presentSpan.presentOutcome').values.startsWith('One of accepted, refused'));
+  assert.ok(field('trace.presentSpan.presentOutcome').absent.includes('(PresentSpanError)'));
+  assert.ok(field('trace.presentSpan.operationType').sentence.includes('A host never shows a present_result call as a call to a source'));
+});
+
+test('civicaitools-v1 bundle: the entries that named the tools offered, the operation types, the bare names and the calls no source answered name present_result', () => {
+  const tools = field('environment.toolDefinitions').values;
+  assert.ok(tools.includes('present_result'), 'the tools offered name the site\'s step');
+  assert.ok(!tools.includes("(the router's output: load_source, find_source when the run offered the model a search, and each loaded source's tools)"),
+    'the tools array is no longer said to be the router\'s output alone');
+  assert.ok(tools.includes('find_source when the run offered the model a search'));
+  assert.ok(field('trace.loadSpan.operationType').values.includes('present_result marks a present span (see trace.presentSpan.operationType)'));
+  assert.ok(field('civic.operationType').values.includes('present_result'));
+  assert.ok(field('civic.toolName').values.includes('(load_source, find_source, present_result)'));
+  assert.ok(field('civic.sourceId').values.includes('The activity of a load span, a search span or a present span states none'));
+  assert.ok(field('civic.sourceId').absent.includes('a load, a find_source or a present_result call'));
+});
+
+test('civicaitools-v1 bundle: ADR-0033 has amendment 6, ADR-0038 revision 6\'s amendment, and the spec\'s revision lines name the digest at the URL\'s tag', () => {
+  const adr33 = readFileSync(ADR_0033_PATH, 'utf8');
+  assert.ok(/^## Amendment 6 — \d{4}-\d{2}-\d{2}: the present span/m.test(adr33), 'ADR-0033 amendment 6');
+  const adr38 = readFileSync(ADR_0038_PATH, 'utf8');
+  assert.ok(adr38.includes(`## Amendment — ${REVISION_DATE}: revision 6 of the bundle`), 'ADR-0038 revision 6 amendment');
+  const digest = createHash('sha256').update(bundleBytes()).digest('hex');
+  const tag = /\/(v[0-9.]+-typed-standards-spec)\//.exec(readBundle().url)?.[1];
+  assert.ok(tag, 'the URL names a spec tag');
+  const spec = readFileSync(SPEC_PATH, 'utf8');
+  assert.ok(spec.includes(`\nTag: ${tag}\n`), `the spec's frontmatter Tag is ${tag}`);
+  const version = tag.replace('-typed-standards-spec', '');
+  const statusLine = spec.split('\n').find((l) => l.startsWith(`- **Status updated ${REVISION_DATE} (${version}):**`));
+  assert.ok(statusLine?.includes(digest), 'Appendix E\'s status line names the digest');
+  const historyLine = spec.split('\n').find((l) => l.startsWith(`- **${REVISION_DATE}** — Guidance bundle revision patch revision (${version};`));
+  assert.ok(historyLine?.includes(digest), 'Appendix G\'s line names the digest');
 });
