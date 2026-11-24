@@ -9,7 +9,7 @@
 | Revision | 6, dated 2026-11-24, recorded in the ADR-0038 amendment of that date. Revision 5, dated 2026-11-13, is SHA-256 `9946c58f2a4e800388b10f31a43a099c5a1d97b4f5084dbbff8351480d9223d5` at tag `v0.1.17-typed-standards-spec`; revision 4, dated 2026-11-12, is SHA-256 `4c623892516dc1996e412c313c2208e0880d594e753ef0c9d2a1a3e4f4ce5c81` at tag `v0.1.16-typed-standards-spec`; revision 3, dated 2026-11-07, is SHA-256 `db8175703601a5de9d785a2cda93db194eb05cdeeb222dcfd509ea8ab249f016` at tag `v0.1.15-typed-standards-spec`; revision 2, dated 2026-11-02, is SHA-256 `45bf3ab479325a791829ed9987f5f291fea44238b54bfb598f32f306f574eb9b` at tag `v0.1.14-typed-standards-spec`; revision 1, dated 2026-10-30, is SHA-256 `724e399e02db8993041b64982eec731505084bec2ec5e6ca58fda2de8087a281` at tag `v0.1.13-typed-standards-spec` |
 | Decision record | [ADR-0038](../../../adr/0038-civicaitools-v1-producer-profile-subtype.md) |
 | URL | `https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.18-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json` |
-| SHA-256 of `bundle.json` | `3008dd558043de6c2acac446fea7a0841d649331c95aea342b4cd832bd61b171` |
+| SHA-256 of `bundle.json` | `b89db887ef68e4aa0682defe1610d5f11d6c8abd234a50bb57f38b717e69bd0d` |
 | Content profiles the row admits | `datHere` (the A-G envelope, a full-text record) and `default` (the plain shape, a hash-only record) |
 | Capture vocabulary | inherited from `ai-assisted-analysis` (ADR-0011's G4 decision), no override |
 

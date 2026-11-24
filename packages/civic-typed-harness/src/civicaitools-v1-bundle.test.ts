@@ -814,6 +814,9 @@ test('civicaitools-v1 bundle: each entry revision 6 added carries the seven memb
 test('civicaitools-v1 bundle: the extension\'s preset, reasons, counts and map are as revision 6 declares them', () => {
   assert.ok(field('outputFormat.preset').values.startsWith('{ id, version }, keys in that order'));
   assert.ok(field('outputFormat.preset').values.includes('plain-map'));
+  // The version is text, as OF2's record writes it (`{"id":"…","version":"1"}`), never a number.
+  assert.ok(field('outputFormat.preset').values.includes('version is a non-empty string'));
+  assert.ok(!/version is a (whole number|positive|an integer|number)/.test(field('outputFormat.preset').values));
   const outcome = field('outputFormat.outcome');
   assert.ok(outcome.values.startsWith('{ drawn, reason }'), outcome.values);
   for (const reason of NOT_DRAWN_REASONS) {
