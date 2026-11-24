@@ -2,10 +2,10 @@
   "subtype": "ai-assisted-analysis/civicaitools-v1",
   "profileType": "ai-assisted-analysis",
   "displayName": "Civic AI Tools profile, v1",
-  "revision": 5,
-  "date": "2026-11-13",
+  "revision": 6,
+  "date": "2026-11-24",
   "decisionRecord": "https://github.com/npstorey/civic-ai-tools/blob/main/docs/adr/0038-civicaitools-v1-producer-profile-subtype.md",
-  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.17-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
+  "url": "https://raw.githubusercontent.com/npstorey/civic-ai-tools/v0.1.18-typed-standards-spec/docs/profiles/ai-assisted-analysis/civicaitools-v1/bundle.json",
   "versionRule": "The subtype name carries the major: v2 when a declared field changes meaning, is removed, or a v1 reader statement would be false of the record. This file's SHA-256 carries the revisions: an added entry with an absence rule, a new reader sentence or a corrected citation stays v1 and moves the digest and the verifier table row's pin (ADR-0038 section 2).",
   "producer": "The reference host of this project, civicaitools.org, through the composed harness (ADR-0033, ADR-0037). Every new record of this producer, full-text or hash-only, declares this subtype.",
   "contentProfiles": {
@@ -118,7 +118,7 @@
     {
       "id": "environment.toolDefinitions",
       "path": "extensions[\"org.civicaitools.environment\"].toolDefinitions",
-      "values": "The tools array as offered to the model, in offered order, verbatim (the router's output: load_source, find_source when the run offered the model a search, and each loaded source's tools), or a BlobRef when large (spec section 8.7.1 requirement 3; ADR-0033 section C). find_source in the array states that a search was offered, not that the model searched: a search that ran is a search span whose outcome is searched (see trace.searchSpan.searchOutcome).",
+      "values": "The tools array as offered to the model, in offered order, verbatim (the router's output: load_source, find_source when the run offered the model a search, and each loaded source's tools; then present_result, which the producer adds itself, not the router, in a run asked in an output format), or a BlobRef when large (spec section 8.7.1 requirement 3; ADR-0033 section C). find_source in the array states that a search was offered, not that the model searched: a search that ran is a search span whose outcome is searched (see trace.searchSpan.searchOutcome). present_result in the array states that the step was offered, not that the model called it: a call is a present span (see trace.presentSpan.operationType).",
       "absent": "Key omitted when the producer does not know the tools the run offered. Records published before harness 0.7.0 carry the placeholder [] and are not re-labelled. On a record whose metadata.contentProfile is not datHere (this producer's hash-only records carry default), the whole org.civicaitools.environment block is absent, because the harness emits it only for datHere (spec section 8.7.1; harness format/dathere.ts:821-835); that absence states nothing about the tools.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "Tools offered to the model: {count}, named {names}.",
@@ -152,9 +152,45 @@
       "class": "shows"
     },
     {
+      "id": "outputFormat.preset",
+      "path": "extensions[\"org.civicaitools.output-format\"].preset",
+      "values": "{ id, version }, keys in that order: the output format the person who asked the question chose for it. id names a format the producer lists, a non-empty string; at this revision the one format this producer lists is plain-map, in which the site that ran the question draws the result the model named as a plain map, beside a table of the same rows. version is a non-empty string, the version of that format's definition, written as text (for example \"1\"), as composition.routing's version is; the record states it as a string, never as a number. The preset states what was asked for, not what was produced: whether anything was drawn is outputFormat.outcome. As planned for this producer, it writes the key from the run's own root-span attribute analysis.output_format, and replaces a key of the same name that a publish request carries.",
+      "absent": "Under Auto, the output format a question has unless the person who asked it chose another, the whole org.civicaitools.output-format key is absent, and the record is the one the producer writes without this extension. The key is also absent on every record before the producer wrote it: no record of the reference host carried it when this revision was written (website 0dee174 has no writer of the key). Absent reads as no format recorded: a host never names a format for such a record, and never reads it as plain-map.",
+      "carriedBy": "No fixture or published record carries it when this revision was written. As planned, the reference host writes it from the run's root-span attribute analysis.output_format.",
+      "sentence": "'Output format: {the host's name for the format}', or the id as written when the host has no name for it; the version is not shown. Absent: nothing.",
+      "class": "may-show"
+    },
+    {
+      "id": "outputFormat.outcome",
+      "path": "extensions[\"org.civicaitools.output-format\"].outcome",
+      "values": "{ drawn, reason }, keys in that order, reason present only when drawn is false: whether the site that ran the question drew the format asked for from the run's own rows. drawn is a boolean: true when it drew the result the model named, from that result's rows; false when it drew nothing. reason is one of no-result-named, the model named no result, or every result it named was refused (see trace.presentSpan.presentOutcome); no-location-columns, the result named has no column that gives a location; no-located-rows, it has such columns and no row holds a location in them; result-failed, the call that produced the result named failed, or its rows could not be read. The outcome states what was drawn, never what the model wrote: the model names a result and one of its columns, and code builds everything drawn from that result's rows.",
+      "absent": "Absent under Auto, where the whole org.civicaitools.output-format key is absent. In a run asked in a format, absent when the run recorded no outcome: a run that ended before its present step, by an error or a stop. Absent reads as not recorded, never as drawn false and never as a reason.",
+      "carriedBy": "No fixture or published record carries it when this revision was written.",
+      "sentence": "For a format that draws a map (plain-map). drawn true: 'A map was drawn from {counts.drawn} of {counts.returned} rows.' drawn false: 'No map was drawn: {the reason's words}.', where the reason's words are, for no-result-named: 'the model did not choose a set of results to map'; for no-location-columns: 'the data behind this answer has no locations'; for no-located-rows: 'none of the {counts.returned} rows had a location'; for result-failed: 'the data for the map could not be read'. A reason the host has no words for is named as written. Absent: nothing.",
+      "class": "may-show"
+    },
+    {
+      "id": "outputFormat.counts",
+      "path": "extensions[\"org.civicaitools.output-format\"].counts",
+      "values": "{ returned, drawn, withoutLocation, beyondCap }, keys in that order, each a whole number zero or more, counted by code from the rows of the result the model named, never written by the model. returned: the rows the result held. drawn: the rows drawn. withoutLocation: the rows with no location. beyondCap: the rows with a location that were left out because the format draws at most a fixed number of rows. drawn + withoutLocation + beyondCap = returned, so a row left out is stated, never silent; beyondCap is 0 when none was.",
+      "absent": "Absent under Auto, where the whole org.civicaitools.output-format key is absent. In a run asked in a format, absent when no result was named (outcome no-result-named) and when the run recorded no outcome. Absent reads as not recorded, never as zero.",
+      "carriedBy": "No fixture or published record carries it when this revision was written.",
+      "sentence": "May be shown beside what was drawn: '{drawn} of {returned} rows mapped.'; then, when beyondCap is not 0, 'The map shows at most {drawn} points.'; then, when withoutLocation is not 0, '{withoutLocation} had no location.' Each number as the host writes numbers. Absent: nothing, and a host never derives a count from the map's features.",
+      "class": "may-show"
+    },
+    {
+      "id": "outputFormat.map",
+      "path": "extensions[\"org.civicaitools.output-format\"].map",
+      "values": "The map that was drawn, as data: a map spec valid against the squidmaps map spec's schema at squidmaps-io/squidmaps-map-spec@d7cdb725 (schema/map.schema.json), built by code from the rows of the result the model named. It carries the schema's seven required top-level fields, name, description, basemap, extent, view, legend and features, may carry its two optional ones, panel and controls, and carries no others. features holds one GeoJSON feature per drawn row, counts.drawn of them, each with its row's id, as a string, in its id. The producer guarantees that no two features share an id; the schema does not require the ids to be unique (it states uniqueness only in the field's description, and a spec with a repeated id validates), so a reader that relies on it checks it. As planned for this producer, no free-text field of the map (its name, description, legend or any label) is written from the question or from the model's text. Anyone can redraw the map, or check it against the result's rows, from the record alone.",
+      "absent": "Absent when outcome.drawn is false: no map was drawn, so none is stated, and a host never draws an empty map for it. Absent under Auto, where the whole org.civicaitools.output-format key is absent. Absent reads as not recorded.",
+      "carriedBy": "No fixture or published record carries it when this revision was written.",
+      "sentence": "A host may draw the features from this data alone, beside a table of the same rows as its text alternative. Its alternative text is built from outputFormat.counts, never from the model's text: 'Map of {counts.drawn} points.', then, when counts.withoutLocation is not 0, '{counts.withoutLocation} rows had no location.' Absent: no map is drawn.",
+      "class": "may-show"
+    },
+    {
       "id": "trace.loadSpan.operationType",
       "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.operation_type\"]",
-      "values": "load_source on a load span: a call the instance's own loop handled through the router's directory, which no source answered (ADR-0033 amendment 2; ADR-0037 section C). Other spans carry the producer's other operation types (query, search, metadata, find_source, ...); find_source marks a search span (see trace.searchSpan.operationType), and search is a source's own search tool.",
+      "values": "load_source on a load span: a call the instance's own loop handled through the router's directory, which no source answered (ADR-0033 amendment 2; ADR-0037 section C). Other spans carry the producer's other operation types (query, search, metadata, find_source, present_result, ...); find_source marks a search span (see trace.searchSpan.operationType), present_result marks a present span (see trace.presentSpan.operationType), and search is a source's own search tool.",
       "absent": "No load span is present on an all-sources run, where the model is offered no load_source tool, and on every record before in-loop routing. Then the record states that no source was loaded during the run, not that none was reached.",
       "carriedBy": "in-loop-golden.json (one load span, loaded).",
       "sentence": "Identifies the load spans from which the chooser sentence's 'Loaded' and 'Requested, not loaded' groups are read (see composition.routing): 'the model asked for {alias}'.",
@@ -215,6 +251,24 @@
       "class": "shows"
     },
     {
+      "id": "trace.presentSpan.operationType",
+      "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.operation_type\"]",
+      "values": "present_result on a present span: the step a run asked in an output format offers the model, which the instance's own loop answered itself and which no source saw (ADR-0033 amendment 6). Its arguments, { result, label } in tool.arguments, are identifiers: result names a result of the run and label one of that result's columns, which the instance checked against the run's results before it presented anything. The span's tool.present_outcome says whether the instance took them (see trace.presentSpan.presentOutcome). It is read as a load span is: the graph mints no source agent and no data-response entity for it, dataSources[] has no entry for it, its activity is the platform agent's and states no civic:sourceId, and the calls after it keep their own spans. The harness refuses a present span that carries error: true, mcp.source, mcp.server.id, mcp.alias, mcp.pack_id or tool.upstream_name (PresentSpanError), so a graph never states that a present_result call failed, or that a source, a server or a pack took part in one. The span does not state what was drawn: outputFormat.outcome does.",
+      "absent": "No present span is present on a run asked in Auto, where the model is offered no present_result tool, nor on any record before the producer offered the step: no record of the reference host held one when this revision was written (website 0dee174 has no writer of it). A run asked in a format may hold none, when the model named no result; its outcome is then no-result-named (see outputFormat.outcome). With no present span, the record states that the model made no present_result call.",
+      "carriedBy": "No golden holds a present span; packages/civic-typed-harness/src/capture/present-span.test.ts drives one of each outcome.",
+      "sentence": "Identifies the present spans, each a present_result call. A host never shows a present_result call as a call to a source, or as a source's answer, and never counts it among the sources reached. Where the calls of a run are listed, it may say: 'The model chose which result to present. The site that ran this question answered that step itself, and no source took part in it.'",
+      "class": "shows"
+    },
+    {
+      "id": "trace.presentSpan.presentOutcome",
+      "path": "trace.resourceSpans[].scopeSpans[].spans[name=\"mcp_tool_call\"].attributes[key=\"tool.present_outcome\"]",
+      "values": "One of accepted, refused, on a present span (ADR-0033 amendment 6). accepted: the instance took the result and the label the call named. refused: a value the call named was not one the instance could check against the run's results (a result the run did not have, or a column that result did not have), so it presented nothing for the call. The outcome says how the call ended, not what was drawn: a call that was accepted can still end in no map, for a reason outputFormat.outcome states.",
+      "absent": "Present on every present span: the harness refuses a present span whose tool.present_outcome is absent or is neither value when it builds the graph (PresentSpanError), so a record never states a present_result call without saying how it ended. A run asked in Auto has no present span, so it states no outcome.",
+      "carriedBy": "No golden holds a present span; packages/civic-typed-harness/src/capture/present-span.test.ts drives both outcomes.",
+      "sentence": "May be shown beside the call. accepted: 'The site that ran this question took the result the model chose.' refused: 'The site that ran this question did not take the model's choice: it named a result or a column the run did not have.' Neither says whether anything was drawn; outputFormat.outcome does.",
+      "class": "may-show"
+    },
+    {
       "id": "civic.failed",
       "path": "provenance[\"@graph\"][] (prov:Activity, a tool call)[\"civic:failed\"]",
       "values": "true, only when the producer stated that the call failed: it returned no data, whether the source answered with an error or with a reply the producer could not read, did not answer, or was never sent the call; civic:failureKind is the producer's label for it. Never false. Spec section 8.1.8 defines a failed call as one rejected by the source; this producer also marks failed a call the source did not answer and one the producer did not send (civic.failureKind's values say which labels mark one).",
@@ -253,8 +307,8 @@
     {
       "id": "civic.sourceId",
       "path": "provenance[\"@graph\"][] (prov:SoftwareAgent, prov:Activity, prov:Entity)[\"civic:sourceId\"]",
-      "values": "The stable registry id of the source that answered a call, on the source agent, the tool-call activity and the data-response entity. The activity of a load span or of a search span states none: the instance's own loop answered the call, and no source did. A source id among a search's hits (see civic.searchHits) names a source the search returned, not a source that answered anything.",
-      "absent": "Absent on a call no source answered (a load or a find_source call) and on a call whose source the span did not name; the graph never defaults a source id (ADR-0024).",
+      "values": "The stable registry id of the source that answered a call, on the source agent, the tool-call activity and the data-response entity. The activity of a load span, a search span or a present span states none: the instance's own loop answered the call, and no source did. A source id among a search's hits (see civic.searchHits) names a source the search returned, not a source that answered anything.",
+      "absent": "Absent on a call no source answered (a load, a find_source or a present_result call) and on a call whose source the span did not name; the graph never defaults a source id (ADR-0024).",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "'{the host's name for sourceId} answered this call.', only on a call that carries no civic:failed; civic.failed's words say how a failed call ended. The host resolves the id against its own manifest; the record never spells the reader-facing name.",
       "class": "may-show"
@@ -289,7 +343,7 @@
     {
       "id": "civic.toolName",
       "path": "provenance[\"@graph\"][] (prov:Entity, a tool-argument query)[\"civic:toolName\"]",
-      "values": "The tool the call invoked, verbatim from the span: the name the model called. Under ADR-0032 a source's tool is named <alias>__<upstream name>; a call the instance's own loop answers has a bare name (load_source, find_source).",
+      "values": "The tool the call invoked, verbatim from the span: the name the model called. Under ADR-0032 a source's tool is named <alias>__<upstream name>; a call the instance's own loop answers has a bare name (load_source, find_source, present_result).",
       "absent": "Absent when the span named no tool; never a placeholder.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "'Called {toolName}.'",
@@ -298,7 +352,7 @@
     {
       "id": "civic.operationType",
       "path": "provenance[\"@graph\"][] (prov:Entity, a tool-argument query)[\"civic:operationType\"]",
-      "values": "The producer's classification of what the call did (query, search, metadata, load_source, find_source, unknown, ...), an open string stated verbatim.",
+      "values": "The producer's classification of what the call did (query, search, metadata, load_source, find_source, present_result, unknown, ...), an open string stated verbatim.",
       "absent": "Absent when the span carried no tool.operation_type.",
       "carriedBy": "in-loop-golden.json; the three website fixture records.",
       "sentence": "'A {operationType} call.'",
@@ -437,6 +491,15 @@
       "absent": "Absent on every activity that is not a search span's, and on the activity of a search span whose outcome is limit-reached, where no search ran. A graph never states a search that ran without it: a search that returned none states [].",
       "carriedBy": "search-golden.json (two hits); emitted by the harness since 0.14.0 (capture/provenance.ts:683).",
       "sentence": "The graph's statement of trace.searchSpan.searchHits; a host reading the graph rather than the trace derives the same words from it, in the order of the record's JSON.",
+      "class": "may-show"
+    },
+    {
+      "id": "civic.presentOutcome",
+      "path": "provenance[\"@graph\"][] (prov:Activity, the tool call of a present span, associated with the platform agent)[\"civic:presentOutcome\"]",
+      "values": "One of accepted, refused, verbatim from the span's tool.present_outcome; on the tool-call activity of a present span, which is associated with the platform agent and states no civic:sourceId, as its last key; on no other node (ADR-0033 amendment 6).",
+      "absent": "Absent on every activity that is not a present span's; a graph never states a present_result call without it. A run asked in Auto has no present span, so its graph states none.",
+      "carriedBy": "packages/civic-typed-harness/src/capture/present-span.test.ts pins the present activity's whole key list for both outcomes; no golden holds one.",
+      "sentence": "The graph's statement of trace.presentSpan.presentOutcome; a host reading the graph rather than the trace derives the same words from it.",
       "class": "may-show"
     },
     {
