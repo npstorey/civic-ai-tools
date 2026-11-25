@@ -19,6 +19,7 @@
 import type { DataSourceEntry } from '@typedstandards/produce-core';
 import { isLoadSpan } from './load-span.ts';
 import { isSearchSpan } from './search-span.ts';
+import { isPresentSpan } from './present-span.ts';
 
 export type { DataSourceEntry };
 
@@ -180,7 +181,8 @@ export function resolveToolSourceWith(
  * (ADR-0033 amendment 2) — contributes nothing either: the instance's loop
  * answered it and no source did. It too keeps its position in the walk. So
  * does a SEARCH CALL, whose span's `tool.operation_type` is `find_source`
- * (amendment 5).
+ * (amendment 5), and a PRESENT CALL, whose span's `tool.operation_type` is
+ * `present_result` (amendment 6).
  *
  * The run's portal is not a parameter: an entry states the portal the call
  * carried, never the run's (the civic layer's `buildDataSources` keeps its
@@ -215,6 +217,10 @@ export function buildDataSourcesWith(
     // ADR-0033 amendment 5): the instance answered it and no source saw it,
     // so it mints no entry either. Skipped in place, for the same reason.
     if (isSearchSpan(toolSpans[i]?.attributes)) continue;
+    // A present call (its span's `tool.operation_type` is `present_result`,
+    // ADR-0033 amendment 6): the producer's own step, which no source saw, so
+    // it mints no entry either. Skipped in place, for the same reason.
+    if (isPresentSpan(toolSpans[i]?.attributes)) continue;
     const source = resolveToolSourceWith(tc, toolSpans[i], resolver, fallbackSourceId);
     const portalArgument = registry[source]?.portalArgument;
     if (portalArgument !== undefined) {

@@ -1652,8 +1652,9 @@ test('byte stability: the golden graph carries two data-response descriptions on
  *  token counts, a dataset-keyed call that answered with rows and an elapsed,
  *  a call the source REFUSED that also reports its elapsed, a load call
  *  stating its outcome (ADR-0033 amendment 2) and whether a question was put
- *  (amendment 3), and a synthesis. The answered call is a pack's, so it
- *  states the pack's id beside the base's server id (amendment 3). */
+ *  (amendment 3), a search (amendment 5), a present step (amendment 6), and a
+ *  synthesis. The answered call is a pack's, so it states the pack's id beside
+ *  the base's server id (amendment 3). */
 function everyCivicTermTrace(): Record<string, unknown> {
   const inference: SpanStub = {
     name: 'llm_inference',
@@ -1736,6 +1737,19 @@ function everyCivicTermTrace(): Record<string, unknown> {
       'tool.search_hits': '["socrata"]',
     }),
   };
+  // The producer's present step stating its outcome (ADR-0033 amendment 6).
+  const present: SpanStub = {
+    name: 'mcp_tool_call',
+    spanId: 'span-present-all-terms',
+    startTimeUnixNano: '2550000000',
+    endTimeUnixNano: '2560000000',
+    attributes: attrs({
+      'tool.name': 'present_result',
+      'tool.operation_type': 'present_result',
+      'tool.arguments': '{"result":2,"label":"street_name"}',
+      'tool.present_outcome': 'accepted',
+    }),
+  };
   const synthesis: SpanStub = {
     name: 'synthesis',
     spanId: 'span-synthesis',
@@ -1743,7 +1757,7 @@ function everyCivicTermTrace(): Record<string, unknown> {
     endTimeUnixNano: '2700000000',
     attributes: [],
   };
-  return traceOf([skillSpan('5f6e7d'), inference, search, load, answered, rejected, synthesis]);
+  return traceOf([skillSpan('5f6e7d'), inference, search, load, answered, rejected, present, synthesis]);
 }
 
 /** Every `civic:` property key anywhere in a graph, nested nodes included. */
@@ -1802,6 +1816,7 @@ test('#199 §2 PREMISE: the driving trace reaches every term-emitting branch', (
     'civic:searchOutcome',
     'civic:searchQuery',
     'civic:searchHits',
+    'civic:presentOutcome',
   ]) {
     assert.ok(emitted.has(key), `the driving trace does not reach ${key} — the checks below cannot see it`);
   }

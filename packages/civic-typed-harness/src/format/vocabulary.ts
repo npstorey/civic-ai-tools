@@ -317,6 +317,30 @@ export const CIVIC_TERM_SEARCH_QUERY = 'civic:searchQuery';
 export const CIVIC_TERM_SEARCH_HITS = 'civic:searchHits';
 
 /**
+ * `civic:presentOutcome` — how a `present_result` call ended (ADR-0033
+ * amendment 6): one of {@link PRESENT_OUTCOMES}, verbatim from the span's
+ * `tool.present_outcome`. A present span is a tool span whose
+ * `tool.operation_type` is `present_result`: the producer's own step in a run
+ * asked in an output format, which no source saw, so its activity is
+ * associated with the platform agent and states no `civic:sourceId`. Stated
+ * on that activity, after every earlier key, and on no other node. A present
+ * span whose outcome is absent or another value is refused when the graph is
+ * built.
+ */
+export const CIVIC_TERM_PRESENT_OUTCOME = 'civic:presentOutcome';
+
+/** How a `present_result` call ended (ADR-0033 amendment 6): `accepted`, the
+ *  producer took the result and the label the call named; `refused`, a value
+ *  the call named was not one the producer could check against the run's
+ *  results. Neither says whether anything was drawn: that is the record's
+ *  `org.civicaitools.output-format` extension's `outcome`. */
+export type PresentOutcome = 'accepted' | 'refused';
+
+/** The two outcomes, in that order. A present span carrying any other value,
+ *  or none, is refused when the graph is built. */
+export const PRESENT_OUTCOMES: readonly PresentOutcome[] = ['accepted', 'refused'];
+
+/**
  * One era of the civic vocabulary: the two literals plus the emitters bound
  * to them. The vocabulary is not deployment configuration (a deployment does
  * not choose its own term set); this seam exists only so a prior-era package
