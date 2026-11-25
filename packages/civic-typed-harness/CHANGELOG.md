@@ -3,7 +3,7 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
-## Unreleased
+## 0.16.0 — 2026-11-25
 
 - **The present span** ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
   amendment 6): a tool span whose `tool.operation_type` is `present_result`,
