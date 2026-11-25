@@ -3,6 +3,30 @@
 Factual record of what changed per published version. Section references are
 to the Typed Standards specification unless noted otherwise.
 
+## Unreleased
+
+- **The present span** ([ADR-0033](../../docs/adr/0033-composed-harness-record-fields.md)
+  amendment 6): a tool span whose `tool.operation_type` is `present_result`,
+  the producer's own step in a run asked in an output format, is read as a
+  load span and a search span are read. The graph mints no source agent and
+  no data-response entity for it, even when it carries `tool.response_hash`;
+  `buildDataSources` mints no entry for it and skips it in place, so the
+  calls after it keep their own spans. Its tool-call activity is associated
+  with the platform agent and states no `civic:sourceId`. Until this release
+  such a span was resolved like a source's call, so an untagged step was
+  credited to an agent named `unknown`, and a step tagged with an aggregate
+  source minted that source's `dataSources[]` entry.
+- **`civic:presentOutcome`** (`CIVIC_TERM_PRESENT_OUTCOME`), on a present
+  span's activity, after every earlier key: `accepted` or `refused`
+  (`PRESENT_OUTCOMES`, `PresentOutcome`), verbatim from
+  `tool.present_outcome`. `ProvenanceTerms` names it as an optional member.
+- **`PresentSpanError`** (exported) refuses, when the graph is built, a
+  present span whose outcome is absent, not a string, or neither value, or
+  that carries `error: true`, `mcp.source`, `mcp.server.id`, `mcp.alias`,
+  `mcp.pack_id` or `tool.upstream_name`. `error: false` is not refused.
+- A trace with no present span gives the graph and `dataSources[]` 0.15.0
+  gives; no golden fixture moves.
+
 ## 0.15.0 — 2026-11-18
 
 - **A per-portal source** (`CivicSourceInfo.portalArgument`, and the same
